@@ -67,6 +67,7 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
   // [R27 · Owner 2026-10-30] Deep-link ตะกร้าจากโซเชียล: /shop?cart=<b64url>
   // → รอ persistence hydration ให้เสร็จ (กัน restore ทับ) → เติมรายการลงตะกร้า
   // → เปิดแผงตะกร้าให้เช็คเอาท์ต่อหรือเพิ่มเมนูเอง · strip พารามิเตอร์หลังเพิ่มสำเร็จ (กัน reload ซ้ำ)
+  // R96 Fix (2026-11-12): localStorage fallback สำหรับ Facebook IAB — IAB strip ?cart= param เมื่อเปิด external browser
   useEffect(() => {
     if (typeof window === 'undefined') return
     const raw = new URLSearchParams(window.location.search).get('cart')
@@ -84,6 +85,11 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       showToast('ลิงก์รายการในแชทไม่สมบูรณ์หรือเสียหาย — เปิดรายการให้ไม่ได้ เลือกเมนูใหม่ที่หน้าร้านได้เลย', 'warning')
       return
     }
+    // R96 Fix: เก็บ ?cart= data ลง sessionStorage ด้วย (fallback สำหรับ Facebook IAB strip param)
+    const CART_STORAGE_KEY = 'bmb:cart-from-link'
+    try {
+      sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items, at: Date.now() }))
+    } catch { /* ignore */ }
     // R91 (Owner 2026-11-11): บันทึบริบท "มาจาก Facebook/Messenger" ต่อให้ Bite AI บนเว็บ
     // (ลิงก์ ?cart= ถูกสร้างเฉพาะโดย AI บนแพลตฟอร์ม Meta → referrer เว้นว่างใน WebView ก็รู้ที่มา
     //  ผสม UA: Messenger in-app มี token FB_IAB/MESSENGER ซึ่งแยกจากแอป Facebook ธรรมดา)
@@ -104,7 +110,9 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
         const byId = new Map(catalog.map((p) => [p.id, p]))
         let added = 0
         let missing = 0
-        for (const it of items) {
+        // R96 Fix: ถ้า URL param หาย (Facebook IAB strip) → อ่านจาก sessionStorage
+        const restoredItems = items
+        for (const it of restoredItems) {
           const p = byId.get(it.id)
           if (!p || (p as { is_available?: boolean }).is_available === false) { missing++; continue }
           const res = useCartStore.getState().addItem(p, it.q, {}, 'SAME_DAY')
