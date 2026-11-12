@@ -1,3 +1,20 @@
+## 🔒 SESSION CLOSE 2026-11-12 (รอบ 18 · R94 — โฟลตติ้งโฆษณาพื้นหลังโปร่ง + สเปคขนาดรูป 3 ระดับ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-12 11:52:** owner แจ้ง ① โฟลตติ้งโฆษณาพื้นหลังเป็นรูปโลโก้อยู่ ไม่ต้องมี — ปล่อยโปร่งทะลุใช้ธีมแทน ② สเปคขนาดรูปใหม่: เจน/โพสต์ FB = 800×800/.jpg/.webp/80-150KB · เก็บ Supabase = 800×800/.webp(Q80%)/60-120KB · แสดงเว็บ = 400×400/.webp/30-100KB · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ vitest ✅ **2237 tests** · build ✅ — `e2e/_r94_gates_*.log`) · push แล้ว
+
+> **สิ่งที่แก้:**
+> 1. **`index.css`** — `.flad-card` เปลี่ยนจาก `background: #fff` → **`background: transparent`** (both light + dark theme) — ปล่อยพื้นหลังธีมทะลุผ่าน · Dark override จาก `var(--color-brand-surface)` → `transparent`
+> 2. **`bmbAdminApi_media.ts`** — สเปค 3 ระดับใหม่ (แทน R92-B เดิม 300×300/100KB):
+>    - **GENERATE** (เจนภาพ + โพสต์ Facebook): `MAX_SIDE=800`, `MAX_BYTES=150KB`, `QUALITY=0.85`
+>    - **STORE** (เก็บใน Supabase): `MAX_SIDE=800`, `MAX_BYTES=120KB`, `QUALITY=0.80` (.webp)
+>    - **DISPLAY** (แสดงผลเว็บ): `MAX_SIDE=400`, `MAX_BYTES=100KB`, `QUALITY=0.80` (.webp)
+> 3. **`compressToWebLimits`** — เปลี่ยน output จาก JPEG → **WebP** (R94-③ display spec) + ใช้ `DISPLAY_*` constants
+> 4. **`WEB_USE_MAX_SIDE`/`WEB_USE_MAX_BYTES`** — แทนที่ด้วย `DISPLAY_*` (400×400/100KB)
+
+> **Live-test checklist (owner):** ① โฟลตติ้งโฆษณา = โปร่ง (ธีมทะลุ) ไม่ขาว ② รูปเจน/อัปโหลด = ย่ออัตโนมัติตามสเปค 3 ระดับ (800/800/400) · WebP · ≤150/120/100KB
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-12 (รอบ 17 · R93 — คิวอนุมัติว่างเงียบ → อนุมัติ/ตั้งเวลาไม่ได้ + โพสต์รออนุมัติ แก้ไข/ลบ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-12 10:41:** owner แจ้งภาพ 3 ใบ: "ภาพรวมมี 1 รออนุมัติ แต่แท็บตรวจ&อนุมัติว่าง + ตั้งเวลาโพสไม่ได้ + โพสรออนุมัติไม่มีปุ่มลบ/แก้ไข" · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ vitest ✅ **2237 tests** · build ✅ — `e2e/_r93_gates_*.log`) · push แล้ว — รอ deploy + owner live test

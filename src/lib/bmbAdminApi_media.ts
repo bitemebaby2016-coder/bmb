@@ -175,17 +175,32 @@ export async function downscaleImageFile(
   }
 }
 
-/** R92 (Owner 2026-11-09): บังคับรูปที่แอดมิน "เอามาใช้" = ไม่เกิน 300×300 px + ไม่เกิน 100KB
- *  (ทั้งลงเว็บและเก็บใน supabase — ย่ออัตโนมัติก่อน upload เสมอ)
- *  · ต่างจาก downscaleImageFile: บีบจนเข้าเกณฑ์จริง (quality ลงทีละ step → ย่อสัดส่วนซ้ำ)
- *  · คืนไฟล์เดิมเมื่อ decode/GIF ไม่ได้ (zero-fake — ไม่ทิ้งรูป) */
-export const WEB_USE_MAX_SIDE = 300
-export const WEB_USE_MAX_BYTES = 100 * 1024 // 100KB (ช่วง 50–100KB ที่ Owner อนุญาต — เอาที่ปลอดภัยสุด)
+/** R94 (Owner 2026-11-12): สเปคขนาดรูป 3 ระดับ (แทน R92-B เดิม 300×300/100KB)
+ *  ① เจนภาพ & โพสต์ Facebook: 800×800px, .jpg/.webp, 80-150KB
+ *  ② เก็บใน Supabase: 800×800px, .webp (Quality 80%), 60-120KB
+ *  ③ แสดงผลบนหน้าเว็บ: 400×400px, .webp, 30-100KB
+ *  · generate/store = ย่ออัตโนมัติก่อน upload · display = ย่อก่อน render
+ *  · gif/decode ไม่ได้ = zero-fake (คืนเดิม ไม่ทิ้งรูป) */
+export const GENERATE_MAX_SIDE = 800
+export const GENERATE_MAX_BYTES = 150 * 1024 // 150KB
+export const GENERATE_QUALITY = 0.85
+
+export const STORE_MAX_SIDE = 800
+export const STORE_MAX_BYTES = 120 * 1024 // 120KB
+export const STORE_QUALITY = 0.80
+
+export const DISPLAY_MAX_SIDE = 400
+export const DISPLAY_MAX_BYTES = 100 * 1024 // 100KB
+export const DISPLAY_QUALITY = 0.80
+
+/** R94-③: ใช้สำหรับ compressToWebLimits (แสดงผลบนเว็บ) — แทน R92-B เดิม 300×300 */
+export const WEB_USE_MAX_SIDE = DISPLAY_MAX_SIDE
+export const WEB_USE_MAX_BYTES = DISPLAY_MAX_BYTES // 100KB (ช่วง 50–100KB ที่ Owner อนุญาต)
 
 export async function compressToWebLimits(
   file: File,
-  maxSide: number = WEB_USE_MAX_SIDE,
-  maxBytes: number = WEB_USE_MAX_BYTES,
+  maxSide: number = DISPLAY_MAX_SIDE,
+  maxBytes: number = DISPLAY_MAX_BYTES,
 ): Promise<File> {
   if (file.type === 'image/gif') return file
   let bmp: ImageBitmap | null = null
@@ -210,15 +225,15 @@ export async function compressToWebLimits(
           canvas.height = ch
           ctx.drawImage(bmp as ImageBitmap, 0, 0, cw, ch)
         }
-        canvas.toBlob((b) => resolve(b), 'image/jpeg', q)
+        canvas.toBlob((b) => resolve(b), 'image/webp', q)
       })
-    let quality = 0.9
+    let quality = DISPLAY_QUALITY
     let blob = await enc(quality)
     while (blob && blob.size > maxBytes && quality > 0.4) {
       quality -= 0.15
       blob = await enc(quality)
     }
-    // ยังใหญ่ → ย่อสัดส่วนต่อ 75% แล้วบีบซ้ำ (300→225 ยังพอใช้บนเว็บ)
+    // ยังใหญ่ → ย่อสัดส่วนต่อ 75% แล้วบีบซ้ำ (400→300 ยังพอใช้บนเว็บ)
     if (blob && blob.size > maxBytes) {
       const w2 = Math.max(1, Math.round(w * 0.75))
       const h2 = Math.max(1, Math.round(h * 0.75))
@@ -227,7 +242,7 @@ export async function compressToWebLimits(
     }
     if (!blob || blob.size > maxBytes) return file // ยังไม่ผ่าน = คืนเดิม (ไม่ทิ้งรูป — ดีกว่า upload ไม่ได้)
     const base = file.name.replace(/\.[^.]+$/, '') || 'img'
-    return new File([blob], `${base}-web.jpg`, { type: 'image/jpeg', lastModified: Date.now() })
+    return new File([blob], `${base}-web.webp`, { type: 'image/webp', lastModified: Date.now() })
   } catch {
     return file
   } finally {
