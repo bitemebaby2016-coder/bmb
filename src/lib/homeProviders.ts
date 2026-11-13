@@ -50,9 +50,46 @@ function availabilityOf(p: Product): AvailabilityState {
   return 'available'
 }
 
-function toHomeProduct(p: Product, cat: ProductCategory | undefined, mode: 'same-day' | 'pre-order' = 'same-day', schedule: ProductScheduleMap = {}): HomeProduct {
+/**
+ * R100: คำนวณจำนวนเหลือจริงสำหรับพรีออเดอร์ (จาก max_capacity - current_count ของรอบ)
+ * ใช้แทน p.stock (legacy seed value) สำหรับการ์ดพรีออเดอร์
+ * @param product Product data
+ * @param scheduleMap Schedule map (product_id → scheduled_date)
+ * @param rounds Delivery rounds data
+ * @returns Real remaining capacity (null = ไม่รู้/ไม่มีข้อมูล)
+ */
+function calculatePreOrderRemaining(
+  product: Product,
+  scheduleMap: ProductScheduleMap,
+  rounds: any[],
+): number | null {
+  const scheduledDate = scheduleMap[product.id]
+  if (!scheduledDate) return null
+
+  // หา round ที่ตรงกับวันที่
+  const targetDate = scheduledDate.slice(0, 10)
+  const round = (rounds || []).find((r) => {
+    const d = r.scheduled_date ? String(r.scheduled_date).slice(0, 10) : null
+    return d === targetDate
+  })
+
+  if (!round) return null
+
+  const maxCap = Number(round.max_capacity) || 0
+  const currentCount = Number(round.current_count) || 0
+  const remaining = maxCap - currentCount
+
+  return remaining > 0 ? remaining : null
+}
+
+function toHomeProduct(p: Product, cat: ProductCategory | undefined, mode: 'same-day' | 'pre-order' = 'same-day', schedule: ProductScheduleMap = {}, rounds: any[] = []): HomeProduct {
   // migration 012 real columns win; MOCK_* overlays removed.
-  const stock = p.stock ?? 0
+  // R100: สำหรับ pre-order = ใช้ remaining capacity จาก delivery_rounds (ไม่ใช่ p.stock)
+  let stock = p.stock ?? 0
+  if (mode === 'pre-order') {
+    const remaining = calculatePreOrderRemaining(p, schedule, rounds)
+    if (remaining !== null) stock = remaining
+  }
   // RE-D3: products.rating/review_count are LEGACY SEED VALUES (migration 012),
   // NOT canonical customer-review aggregates (reviews table = 0 rows).
   // Per RE-D3 they must not be shown as customer-review truth → omitted until
@@ -74,11 +111,13 @@ function toHomeProduct(p: Product, cat: ProductCategory | undefined, mode: 'same
   }
 }
 
-/** Map real products → HomeProduct, split into same-day and pre-order carousels. */
+/** Map real products → HomeProduct, split into same-day and pre-order carousels.
+ * R100: Accept rounds to calculate real remaining capacity for pre-order items. */
 export function getHomeProducts(
   products: Product[],
   categories: ProductCategory[],
   schedule: ProductScheduleMap = {},
+  rounds: any[] = [],
 ): { sameDay: HomeProduct[]; preOrder: HomeProduct[] } {
   const catMap = new Map((categories || []).map((c) => [c.id, c]))
   const sameDay: HomeProduct[] = []
@@ -100,12 +139,12 @@ export function getHomeProducts(
     if (sellable && preorderEligible(p) && !seenPreOrder.has(p.id)) {
       if (p.is_featured || preOrder.length < 6) {
         seenPreOrder.add(p.id)
-        preOrder.push(toHomeProduct(p, cat, 'pre-order', schedule))
+        preOrder.push(toHomeProduct(p, cat, 'pre-order', schedule, rounds))
       }
     } else if (sellable && sameDayEligible(p) && !seenSameDay.has(p.id)) {
       if (p.is_featured || sameDay.length < 6) {
         seenSameDay.add(p.id)
-        sameDay.push(toHomeProduct(p, cat, 'same-day', schedule))
+        sameDay.push(toHomeProduct(p, cat, 'same-day', schedule, rounds))
       }
     }
   }

@@ -148,9 +148,29 @@ export function resolvePopularItems(
   return rotated.slice(0, Math.min(config.showCount, rotated.length))
 }
 
-/** map Product → HomeProduct ของการ์ด "เมนูยอดนิยม" (โหมดขายจริง + วันจัดส่งจาก menu_schedule) */
-export function toPopularHomeProduct(p: Product, cat: ProductCategory | undefined, schedule: ProductScheduleMap = {}): HomeProduct {
+/** map Product → HomeProduct ของการ์ด "เมนูยอดนิยม" (โหมดขายจริง + วันจัดส่งจาก menu_schedule)
+ * R100: สำหรับ pre-order = ใช้ remaining capacity จาก delivery_rounds (ไม่ใช่ p.stock) */
+export function toPopularHomeProduct(p: Product, cat: ProductCategory | undefined, schedule: ProductScheduleMap = {}, rounds: any[] = []): HomeProduct {
   const mode = productModeOf(p)
+  let stock = p.stock ?? 0
+  if (mode === 'pre-order') {
+    // Import calculatePreOrderRemaining from homeProviders
+    // Actually, let's inline it here to avoid circular dependency
+    const scheduledDate = schedule[p.id]
+    if (scheduledDate) {
+      const targetDate = scheduledDate.slice(0, 10)
+      const round = (rounds || []).find((r: any) => {
+        const d = r.scheduled_date ? String(r.scheduled_date).slice(0, 10) : null
+        return d === targetDate
+      })
+      if (round) {
+        const maxCap = Number(round.max_capacity) || 0
+        const currentCount = Number(round.current_count) || 0
+        const remaining = maxCap - currentCount
+        if (remaining > 0) stock = remaining
+      }
+    }
+  }
   return {
     id: p.id,
     name: p.name,
@@ -162,7 +182,7 @@ export function toPopularHomeProduct(p: Product, cat: ProductCategory | undefine
     categoryIcon: cat?.icon,
     mode,
     availability: p.is_available ? 'available' : 'sold_out',
-    stock: p.stock ?? 0,
+    stock,
     cta: mode === 'pre-order' ? '📅 จองล่วงหน้า' : '🛒 เพิ่มลงตะกร้า',
     scheduledDate: schedule[p.id],
   }

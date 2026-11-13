@@ -204,7 +204,7 @@ export function HomePage() {
   // R34: ส่ง scheduleMap ด้วย — เมนูพรีออเดอร์ที่ยังไม่ลงปฏิทินรอบถัดไป = ไม่โชว์ในช่องนี้
   const popularCatMap = new Map(categories.map((c) => [c.id, c]))
   const popularAll = resolvePopularItems(products, categories, popularCfg, undefined, scheduleMap)
-    .map((p) => toPopularHomeProduct(p, popularCatMap.get(p.category_id), scheduleMap))
+    .map((p) => toPopularHomeProduct(p, popularCatMap.get(p.category_id), scheduleMap, rounds))
   // ปุ่มกรองหัวข้อเมนู — กติกาเดียวกับแถวหัวข้อด้านล่าง (หัวข้อว่าง = ซ่อน)
   // Owner (2026-10-25): หมวดโหมดขาย = ความหมายเดียวกับแท็บ 🛵 ส่งวันนี้ / 📅 พรีออเดอร์
   // ("มันคืออันเดียวกัน") → ไม่โชว์ซ้ำในแถวแท็บ — เซกชันโหมดด้านล่างรับผิดชอบเอง
@@ -366,7 +366,7 @@ export function HomePage() {
 
   // Feature B (Owner 2026-10-25): sections ส่งวันนี้ + พรีออเดอร์ (ลำดับ 2-3 ของหน้าแรก)
   const catById = new Map(categories.map((c) => [c.id, c] as const))
-  const toShowcaseCard = (p: Product) => toPopularHomeProduct(p, catById.get(p.category_id), scheduleMap)
+  const toShowcaseCard = (p: Product) => toPopularHomeProduct(p, catById.get(p.category_id), scheduleMap, rounds)
   // Owner (2026-10-25): หมวดโหมดขาย (ส่งวันนี้/Same Day · จองล่วงหน้า/พรีออเดอร์) = ความหมาย
   // เดียวกับเซกชัน/แท็บโหมด → หัวข้อซ้ำถูกถอด (CategorySections กรองออก) และ "สินค้าของหมวดนั้น
   // ถูกย้ายเข้า showcase โหมด" โดยหมวดตัวเองเรียงมาก่อน slice(8) — ไม่มีเมนูหายจากหน้าแรก
