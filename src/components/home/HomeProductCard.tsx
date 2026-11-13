@@ -20,9 +20,11 @@ interface HomeProductCardProps {
 
 export function HomeProductCard({ item, onSameDay, onPreOrder, mode = 'auto' }: HomeProductCardProps) {
   const soldOut = item.availability === 'sold_out'
-  const lowStock = typeof item.stock === 'number' && item.stock > 0 && item.stock <= 5
-  // A1: effective mode — explicit section mode ชนะ item.mode → section ไม่มีวันมีปุ่มอีกโหมด
   const isPreOrderCta = mode === 'pre_order' ? true : mode === 'same_day' ? false : item.mode === 'pre-order'
+  // R100: สำหรับ pre-order = แสดงจำนวนเหลือเสมอ (ไม่ใช่แค่ ≤5)
+  const isPreOrder = item.mode === 'pre-order' || isPreOrderCta
+  const preOrderRemaining = isPreOrder && typeof item.stock === 'number' && item.stock > 0 ? item.stock : null
+  const lowStock = !isPreOrder && typeof item.stock === 'number' && item.stock > 0 && item.stock <= 5
   // R5c (Owner 2026-10-23): ปุ่มจองล่วงหน้ากดได้เฉพาะการ์ดที่มีป้ายปฏิทิน (เมนูปฏิทินแอดมิน)
   const preOrderReady = isPreOrderCta && !!item.scheduledDate
   const disabledCta = soldOut || (isPreOrderCta && !preOrderReady)
@@ -65,6 +67,13 @@ export function HomeProductCard({ item, onSameDay, onPreOrder, mode = 'auto' }: 
           />
         )}
         {item.badge && <span className="home-card-badge">{item.badge}</span>}
+        {/* R100: สำหรับ pre-order = แสดงจำนวนเหลือเสมอ (ไม่ใช่แค่ ≤5) */}
+        {preOrderRemaining !== null && (
+          <span className="home-card-stock home-card-stock--preorder">
+            📦 เหลือ {preOrderRemaining} กล่อง
+          </span>
+        )}
+        {/* สำหรับ same-day = แสดงเฉพาะเมื่อ ≤5 (low stock urgency) */}
         {lowStock && <span className="home-card-stock">🔥 เหลือ {item.stock} กล่อง</span>}
         {isPreOrderCta && item.scheduledDate && (
           <ScheduleDateBadge date={item.scheduledDate} />

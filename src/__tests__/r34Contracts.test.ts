@@ -44,11 +44,16 @@ describe('R34 · หน้าแรก = หัวข้อแอดมิน + 
     expect(out.map((p) => p.id)).toEqual(['on-cal'])
   })
 
-  it('อัลบั้มรีวิวจริง mount บนหน้าแรก (N4: รวมใน ReviewCarouselSection — ห้าม render ซ้ำ) + รายชื่อ = ไฟล์จริง 32 ใบ (ไม่มีรูปผี 404)', () => {
+  it('อัลบั้มรีวิวจริง = หน้า /reviews ที่เดียว (R100: ปุ่ม "ดูทั้งหมด" บนหน้าแรกเป็นลิงก์ — แก้ปุ่มตกนอกกรอบจอแคบ) + รายชื่อ = ไฟล์จริง 32 ใบ (ไม่มีรูปผี 404)', () => {
     expect(homeSrc).toContain('<ReviewCarouselSection')
     expect(homeSrc).not.toContain('<ReviewGallerySection') // N4: ยุบรีวิว 2 เซกชั่นแล้ว
-    expect(carouselSrc).toContain('REAL_REVIEW_PHOTOS') // อัลบั้มอยู่ในเซกชั่นเดียวกับคารูเซล
-    expect(carouselSrc).toContain('review-gallery')
+    // R100: ปุ่ม "ดูทั้งหมด" = ลิงก์ไป /reviews (อัลบั้ม+รีวิวจริงครบอยู่ใน ReviewPage แล้ว)
+    // — ห้ามกลับไปเปิด modal อัลบั้มบนหน้าแรก + header กัน overflow (h2 หดได้ + ปุ่มไม่ตกแถว)
+    expect(carouselSrc).toContain('to="/reviews"')
+    expect(carouselSrc).not.toContain('setAlbumOpen')
+    expect(carouselSrc).not.toContain("from '@/lib/realReviews'") // อัลบั้มไม่ import มาบนหน้าแรกแล้ว
+    expect(carouselSrc).toContain('min-w-0') // h2 หดได้ — ข้อความไม่ดันปุ่มออกนอกกรอบ
+    expect(carouselSrc).toContain('shrink-0') // ปุ่ม/ป้าย/โลโก้ไม่ถูกบีบจนพัง
     expect(REAL_REVIEW_PHOTOS.length).toBe(32)
     const dir = path.resolve(__dirname, '../../public/assets/reviews/small')
     const onDisk = fs.readdirSync(dir).filter((f) => f.endsWith('.jpg')).sort()

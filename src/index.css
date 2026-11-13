@@ -990,6 +990,11 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 999px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
+/* R100: Pre-order remaining count — blue/amber to distinguish from low-stock urgency */
+.home-card-stock--preorder {
+  color: #D97706; /* amber-600 */
+  background: rgba(255, 251, 235, 0.95);
+}
 .home-card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .home-card-cta { margin-top: auto; }
 
