@@ -561,6 +561,68 @@ export function cartFooterForMatch(m: MatchResult, site = 'https://biteme-baby.c
 }
 
 // ============================================
+// R100: สร้าง footer สำหรับ "เมนูที่ยังสั่งได้" (แยก Same-Day / Pre-Order)
+// ============================================
+// ใช้กับ case ลูกค้าถาม "สั่งอะไรได้บ้าง" / "ทบทวนเมนู" / "มีเมนูอะไรบ้าง"
+// ต้องแยกให้ถูก: Same-Day (ส่งวันนี้) vs Pre-Order (จองล่วงหน้า) vs ผ่านรอบ (สั่งไม่ได้)
+// สร้าง cart link ให้ลูกค้าใส่ตะกร้า — ไม่แค่列出เมนู
+// ============================================
+
+export interface OrderableMenuFooter {
+  sameDayItems: Array<{ id: string; name: string; price: number }>
+  preOrderItems: Array<{ id: string; name: string; nextDate: string; detail: string }>
+  passedItems: Array<{ id: string; name: string; detail: string }>
+}
+
+/** สร้างข้อความ footer สำหรับ "เมนูที่ยังสั่งได้" + cart link */
+export function buildOrderableMenuFooter(
+  catalog: OrderableMenuFooter,
+  site = 'https://biteme-baby.com',
+  ctx?: CartLinkContext,
+): string {
+  const lines: string[] = []
+
+  // Same-Day items
+  if (catalog.sameDayItems.length > 0) {
+    lines.push(` ส่งวันนี้ (Same Day) — ${catalog.sameDayItems.length} รายการ:`)
+    for (const item of catalog.sameDayItems.slice(0, 10)) {
+      lines.push(`  • ${item.name} ${item.price}฿`)
+    }
+  }
+
+  // Pre-Order items
+  if (catalog.preOrderItems.length > 0) {
+    lines.push(` พรีออเดอร์ (Pre-Order) — จองล่วงหน้าได้ ${catalog.preOrderItems.length} รายการ:`)
+    for (const item of catalog.preOrderItems.slice(0, 10)) {
+      lines.push(`  • ${item.name} (${item.nextDate}) — ${item.detail}`)
+    }
+  }
+
+  // Passed items (blocked)
+  if (catalog.passedItems.length > 0) {
+    lines.push(`❌ ผ่านรอบแล้ว (สั่งไม่ได้) — ${catalog.passedItems.length} รายการ:`)
+    for (const item of catalog.passedItems.slice(0, 5)) {
+      lines.push(`  • ${item.name} — ${item.detail}`)
+    }
+  }
+
+  // Cart link — สร้างจากรายการที่ยังสั่งได้ (sameDay + preOrder)
+  const orderableItems: CartSummaryItem[] = [
+    ...catalog.sameDayItems.map((i) => ({ product_id: i.id, quantity: 1, name: i.name })),
+    ...catalog.preOrderItems.map((i) => ({ product_id: i.id, quantity: 1, name: i.name })),
+  ]
+  if (orderableItems.length > 0) {
+    const link = buildCartLink(orderableItems, site, ctx)
+    lines.push('')
+    lines.push('🛒 เลือกเมนูที่ต้องการ → กดลิงก์นี้เพื่อใส่ตะกร้า: ' + link)
+    lines.push('')
+    lines.push('🔗 ลิงก์เปิดเว็บ biteme-baby.com ภายนอก Facebook — ถ้าแตะแล้วยังค้างอยู่ในเฟซ ให้กดคัดลอกลิงก์ในแถบที่ขึ้น แล้ววางใน Chrome/Safari ได้เลย')
+  }
+
+  return lines.join('\n')
+}
+
+// ============================================
 // Cross-Sell Prompts for AI (Owner 2026-11-09)
 // ============================================
 // Pre-Order → แนะนำ Same-Day + โค้ดลด SAMEDAY10

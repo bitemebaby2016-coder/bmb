@@ -89,6 +89,86 @@ async function restGet(sbUrl: string, serviceKey: string, path: string): Promise
 }
 
 // ============================================
+// R100: กรองแคตตาล็อกตาม order window (แยก Same-Day / Pre-Order / ผ่านรอบ)
+// ============================================
+// ใช้กับ case ที่ลูกค้าถาม "สั่งอะไรได้บ้าง" / "ทบทวนเมนู" / "มีเมนูอะไรบ้าง"
+// ต้องแยกให้ถูก: Same-Day (ส่งวันนี้) vs Pre-Order (จองล่วงหน้า) vs ผ่านรอบ (สั่งไม่ได้)
+// ข้อมูลจาก orderWindow.ts (mirror web logic) — ห้ามเดา/ห้ามมโน
+// ============================================
+
+import { assessProductWindows, loadOrderWindow } from './orderWindow.ts'
+
+export interface OrderableCatalog {
+  /** เมนู Same-Day ที่ส่งวันนี้ได้ (ไม่มีปิดรอบ — สั่งได้ตลอดเวลาที่ร้านเปิด) */
+  sameDayOpen: Array<{ id: string; name: string; price: number }>
+  /** เมนู Pre-Order ที่จองได้ (มีวันในปฏิทินที่ยังไม่เลยรอบ) */
+  preOrderBookable: Array<{ id: string; name: string; nextDate: string; detail: string }>
+  /** เมนูที่ผ่านรอบแล้ว (สั่งไม่ได้ — ห้ามบอกยังสั่งได้) */
+  preOrderPassed: Array<{ id: string; name: string; detail: string }>
+  /** ข้อมูลรอบ/ปฎิทินสำหรับ prompt (ใช้ buildOrderWindowPrompt) */
+  windowData: { scheduleRows: any[]; rounds: any[]; products: any[] } | null
+}
+
+/**
+ * กรองแคตตาล็อกให้เหลือเฉพาะเมนูที่ยังสั่งได้ ณ ตอนนี้:
+ *   - Same-Day: เมนูไม่มีปฏิทิน = เซมเดย์ · วันนี้ยังมีรอบว่าง = เปิด
+ *   - Pre-Order: มีวันในปฏิทินที่ยังไม่เลยรอบ = จองได้
+ *   - ผ่านรอบ: มีวันในปฏิทินแต่เลย cutoff แล้ว = สั่งไม่ได้
+ *   - data = null → return empty (ZERO-FAKE: ห้ามเดา)
+ */
+export async function filterCatalogByOrderWindow(
+  deps: ShopContextDeps,
+): Promise<OrderableCatalog> {
+  const [scheduleRows, rounds, products] = await Promise.all([
+    restGet(deps.sbUrl, deps.serviceKey,
+      '/rest/v1/menu_schedule?select=product_id,scheduled_date,is_published&is_published=eq.true&order=scheduled_date.asc&limit=300'),
+    restGet(deps.sbUrl, deps.serviceKey,
+      '/rest/v1/delivery_rounds?select=scheduled_date,status,cutoff_time,pre_order_cutoff,delivery_start,delivery_end,current_count,max_capacity&order=scheduled_date.asc&limit=120'),
+    restGet(deps.sbUrl, deps.serviceKey,
+      '/rest/v1/products?select=id,name,price,is_available&is_available=eq.true&order=sort_order.asc&limit=300'),
+  ])
+
+  const productIds = (scheduleRows || []).map((r) => String(r.product_id)).filter(Boolean)
+  if (productIds.length === 0) {
+    return { sameDayOpen: [], preOrderBookable: [], preOrderPassed: [], windowData: null }
+  }
+
+  const statuses = assessProductWindows(
+    productIds,
+    scheduleRows as any[],
+    rounds as any[],
+  )
+  const productsById = new Map((products || []).map((p) => [String(p.id), p]))
+
+  const sameDayOpen: Array<{ id: string; name: string; price: number }> = []
+  const preOrderBookable: Array<{ id: string; name: string; nextDate: string; detail: string }> = []
+  const preOrderPassed: Array<{ id: string; name: string; detail: string }> = []
+
+  for (const s of statuses) {
+    const p = productsById.get(s.product_id)
+    if (!p) continue
+    if (s.orderable && s.reason === 'same_day_open') {
+      sameDayOpen.push({ id: s.product_id, name: p.name, price: p.price })
+    } else if (s.orderable && s.reason === 'pre_order_bookable') {
+      preOrderBookable.push({
+        id: s.product_id,
+        name: p.name,
+        nextDate: s.nextDate || '',
+        detail: s.detail,
+      })
+    } else if (!s.orderable && s.reason === 'pre_order_day_passed') {
+      preOrderPassed.push({ id: s.product_id, name: p.name, detail: s.detail })
+    }
+  }
+
+  const windowData = (scheduleRows && rounds && products)
+    ? { scheduleRows, rounds, products }
+    : null
+
+  return { sameDayOpen, preOrderBookable, preOrderPassed, windowData }
+}
+
+// ============================================
 // R43 B4 (Owner 2026-10-31): สถานะเปิดร้าน "สด" สำหรับ prompt AI
 // ============================================
 // ปัญหาจริง: prompt มีแค่ SHOP_FACTS_TH static "07:00-20:00" → AI ตอบ "เปิดถึง 20:00"
@@ -402,6 +482,37 @@ export async function getShopContext(
   }
   if (unavailable.length > 0) {
     lines.push('MENU หมดวันนี้ (ห้ามบอกว่าสั่งได้): ' + unavailable.map((p: any) => p.name).join(', '))
+  }
+
+  // R100: กรองแคตตาล็อกตาม order window — แยก Same-Day / Pre-Order / ผ่านรอบ
+  // ใช้กับ case ลูกค้าถาม "สั่งอะไรได้บ้าง" / "ทบทวนเมนู" / "มีเมนูอะไรบ้าง"
+  // ต้องแยกให้ถูก: Same-Day (ส่งวันนี้) vs Pre-Order (จองล่วงหน้า) vs ผ่านรอบ (สั่งไม่ได้)
+  try {
+    const catalog = await filterCatalogByOrderWindow({ sbUrl: deps.sbUrl, serviceKey: deps.serviceKey })
+    if (catalog.windowData) {
+      lines.push('ORDER WINDOW (เมนูที่ยังสั่งได้ — แยกตามประเภทออเดอร์):')
+      if (catalog.sameDayOpen.length > 0) {
+        lines.push(`  • ส่งวันนี้ (Same Day) — ${catalog.sameDayOpen.length} รายการ (ส่งได้ตลอดเวลาที่ร้านเปิด):`)
+        for (const item of catalog.sameDayOpen.slice(0, 10)) {
+          lines.push(`    - ${item.name} ${item.price}฿`)
+        }
+      }
+      if (catalog.preOrderBookable.length > 0) {
+        lines.push(`  • พรีออเดอร์ (Pre-Order) — จองล่วงหน้าได้ ${catalog.preOrderBookable.length} รายการ:`)
+        for (const item of catalog.preOrderBookable.slice(0, 10)) {
+          lines.push(`    - ${item.name} (${item.nextDate}) — ${item.detail}`)
+        }
+      }
+      if (catalog.preOrderPassed.length > 0) {
+        lines.push(`  • ผ่านรอบแล้ว (สั่งไม่ได้): ${catalog.preOrderPassed.length} รายการ:`)
+        for (const item of catalog.preOrderPassed.slice(0, 5)) {
+          lines.push(`    - ${item.name} — ${item.detail}`)
+        }
+      }
+    }
+  } catch (e) {
+    // R100: filterCatalogByOrderWindow ล้มเหลว = ไม่เพิ่มข้อมูล (ZERO-FAKE: ห้ามเดา)
+    console.warn('[shopContext] filterCatalogByOrderWindow failed:', String(e).slice(0, 100))
   }
 
   // R58 (Owner): ปฎิทินเมนูจริง → วันพรีออเดอร์ผูกวันจริง + เมนูยังไม่ลงปฎิทิน = "เปิดจองล่วงหน้าเร็ว ๆ นี้"
