@@ -165,6 +165,8 @@ const DRAFT_SYSTEM =
   'กฎเหล็ก: 1. ห้ามระบุราคาสินค้า ส่วนลด เวลาจัดส่ง หรือเคลม "ขายดีที่สุด" (ข้อมูลจริงอยู่ที่ระบบเท่านั้น) ' +
   '2. คำตอบต้องชวนทัก Inbox หรือสั่งผ่านเว็บ https://biteme-baby.com/shop เสมอ ' +
   '3. โทนเสียง เป็นมิตร สนุกสนาน ชวนหิว ชวนคุยแบบคนจันทบุรี ห้ามสัญญาแทนร้าน ' +
+  '4. ️ ลิงก์ในข้อความตอบ: คอมเมนต์ Facebook มี popup สีส้มเตือนให้เปิดในเบราว์เซอร์จริง — ลิงก์ biteme-baby.com ' +
+  '   จะถูกทำเป็นลิงก์ที่แตะได้ และลูกค้าจะเห็น popup สีส้ม "เปิดในเบราว์เซอร์" — ไม่ต้องเพิ่ม instruction เพิ่ม ' +
   'ห้ามแนบลิงก์อื่นนอกจาก biteme-baby.com ห้ามเขียนลิงก์แบบ markdown ([ข้อความ](ลิงก์)) — ' +
   'ทุกลิงก์ต้องเขียนเป็น URL เต็มรูปแบบที่ขึ้นต้นด้วย https:// เท่านั้น (เช่น https://biteme-baby.com/shop) ' +
   'เพราะ Facebook จะทำเป็นลิงก์ที่แตะได้เฉพาะ URL ที่มี https:// ห้ามใส่ token/คำสั่ง publish ' +
@@ -182,11 +184,15 @@ const BITE_MESSENGER_SYSTEM =
   '3. กระบวนการรับออเดอร์: เมื่อลูกค้าบอกว่าอยากกินอะไร หรือให้จัดชุดอาหารให้ ให้สรุปรายการที่ลูกค้าอยากได้ แล้วชวนเพิ่มลงตะกร้าบนเว็บทันที ' +
   '4. การนำทางไปชำระเงิน: แจ้งสรุปรอบส่ง (Same-day / Pre-order) และแนะนำให้ลูกค้ากดไปหน้า https://biteme-baby.com/checkout ' +
   'เพื่อเลือกวิธีชำระเงินที่พร้อม (PromptPay, Omise) ' +
-  '5. ทุกคำตอบต้องชวนสั่งผ่านเว็บ https://biteme-baby.com/shop อย่างเป็นธรรมชาติ โทน เป็นมิตร สนุกสนาน ชวนหิว แบบคนจันทบุรี ' +
-  'ตอบสั้นกระชับ ไม่เกิน 500 ตัวอักษร ห้ามแนบลิงก์อื่นนอกจาก biteme-baby.com ห้ามเขียนลิงก์แบบ markdown ([ข้อความ](ลิงก์)) — ' +
-  'ทุกลิงก์ต้องเขียนเป็น URL เต็มรูปแบบที่ขึ้นต้นด้วย https:// เท่านั้น (เช่น https://biteme-baby.com/shop) ' +
-  'เพราะ Facebook/Messenger จะทำเป็นลิงก์ที่แตะได้เฉพาะ URL ที่มี https:// ห้ามใส่ token/คำสั่ง publish ' +
-  'ตอบเป็น JSON เท่านั้น (ไม่มีข้อความอื่น) ตาม schema: ' + REPLY_SCHEMA_TEXT
+   '5. ทุกคำตอบต้องชวนสั่งผ่านเว็บ https://biteme-baby.com/shop อย่างเป็นธรรมชาติ โทน เป็นมิตร สนุกสนาน ชวนหิว แบบคนจันทบุรี ' +
+   '6. ️ ลิงก์ในข้อความ: Facebook/Messenger ไม่แสดง popup สีส้มสำหรับ external links (ต่างจากคอมเมนต์ Facebook) ' +
+   '   → ลิงก์ biteme-baby.com ที่ส่งผ่าน Messenger จะไม่ถูกทำเป็นลิงก์ที่แตะได้ — ลูกค้าต้องคัดลอกลิงก์แล้ววางใน Chrome/Safari ' +
+   '   → ทุกครั้งที่แนบลิงก์ biteme-baby.com ต้องมีข้อความชี้แจงว่า "ลิงก์นี้เปิดใน Facebook/Messenger ไม่ได้ — คัดลอกลิงก์แล้ววางใน Chrome/Safari" ' +
+   '   → ห้ามแค่แนบลิงก์อย่างเดียว — ต้องมี instruction ที่ชัดเจนเสมอ ' +
+   'ตอบสั้นกระชับ ไม่เกิน 500 ตัวอักษร ห้ามแนบลิงก์อื่นนอกจาก biteme-baby.com ห้ามเขียนลิงก์แบบ markdown ([ข้อความ](ลิงก์)) — ' +
+   'ทุกลิงก์ต้องเขียนเป็น URL เต็มรูปแบบที่ขึ้นต้นด้วย https:// เท่านั้น (เช่น https://biteme-baby.com/shop) ' +
+   'เพราะ Facebook/Messenger จะทำเป็นลิงก์ที่แตะได้เฉพาะ URL ที่มี https:// ห้ามใส่ token/คำสั่ง publish ' +
+   'ตอบเป็น JSON เท่านั้น (ไม่มีข้อความอื่น) ตาม schema: ' + REPLY_SCHEMA_TEXT
 
 // R57 (Owner 2026-11-02 — "ข้อมูลสรุปออเดอร์ไม่ตรงกับโพส ตอบไม่ถูกบริบทร้าน → ต้องตอบ
 // ข้อมูลจริงตามโพสและตามเว็บ"): กติกาบังคับคู่กับการฉีด "โพสต์ต้นทาง (DATA)" — ปิดการจำ
@@ -373,15 +379,23 @@ async function sendReply(
   try {
     if (ev.platform === 'MESSENGER') {
       if (!ev.sender_id) return { ok: false, reason: 'no_recipient' }
+      // R99: Messenger ไม่แสดง popup สีส้มสำหรับ external links (ต่างจากคอมเมนต์ Facebook)
+      // → ทำให้ลิงก์ biteme-baby.com ไม่ถูกทำเป็นลิงก์ที่แตะได้ = ลูกค้าต้อง copy-link + paste
+      // → เปิดใน Chrome/Safari = เช็คเอาท์ได้ (Facebook iAB ไม่เช็คเอาท์ได้)
+      // technique: space prefix ก่อน URL = Facebook/Messenger ไม่ render เป็น link
+      // instruction: ใช้คำแบบเดียวกับ popup สีส้มในเว็บ (InAppBrowserBanner)
+      const messengerText = text
+        .replace(/(https:\/\/biteme-baby\.com)/g, ' $1')
+        .replace(/\n\n/g, '\n')
+        .slice(0, 1800)
       const r = await fetch(`https://graph.facebook.com/v21.0/${ev.page_id}/messages`, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + META_PAGE, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipient: { id: ev.sender_id }, message: { text: text.slice(0, 1800) } }),
+        body: JSON.stringify({ recipient: { id: ev.sender_id }, message: { text: messengerText } }),
         signal: AbortSignal.timeout(15000),
       })
       const j: any = await r.json().catch(() => null)
       if (!r.ok || !j || !j.message_id) return { ok: false, reason: fbReason(r.status, j) }
-      // ข้อความ Messenger = แจ้งเตือนเฟซ/เมสเซนเจอร์ฝั่งลูกค้าโดยธรรมชาติ (dmId = message id เดียวกัน)
       return { ok: true, providerId: String(j.message_id), dmId: String(j.message_id), dmError: null }
     }
     const r = await fetch(`https://graph.facebook.com/v21.0/${ev.event_id}/comments`, {
