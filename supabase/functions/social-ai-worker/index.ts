@@ -211,7 +211,7 @@ interface ClassifiedOutput {
 }
 
 const CLASSIFY_SCHEMA = {
-  intent: { type: 'string', required: true, enumValues: ['question', 'order_request', 'complaint', 'praise', 'spam', 'other'] },
+  intent: { type: 'string', required: true, enumValues: ['question', 'order_request', 'order_cancel', 'order_modify', 'complaint', 'praise', 'spam', 'other'] },
   sentiment: { type: 'string', required: true, enumValues: ['positive', 'neutral', 'negative'] },
   urgency: { type: 'string', required: true, enumValues: ['low', 'normal', 'high'] },
   safety_flags: { type: 'array', required: true, minItems: 1 },
@@ -874,13 +874,49 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
       'ระบบยังสรุปรายการให้ไม่ได้ในตอนนี้ — ห้ามสร้าง/เดารายการสั่งซื้อเอง ให้ถามรายการที่อยากสั่ง (เมนูและจำนวน) ก่อน แล้วชวนสั่งผ่าน https://biteme-baby.com/shop'
   }
 
+  // --- R97: Handle order_cancel and order_modify intents ---
+  let orderActionFooter = ''
+  let orderActionNote = ''
+  if (classification.intent === 'order_cancel' || classification.intent === 'order_modify') {
+    if (!ev.sender_id) {
+      orderActionNote = 'ไม่พบข้อมูลผู้ส่ง — ไม่สามารถดำเนินการกับออเดอร์ได้ ให้ชวนลูกค้าเข้าสู่ระบบก่อนครับ'
+    } else {
+      // Fetch order history to find the target order
+      const orders = await getCustomerOrders({ sbUrl: SB_URL, serviceKey: SERVICE }, ev.sender_id)
+      if (orders.length === 0) {
+        orderActionNote = 'ไม่พบประวัติออเดอร์ของลูกค้า — ให้ชวนสั่งใหม่ที่ https://biteme-baby.com/shop'
+      } else {
+        // For cancel: target the most recent order unless specified
+        // For modify: need to parse what to modify from user message
+        const targetOrder = orders[0] // Most recent order
+        
+        if (classification.intent === 'order_cancel') {
+          // Call cancelOrder RPC
+          const cancelResult = await cancelOrder({ sbUrl: SB_URL, serviceKey: SERVICE }, targetOrder.order_id, 'cancelled_by_customer_via_ai')
+          if (cancelResult.ok) {
+            orderActionFooter = `\n\n✅ ยกเลิกออเดอร์ #${targetOrder.order_id} เรียบร้อยแล้วครับ`
+            orderActionNote = `ระบบยกเลิกออเดอร์ #${targetOrder.order_id} เรียบร้อย — แจ้งลูกค้าตามจริงและชวนสั่งใหม่ได้เลย`
+          } else {
+            orderActionNote = `ยกเลิกออเดอร์ไม่สำเร็จ: ${cancelResult.error} — ให้แจ้งลูกค้าติดต่อแอดมินหรือลองใหม่อีกครั้ง`
+          }
+        } else if (classification.intent === 'order_modify') {
+          // For modify, we need the AI to extract what to change
+          // This will be handled by the AI in the draft phase with the order history context
+          // The AI should respond with the modified order details
+          orderActionNote = `ลูกค้าขอแก้ไขออเดอร์ #${targetOrder.order_id} — ระบบมีข้อมูลออเดอร์ล่าสุด: ${formatOrderHistoryForPrompt([targetOrder])} — ให้ AI ตอบด้วยรายการที่แก้ไขแล้ว แล้วระบบจะเรียก modifyOrder RPC`
+        }
+      }
+    }
+  }
+
   // --- Cross-Sell Prompt (Owner 2026-11-09) ---
   const crossSellPrompt = getCrossSellPrompt(intakeOrderMode)
 
   // --- Task 2: social_reply_draft (persona by surface: Messenger = น้อง Bite
   //     conversational waiter; Facebook comments = marketing reply + CTA) ---
   const draftUser = userMsg + `\nผลวิเคราะห์ (DATA): ${JSON.stringify(classification)}` +
-    (intakeNote ? `\nสถานะระบบบันทึกรายการ (DATA — ตอบตามนี้เท่านั้น): ${intakeNote}` : '')
+    (intakeNote ? `\nสถานะระบบบันทึกรายการ (DATA — ตอบตามนี้เท่านั้น): ${intakeNote}` : '') +
+    (orderActionNote ? `\nสถานะการดำเนินการออเดอร์ (DATA — ตอบตามนี้เท่านั้น): ${orderActionNote}` : '')
   const baseSystem = (ev.platform === 'MESSENGER' || ev.event_type === 'message') ? BITE_MESSENGER_SYSTEM : DRAFT_SYSTEM
   // บริบทสมบูรณ์ทุกช่องทาง (Owner 2026-10-17): persona ชุดเดียวกับเว็บ/เสียง
   // + ข้อมูลร้านจริงจาก DB (ห้ามมโน) + กติกาตอบต่อเนื่อง + R57 กติกาข้อมูลจริงตามโพส/เว็บ
@@ -896,11 +932,11 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     baseSystem + '\n\n' + BITE_PERSONA_SEGMENT + '\n\n' + REPLY_CONTINUITY_RULES + '\n\n' + REPLY_GROUNDING_RULES +
     '\n\n' + groundingPrompt +
     (orderHistoryPrompt ? orderHistoryPrompt + '\n\n' : '') +
-    '\n\n--- คำสั่งลำดับการตอบ (MUST FOLLOW) ---',
-    '1. อ่าน "โพสต์ที่ลูกค้าโต้ตอบล่าสุด" หรือ "ข้อความลูกค้า" ก่อนเสมอ',
-    '2. ตอบเรื่องนั้นให้ครบก่อน — ห้ามข้ามไปสรุปออเดอร์',
-    '3. ค่อยสรุปออเดอร์/รายการที่ระบบบันทึกไว้',
-    '4. ถ้าลูกค้าขอยกเลิก/แก้ไขออเดอร์ → เรียก cancelOrder/modifyOrder RPC',
+    '\n\n--- คำสั่งลำดับการตอบ (MUST FOLLOW) ---\n' +
+    '1. อ่าน "โพสต์ที่ลูกค้าโต้ตอบล่าสุด" หรือ "ข้อความลูกค้า" ก่อนเสมอ\n' +
+    '2. ตอบเรื่องนั้นให้ครบก่อน — ห้ามข้ามไปสรุปออเดอร์\n' +
+    '3. ค่อยสรุปออเดอร์/รายการที่ระบบบันทึกไว้\n' +
+    '4. ถ้าลูกค้าขอยกเลิก/แก้ไขออเดอร์ → เรียก cancelOrder/modifyOrder RPC\n' +
     '\n\n--- ข้อมูลร้านจริง (DATA — ตอบจากนี้เท่านั้น ห้ามมโน) ---\n' +
     (shopCtx || 'ยังดึงข้อมูลร้านไม่ได้ในตอนนี้ — ให้บอกตามจริงว่าไม่พบข้อมูล และชวนดูเมนูที่ https://biteme-baby.com/shop') +
     orderWindowBlock +
@@ -948,6 +984,35 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   const draftOut = draftSem.value
   const requiresHumanReview = classification.requires_human_review || draftOut.requires_human_review
 
+  // --- R97: Handle order_modify RPC after AI responds with modified order ---
+  let orderActionFooterFinal = orderActionFooter
+  if (classification.intent === 'order_modify' && ev.sender_id) {
+    // Parse the AI's response for modified order items
+    // The AI should mention the modified items in its response
+    const orders = await getCustomerOrders({ sbUrl: SB_URL, serviceKey: SERVICE }, ev.sender_id)
+    if (orders.length > 0) {
+      const targetOrder = orders[0]
+      // Extract items from AI response (simple heuristic: look for product names mentioned)
+      // In production, this should use structured output from AI
+      const mentionedProducts = groundingData.products.filter(p => 
+        draftOut.draft_text.toLowerCase().includes(p.name.toLowerCase())
+      )
+      if (mentionedProducts.length > 0) {
+        const newItems = mentionedProducts.map(p => ({
+          name: p.name,
+          quantity: 1, // Default, AI should specify
+          note: ''
+        }))
+        const modifyResult = await modifyOrder({ sbUrl: SB_URL, serviceKey: SERVICE }, targetOrder.order_id, newItems)
+        if (modifyResult.ok) {
+          orderActionFooterFinal += `\n\n✅ แก้ไขออเดอร์ #${targetOrder.order_id} เรียบร้อยแล้ว (ยอดใหม่: ${modifyResult.newTotal}฿)`
+        } else {
+          orderActionFooterFinal += `\n\n⚠️ แก้ไขออเดอร์ไม่สำเร็จ: ${modifyResult.error}`
+        }
+      }
+    }
+  }
+
   // --- AUTO-SEND gate (Owner 2026-10-16 full-auto: "ไม่ต้องอนุมัติ") ---
   // Safety fail-safe kept: ONLY safety-flagged content is held back
   // (banned-content drafts are already rejected earlier — fail closed).
@@ -962,7 +1027,9 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   // ข้อความสุดท้าย = draft ที่ validate แล้ว + บรรทัดระบบจากผลบริการจริง (buildIntakeLine)
   // — ระบบเป็นคนเขียนบรรทัดยืนยันเท่านั้น AI เคลมเองใน draft ไม่ได้ (§3)
   // R75: ทุกลิงก์ในข้อความที่ส่งออกต้องเป็น https:// URL เต็มรูปแบบ (แตะได้จริงบน Facebook)
-  const finalText = normalizeAiTextLinks(intakeFooter ? (draftOut.draft_text + '\n\n' + intakeFooter) : draftOut.draft_text)
+  const finalText = normalizeAiTextLinks(
+    [draftOut.draft_text, intakeFooter, orderActionFooterFinal].filter(Boolean).join('\n\n')
+  )
   
   // R96 Phase 1: Prepare grounding data for storage
   const groundingDataForStorage = {

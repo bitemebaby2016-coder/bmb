@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getProducts, createProduct, updateProduct, archiveProduct, restoreProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, archiveCategory, restoreCategory, deleteCategory, deleteProduct } from '@/lib/bmbAdminApi_products'
+import { invalidateProductCache } from '@/lib/productCache'
 import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
 import { HomePopularManager } from '@/components/admin/HomePopularManager'
 import { uploadProductImage, validateImageFile, downscaleImageFile, listAiAlbumFiles, PRODUCT_IMAGE_MAX_SIDE, type AiAlbumFile } from '@/lib/bmbAdminApi_media'
@@ -158,6 +159,7 @@ export function AdminProducts() {
       showToast('บันทึกเมนูไม่สำเร็จ — ยังไม่มีข้อมูลเข้าฐานข้อมูล (ตรวจสิทธิ์แอดมิน/การเชื่อมต่อ แล้วลองใหม่)', 'error')
       return
     }
+    invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
     loadAll()
     resetForm()
     setShowAddForm(false)
@@ -196,6 +198,7 @@ export function AdminProducts() {
       showToast('อัปเดตเมนูไม่สำเร็จ — ยังไม่มีการเปลี่ยนแปลงในฐานข้อมูล (ตรวจสิทธิ์แอดมิน/การเชื่อมต่อ แล้วลองใหม่)', 'error')
       return
     }
+    invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
     loadAll()
     resetForm()
     setShowAddForm(false)
@@ -228,6 +231,7 @@ export function AdminProducts() {
     if (failed.length > 0) {
       showToast(`ย้ายได้ ${ok}/${moving.length} รายการ — ที่ไม่สำเร็จ: ${failed.join(', ')}`, 'error')
     } else {
+      invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
       showToast(`ย้ายสินค้า ${ok} รายการเรียบร้อย — หน้าลูกค้าจะเห็นหมวดใหม่ในการโหลดข้อมูลรอบถัดไป`, 'success')
     }
     setMoveFrom(null)
@@ -238,6 +242,7 @@ export function AdminProducts() {
   async function handleArchiveProduct(id: string) {
     if (confirm('จัดเก็บเมนูนี้ (ซ่อนจากลูกค้า + หยุดรับออเดอร์ — กู้คืนได้) ?')) {
       const ok = await archiveProduct(id)
+      if (ok) invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
       showToast(ok ? 'จัดเก็บเมนูแล้ว (กู้คืนได้)' : 'จัดเก็บไม่สำเร็จ', ok ? 'success' : 'error')
       loadAll()
     }
@@ -245,6 +250,7 @@ export function AdminProducts() {
 
   async function handleRestoreProduct(id: string) {
     const ok = await restoreProduct(id)
+    if (ok) invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
     showToast(ok ? 'กู้คืนเมนูแล้ว — เปิดขายได้จากปุ่มเปิด/ปิดขาย' : 'กู้คืนไม่สำเร็จ', ok ? 'success' : 'error')
     loadAll()
   }
@@ -261,7 +267,7 @@ export function AdminProducts() {
     setShowCatForm(true)
   }
 
-  async function handleSaveCategory() {
+async function handleSaveCategory() {
     const name = catForm.name.trim()
     if (!name) { showToast('กรุณาใส่ชื่อหัวข้อเมนู', 'warning'); return }
     const maxSort = adminCats.reduce((m, c) => Math.max(m, c.sort_order || 0), 0)
@@ -269,10 +275,12 @@ export function AdminProducts() {
     if (editingCat) {
       const ok = await updateCategory(editingCat.id, { name, icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, allow_same_day: catForm.allow_same_day, allow_pre_order: catForm.allow_pre_order })
       if (!ok) { showToast('บันทึกหัวข้อเมนูไม่สำเร็จ', 'error'); return }
+      invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
       showToast('อัปเดตหัวข้อเมนูแล้ว!', 'success')
     } else {
       const ok = await createCategory({ name, slug: slugifyCategory(name), icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, allow_same_day: catForm.allow_same_day, allow_pre_order: catForm.allow_pre_order })
       if (!ok) { showToast('เพิ่มหัวข้อเมนูไม่สำเร็จ', 'error'); return }
+      invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
       showToast('เพิ่มหัวข้อเมนูสำเร็จ!', 'success')
     }
     setShowCatForm(false)
@@ -281,9 +289,10 @@ export function AdminProducts() {
     loadAll()
   }
 
-  async function handleArchiveCategory(cat: ProductCategory) {
+async function handleArchiveCategory(cat: ProductCategory) {
     if (confirm(`จัดเก็บหัวข้อ "${cat.name}" (ซ่อนจากลูกค้า — กู้คืนได้)?`)) {
       const ok = await archiveCategory(cat.id)
+      if (ok) invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
       showToast(ok ? 'จัดเก็บหัวข้อแล้ว (กู้คืนได้)' : 'จัดเก็บไม่สำเร็จ', ok ? 'success' : 'error')
       loadAll()
     }
@@ -291,12 +300,13 @@ export function AdminProducts() {
 
   async function handleRestoreCategory(cat: ProductCategory) {
     const ok = await restoreCategory(cat.id)
+    if (ok) invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
     showToast(ok ? 'กู้คืนหัวข้อเมนูแล้ว' : 'กู้คืนไม่สำเร็จ', ok ? 'success' : 'error')
     loadAll()
   }
 
   // ── ลบถาวร (Owner 17 ต.ค.: "ลบได้เลย ยังไม่มีออเดอร์จริง") — คนละปุ่มกับจัดเก็บ ──
-  async function handleDeleteCategory(cat: ProductCategory) {
+async function handleDeleteCategory(cat: ProductCategory) {
     const count = products.filter((p) => p.category_id === cat.id).length
     if (count > 0) {
       showToast(`หัวข้อ "${cat.name}" ยังมีเมนู ${count} รายการ — ย้ายเมนูออกก่อน (ปุ่ม "ย้ายสินค้า")`, 'warning')
@@ -306,14 +316,16 @@ export function AdminProducts() {
     }
     if (!confirm(`ลบถาวรหัวข้อ "${cat.name}"? (ไม่มีเมนูค้างอยู่ — ลบแล้วเอาคืนไม่ได้)`)) return
     const ok = await deleteCategory(cat.id)
+    if (ok) invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
     showToast(ok ? 'ลบหัวข้อเมนูถาวรแล้ว' : 'ลบไม่สำเร็จ (อาจมีข้อมูลผูกอยู่ — ใช้ "จัดเก็บ" แทน)', ok ? 'success' : 'error')
     loadAll()
   }
 
-  async function handleDeleteProduct(id: string) {
+async function handleDeleteProduct(id: string) {
     const p = products.find((x) => x.id === id)
     if (!confirm(`ลบถาวรเมนู "${p?.name ?? ''}"? (ลบแล้วเอาคืนไม่ได้ — ถ้ามีประวัติผูกอยู่ ใช้ "จัดเก็บ" แทน)`)) return
     const ok = await deleteProduct(id)
+    if (ok) invalidateProductCache() // R96 Phase 3: Invalidate cache so AI gets fresh data
     showToast(ok ? 'ลบเมนูถาวรแล้ว' : 'ลบไม่ได้ (มีประวัติผูกอยู่) — ใช้ "จัดเก็บ" แทน', ok ? 'success' : 'error')
     loadAll()
   }

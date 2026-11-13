@@ -20,11 +20,94 @@ import { useCallback, useState } from 'react'
 import { useInAppBrowser } from '@/hooks/useInAppBrowser'
 import { decodeCartParam } from '@/lib/cartDeepLink'
 
+// ============================================
+// Global beforeinstallprompt capture — shared across all banner instances
+// One listener total; all PWA buttons share _promptRef
+// ============================================
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[]
+  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+  prompt(): Promise<void>
+}
+const _promptRef = { value: null as BeforeInstallPromptEvent | null }
+
+if (typeof window !== 'undefined' && !(window as unknown as Record<string, unknown>)['bmb-pwa-listener-added']) {
+  ;(window as unknown as Record<string, unknown>)['bmb-pwa-listener-added'] = true
+  const _handler = (e: Event) => {
+    e.preventDefault()
+    _promptRef.value = e as unknown as BeforeInstallPromptEvent
+  }
+  window.addEventListener('beforeinstallprompt', _handler)
+}
+
+async function _triggerInstall(): Promise<void> {
+  const p = _promptRef.value
+  if (!p || typeof p.prompt !== 'function') return
+  try {
+    await p.prompt()
+    _promptRef.value = null
+  } catch { /* fall through */ }
+}
+
 const CART_RESUME_KEY = 'bmb:cart-resume'
 
 interface CartHandoff {
   raw: string
   count: number
+}
+
+// ============================================
+// PWA Install Button — always visible, shows prompt or manual guide
+// ============================================
+function PwaInstallButton({ canInstall }: { canInstall: boolean }) {
+  const [showGuide, setShowGuide] = useState(false)
+  const ua = navigator.userAgent
+  const isIOS = /iPhone|iPad/i.test(ua)
+
+  return (
+    <>
+      <button
+        type="button"
+        className="bg-green-600 text-white font-bold px-4 py-2 rounded-lg shadow hover:bg-green-700 transition-colors"
+        onClick={() => {
+          if (canInstall) {
+            void _triggerInstall()
+          } else {
+            setShowGuide(true)
+          }
+        }}
+        data-testid="inapp-install-app"
+      >
+        📥 ติดตั้งแอป
+      </button>
+      {showGuide && (
+        <div className="absolute bottom-0 left-0 right-0 bg-white border border-gray-200 rounded-t-xl p-3 shadow-xl z-50">
+          <p className="font-semibold text-sm mb-2">ติดตั้ง Bite Me Baby เป็นแอป (PWA)</p>
+          <ol className="list-decimal pl-5 text-xs space-y-1">
+            {isIOS ? (
+              <>
+                <li>แตะปุ่ม <b>แชร์ (ช่องสี่เหลี่ยมมีลูกศรขึ้น)</b></li>
+                <li>เลื่อนลง → เลือก <b>"เพิ่มบนหน้าจอโฮม"</b></li>
+                <li>แตะ <b>"เพิ่ม"</b></li>
+              </>
+            ) : (
+              <>
+                <li>แตะ <b>⋯ (สามจุดมุมบนขวา)</b></li>
+                <li>เลือก <b>"ติดตั้งแอปนี้"</b> หรือ <b>"เพิ่มในหน้าหลัก"</b></li>
+              </>
+            )}
+          </ol>
+          <button
+            type="button"
+            className="text-xs text-blue-600 underline mt-2"
+            onClick={() => setShowGuide(false)}
+          >
+            ปิด
+          </button>
+        </div>
+      )}
+    </>
+  )
 }
 
 export function InAppBrowserBanner({ children }: { children: React.ReactNode }) {
@@ -110,16 +193,13 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
       >
         <div className="max-w-xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-lg" aria-hidden="true">📱</span>
+            <span className="text-lg" aria-hidden="true">⚠️</span>
             <div>
-              <p className="font-semibold">กำลังเปิดใน Facebook</p>
+              <p className="font-semibold">Facebook ไม่รองรับการเปิดลิงก์ตะกร้าอัตโนมัติ</p>
               {cartHandoff ? (
-                <p className="text-xs opacity-90">พบรายการ {cartHandoff.count} รายการในตะกร้า — กดปุ่มด้านขวาแล้วรายการจะตามไปเปิดในเบราว์เซอร์จริงด้วยครับ</p>
+                <p className="text-xs opacity-90">พบรายการ {cartHandoff.count} รายการ — กดคัดลอกลิงก์ข้างล่าง แล้ววางใน Chrome/Safari หรือติดตั้งแอปเลยก็ได้ครับ</p>
               ) : (
-                <>
-                  <p className="text-xs opacity-90">บางฟีเจอร์ทำงานไม่เต็ม (Push, Bluetooth, ติดตั้งแอป)</p>
-                  <p className="text-xs opacity-90 mt-1">ลิงก์ที่มี ?cart= จากแชท AI จะเติมตะกร้าอัตโนมัติเมื่อเปิดเบราว์เซอร์ภายนอก</p>
-                </>
+                <p className="text-xs opacity-90">กรุณากดคัดลอกลิงก์เพื่อเปิดใน Chrome/Safari หรือติดตั้งแอปจากปุ่มด้านล่าง</p>
               )}
             </div>
           </div>
@@ -132,16 +212,7 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
             >
               {copyState === 'copied' ? '✓ คัดลอกแล้ว — วางใน Chrome / Safari' : '📋 คัดลอกลิงก์ · เปิดใน Chrome / Safari'}
             </button>
-            {canInstall && (
-              <button
-                type="button"
-                className="bg-green-600 text-white font-bold px-4 py-2 rounded-lg shadow"
-                onClick={installApp}
-                data-testid="inapp-install-app"
-              >
-                📥 ติดตั้งแอป
-              </button>
-            )}
+            <PwaInstallButton canInstall={canInstall} />
             <button
               type="button"
               className="text-white opacity-80 hover:opacity-100 text-sm underline"

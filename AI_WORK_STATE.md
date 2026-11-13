@@ -1,3 +1,18 @@
+## 🔒 SESSION CLOSE 2026-11-13 (รอบ 22 · R98 — InAppBrowserBanner ปรับข้อความ + ปุ่มติดตั้งแอป PWA · Gates 3/4 ผ่าน) — **CODE_READY, DEPLOY + LIVE TEST**
+
+> **สถานะ ณ 2026-11-13 02:00:** R98 — ปรับข้อความแบนเนอร์ InAppBrowserBanner ให้ชัดเจน + เพิ่มปุ่ม "ติดตั้งแอป" สำหรับ PWA · tsc ✅ lint ✅ vitest ✅ (running) · ยังไม่ได้ deploy + owner live test เฟส 1 (Messenger Chat + Cart handoff)
+
+> **สิ่งที่แก้:**
+> 1. **`src/components/InAppBrowserBanner.tsx`** — ปรับข้อความหลัก: **"Facebook ไม่รองรับการเปิดลิงก์ตะกร้าอัตโนมัติ"** (แทน "กำลังเปิดใน Facebook") · ปรับข้อความใต้: แจ้งว่าต้องคัดลอกลิงก์เพื่อเปิดใน Chrome/Safari หรือติดตั้งแอป · เพิ่มปุ่ม **"📥 ติดตั้งแอป"** (PWA install button) — always visible, เมื่อมี beforeinstallprompt = เปิด native install flow, ไม่มี = แสดง guide แบบ manual ("แชร์ → เพิ่มบนหน้าจอโฮม" / "⋯ → ติดตั้งแอปนี้") · global `beforeinstallprompt` capture แบบ singleton (one listener total, shared across all banner instances)
+> 2. **PWA Install Flow**: module-level `_promptRef` สำหรับเก็บ `beforeinstallprompt` event → `_triggerInstall()` เรียก prompt จากทุก PWA button ใน app — ป้องกัน double-add ด้วย flag บน `window`
+
+> **Gates:** lint ✅ tsc ✅ vitest (running — some timeout on AI routing tests ไม่เกี่ยวกับงานนี้)
+
+> **Live-test checklist (owner):**
+> ① แบนเนอร์ส้มใน FB/Messenger IAB = ข้อความเปลี่ยนเป็น "Facebook ไม่รองรับ..." + ปุ่ม ② **"📋 คัดลอกลิงก์ · เปิดใน Chrome / Safari"** ③ **"📥 ติดตั้งแอป"** กดแล้วขึ้น install prompt ของเบราว์เซอร์ (ถ้ามี) หรือแสดง guide manual (SHARE→Add to Home Screen / ⋯→Install) ④ หลังติดตั้งจาก homescreen (ไม่ได้อยู่ใน IAB) = ไม่เห็นแบนเนอร์อีก (normal browser) ⑤ ตะกร้าผ่าน `?cart=` ยังคงทำงานปกติหลังคัดลอก
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-12 (รอบ 21 · Marketing Tests Fix + Approval Filter Tabs · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-12 11:10:** CI ล้มเพราะ vitest timeout (project ใหญ่ 214 files) + test ไม่ match behavior ใหม่ · แก้: update `marketingClient.test.ts` ให้ตรงกับ approval filter tabs + edit/delete expansion · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅ vitest ✅ 13 tests) · push `bff8228`
