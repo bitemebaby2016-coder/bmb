@@ -16,7 +16,7 @@
 // ============================================
 
 import { supabase } from './supabase'
-import { getCachedProducts, isProductCacheFresh } from './productCache'
+import { getCachedProducts, resetProductCacheForTests } from './productCache'
 
 // จำกัดขนาด context กันโมเดลโดนทิ้ง (≤ ~3,500 chars ≈ ~1,000 tokens —
 // ต่ำกว่าเพดาน ~1,500 tokens ที่ handoff กำหนด และต้องเผื่อคำตอบ)
@@ -98,22 +98,34 @@ async function safeSelect<T>(
 }
 
 /** ดึงข้อมูลจาก DB (fresh query เสมอ — caller ควรผ่าน cache wrapper) */
-async function fetchDbContext(): Promise<DbContextResult> {
+async function fetchDbContext(forceRefresh = false): Promise<DbContextResult> {
   const failedTables: string[] = []
 
   // R96 Phase 3: Use product cache for real-time product data with explicit invalidation
   let products: RawProduct[] = []
   try {
-    const cachedProducts = await getCachedProducts()
-    products = cachedProducts.map(p => ({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      category_id: p.category_id,
-      is_available: p.is_available,
-      is_featured: p.is_featured,
-      stock: p.stock ?? null,
-    }))
+    const cachedProducts = await getCachedProducts(forceRefresh)
+    if (cachedProducts && cachedProducts.length > 0) {
+      products = cachedProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        category_id: p.category_id,
+        is_available: p.is_available,
+        is_featured: p.is_featured,
+        stock: p.stock ?? null,
+      }))
+    } else {
+      // Cache empty or failed — try direct query as fallback
+      failedTables.push('products')
+      products = await safeSelect<RawProduct>('products', failedTables, () =>
+        supabase
+          .from('products')
+          .select('id,name,price,category_id,is_available,is_featured,stock')
+          .order('sort_order', { ascending: true })
+          .limit(200)
+      )
+    }
   } catch (e) {
     console.warn('[AI DB Context] product cache failed, falling back to direct query:', e)
     failedTables.push('products')
@@ -219,7 +231,7 @@ export async function getDbContextPrompt(forceRefresh = false): Promise<string> 
   if (!forceRefresh && cache && Date.now() - cache.builtAt < CACHE_TTL_MS) {
     return cache.text
   }
-  const result = await fetchDbContext()
+  const result = await fetchDbContext(forceRefresh)
   let text = result.ok
     ? result.text + '\n\nห้ามมโน: ตอบจากข้อมูลใน context นี้เท่านั้น ' +
       '(เฉพาะราคา/เมนู/โปรโมชัน/ตั้งค่าร้าน) ถ้าไม่มีข้อมูลใน context ให้บอกตามจริงและแนะนำถามทางร้าน ' +

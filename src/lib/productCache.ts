@@ -16,9 +16,9 @@ const CACHE_TTL_MS = 7 * 60 * 1000 // 7 minutes (same as dbContext in aiService)
  * Get products from cache or fetch fresh from API
  * Called by chatWithAI and other AI entry points for real-time data
  */
-export async function getCachedProducts(): Promise<Product[]> {
+export async function getCachedProducts(forceRefresh = false): Promise<Product[]> {
   const now = Date.now()
-  if (cachedProducts && now - cacheTimestamp < CACHE_TTL_MS) {
+  if (!forceRefresh && cachedProducts && now - cacheTimestamp < CACHE_TTL_MS) {
     return cachedProducts
   }
   const { getProducts } = await import('@/lib/bmbAdminApi_products')
@@ -48,4 +48,10 @@ export function isProductCacheFresh(): boolean {
  */
 export function getProductCacheTimestamp(): number {
   return cacheTimestamp
+}
+
+/** Test-only: clear cache synchronously. */
+export function resetProductCacheForTests(): void {
+  cachedProducts = null
+  cacheTimestamp = 0
 }
