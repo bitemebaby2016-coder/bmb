@@ -1,3 +1,23 @@
+## 🔒 SESSION CLOSE 2026-11-13 (รอบ 25 · R100b — เลขเหลือการ์ดพรีออเดอร์ + ปุ่ม "ดูทั้งหมด" รีวิวแก้ตกนอกกรอบ + ยืนยันลบโปรโมชั่น · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-13 17:50:** R100b **COMPLETE IN CODE + PUSHED** (`7926024` รวม docs `c0f4cb6` ที่ค้างขึ้น main แล้ว) · tsc ✅ lint ✅ vitest ✅ (214 files / 2238 tests PASS — `e2e/_r100_gates_*.log`)
+
+> **สิ่งที่ทำ (โค้ดจริง):**
+> 1. **เลขเหลือการ์ดพรีออเดอร์ (R100 ต่อยอด):** พิสูจน์ห่วงโซ่ครบทุกจุด render — `HomePage.tsx:207/369` ส่ง `(scheduleMap, rounds)` ให้ `toPopularHomeProduct` ครบทั้ง "เมนูยอดนิยม" + เซกชันโหมด · `HomeProductCard` (diff ค้างจากรอบ 24 commit พร้อมวันนี้) แสดง badge `📦 เหลือ X กล่อง` สีเหลือง `.home-card-stock--preorder` เสมอเมื่อ stock > 0 · **เงื่อนไขให้เลขขึ้นจริง (owner ต้องมีของจริงใน DB):** ① เมนูลงปฏิทิน published (menu_schedule) ② มีแถว `delivery_rounds.scheduled_date` ตรงกับวันเมนูนั้น ③ `max_capacity` > `current_count` — ขาดข้อใด = ไม่โชว์เลข (ZERO-FAKE ตามดีไซน์)
+> 2. **ปุ่ม "ดูทั้งหมด" รีวิวตกนอกกรอบ:** `ReviewCarouselSection.tsx` — เปลี่ยนปุ่มเปิด album modal → **`<Link to="/reviews">`** (ReviewPage แสดงอัลบั้ม 32 รูป + รีวิวจริงอยู่แล้ว = ไม่ซ้ำซ้อน) · แก้ overflow ตรงต้นตอ: แถวหัวข้อเพิ่ม `gap-2` + h2 `min-w-0` + ข้อความ `truncate` + ป้าย/โลโก้/ปุ่ม `shrink-0` — ปุ่มไม่ตกแถว/ไม่ล้นกรอบจอแคบเสมอ · ลบ modal + lightbox + state ที่ไม่ใช้ (−74 บรรทัด)
+> 3. **ลบโปรโมชั่น (ยืนยันมีอยู่แล้ว):** `AdminPromotions.tsx` `handleDelete` (line 167) + ปุ่ม 🗑 ลบ (line 495) ผ่าน RPC `deletePromotion` — ลบโปรเก่า/ใหม่ได้จริงทั้งหมด · หน้าเว็บดึงโปร active จาก DB ผ่าน `getHomePromotionsFromRows` (กรองวันไทย · 11.11 แสดงตาม is_active+ช่วงวัน)
+> 4. **Test contract อัปเดตตามของจริง:** `r34Contracts.test.ts` — อัลบั้ม = หน้า /reviews ที่เดียว (ห้ามกลับไป modal หน้าแรก) + ห้าม import realReviews ในเซกชัน + header ต้องมี min-w-0/shrink-0 (กัน regression ปุ่มตกนอกกรอบ)
+
+> **Gates:** lint ✅ tsc ✅ vitest ✅ (2238/2238)
+
+> **Deploy checklist (owner):**
+> ① Push แล้ว → รอ auto-deploy → hard refresh (`Ctrl+Shift+R`) หน้าแรก + /shop
+> ② การ์ดพรีออเดอร์: เลข "📦 เหลือ X กล่อง" ขึ้นเฉพาะเมื่อมีรอบ `delivery_rounds` วันตรงกับปฏิทินเมนู + ความจุเหลือ > 0 — ถ้ายังไม่ขึ้น = เช็ค /admin รอบส่งวันที่ตรงกับเมนู (max_capacity ว่าง/0 = ไม่มีเลขตามกฎ ZERO-FAKE)
+> ③ ปุ่ม "ดูทั้งหมด" หัวข้อรีวิว: กดแล้วไปหน้า /reviews (มีอัลบั้มครบ) + ไม่ตกนอกกรอบจอมือถือ
+> ④ /admin/promotions: กด 🗑 ลบโปร 11.11 (เก่า/ใหม่) → confirm → หายจากหน้าแรกทันที
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-13 (รอบ 24 · R100 — AI Context Fix: แยก Pre-Order/Same-Day ถูกต้อง + สร้าง flow ใส่ตะกร้าจริง · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-13 11:30:** R100 **COMPLETE IN CODE + PUSHED** · tsc ✅ vitest ✅ (36/36 tests PASS) · **Deploy EF social-ai-worker ใหม่เพื่อใช้ prompt changes**
