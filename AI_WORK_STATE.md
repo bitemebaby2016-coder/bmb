@@ -1,3 +1,35 @@
+## 🔒 SESSION CLOSE 2026-11-13 (รอบ 24 · R100 — AI Context Fix: แยก Pre-Order/Same-Day ถูกต้อง + สร้าง flow ใส่ตะกร้าจริง · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-13 11:30:** R100 **COMPLETE IN CODE + PUSHED** · tsc ✅ vitest ✅ (36/36 tests PASS) · **Deploy EF social-ai-worker ใหม่เพื่อใช้ prompt changes**
+
+> **สิ่งที่ทำเสร็จแล้ว (โค้ดจริงครบ):**
+> **1. `supabase/functions/_shared/shopContext.ts`** — เพิ่ม `filterCatalogByOrderWindow()` (R100):
+>    - ดึง `menu_schedule` + `delivery_rounds` + `products` ครั้งเดียว/60s cache
+>    - ใช้ `assessProductWindows()` (mirror web logic) → แยก: Same-Day / Pre-Order / ผ่านรอบ
+>    - เพิ่ม "ORDER WINDOW" section ใน `getShopContext` — AI ใช้ข้อมูลนี้ตอบ "สั่งอะไรได้บ้าง"
+>    - ZERO-FAKE: ดึงข้อมูลไม่ได้ = return empty (ห้ามเดา)
+>
+> **2. `supabase/functions/_shared/socialOrderIntake.ts`** — เพิ่ม `buildOrderableMenuFooter()` (R100):
+>    - สร้าง footer + cart link จากเมนูที่ยังสั่งได้ (sameDay + preOrder)
+>    - แยกแสดง: "ส่งวันนี้ (Same Day)" / "พรีออเดอร์ (Pre-Order)" / "ผ่านรอบแล้ว (สั่งไม่ได้)"
+>    - สร้าง `?cart=` link ให้ลูกค้าใส่ตะกร้าได้จริง (ไม่แค่列出เมนู)
+>
+> **3. `supabase/functions/social-ai-worker/index.ts`** — อัปเดต `BITE_MESSENGER_SYSTEM` + `DRAFT_SYSTEM` prompts (R100):
+>    - บังคับ AI แยกประเภทออเดอร์: Same-Day vs Pre-Order vs ผ่านรอบ (ห้ามบอกผ่านรอบว่ายังสั่งได้)
+>    - บังคับ AI ตอบจากบริบทโพสต์/ข้อความที่ลูกค้าถาม (ไม่มั่วๆ)
+>    - บังคับ AI สร้าง cart link ทุกครั้งที่ลูกค้าถาม "สั่งอะไรได้บ้าง" / "ทบทวนเมนู"
+>    - R99 (ก่อนหน้า): Messenger links ไม่ถูกทำเป็นลิงก์ที่แตะได้ (space prefix)
+
+> **Gates:** lint ✅ tsc ✅ vitest ✅ (36/36 tests PASS)
+
+> **Deploy checklist (owner):**
+> ① Deploy EF `social-ai-worker` ใหม่ (prompt changes + filterCatalogByOrderWindow)
+> ② ทดสอบ: ทัก "สั่งอะไรได้บ้าง" → AI ตอบแยก Same-Day / Pre-Order / ผ่านรอบ + มี cart link
+> ③ ทดสอบ: ทัก "ทบทวนเมนู" → AI ตอบจากบริบทโพสต์/ข้อความ + สร้าง cart link
+> ④ ทดสอบ: คอมเมนต์ใต้โพสต์ → AI ตอบจากโพสต์นั้น + แยกประเภทออเดอร์ถูกต้อง
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-13 (รอบ 22 · R98 — InAppBrowserBanner ปรับข้อความ + ปุ่มติดตั้งแอป PWA · Gates 4/4 ผ่าน) — **CODE_CLOSED + DEPLOYED + LIVE TEST PASSED**
 
 > **สถานะ ณ 2026-11-13 08:41:** R98 — ปรับข้อความแบนเนอร์ InAppBrowserBanner ให้ชัดเจน + เพิ่มปุ่ม "ติดตั้งแอป" สำหรับ PWA · tsc ✅ lint ✅ vitest ✅ · **Deployed + Owner Live Test 5/5 PASS**
