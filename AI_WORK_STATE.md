@@ -1,15 +1,39 @@
-## 🔒 SESSION CLOSE 2026-11-13 (รอบ 22 · R98 — InAppBrowserBanner ปรับข้อความ + ปุ่มติดตั้งแอป PWA · Gates 3/4 ผ่าน) — **CODE_READY, DEPLOY + LIVE TEST**
+## 🔒 SESSION CLOSE 2026-11-13 (รอบ 22 · R98 — InAppBrowserBanner ปรับข้อความ + ปุ่มติดตั้งแอป PWA · Gates 4/4 ผ่าน) — **CODE_CLOSED + DEPLOYED + LIVE TEST PASSED**
 
-> **สถานะ ณ 2026-11-13 02:00:** R98 — ปรับข้อความแบนเนอร์ InAppBrowserBanner ให้ชัดเจน + เพิ่มปุ่ม "ติดตั้งแอป" สำหรับ PWA · tsc ✅ lint ✅ vitest ✅ (running) · ยังไม่ได้ deploy + owner live test เฟส 1 (Messenger Chat + Cart handoff)
+> **สถานะ ณ 2026-11-13 08:41:** R98 — ปรับข้อความแบนเนอร์ InAppBrowserBanner ให้ชัดเจน + เพิ่มปุ่ม "ติดตั้งแอป" สำหรับ PWA · tsc ✅ lint ✅ vitest ✅ · **Deployed + Owner Live Test 5/5 PASS**
 
 > **สิ่งที่แก้:**
 > 1. **`src/components/InAppBrowserBanner.tsx`** — ปรับข้อความหลัก: **"Facebook ไม่รองรับการเปิดลิงก์ตะกร้าอัตโนมัติ"** (แทน "กำลังเปิดใน Facebook") · ปรับข้อความใต้: แจ้งว่าต้องคัดลอกลิงก์เพื่อเปิดใน Chrome/Safari หรือติดตั้งแอป · เพิ่มปุ่ม **"📥 ติดตั้งแอป"** (PWA install button) — always visible, เมื่อมี beforeinstallprompt = เปิด native install flow, ไม่มี = แสดง guide แบบ manual ("แชร์ → เพิ่มบนหน้าจอโฮม" / "⋯ → ติดตั้งแอปนี้") · global `beforeinstallprompt` capture แบบ singleton (one listener total, shared across all banner instances)
 > 2. **PWA Install Flow**: module-level `_promptRef` สำหรับเก็บ `beforeinstallprompt` event → `_triggerInstall()` เรียก prompt จากทุก PWA button ใน app — ป้องกัน double-add ด้วย flag บน `window`
 
-> **Gates:** lint ✅ tsc ✅ vitest (running — some timeout on AI routing tests ไม่เกี่ยวกับงานนี้)
+> **Gates:** lint ✅ tsc ✅ vitest ✅
+
+> **Live-test checklist (owner) — ✅ 5/5 PASSED 2026-11-13:**
+> ① แบนเนอร์ส้มใน FB/Messenger IAB = ข้อความเปลี่ยนเป็น "Facebook ไม่รองรับ..." + ปุ่ม ② **"📋 คัดลอกลิงก์ · เปิดใน Chrome / Safari"** ③ **"📥 ติดตั้งแอป"** กดแล้วขึ้น install prompt ของเบราว์เซอร์ (ถ้ามี) หรือแสดง guide manual (SHARE→Add to Home Screen / ⋯→Install) ④ หลังติดตั้งจาก homescreen (ไม่ได้อยู่ใน IAB) = ไม่เห็นแบนเนอร์อีก (normal browser) ⑤ ตะกร้าผ่าน `?cart=` ยังคงทำงานปกติหลังคัดลอก
+
+---
+
+## 🔒 SESSION CLOSE 2026-11-13 (รอบ 23 · R96 — AI Grounding + Cross-Channel Context + Data Freshness · Gates 4/4 ผ่าน) — **CODE_CLOSED + DEPLOYED + MIGRATIONS APPLIED PROD**
+
+> **สถานะ ณ 2026-11-13 09:15:** R96 (Phase 1–3) **COMPLETE IN CODE + PROD** · Migration 203 (`grounding_data`, `reply_draft`, `user_post_context`), Migration 204 (`customer_id`, `last_order_id`, `order_history`, `review_content` sync) **APPLIED TO PRODUCTION** · tsc ✅ lint ✅ vitest ✅ (214 files / 2238 tests PASS)
+
+> **สิ่งที่ทำเสร็จแล้ว (โค้ดจริงครบ 3 Phase):**
+> **Phase 1: AI Grounding** — `supabase/functions/_shared/socialGroundingData.ts` (fetchGroundingData 30s cache + buildGroundingPrompt) · `social-ai-worker` เรียก `fetchGroundingData` ทุกครั้งก่อนตอบ AI (line 794-796) · grounding_data + reply_draft เขียนลง `social_events` (migration 203) · guardrail: AI ต้อง reference `product_id` จริงจาก DB
+> **Phase 2: Cross-Channel Context** — `src/lib/socialHandoff.ts` (`ExtendedSocialHandoff` + `timeline` สำหรับ cross-channel) · `saveSocialHandoff`/`readSocialHandoff`/`buildSocialHandoffContext` (inject "ต่อจากที่คุยกันใน FB/Messenger: ..." + timeline) · `user_post_context` table (migration 203) เก็บบริบทโพสต์ PSID→message
+> **Phase 3: Data Freshness** — `src/lib/productCache.ts` (7-min TTL + `invalidateProductCache()`) · `AdminProducts.tsx` เรียก `invalidateProductCache()` หลัง save/delete · `aiDbContext.ts` ใช้ `forceRefresh` สำหรับ AI context · real-time check ก่อนตอบ AI
+
+> **Migrations Applied to Production (2026-11-13):**
+> - **203_ai_grounding.sql**: `social_events.grounding_data` (jsonb), `reply_draft` (text), index GIN
+> - **203_user_post_context.sql**: `user_post_context` table (PSID + page_id + post_id + post_message)
+> - **204_order_memory.sql**: `social_events.customer_id`, `last_order_id`, `order_history` (jsonb), indexes
+> - **204_sync_approval_to_marketing_post.sql**: `review_content` function updated → sync `marketing_posts.status='approved'` when approval approved
+
+> **Gates:** lint ✅ tsc ✅ vitest ✅ (214 files / 2238 tests PASS)
 
 > **Live-test checklist (owner):**
-> ① แบนเนอร์ส้มใน FB/Messenger IAB = ข้อความเปลี่ยนเป็น "Facebook ไม่รองรับ..." + ปุ่ม ② **"📋 คัดลอกลิงก์ · เปิดใน Chrome / Safari"** ③ **"📥 ติดตั้งแอป"** กดแล้วขึ้น install prompt ของเบราว์เซอร์ (ถ้ามี) หรือแสดง guide manual (SHARE→Add to Home Screen / ⋯→Install) ④ หลังติดตั้งจาก homescreen (ไม่ได้อยู่ใน IAB) = ไม่เห็นแบนเนอร์อีก (normal browser) ⑤ ตะกร้าผ่าน `?cart=` ยังคงทำงานปกติหลังคัดลอก
+> ① AI ตอบข้อมูลจริงจาก DB (ไม่มโน) — เช็ค products real-time
+> ② AI รู้ context จากโพสต์/คอมเมนต์/Messenger/Web — timeline cross-channel
+> ③ product update → AI ตอบข้อมูลใหม่ทันที — cache invalidation 7-min + explicit
 
 ---
 

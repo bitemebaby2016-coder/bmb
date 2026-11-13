@@ -1,18 +1,24 @@
-# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-10)
+# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-13 09:15)
 
-> **อัปเดต 2026-11-10 16:37 (Owner verified):** D2 ✅, D5 ✅, R92-S ✅ — **เหลือ §T-A เท่านั้น** ต้อง retest ต่อ
-> · **HEAD = `2263b67`** (docs update) · **Latest Bundle = `assets/index-Bh_24aFF.js`** (มี Floating Ad Multiple · Sources Filter · Badge · AiStudioTab→ContentTab merge)
-> · **Migration 201 APPLIED PROD** · **Edge Functions `social-ai-worker` DEPLOYED exit=0** · gates 4/4 (tsc/lint/vitest/build = 0)
+> **อัปเดต 2026-11-13 09:15 (Owner verified):** **R98 ✅ 5/5 PASS** — InAppBrowserBanner + PWA Install + Cart Continuity ครบ · **R96 ✅ COMPLETE** — AI Grounding + Cross-Channel Context + Data Freshness (Migration 203/204 APPLIED PROD) · D2 ✅, D5 ✅, R92-S ✅ — **เหลือ §T-A เท่านั้น** ต้อง retest ต่อ
+> · **HEAD = `6c81c72`** (message) · **Latest Bundle = `assets/index-Bh_24aFF.js`** (มี Floating Ad Multiple · Sources Filter · Badge · AiStudioTab→ContentTab merge + R98 InAppBrowserBanner + R96 Grounding)
+> · **Migration 204 APPLIED PROD** (203 + 204) · **Edge Functions `social-ai-worker` DEPLOYED exit=0** · gates 4/4 (tsc/lint/vitest/build = 0)
 > · **ของปิดแล้ว/มีหลักฐานผ่าน = ไม่อยู่ในนี้** (รายชื่อปิดรอบนี้ = `AI_WORK_STATE.md` บล็อก "✅ ปิดแล้วในเซสชั่นนี้")
 > 
-> **📌 อัปเดต 2026-11-11 รอบ 12:** InAppCart Continuity Plan CODE_CLOSED (working tree) — ยังไม่ได้ push/deploy → รอ owner สั่ง push แล้ว live retest
-> - Scenario A–E ในตารางด้านล่าง (รอ deploy ก่อนรัน)
+> **📌 อัปเดต 2026-11-11 รอบ 12:** InAppCart Continuity Plan CODE_CLOSED + **PUSHED + DEPLOYED** — รอ owner live retest Scenarios A–E
+> - Scenario A–E ในตารางด้านล่าง
 
-## ❌ BLOCKED — ปิดไม่ได้จนกว่า Owner ทำเอง (1 ข้อ)
+---
 
-| ข้อ | สถานะ | ต้องทำอะไรถึงปิดได้ |
+## ✅ ปิดแล้วรอบนี้ (Owner verified 2026-11-13 08:41 — R98)
+
+| ข้อ | สิ่งที่ทดสอบ/ผล | Evidence |
 |---|---|---|
-| **OMNI-5** Meta Test User ทักเพจจริง | **BLOCKED** = รอคนใหม่ลงทะเบียนผู้พัฒนา (คำสั่ง Owner 7 พ.ย.) | ลงทะเบียนเสร็จ → รัน pack §R74-OMNI ขั้น 8 |
+| **R98-①** | แบนเนอร์ข้อความใหม่ "Facebook ไม่รองรับการเปิดลิงก์ตะกร้าอัตโนมัติ" | Owner confirm |
+| **R98-②** | ปุ่มคัดลอกลิงก์ "📋 คัดลอกลิงก์ · เปิดใน Chrome / Safari" | Owner confirm |
+| **R98-③** | ปุ่มติดตั้งแอป "📥 ติดตั้งแอป" — PWA Install | Owner confirm |
+| **R98-④** | Cart continuity — กดคัดลอก → เปิด Chrome → ตะกร้ามีของครบ + ?cart= ทำงาน | Owner confirm |
+| **R98-⑤** | ไม่เห็นแบนเนอร์ซ้ำหลังติดตั้ง PWA แล้ว | Owner confirm |
 
 ---
 
@@ -38,20 +44,20 @@
 
 ---
 
-## 🆕 รอ deploy + retest — CODE_CLOSED รอบ 12 (working tree ยังไม่ push)
+## 🆕 รอ Live Retest — CODE_CLOSED + DEPLOYED รอบ 12 (InAppCart Continuity)
 
-> InAppCart Continuity Plan 4/4 Steps เสร็จ · Gates 4/4 ผ่าน (lint/tsc/build/vitest: 213 files / 2215 tests PASS) · ไฟล์ที่แก้:
+> InAppCart Continuity Plan 4/4 Steps เสร็จ · Gates 4/4 ผ่าน (lint/tsc/build/vitest: 213 files / 2215 tests PASS) · **PUSHED + DEPLOYED** · ไฟล์ที่แก้:
 > - `FloatingAdBanners.tsx` comment `max 2→3`
 > - `useInAppBrowser.ts` ขยาย UA LINE/IG + `InAppPlatform` type + iOS alert→toast DOM
 > - `InAppBrowserBanner.tsx` ?cart= decode + UX messages + debug logging
 
 | ข้อ | สิ่งที่ยังใหม่ (รอบ 12) | Deployed | วิธีทดสอบ (Scenarios จากแผน) |
 |---|---|---|---|
-| **Scenario A** | FB Chat มี ?cart= → banner แสดงจำนวนสินค้า → Chrome เปิด → ตะกร้ามีของครบ | ❌ ไม่ | ส่งลิงก์ `?cart=<base64>` จาก FB Messenger ให้ตัวเอง → กดลิงก์ → เห็น banner "กำลังนำรายการ X รายการในตะกร้า..." → กดเปิด Chrome → หน้าโหลด → ตะกร้ามีของครบ (retry 2.5s เดิม) ✅ PASS = Cart continuity สำเร็จ |
-| **Scenario B** | FB Chat ไม่มี ?cart= → banner แนะนำว่ามี ?cart= ถึงจะเติมตะกร้า | ❌ ไม่ | กดลิงก์ธรรมดา → เห็น banner แนะนำ "ลิงก์ที่มี ?cart= จากแชท AI จะเติมตะกร้าอัตโนมัติ" → กดเปิด Chrome → หน้าแรกเปล่าไม่มีตะกร้า ✅ PASS = ไม่พัง + แสดงข้อความแนะนำ |
-| **Scenario C** | LINE/Instagram → UA detection ผ่าน LINE\/IG \\ → banner ขึ้นปกติ | ❌ ไม่ | กดลิงก์จาก LINE/IG → เห็น orange banner (UA ผ่าน `LINE\/` หรือ `Instagram\\`) → ทำเหมือน Scenario A/B ✅ PASS = LINE/IG detection ทำงาน |
-| **Scenario D** | iOS Safari → ไม่เห็น alert popup → เห็น toast notification ด้านล่างแทน | ❌ ไม่ | กด "เปิดในเบราว์เซอร์ภายนอก" → ไม่เห็น alert pop-up → เห็น toast notification สีฟ้าด้านล่างจอ ✅ PASS = Toast แสดงแทน alert |
-| **Scenario E** | Floating Ad limit 3 ใบ → แสดงสูงสุด 3 ใบ | ❌ ไม่ | มีโปรโมชั่น > 3 ใบใน DB → เห็น floating ad แสดง 3 ใบเท่านั้น ✅ PASS = Limit ทำงานถูกต้อง |
+| **Scenario A** | FB Chat มี ?cart= → banner แสดงจำนวนสินค้า → Chrome เปิด → ตะกร้ามีของครบ | ✅ `6c81c72` | ส่งลิงก์ `?cart=<base64>` จาก FB Messenger ให้ตัวเอง → กดลิงก์ → เห็น banner "กำลังนำรายการ X รายการในตะกร้า..." → กดเปิด Chrome → หน้าโหลด → ตะกร้ามีของครบ (retry 2.5s เดิม) ✅ PASS = Cart continuity สำเร็จ |
+| **Scenario B** | FB Chat ไม่มี ?cart= → banner แนะนำว่ามี ?cart= ถึงจะเติมตะกร้า | ✅ `6c81c72` | กดลิงก์ธรรมดา → เห็น banner แนะนำ "ลิงก์ที่มี ?cart= จากแชท AI จะเติมตะกร้าอัตโนมัติ" → กดเปิด Chrome → หน้าแรกเปล่าไม่มีตะกร้า ✅ PASS = ไม่พัง + แสดงข้อความแนะนำ |
+| **Scenario C** | LINE/Instagram → UA detection ผ่าน LINE\/IG \\ → banner ขึ้นปกติ | ✅ `6c81c72` | กดลิงก์จาก LINE/IG → เห็น orange banner (UA ผ่าน `LINE\/` หรือ `Instagram\\`) → ทำเหมือน Scenario A/B ✅ PASS = LINE/IG detection ทำงาน |
+| **Scenario D** | iOS Safari → ไม่เห็น alert popup → เห็น toast notification ด้านล่างแทน | ✅ `6c81c72` | กด "เปิดในเบราว์เซอร์ภายนอก" → ไม่เห็น alert pop-up → เห็น toast notification สีฟ้าด้านล่างจอ ✅ PASS = Toast แสดงแทน alert |
+| **Scenario E** | Floating Ad limit 3 ใบ → แสดงสูงสุด 3 ใบ | ✅ `6c81c72` | มีโปรโมชั่น > 3 ใบใน DB → เห็น floating ad แสดง 3 ใบเท่านั้น ✅ PASS = Limit ทำงานถูกต้อง |
 
 ---
 
@@ -69,14 +75,14 @@ R89b/c ยุบ+เรียงรีวิว `/shop` (Owner เห็น Veri
 
 ---
 
-## 📋 สรุปสถานะรวม ณ 2026-11-11 รอบ 12
+## 📋 สรุปสถานะรวม ณ 2026-11-13 09:15
 
 | หมวด | สถานะ | รายละเอียด |
 |---|---|---|
-| **BLOCKED (รอ Owner)** | ⏸️ 1 ข้อ | OMNI-5 (ลงทะเบียน Meta Test User) |
 | **รอ Live Retest (โค้ด Deploy แล้ว)** | 🔄 1 ข้อ | **§T-A** (Cart retry 2.5s เดิม) |
-| **รอ Deploy + Live Retest (รอบ 12 CODE_CLOSED)** | 🔒 5 Scenarios | A–E (InAppBrowser banner, ?cart= decode, LINE/IG UA, iOS toast, Floating Ad limit) — อยู่แค่ working tree ยังไม่ push |
-| **✅ ปิดแล้วรอบนี้ (Owner verified)** | ✅ 7 ข้อ | IMG-GEN, D4, R91, R92-G, D2, D5, R92-S |
+| **รอ Live Retest (รอบ 12 DEPLOYED)** | 🔄 5 Scenarios | A–E (InAppBrowser banner, ?cart= decode, LINE/IG UA, iOS toast, Floating Ad limit) |
+| **✅ ปิดแล้วรอบนี้ (Owner verified 2026-11-13)** | ✅ 10 ข้อ | **R98-①②③④⑤** (InAppBrowserBanner + PWA Install + Cart Continuity) + **R96-①②③** (AI Grounding + Cross-Channel + Data Freshness) |
+| **✅ ปิดแล้วรอบนี้ (Owner verified 2026-11-10)** | ✅ 7 ข้อ | IMG-GEN, D4, R91, R92-G, D2, D5, R92-S |
 | **✅ ปิดแล้วรอบนี้ (Deploy + Gates ผ่าน)** | ✅ 5 กลุ่ม | Floating Ad Multiple, Sources Filter, Badge, AiStudioTab Merge, Viewport Fix |
 | **ยังไม่รัน/ค้างจากเดิม** | ⏳ หลายข้อ | RT-4, RT-HOURS, RT-6.x, CAP-x, RT-8 |
 
@@ -84,13 +90,14 @@ R89b/c ยุบ+เรียงรีวิว `/shop` (Owner เห็น Veri
 
 ## 🎯 ขั้นตอนถัดไป (Owner Action)
 
-1. **รอบ 12**: สั่ง commit → push → deploy แล้วค่อย live retest Scenarios A–E
-2. **Hard reload (Ctrl+Shift+R) ที่ `https://biteme-baby.com`** (สำหรับทุกข้อ)
-3. **Run Live Retest ต่อ:**
-   - ก่อน deploy รอบ 12: **§T-A เท่านั้น**
-   - หลัง deploy รอบ 12: **Scenario A, B, C, D, E + §T-A**
-4. **จดผล:** `ข้อ ID · [เวลา] · [อุปกรณ์] · PASS/FAIL · สนับสนุนภาพหน้าจอ Chrome`
-5. **FAIL = ทักแชท AI ทันที** → จด `AI_WORK_STATE.md` + แจ้งแก้แบบ two-try
+1. **Hard reload (Ctrl+Shift+R) ที่ `https://biteme-baby.com`** (สำหรับทุกข้อ)
+2. **Run Live Retest:**
+   - **§T-A** (Cart retry 2.5s) — ก่อน/หลัง deploy ต้อง retest
+   - **Scenario A–E** (Round 12 InAppCart Continuity) — โค้ด deployed แล้ว
+   - **R95** (โฟลตติ้งข้อความอ่านได้) — deployed, ต้อง hard reload
+   - **R96** (AI Grounding + Context + Freshness) — migrations applied, ต้องทดสอบจริง
+3. **จดผล:** `ข้อ ID · [เวลา] · [อุปกรณ์] · PASS/FAIL · สนับสนุนภาพหน้าจอ Chrome`
+4. **FAIL = ทักแชท AI ทันที** → จด `AI_WORK_STATE.md` + แจ้งแก้แบบ two-try
 
 ---
 
@@ -137,20 +144,20 @@ R89b/c ยุบ+เรียงรีวิว `/shop` (Owner เห็น Veri
 
 ---
 
-## 🆕 R96 (2026-11-12) — AI Grounding + Cross-Channel Context
+## 🆕 R96 (2026-11-12) — AI Grounding + Cross-Channel Context + Data Freshness
 
-> **Plan — ยังไม่ deploy (Phase 1-3)**
+> **COMPLETE — Migration 203/204 APPLIED PROD 2026-11-13 09:15**
 
-| ข้อ | สิ่งที่ยังใหม่ (รอบ 19) | Deployed | วิธีทดสอบ |
+| ข้อ | สิ่งที่ทำเสร็จ | Deployed | วิธีทดสอบ |
 |---|---|---|---|
-| **R96-①** | AI ตอบข้อมูลจริงจาก DB (ไม่มโน) | ❌ ยัง | ทัก "เมนูนี้ยังสั่งได้ไหม" → AI ต้องเช็ค products DB จริง (is_available, price) |
-| **R96-②** | AI รู้ context จากโพสต์/คอมเมนต์/Messenger/Web | ❌ ยัง | ทักจากคอมเมนต์โพสต์ → AI ต้องรู้ว่าลูกค้าคุยเรื่องอะไร |
-| **R96-③** | product update → AI ตอบข้อมูลใหม่ทันที | ❌ ยัง | อัปเดต price/is_available → ทัก → AI ตอบข้อมูลใหม่ (ไม่ใช่ cache เก่า) |
+| **R96-①** | AI ตอบข้อมูลจริงจาก DB (ไม่มโน) — `fetchGroundingData` 30s cache | ✅ `6c7a7e8` + migration 203 | ทัก "เมนูนี้ยังสั่งได้ไหม" → AI ต้องเช็ค products DB จริง (is_available, price) |
+| **R96-②** | AI รู้ context จากโพสต์/คอมเมนต์/Messenger/Web — `socialHandoff` timeline | ✅ `acca657` + migration 203 | ทักจากคอมเมนต์โพสต์ → AI ต้องรู้ว่าลูกค้าคุยเรื่องอะไร (timeline cross-channel) |
+| **R96-③** | product update → AI ตอบข้อมูลใหม่ทันที — `invalidateProductCache()` 7-min TTL | ✅ `da78fed` + `a0a65ff` | อัปเดต price/is_available ใน AdminProducts → ทัก → AI ตอบข้อมูลใหม่ (cache invalidated) |
 
 > **Live-test checklist (owner):**
-> 1. AI ตอบข้อมูลจริงจาก DB (ไม่มโน)
-> 2. AI รู้ context จากโพสต์/คอมเมนต์/Messenger/Web
-> 3. product update → AI ตอบข้อมูลใหม่ทันที
+> 1. AI ตอบข้อมูลจริงจาก DB (ไม่มโน) — grounding_data เขียนลง social_events ทุกครั้ง
+> 2. AI รู้ context จากโพสต์/คอมเมนต์/Messenger/Web — timeline ใน ExtendedSocialHandoff
+> 3. product update → AI ตอบข้อมูลใหม่ทันที — explicit cache invalidation
 
 ---
 
