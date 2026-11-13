@@ -42,6 +42,8 @@ import {
   type AIVoiceService,
 } from '@/lib/aiVoice'
 import { getOrdersByCustomer } from '@/lib/bmbAdminApi_orders'
+import { cancelOrder, createOrder, createOrderDetailed, type OrderInput, type OrderResult } from '@/lib/bmbAdminApi_orders'
+import { getActiveDeliveryRounds } from '@/lib/bmbAdminApi_products'
 import { getRuntimeAssetUrl } from '@/lib/bmbAdminApi_media'
 import { defaultBackground } from '@/lib/backgrounds'
 import { applyTheme, cycleTheme, getTheme, THEME_LABELS, type ThemeName } from '@/lib/theme'
@@ -421,7 +423,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       }
       const recent = [...orders].slice(0, 5)
       const lines = recent.map((o) => `• ${o.order_number} — ${getServerStatusLabel(String(o.status), (o.order_mode ?? 'SAME_DAY') as OrderMode, o.delivery_method === 'pickup' ? 'pickup' : 'delivery')}`)
-      pushAssistant(`ออเดอร์ล่าสุดของคุณ (${Math.min(orders.length, 5)}/${orders.length}) ที่ยังเข้าถึงได้:\n${lines.join('\n')}`)
+pushAssistant(`ออเดอร์ล่าสุดของคุณ (${Math.min(orders.length, 5)}/${orders.length}) ที่ยังเข้าถึงได้:\n${lines.join('\n')}`)
       setBiteState('IDLE')
     } catch {
       pushAssistant('ขอโทษครับ อ่านสถานะออเดอร์ไม่สำเร็จครับ 🙏')
@@ -431,6 +433,252 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     }
   }
 
+  // --- Web Chat Order RPCs (R97: create/cancel/modify order via Talk to Bite) ---
+
+  /** Create order from current cart — uses canonical create_order_with_items_i RPC */
+  async function handleCreateOrderFromCart() {
+    if (!requireAuth()) return
+    const items = useCartStore.getState().items
+    if (items.length === 0) {
+      pushAssistant('ตะกร้าว่างเปล่าครับ กดเลือกเมนูก่อนได้เลย 🍊')
+      return
+    }
+    setBiteState('THINKING')
+    pushAssistant('เดี๋ยวครับ Bite สร้างออเดอร์จากตะกร้าของคุณให้…')
+    setTyping(true)
+    try {
+      // Determine order mode from cart items
+      const hasPreorderOnly = items.some((i) => i.product.available_preorder && !i.product.available_same_day)
+      const hasSameDay = items.some((i) => i.product.available_same_day)
+      const orderMode = hasPreorderOnly && !hasSameDay ? 'PRE_ORDER' : 'SAME_DAY'
+
+      // Get active delivery rounds — server validates order_mode matches round
+      const rounds = await withDeadline(getActiveDeliveryRounds())
+      const round = rounds[0]
+      if (!round) {
+        pushAssistant(orderMode === 'PRE_ORDER'
+          ? 'ยังไม่มีรอบจัดส่งพรีออเดอร์เปิดรับครับ ลองดูเมนูส่งวันนี้แทนได้ 🍊'
+          : 'ยังไม่มีรอบจัดส่งวันนี้เปิดรับครับ ลองดูเมนูพรีออเดอร์แทนได้ 🍊')
+        setBiteState('IDLE')
+        return
+      }
+
+      // Build order input from cart
+      const orderInput: OrderInput = {
+        items: items.map((i) => ({
+          product_id: i.product.id,
+          quantity: i.quantity,
+          options: i.customizations ?? {},
+          special_request: '', // CartItem doesn't have note property
+        })),
+        delivery_round_id: round.id,
+        delivery_method: 'self_delivery',
+        customer_name: customer!.name || 'ลูกค้า',
+        customer_phone: customer!.phone || '',
+        payment_method: 'promptpay_qr',
+        order_mode: orderMode,
+        source_channel: 'WEB_CHAT',
+      }
+
+      const outcome = await withDeadline(createOrderDetailed(orderInput))
+      if (!outcome.result) {
+        const errMsg = outcome.errorCode
+          ? `สร้างออเดอร์ไม่สำเร็จ: ${outcome.errorCode}`
+          : 'สร้างออเดอร์ไม่สำเร็จครับ ลองใหม่อีกครั้ง 🙏'
+        pushAssistant(errMsg)
+        setBiteState('ERROR')
+        return
+      }
+
+      // Success — clear cart and show confirmation
+      useCartStore.getState().clearCart()
+      const res = outcome.result
+      pushAssistant(
+        `✅ สร้างออเดอร์ #${res.order_number} เรียบร้อยแล้วครับ (ยอด ${res.total_amount}฿)\n` +
+        `รอบจัดส่ง: ${round.display_name || round.round_key || '-'}\n` +
+        `สถานะ: ${res.status} — ชำระเงินเพื่อยืนยันได้เลยครับ 🍊`
+      )
+      push({ kind: 'cta', id: nextId(), label: 'ชำระเงิน →', to: '/checkout' })
+      setBiteState('SUCCESS')
+    } catch {
+      pushAssistant('ขอโทษครับ สร้างออเดอร์ไม่สำเร็จ กรุณาลองใหม่นะครับ 🙏')
+      setBiteState('ERROR')
+    } finally {
+      setTyping(false)
+    }
+  }
+
+  /** Cancel most recent order — uses canonical cancel_order RPC */
+  async function handleCancelOrder() {
+    if (!requireAuth()) return
+    setBiteState('THINKING')
+    pushAssistant('เดี๋ยวครับ Bite เช็กออเดอร์ล่าสุดของคุณให้…')
+    setTyping(true)
+    try {
+      const orders = await withDeadline(getOrdersByCustomer(customer!.id))
+      if (!orders || orders.length === 0) {
+        pushAssistant('ยังไม่มีออเดอร์ที่ยกเลิกได้ครับ อยากให้ Bite แนะนำเมนูแทนไหมครับ? 🍊')
+        setBiteState('IDLE')
+        return
+      }
+      const latestOrder = orders[0]
+      // Only allow cancel if not already delivered/cancelled
+      const nonCancellable = ['delivered', 'cancelled']
+      if (nonCancellable.includes(latestOrder.status)) {
+        pushAssistant(`ออเดอร์ #${latestOrder.order_number} สถานะ "${latestOrder.status}" ยกเลิกไม่ได้แล้วครับ`)
+        setBiteState('IDLE')
+        return
+      }
+      // Confirm before cancel
+      const confirmed = window.confirm(`ยกเลิกออเดอร์ #${latestOrder.order_number} จริงหรือครับ? (ไม่สามารถย้อนกลับได้)`)
+      if (!confirmed) {
+        pushAssistant('ยกเลิกการยกเลิกครับ 😄')
+        setBiteState('IDLE')
+        return
+      }
+      const result = await withDeadline(cancelOrder(latestOrder.order_number, 'cancelled_by_customer_via_chat'))
+      if (!result.success) {
+        pushAssistant(`ยกเลิกออเดอร์ไม่สำเร็จ: ${result.error || 'สาเหตุไม่ทราบ'} ลองใหม่อีกครั้ง 🙏`)
+        setBiteState('ERROR')
+        return
+      }
+      pushAssistant(
+        `✅ ยกเลิกออเดอร์ #${result.order_number} เรียบร้อยแล้วครับ\n` +
+        `สถานะใหม่: ${result.status} — ต้องการสั่งใหม่กด "เมนูทั้งหมด" ได้เลย 🍊`
+      )
+      setBiteState('SUCCESS')
+    } catch {
+      pushAssistant('ขอโทษครับ ยกเลิกออเดอร์ไม่สำเร็จ กรุณาลองใหม่นะครับ 🙏')
+      setBiteState('ERROR')
+    } finally {
+      setTyping(false)
+    }
+  }
+
+  /** Modify existing order — swap items in most recent order */
+  async function handleModifyOrder() {
+    if (!requireAuth()) return
+    setBiteState('THINKING')
+    pushAssistant('เดี๋ยวครับ Bite ดึงออเดอร์ล่าสุดของคุณมาให้ก่อน…')
+    setTyping(true)
+    try {
+      const [orders, catalog] = await withDeadline(Promise.all([
+        getOrdersByCustomer(customer!.id),
+        (await import('@/lib/bmbAdminApi_products')).getProducts(),
+      ]))
+      if (!orders || orders.length === 0) {
+        pushAssistant('ยังไม่มีออเดอร์ที่แก้ไขได้ครับ อยากให้ Bite แนะนำเมนูแทนไหมครับ? 🍊')
+        setBiteState('IDLE')
+        return
+      }
+      const latestOrder = orders[0]
+      const nonModifiable = ['delivered', 'cancelled']
+      if (nonModifiable.includes(latestOrder.status)) {
+        pushAssistant(`ออเดอร์ #${latestOrder.order_number} สถานะ "${latestOrder.status}" แก้ไขไม่ได้แล้วครับ`)
+        setBiteState('IDLE')
+        return
+      }
+      // Build draft from current order (like order-again)
+      const res = resolveOrderAgainFromOrder(latestOrder, catalog)
+      if (res.draft.length === 0) {
+        pushAssistant('ออเดอร์เดิมหมดแล้วครับ เลยแก้ไขไม่ได้ ขอแนะนำเมนูอื่นที่ยังมีนะครับ 🙏')
+        setBiteState('IDLE')
+        return
+      }
+      setBiteState('ORDER_DRAFT')
+      push({
+        kind: 'draft',
+        id: nextId(),
+        intro: `นี่คือรายการออเดอร์ #${latestOrder.order_number || '-'} ที่แก้ไขได้ครับ เลือกเมนู/จำนวนที่ต้องการเปลี่ยน:`,
+        draft: res.draft,
+        unavailable: res.unavailable,
+        total: res.total,
+        applied: false,
+      })
+      if (res.unavailable.length > 0) {
+        pushAssistant(`หมายเหตุ: ${res.unavailable.map((u) => `${u.name} (${u.requested})`).join(', ')} หมด/เปลี่ยนไปแล้ว จึงไม่รวมในรายการนี้ครับ`)
+      }
+      // Store order number for confirmModifyOrder to use
+      window.localStorage.setItem('bmb:modifying_order', latestOrder.order_number || '')
+      setBiteState('ORDER_DRAFT')
+    } catch {
+      pushAssistant('ขอโทษครับ อ่านออเดอร์ไม่สำเร็จ กรุณาลองใหม่นะครับ 🙏')
+      setBiteState('ERROR')
+    } finally {
+      setTyping(false)
+    }
+  }
+
+  /** Confirm modified order draft — cancel old + create new (atomic) */
+  async function confirmModifyOrder(draft: DraftLine[]) {
+    if (!requireAuth()) return
+    const orderNumber = window.localStorage.getItem('bmb:modifying_order')
+    if (!orderNumber) {
+      pushAssistant('ไม่พบออเดอร์ที่กำลังแก้ไขครับ ลองใหม่อีกครั้ง 🙏')
+      setBiteState('IDLE')
+      return
+    }
+    setBiteState('THINKING')
+    pushAssistant('เดี๋ยวครับ Bite ส่งการแก้ไขออเดอร์ให้…')
+    setTyping(true)
+    try {
+      // For now: cancel old order + create new one (simpler, atomic)
+      // In future: could call a dedicated modify_order RPC if available
+      const cancelResult = await withDeadline(cancelOrder(orderNumber, 'modified_via_chat'))
+      if (!cancelResult.success) {
+        pushAssistant(`ยกเลิกออเดอร์เก่าไม่สำเร็จ: ${cancelResult.error} — แก้ไขไม่ได้ 🙏`)
+        setBiteState('ERROR')
+        return
+      }
+      // Create new order from draft
+      const items = draft.map((d) => ({
+        product_id: d.product.id,
+        quantity: d.quantity,
+        options: d.customizations ?? {},
+        special_request: d.note ?? '',
+      }))
+      const hasPreorderOnly = draft.some((d) => d.product.available_preorder && !d.product.available_same_day)
+      const hasSameDay = draft.some((d) => d.product.available_same_day)
+      const orderMode = hasPreorderOnly && !hasSameDay ? 'PRE_ORDER' : 'SAME_DAY'
+      const rounds = await withDeadline(getActiveDeliveryRounds())
+      const round = rounds[0]
+      if (!round) {
+        pushAssistant('ไม่มีรอบจัดส่งเปิดรับสำหรับโหมดนี้ครับ ลองใหม่อีกที 🙏')
+        setBiteState('ERROR')
+        return
+      }
+      const orderInput: OrderInput = {
+        items,
+        delivery_round_id: round.id,
+        delivery_method: 'self_delivery',
+        customer_name: customer!.name || 'ลูกค้า',
+        customer_phone: customer!.phone || '',
+        payment_method: 'promptpay_qr',
+        order_mode: orderMode,
+        source_channel: 'WEB_CHAT',
+      }
+      const outcome = await withDeadline(createOrderDetailed(orderInput))
+      if (!outcome.result) {
+        pushAssistant(`สร้างออเดอร์ใหม่ไม่สำเร็จ: ${outcome.errorCode || 'unknown'} 🙏`)
+        setBiteState('ERROR')
+        return
+      }
+      window.localStorage.removeItem('bmb:modifying_order')
+      const res = outcome.result
+      pushAssistant(
+        `✅ แก้ไขออเดอร์ #${orderNumber} → ใหม่ #${res.order_number} เรียบร้อยแล้วครับ (ยอด ${res.total_amount}฿)\n` +
+        `รอบจัดส่ง: ${round.display_name || round.round_key || '-'}\n` +
+        `สถานะ: ${res.status} — ชำระเงินเพื่อยืนยันได้เลยครับ 🍊`
+      )
+      push({ kind: 'cta', id: nextId(), label: 'ชำระเงิน →', to: '/checkout' })
+      setBiteState('SUCCESS')
+    } catch {
+      pushAssistant('ขอโทษครับ แก้ไขออเดอร์ไม่สำเร็จ กรุณาลองใหม่นะครับ 🙏')
+      setBiteState('ERROR')
+    } finally {
+      setTyping(false)
+    }
+  }
 
 
   // --- Commerce actions (via the canonical cart path only) ---
@@ -468,6 +716,12 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
   }
 
   function confirmDraft(draft: DraftLine[]) {
+    // Check if this is a modify-order draft (stored in localStorage)
+    const modifyingOrder = window.localStorage.getItem('bmb:modifying_order')
+    if (modifyingOrder) {
+      confirmModifyOrder(draft)
+      return
+    }
     // P0 WS4: handle every AddToCartResult per line — never claim success for
     // lines that were not actually added (before: results were ignored and the
     // assistant always reported success).
@@ -592,10 +846,26 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
   }
 
   // Understand free-text order intent from real data (never fabricated). Only
-  // fires when the customer clearly asks to re-order; otherwise passes through.
+  // fires when the customer clearly asks to re-order/cancel/modify; otherwise passes through.
   async function tryOrderIntent(text: string): Promise<boolean> {
     const intent = parseOrderIntent(text)
-    if (!intent.likeBefore || !customer?.id) return false
+    if (!customer?.id) return false
+    
+    // Handle cancel order intent
+    if (intent.cancelOrder) {
+      await handleCancelOrder()
+      return true
+    }
+    
+    // Handle modify order intent
+    if (intent.modifyOrder) {
+      await handleModifyOrder()
+      return true
+    }
+    
+    // Handle like-before (re-order) intent
+    if (!intent.likeBefore) return false
+    
     try {
       const [orders, catalog] = await withDeadline(Promise.all([
         getOrdersByCustomer(customer.id),
@@ -971,6 +1241,9 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           { label: '🍊 ช่วยเลือกให้หน่อย', fn: () => void handleRecommend(), id: 'ttb-recommend' },
           { label: '🍽️ ดูเมนู', fn: () => void showMenu(), id: 'ttb-menu' },
           { label: '📦 เช็กออเดอร์', fn: () => void handleCheckOrders(), id: 'ttb-orders' },
+          { label: '✅ สั่งตะกร้านี้', fn: () => void handleCreateOrderFromCart(), id: 'ttb-create-order' },
+          { label: '🚫 ยกเลิกออเดอร์', fn: () => void handleCancelOrder(), id: 'ttb-cancel-order' },
+          { label: '✏️ แก้ไขออเดอร์', fn: () => void handleModifyOrder(), id: 'ttb-modify-order' },
           ...(riderIdentity.driver ? [{ label: '🛵 งานส่งของฉัน', fn: () => navigate('/rider'), id: 'ttb-rider' }] : []),
           ...(customer ? [] : [{ label: '🔐 เข้าสู่ระบบ', fn: goLogin, id: 'ttb-login' }]),
         ].map((qa) => (

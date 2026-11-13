@@ -431,6 +431,10 @@ export function matchHelpTopic(text: string): HelpTopic | null {
 export interface OrderIntent {
   /** Wants "order like before / again / same as yesterday". */
   likeBefore: boolean
+  /** Wants to cancel an existing order. */
+  cancelOrder?: boolean
+  /** Wants to modify an existing order. */
+  modifyOrder?: boolean
   /** Raw "change FROM ... " token (fuzzy). */
   modifyFrom?: string
   /** Raw " ... TO ..." token (fuzzy). */
@@ -442,12 +446,20 @@ export interface OrderIntent {
 const LIKE_BEFORE_RE =
   /(เหมือนเดิม|เหมือนครั้งก่อน|เหมือนครั้งที่แล้ว|เหมือนเมื่อวาน|สั่งเหมือนเดิม|สั่งเหมือน|เอาเหมือนเดิม|เอาเหมือนเมื่อวาน|ของเมื่อวาน|เมื่อวาน|ครั้งก่อน|ครั้งล่าสุด|ล่าสุด|สั่งซ้ำ|เอาเดิม|อีกครั้ง)/
 
+const CANCEL_ORDER_RE =
+  /(ยกเลิก\s*(?:ออเดอร์|order|สั่ง|ของ)?|cancel\s*order|ยกเลิก\s*(?:ที่|หมายเลข)?\s*\d+|ยกเลิก\s*เลข\s*\d+)/i
+
+const MODIFY_ORDER_RE =
+  /(แก้ไข\s*(?:ออเดอร์|order|สั่ง|ของ)?|modify\s*order|แก้\s*(?:ออเดอร์|order)|เปลี่ยน\s*(?:ออเดอร์|order))/i
+
 export function parseOrderIntent(text: string): OrderIntent {
   const t = String(text || '').toLowerCase()
   const likeBefore = LIKE_BEFORE_RE.test(t)
+  const cancelOrder = CANCEL_ORDER_RE.test(t)
+  const modifyOrder = MODIFY_ORDER_RE.test(t)
   // change X -> Y  (Thai has no spaces between words; capture before/after "เป็น")
   const m = t.match(/เปลี่ยน\s*([^*\n]*?)\s*(?:เป็น|มาเป็น|แทนที่ด้วย|ด้วย)\s*([^*\n]*)/)
-  const intent: OrderIntent = { likeBefore, customizers: extractCustomizers(text) }
+  const intent: OrderIntent = { likeBefore, cancelOrder, modifyOrder, customizers: extractCustomizers(text) }
   if (m && m[1] && m[2]) {
     const fromToken = m[1].trim()
     const toToken = m[2].trim()
