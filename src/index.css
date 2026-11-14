@@ -549,7 +549,10 @@ p { color: var(--color-brand-text-secondary); }
    ข้อความยาวดันปุ่ม CTA/ดูรีวิวล้น glass → โดน card overflow:hidden ตัด
    ล็อก 2 บรรทัด = ความสูงเนื้อหาคงที่ทุกใบ (กฎ 12.3 การ์ดเท่ากัน) · อ่านเต็มได้ที่ /reviews/:id
    R100c fix3 (Owner สั่ง "ลดช่องว่างดาว↔ข้อความ"): line-height 1.55→1.45 — บรรทัดแน่นขึ้น
-   (สระไทยบน-ล่างยังเต็ม 1.45 · ไทยบน line-height < 1.4 ถึงตัดสระ) */
+   (สระไทยบน-ล่างยังเต็ม 1.45 · ไทยบน line-height < 1.4 ถึงตัดสระ)
+   R100c fix4 (Owner สั่ง 2026-11-14 "ไม่ต้องเลื่อนแล้ว · เอาเลเยอร์คอมเมนต์ขึ้นเหนือโปรไฟล์ลูกค้า
+   · แบ็คกราวโปร่งใส"): position+z-index 5 = ข้อความวาดทับ mascot-mini (3)/peek (4) เมื่อซ้อน
+   · background transparent = ไม่มีกล่องทึบบังตัวที่อยู่ใต้ข้อความ */
 .review-comment {
   font-size: 0.95rem;
   line-height: 1.45;
@@ -559,6 +562,9 @@ p { color: var(--color-brand-text-secondary); }
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
+  position: relative;
+  z-index: 5;
+  background: transparent;
 }
 
 .review-customer {
