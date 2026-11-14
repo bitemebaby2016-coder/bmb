@@ -56,6 +56,19 @@ interface CartHandoff {
   count: number
 }
 
+/** อ่านสแนปชอตตะกร้าจาก localStorage (จากครั้งก่อนในแอป/เครื่องเดียวกัน) —
+ *  R96-R100d (Owner 2026-11-14 "copy ไป Chrome แล้วไม่มีสินค้า"): เมื่อจุดจับ ?cart=
+ *  ณ  mount แรกพลาด (URL ไม่มี param/decode fail) ต้องมีแหล่งถอดลิงก์คัดลอกสำรองเสมอ — ไม่เงียบ */
+function readCartResume(): CartHandoff | null {
+  try {
+    const j = JSON.parse(localStorage.getItem(CART_RESUME_KEY) || 'null') as { raw?: string; items?: number } | null
+    if (j && typeof j.raw === 'string' && j.raw.length > 0 && Number(j.items) > 0) {
+      return { raw: j.raw, count: Number(j.items) }
+    }
+  } catch { /* localStorage ถูกบล็อก/ข้อมูลพัง = ไม่มีสำรอง */ }
+  return null
+}
+
 // ============================================
 // PWA Install Button — always visible, shows prompt or manual guide
 // ============================================
@@ -118,18 +131,18 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
   const [cartHandoff] = useState<CartHandoff | null>(() => {
     try {
       const raw = new URLSearchParams(window.location.search).get('cart')
-      if (!raw) return null
+      if (!raw) return readCartResume() // R96-R100d: จุดจับ ณ mount พลาด = ใช้สแนปชอตสำรอง
       const items = decodeCartParam(raw)
       if (!items || items.length === 0) {
         console.warn('[InAppBanner] ?cart= มีแต่ถอดไม่สำเร็จ —', raw.slice(0, 24))
-        return null
+        return readCartResume() // decode fail = ห้ามแค่ null เงียบ — ลองสแนปชอตสำรองก่อน
       }
       try {
         localStorage.setItem(CART_RESUME_KEY, JSON.stringify({ raw, items: items.length, at: Date.now() }))
       } catch { /* localStorage ถูกบล็อก = มี state ในหน้าพอแล้ว */ }
       return { raw, count: items.length }
     } catch {
-      return null
+      return readCartResume()
     }
   })
 
@@ -199,7 +212,8 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
               {cartHandoff ? (
                 <p className="text-xs opacity-90">พบรายการ {cartHandoff.count} รายการ — กดคัดลอกลิงก์ข้างล่าง แล้ววางใน Chrome/Safari หรือติดตั้งแอปเลยก็ได้ครับ</p>
               ) : (
-                <p className="text-xs opacity-90">กรุณากดคัดลอกลิงก์เพื่อเปิดใน Chrome/Safari หรือติดตั้งแอปจากปุ่มด้านล่าง</p>
+                // R96-R100d (Owner): ห้ามเงียบ — บอกตรงว่าลิงก์นี้ไม่มีรายการ กัน "คัดลอกลิงก์เปล่าไป Chrome แล้วไม่มีตะกร้า"
+                <p className="text-xs opacity-90">ลิงก์ที่เปิดอยู่ไม่พบรายการตะกร้า — ให้ใช้ลิงก์จากคอมเมนต์/ข้อความที่ระบบตอบไว้ (ที่มีข้อความ "สรุปรายการของคุณ") หรือเลือกเมนูที่หน้าร้านได้เลย</p>
               )}
             </div>
           </div>

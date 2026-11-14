@@ -85,10 +85,12 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       showToast('ลิงก์รายการในแชทไม่สมบูรณ์หรือเสียหาย — เปิดรายการให้ไม่ได้ เลือกเมนูใหม่ที่หน้าร้านได้เลย', 'warning')
       return
     }
-    // R96 Fix: เก็บ ?cart= data ลง sessionStorage ด้วย (fallback สำหรับ Facebook IAB strip param)
+    // R96 Fix → R100d (Owner 2026-11-14 "copy ไป Chrome แล้วไม่มีสินค้า"): เดิมเก็บ sessionStorage
+    // แต่ไม่มีจุดอ่านเลย + sessionStorage ข้ามแอป (FB IAB ↔ Chrome) ไม่แชร์กัน = ของตาย
+    // → เก็บ localStorage (อยู่ข้าม reload ในแอป/เครื่องเดียวกัน) และมีจุดอ่านจริงที่ effect ถัดไป
     const CART_STORAGE_KEY = 'bmb:cart-from-link'
     try {
-      sessionStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items, at: Date.now() }))
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items, at: Date.now() }))
     } catch { /* ignore */ }
     // R91 (Owner 2026-11-11): บันทึบริบท "มาจาก Facebook/Messenger" ต่อให้ Bite AI บนเว็บ
     // (ลิงก์ ?cart= ถูกสร้างเฉพาะโดย AI บนแพลตฟอร์ม Meta → referrer เว้นว่างใน WebView ก็รู้ที่มา
@@ -155,6 +157,50 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       if (!cancelled && addedTotal === 0) void runAdd(true)
     }, 2500)
     return () => { cancelled = true; clearTimeout(cartRetryTimer); clearTimeout(cartRetryTimer2) }
+  }, [])
+
+  // R100d (Owner 2026-11-14 "คัดลอกลิงก์ไปวางใน Chrome แล้วไม่มีสินค้าในตะกร้า"):
+  // จุดอ่าน snapshot สำรองจริง ๆ — เคสที่ลิงก์คัดลอกไปไม่มี ?cart= (จุดจับแบนเนอร์พลาด
+  // ณ  mount แรก เช่น FB redirect หน้าแรก) เดิม = เปิด /shop เปล่าเงียบ ๆ หายไปเลย
+  // → ถ้าเปิดหน้าโดยไม่มี ?cart= และไม่มี ?s= · localStorage มี snapshot ที่ลิงก์ตะกร้า
+  //   เคยมาถึงเครื่องนี้แล้ว (อายุ < 30 นาที · ตะกร้าว่าง) → เติมจาก snapshot + แจ้งเหตุผล
+  // · one-shot: เติมแล้วลบ snapshot ทันที (กันเติมซ้ำทุกครั้งที่เปิดหน้าร้าน)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const sp = new URLSearchParams(window.location.search)
+      if (sp.get('cart') || sp.get('s')) return // ลิงก์เต็มอยู่แล้ว = effect ตะกร้าหลักรับผิดชอบ
+      const CART_STORAGE_KEY = 'bmb:cart-from-link'
+      const snap = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || 'null') as
+        { items?: Array<{ id: string; q: number }>; at?: number } | null
+      if (!snap || !Array.isArray(snap.items) || snap.items.length === 0) return
+      if (typeof snap.at !== 'number' || Date.now() - snap.at > 30 * 60_000) {
+        localStorage.removeItem(CART_STORAGE_KEY) // เก่าเกิน 30 นาที = ลบทิ้ง ไม่กินพื้นที่
+        return
+      }
+      if (useCartStore.getState().items.length > 0) return // ตะกร้ามีของ = ห้ามทับ
+      const items = snap.items.filter((i) => i && typeof i.id === 'string' && i.id.length > 0)
+      if (items.length === 0) return
+      localStorage.removeItem(CART_STORAGE_KEY) // one-shot
+      void (async () => {
+        try {
+          const { getProducts } = await import('@/lib/bmbAdminApi_products')
+          const catalog = await getProducts()
+          const byId = new Map(catalog.map((p) => [p.id, p]))
+          let added = 0
+          for (const it of items) {
+            const p = byId.get(it.id)
+            if (!p || (p as { is_available?: boolean }).is_available === false) continue
+            const res = useCartStore.getState().addItem(p, Math.max(1, Math.trunc(Number(it.q)) || 1), {}, 'SAME_DAY')
+            if (res === 'added') added++
+          }
+          if (added > 0) {
+            showToast('เติมรายการจากลิงก์ที่เปิดครั้งก่อน 🛒 ' + added + ' รายการ — เช็คเอาท์หรือเพิ่มเมนูต่อได้เลย', 'success')
+            useCartStore.getState().setCheckoutOpen(true)
+          }
+        } catch { /* snapshot fail = ปล่อยเงียบ (ไม่มีของให้เติมจริง) */ }
+      })()
+    } catch { /* ignore */ }
   }, [])
 
   // Header hide-on-scroll — listen on the ACTUAL scroll container (`main` has

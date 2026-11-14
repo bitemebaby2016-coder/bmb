@@ -1096,6 +1096,12 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     },
     requires_human_review: requiresHumanReview,
     review_status: reviewStatus,
+    // R100d (Owner 2026-11-14 "copy ลิงก์ไป Chrome แล้วไม่มีสินค้า"): กันสาย footer —
+    // ถ้าระบบสร้าง footer ?cart= มาแต่ข้อความสุดท้ายที่ส่งออกไม่มีลิงก์ = ของหายช่วงประกอบ
+    // → บันทึก flag ให้ admin ตรวจย้อน (ไม่บล็อกการส่ง — แจ้งเป็นหลักฐาน)
+    ...(intakeFooter && intakeFooter.includes('cart=') && !finalText.includes('cart=')
+      ? { cart_link_missing: true }
+      : {}),
   }
   const patch = await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
     ai_model: draft.model || null,
