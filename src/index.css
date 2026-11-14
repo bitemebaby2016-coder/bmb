@@ -555,14 +555,16 @@ p { color: var(--color-brand-text-secondary); }
    · background transparent = ไม่มีกล่องทึบบังตัวที่อยู่ใต้ข้อความ
    R100c fix5 (Owner อนุมัติ 2026-11-14 · กรอบชี้ .review-comment): ลบ -webkit-box/line-clamp
    — Chromium clamp ตัดไทยมั่ว (glyph หุบครึ่งตัว + ชิ้นคำหลุดหลัง … เช่น "เมยท...มัน")
-   → display:block + max-height 3 บรรทัดเต็ม = ตัดจบที่ "ขอบบรรทัด" สะอาดเสมอ
-   · พื้นที่: เนื้อหาสูงสุด ~225px ≤ แก้ว ~250px (top 20% + gap 0.2rem จาก fix1-3) ✅ */
+   → display:block + max-height = ตัดจบที่ "ขอบบรรทัด" สะอาดเสมอ
+   R100c fix6 (Owner อนุมัติ 2026-11-14): กล่องตัดส่วนล่างบรรทัดสุดท้าย — สาเหตุ: max-height
+   วัดเป๊ะต่อ line box แต่สระ/หางไทย (ั ู ิ ญ ฐ) ยื่นพ้นขอบล่าง line box → โดน overflow ตัด
+   → ตัดแค่ 2 บรรทัดตามสั่ง + บวกเผื่อล่าง 0.4em = บรรทัดสุดท้ายโชว์เต็มสระ/หาง */
 .review-comment {
   font-size: 0.95rem;
   line-height: 1.45;
   color: var(--color-brand-accent);
   display: block;
-  max-height: calc(1.45em * 3);
+  max-height: calc(1.45em * 2 + 0.4em);
   overflow: hidden;
   margin: 0;
   position: relative;
@@ -577,7 +579,10 @@ p { color: var(--color-brand-text-secondary); }
   margin-top: auto;
 }
 
-/* R100c: 36px = พอดีพื้นที่ glass คงที่ทุกใบ (เดิม 40px ดันเนื้อหาล้น → ปุ่มล่างโดนตัด) */
+/* R100c: 36px = พอดีพื้นที่ glass คงที่ทุกใบ (เดิม 40px ดันเนื้อหาล้น → ปุ่มล่างโดนตัด)
+   R100c fix6 (Owner เสนอ "กรอบและแบ็คกราวของโปรไฟล์ โปร่งแสง"):
+   ลบพื้น gradient ทึบส้ม → พื้นโปร่งใส เห็นภาพหลัง · กรอบกลมบางโปร่งให้เห็นทรงบนพื้นแก้ว
+   · ตัวอักษรเริ่มต้นเดิมขาว (บนพื้นทึบ) → สีเข้มเพื่ออ่านได้บนพื้นโปร่ง */
 .review-avatar {
   width: 36px;
   height: 36px;
@@ -587,9 +592,10 @@ p { color: var(--color-brand-text-secondary); }
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  color: #fff;
-  background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-primary-dark));
-  box-shadow: 0 3px 8px rgba(255, 94, 30, 0.35);
+  color: var(--color-brand-accent);
+  background: transparent;
+  border: 1px solid rgba(255, 94, 30, 0.35);
+  box-shadow: 0 2px 6px rgba(255, 94, 30, 0.15);
 }
 
 /* R100c (2026-11-14): ชื่อยาว = แถวลูกค้าสูงเกิน → กลับไปชน mascot-mini ที่ลอยตายตัว
