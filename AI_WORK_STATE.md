@@ -1,3 +1,18 @@
+## 🔒 SESSION CLOSE 2026-11-14 (รอบ 29 · R100c fix4 — เลเยอร์คอมเมนต์เหนือโปรไฟล์/mascot + พื้นโปร่งใส ตามโค้ดที่ Owner อนุมัติ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-14 13:20:** R100c fix4 **COMPLETE IN CODE + PUSHED** (`77cef59`) · tsc ✅ lint ✅ vitest ✅ (214 files / 2238 tests PASS — `e2e/_r100c4_*.log`) · **Owner ระบุจากภาพ 10:55 "ขาดอีกนิด ไม่ต้องเลื่อนแล้ว" → เปลี่ยนวิธีเป็นเรื่องเลเยอร์ — Owner อนุมัติโค้ดก่อนทำ (ask mode เสนอ → code mode ลงมือ)**
+
+> **รากเหตุตัวจริง (เลเยอร์):** ในการ์ดรีวิว mascot-mini (z-index 3) / mascot-peek (z-index 4) สูงกว่าเนื้อหาแก้ว (z-index 2) เสมอ → ทุกครั้งที่บรรทัดข้อความซ้อนกับ mascot ตัว mascot ชนะการวาด = ตัวอักษรโดนหุบ/บัง — ต่อไม่สำเร็จด้วยการเลื่อนตำแหน่งหลายรอบ (fix→fix2→fix3)
+
+> **แก้ 1 จุด (index.css · `.review-comment` — ตามโค้ดที่ Owner อนุมัติ):**
+> - `position: relative; z-index: 5` — เลเยอร์คอมเมนต์สูงกว่า mascot-mini (3) / mascot-peek (4) → ข้อความวาดทับเมื่อซ้อน (โปรไฟล์/mascot อยู่ใต้ข้อความทางเลเยอร์)
+> - `background: transparent` — ไม่มีกล่องทึบบังตัวที่อยู่ใต้ข้อความ
+> - คงค่า fix1-3 ไว้ทั้งหมด (clamp 2 บรรทัด · line-height 1.45 · top 20% · gap 0.2rem · avatar 36 · badge nowrap) — ไม่เลื่อนเพิ่ม
+
+> **Deploy checklist (owner):** ① รอ auto-deploy → hard refresh ② การ์ดรีวิว: บรรทัดข้อความ (แม้ 2 บรรทัดยาว) ต้องวาดทับ mascot แบบโปร่ง — ตัวหนังสือไม่โดนบัง/หุบอีก ③ ถ้าตำแหน่งยังไม่ตรงใจอีก แจ้งภาพจอจาก biteme-baby.com/shop
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-14 (รอบ 28 · R100c fix3 — เลื่อนข้อความรีวิวขึ้นเหนือโซน mascot ตามสั่ง Owner · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-14 10:40:** R100c fix3 **COMPLETE IN CODE + PUSHED** (`d372ff5`) · tsc ✅ lint ✅ vitest ✅ (214 files / 2238 tests PASS — `e2e/_r100c3_*.log`) · **Owner ชี้ชัดจากภาพ (10:22): mascot ทับ "ข้อความรีวิว" ไม่ใช่ปุ่ม — สั่งแก้เอง: "เลื่อนข้อความรีวิวขึ้นด้านบน · ลดช่องว่างระหว่างบรรทัดดาวกับข้อความรีวิวน้อยลง"**
