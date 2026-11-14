@@ -407,17 +407,20 @@ p { color: var(--color-brand-text-secondary); }
    R100c fix (2026-11-14 · owner รายงานปุ่มยังถูกตัด): ตัวเลขจริง — เนื้อหาแย่สุด
    (badge 2 บรรทัด + คอมเมนต์ 3 บรรทัด + avatar 40) ≈ 267px > พื้นที่ glass 70% ≈ 188px
    → พาเนลสูงขึ้นอีก (top 30%→24%) + gap กระชับ (0.4→0.32rem) + จำกัดคอมเมนต์ 2 บรรทัด
-   และ badge หนึ่งบรรทัด (ดู .review-comment / .review-source-badge) — สูงสุดคงที่ทุกใบ */
+   และ badge หนึ่งบรรทัด (ดู .review-comment / .review-source-badge) — สูงสุดคงที่ทุกใบ
+   R100c fix3 (Owner สั่ง 2026-11-14 "เลื่อนข้อความรีวิวขึ้นบน · ลดช่องว่างดาว↔ข้อความ"):
+   → top 24%→20% (เนื้อหาทั้งก้อนขยับขึ้น ~12px — พ้นโซน mascot ที่ลอยโซนล่าง)
+   → gap 0.32rem→0.2rem (ระยะดาว↔ข้อความ/แถวต่อแถวแน่นขึ้นตามสั่ง) */
 .review-card-glass {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  top: 24%;
+  top: 20%;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 0.32rem;
+  gap: 0.2rem;
   padding: 0.95rem 1.15rem 0.9rem;
   background: rgba(255, 251, 245, 0.72);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
@@ -544,10 +547,12 @@ p { color: var(--color-brand-text-secondary); }
 /* --- Review body --- */
 /* R100c (2026-11-14): 3 บรรทัด = ตัวแปรพื้นที่ใหญ่สุดของการ์ด (~24px/บรรทัด) —
    ข้อความยาวดันปุ่ม CTA/ดูรีวิวล้น glass → โดน card overflow:hidden ตัด
-   ล็อก 2 บรรทัด = ความสูงเนื้อหาคงที่ทุกใบ (กฎ 12.3 การ์ดเท่ากัน) · อ่านเต็มได้ที่ /reviews/:id */
+   ล็อก 2 บรรทัด = ความสูงเนื้อหาคงที่ทุกใบ (กฎ 12.3 การ์ดเท่ากัน) · อ่านเต็มได้ที่ /reviews/:id
+   R100c fix3 (Owner สั่ง "ลดช่องว่างดาว↔ข้อความ"): line-height 1.55→1.45 — บรรทัดแน่นขึ้น
+   (สระไทยบน-ล่างยังเต็ม 1.45 · ไทยบน line-height < 1.4 ถึงตัดสระ) */
 .review-comment {
   font-size: 0.95rem;
-  line-height: 1.55;
+  line-height: 1.45;
   color: var(--color-brand-accent);
   display: -webkit-box;
   -webkit-line-clamp: 2;
