@@ -1,3 +1,25 @@
+## 🔒 SESSION CLOSE 2026-11-14 (รอบ 33 · R100d — ระบบลิงก์ตะกร้า AI ตอบใต้โพส: copy จาก FB in-app ไป Chrome มีตะกร้าเสมอ · พิสูจน์สาเหตุจากโค้ด 4 จุด · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-14 18:55:** R100c fix6c = **ผ่าน (Owner ยืนยัน "โอเคผ่าน จำบันทึกด้วย")** — บันทึกแล้ว · R100d **COMPLETE IN CODE + PUSHED** (`733b220`) · tsc ✅ lint ✅ vitest ✅ (214 files / 2238 tests PASS — `e2e/_r100d_*.log`)
+
+> **งาน:** "ปรับปรุงระบบตอบพร้อมเอไอสร้างลิงก์ตอบใต้โพส" — สถานการณ์ Owner: เปิดลิงก์ AI ใน FB in-app → คัดลอกลิงก์ → วางเปิด Chrome ภายนอก → **ไม่มีสินค้าในตะกร้า**
+
+> **สาเหตุที่แท้จริง (พิสูจน์จากโค้ดทั้งสาย — ไม่ใช่ decode ไม่ใช่ AI แต่งลิงก์):**
+> 1. **ปุ่มคัดลอกในแบนเนอร์คัดลอก URL ที่ไม่มี ?cart= ได้แบบเงียบ** — แบนเนอร์จับ ?cart= แค่ครั้งเดียวตอน mount (`lazy useState`); ตอนนั้นถ้า URL ไม่มี param (FB redirect หน้าแรกผ่าน l.facebook.com) หรือ decode fail → `cartHandoff = null` → คัดลอก = URL ปัจจุบันไม่มีรายการ → Chrome เปิด /shop เปล่า — และแบนเนอร์ยังโชว์ข้อความปกติ (silent)
+> 2. **Fallback เขียนแต่ไม่มีผู้อ่าน (ของตาย)** — Layout เก็บ `bmb:cart-from-link` ลง sessionStorage — grep ทั้ง src ไม่มีจุดอ่าน + sessionStorage ข้ามแอปไม่แชร์ (สะพานเดียว = ตัวลิงก์)
+> 3. **localStorage `bmb:cart-resume` เขียนแต่ไม่ถูกใช้ส่งต่อ**
+> (ตรวจแล้ว: ตัวถอด b64url ทน double-decode ✓ · footer ?cart= มาจากระบบ append เสมอ ไม่ใช่ AI แต่ง ✓)
+
+> **แก้ 4 ข้อ (3 ไฟล์ · `733b220`):**
+> 1. **แบนเนอร์** (`InAppBrowserBanner.tsx`) — จุดจับพลาด/decode fail = อ่านสแนปชอต `bmb:cart-resume` (localStorage) กลับมาใช้เสมอ · ถ้ายังไม่มี = ข้อความบนแบนเนอร์แจ้งตรง "ลิงก์ที่เปิดอยู่ไม่พบรายการตะกร้า — ให้ใช้ลิงก์จากคอมเมนต์/ข้อความที่ระบบตอบไว้" (ห้ามเงียบ — กฎ R43 B6)
+> 2. **Layout** — snapshot เก็บ **localStorage** (แทน sessionStorage ที่ตาย) + **จุดอ่านจริง**: เปิดหน้าไม่มี ?cart=/?s= · snapshot อายุ < 30 นาที · ตะกร้าว่าง → เติมจาก snapshot + toast "เติมรายการจากลิงก์ที่เปิดครั้งก่อน" + one-shot (ลบทันที กันเติมซ้ำ)
+> 3. **ปุ่มคัดลอก** — handoffUrl ใส่ ?cart= กลับจาก state/สแนปชอตเสมอ → ลิงก์ที่คัดลอกมีรายการจริง
+> 4. **worker guardrail** (`social-ai-worker/index.ts`) — ถ้า intakeFooter มี cart= แต่ finalText ไม่มี → บันทึก flag `cart_link_missing: true` ให้ admin ตรวจย้อน (ไม่บล็อกการส่ง)
+
+> **Deploy checklist (owner):** ① รอ auto-deploy (เว็บ) + **deploy edge function social-ai-worker** ② ทดสอบจริง: กดลิงก์ AI ตอบใต้โพสใน FB → แบนเนอร์โชว์จำนวนรายการ → กดคัดลอก → วางใน Chrome → ตะกร้ามีสินค้าครบ + toast สำเร็จ ③ กรณีลิงก์ที่คอมเมนต์พังอยู่แล้ว (โพสเก่า) — แบนเนอร์จะแจ้ง "ไม่พบรายการตะกร้า" ตรง ๆ + ลูกค้ากดลิงก์ใหม่จาก AI ④ ทิ้งแชทค้าง 30 นาทีแล้วเปิดเว็บในเครื่องเดียวกัน → snapshot หมดอายุ ไม่เติมเอง (กันของเก่า)
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-14 (รอบ 32 · R100c fix6c — ยกเลิกโปร่งแสง avatar กลับพื้นทึบ · ลดความสูงทั้งก้อน (โปรไฟล์+ชื่อ+ปุ่ม×2) · เผื่อล่างคอมเมนต์ 0.6em · Owner สั่ง · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-14 16:25:** R100c fix6b+fix6c **COMPLETE IN CODE + PUSHED** (`4e86e0b` รวม fix6b) · tsc ✅ lint ✅ vitest ✅ (214 files / 2238 tests PASS — `e2e/_r100c6b_*.log`, `e2e/_r100c6c_*.log`)
