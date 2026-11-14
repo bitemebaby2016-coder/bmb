@@ -16,6 +16,33 @@ interface BeforeInstallPromptEvent extends Event {
 
 export type InAppPlatform = 'facebook' | 'line' | 'instagram' | 'other'
 
+// R100e (Owner 2026-11-14 "ลิงก์ในข้อความ FB ต่อออกไป = ไม่มีป๊อปอัพสีส้มเลย"):
+// สาเหตุที่แท้จริง — เดิม dismiss เก็บค่า '1' ถาวรใน localStorage ไม่มีวันหมดอายุ
+// → ลูกค้ากด "เข้าใจแล้ว" ครั้งเดียว = แบนเนอร์หายตลอดชีวิตเครื่องทุกลิงก์ถัดไป
+//   (แบนเนอร์ = ประตูเดียวที่พา ?cart= ไป Chrome — ปิดถาวร = สายส่งต่อตายทั้งร้าน)
+// → แก้: ① ปิดมีอายุ 24 ชม. (ค่าเก่าแบบ '1' ถือว่าหมดอายุทันที — ทุกคนเห็นแบนเนอร์อีกครั้ง)
+//        ② ลิงก์ตะกร้าใหม่ (?cart= ใน URL) มีสิทธิ์แจ้งเสมอ — ละเว้น dismissed + เคลียร์ค่าเก่า
+const DISMISS_KEY = 'bmb:inapp:dismissed'
+const DISMISS_TTL = 24 * 60 * 60_000
+
+function isDismissed(): boolean {
+  try {
+    const raw = localStorage.getItem(DISMISS_KEY)
+    if (!raw) return false
+    if (raw === '1') {
+      // ค่าเก่าก่อน R100e = ปิดถาวรแบบไม่มีอายุ — ถือว่าหมดอายุ + ลบทิ้ง
+      localStorage.removeItem(DISMISS_KEY)
+      return false
+    }
+    const at = Number((JSON.parse(raw) as { at?: unknown }).at)
+    const suppressed = Number.isFinite(at) && Date.now() - at < DISMISS_TTL
+    if (!suppressed) localStorage.removeItem(DISMISS_KEY)
+    return suppressed
+  } catch {
+    return false // localStorage ถูกบล็อก = ไม่มีประวัติปิด = โชว์แบนเนอร์ปกติ
+  }
+}
+
 function detectPlatform(ua: string): InAppPlatform {
   if (/LINE\//i.test(ua)) return 'line'
   if (/Instagram\//i.test(ua)) return 'instagram'
@@ -29,6 +56,16 @@ export function useInAppBrowser() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
 
+  // lazy initializer: sync ก่อน effect ใด ๆ — Layout strip ?cart= หลัง fetch เสมอ
+  // จึงการันตีว่าเห็น param ก่อนหาย (ใช้กำหนด "สิทธิ์แจ้ง" ของลิงก์ตะกร้าใหม่)
+  const [hasCartParam] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).has('cart')
+    } catch {
+      return false
+    }
+  })
+
   const detectedPlatform = useRef<InAppPlatform>('other')
   const [platform, setPlatform] = useState<InAppPlatform>('other')
 
@@ -40,11 +77,13 @@ export function useInAppBrowser() {
     detectedPlatform.current = detectPlatform(ua)
     setPlatform(detectedPlatform.current)
 
-    // โหลด dismissed state
-    try {
-      const d = localStorage.getItem('bmb:inapp:dismissed')
-      setDismissed(d === '1')
-    } catch { /* localStorage blocked */ }
+    // R100e: โหลด dismissed state — มีอายุ 24 ชม. + ลิงก์ตะกร้าใหม่ (?cart=) ละเว้นเสมอ
+    if (hasCartParam) {
+      try { localStorage.removeItem(DISMISS_KEY) } catch { /* ignore */ }
+      setDismissed(false)
+    } else {
+      setDismissed(isDismissed())
+    }
 
     // PWA install prompt handling
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
@@ -65,7 +104,7 @@ export function useInAppBrowser() {
   }, [])
 
   const dismiss = useCallback(() => {
-    try { localStorage.setItem('bmb:inapp:dismissed', '1') } catch {}
+    try { localStorage.setItem(DISMISS_KEY, JSON.stringify({ at: Date.now() })) } catch {}
     setDismissed(true)
   }, [])
 
