@@ -1,3 +1,19 @@
+## 🔒 SESSION CLOSE 2026-11-14 (รอบ 30 · R100c fix5 — กล่องข้อความรีวิว (.review-comment) ตัดสะอาดที่ขอบบรรทัด · Owner อนุมัติโค้ดก่อนทำ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-14 13:55:** R100c fix5 **COMPLETE IN CODE + PUSHED** (`a962b59`) · tsc ✅ lint ✅ vitest ✅ (214 files / 2238 tests PASS — `e2e/_r100c5_*.log`) · **ยอมรับตรง: Owner ชี้กรอบ (น้ำเงิน/ดำ) ในภาพ 13:29 = กล่องข้อความรีวิว (.review-comment) — ที่ผมแก้ mascot/ตำแหน่งทั้ง 4 รอบก่อน = เข้าใจผิดตำแหน่ง ไม่แตะตัวจริง**
+
+> **รากเหตุตัวจริง (ผมทำเองใน fix1):** `.review-comment` ใช้ `display: -webkit-box + -webkit-line-clamp: 2` — Chromium line-clamp กับภาษาไทยตัดไม่สะอาด: ① glyph บรรทัดสุดท้ายโดนหุบครึ่งตัว (ที่ Owner เรียก "ส่วนล่างของบรรทัดโดนทับ") ② ชิ้นคำหลุดออกมาหลังจุดไข่ปลา (พิสูจน์ในภาพ: "…เมยท**...มัน**") — ไม่ใช่ mascot และไม่ใช่โปรไฟล์อะไรทั้งสิ้น
+
+> **แก้ 1 จุด (index.css · `.review-comment` · Owner อนุมัติโค้ดก่อนทำ):**
+> - ลบ `-webkit-box`/`-webkit-line-clamp: 2`/`-webkit-box-orient`
+> - `display: block` + `max-height: calc(1.45em * 3)` (3 บรรทัดเต็ม) + `overflow: hidden` = ตัดจบที่ "ขอบบรรทัด" สะอาดเสมอ — ไม่มี glyph หุบ ไม่มีชิ้นคำหลุด
+> - คง fix4: `z-index: 5` เหนือโปรไฟล์/mascot + `background: transparent` ตามสั่ง
+> - พื้นที่ตรวจแล้ว: 3 บรรทัดเต็ม (+22px) → เนื้อหาสูงสุด ~225px ≤ แก้ว ~250px (fix1-3 เพิ่มพื้นที่ไว้แล้ว) ✅
+
+> **Deploy checklist (owner):** ① รอ auto-deploy → hard refresh ② กล่องข้อความรีวิว: ไม่มีตัวอักษรหุบครึ่ง/ชิ้นคำหลุดหลัง … — บรรทัดจบเต็มตัวอักษรสะอาด ③ ตรวจทั้งจอเดสก์ท็อปและมือถือ (biteme-baby.com/shop)
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-14 (รอบ 29 · R100c fix4 — เลเยอร์คอมเมนต์เหนือโปรไฟล์/mascot + พื้นโปร่งใส ตามโค้ดที่ Owner อนุมัติ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-14 13:20:** R100c fix4 **COMPLETE IN CODE + PUSHED** (`77cef59`) · tsc ✅ lint ✅ vitest ✅ (214 files / 2238 tests PASS — `e2e/_r100c4_*.log`) · **Owner ระบุจากภาพ 10:55 "ขาดอีกนิด ไม่ต้องเลื่อนแล้ว" → เปลี่ยนวิธีเป็นเรื่องเลเยอร์ — Owner อนุมัติโค้ดก่อนทำ (ask mode เสนอ → code mode ลงมือ)**
