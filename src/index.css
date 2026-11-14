@@ -578,10 +578,15 @@ p { color: var(--color-brand-text-secondary); }
   box-shadow: 0 3px 8px rgba(255, 94, 30, 0.35);
 }
 
+/* R100c (2026-11-14): ชื่อยาว = แถวลูกค้าสูงเกิน → กลับไปชน mascot-mini ที่ลอยตายตัว
+   ล็อกหนึ่งบรรทัด (parent มี min-w-0 อยู่แล้วใน CustomerReviewCard) */
 .review-name {
   font-weight: 800;
   font-size: 0.9rem;
   color: var(--color-brand-accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .review-food {
@@ -662,11 +667,15 @@ p { color: var(--color-brand-text-secondary); }
   background: #fff;
 }
 
-/* --- 3D Mascot "น้อง Bite" จิ๋ว มุมล่างการ์ด --- */
+/* --- 3D Mascot "น้อง Bite" จิ๋ว มุมล่างการ์ด ---
+   R100c fix (2026-11-14 · owner รายงาน mascot ทับข้อความ): bottom ตายตัววัดจากล่างการ์ด
+   เดิม 64px = โซนแถวชื่อ/เมนู (หลังพาเนลแก้วขยายขึ้น top 24%) → mascot ทับชื่อ-เมนูทุกใบ
+   ลดเหลือ 34px = กลับไปโซนปุ่ม "สั่ง/จองบันชี" ฝั่งขวา (ตัวหนังสือปุ่มอยู่กลาง ไม่ชน)
+   · จบก่อนปุ่ม "ดูรีวิวนี้ทั้งหมด" ล่างสุด · ไม่แตะบรรทัดข้อความรีวิว/แถวชื่ออีก */
 .mascot-mini {
   position: absolute;
   right: 10px;
-  bottom: 64px;
+  bottom: 34px;
   width: 52px;
   height: 52px;
   object-fit: contain;
