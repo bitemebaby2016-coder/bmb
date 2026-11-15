@@ -66,9 +66,12 @@ describe('R61 · /admin/promotions — ภาพ+มาสคอต แนบเ
 })
 
 describe('R61 · §T-1 ลิงก์ตะกร้า (Layout ถอดค่าตรง ๆ)', () => {
-  it('Layout ใช้ decodeCartParam(raw) — ห้ามใช้ readCartParam(raw)', () => {
-    expect(layoutSrc).toContain('decodeCartParam(raw)')
+  it('Layout ใช้ normalizeCartParam (⊇ decodeCartParam) — ห้ามกลับไป readCartParam(raw)', () => {
+    // R101-fix (Owner 2026-11-15 A-4): decodeCartParam(raw) → normalizeCartParam(searchParams.get('cart'))
+    // (สืบทอด §T-1 — ยังถอดตรง ๆ + กัน payload โดน encode มั่วจาก copy/paste ข้าม WebView→Chrome)
+    expect(layoutSrc).toContain("normalizeCartParam(searchParams.get('cart'))")
     expect(layoutSrc).not.toContain('readCartParam(raw)')
+    expect(layoutSrc).not.toContain('decodeCartParam(raw)')
   })
 })
 

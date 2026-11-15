@@ -12,7 +12,7 @@ import { PushPermissionPrompt } from '../notification/PushPermissionPrompt'
 import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
-import { decodeCartParam } from '@/lib/cartDeepLink'
+import { normalizeCartParam } from '@/lib/cartDeepLink'
 import { decodeSocialContextParam, detectSocialSource, saveSocialHandoff } from '@/lib/socialHandoff'
 import { showToast } from '../ui/ToastContainer'
 
@@ -70,21 +70,26 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
   // R96 Fix (2026-11-12): localStorage fallback สำหรับ Facebook IAB — IAB strip ?cart= param เมื่อเปิด external browser
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const raw = new URLSearchParams(window.location.search).get('cart')
-    if (!raw) return
     // R92 (Owner 2026-11-11): จับ `?s=` (บริบทต่อเนื่อง "ระบบเขียน" จากแชท FB/Messenger)
     // ก่อน strip ใด ๆ — decode fail = ไม่มีบริบท ไม่บล็อก flow ตะกร้า
     const socialCtx = decodeSocialContextParam(new URLSearchParams(window.location.search).get('s'))
-    // R61 fix (§T-1): raw = "ค่า" ของ ?cart= — ต้องถอดด้วย decodeCartParam ตรง ๆ
+    // R61 fix (§T-1): raw = "ค่า" ของ ?cart= — ถอดด้วยฟังก์ชัน decode ตรง ๆ
     // (เดิมส่งเข้า readCartParam ที่รอ query string เต็ม → ทำ decodeCartParam(null) ทุกครั้ง
     //  → ลิงก์ตะกร้าจากโซเชียลฟ้อง "ลิงก์ไม่สมบูรณ์" + ตะกร้าว่าง 100% · evidence e2e/tProdProbe_results_T-A4cart.json)
-    const items = decodeCartParam(raw)
-    if (!items || items.length === 0) {
+    // R101-fix (Owner 2026-11-15 A-4): normalizeCartParam = ถอด % มั่วที่ติดมาจาก
+    // copy/paste ข้าม WebView→address bar ได้ด้วย (ค่าปกติไม่มี % = เหมือนเดิมเป๊ะ)
+    const searchParams = new URLSearchParams(window.location.search)
+    const norm = normalizeCartParam(searchParams.get('cart'))
+    if (!norm) {
       // R43 B6 (Owner 2026-10-31): decode-fail เคย return เงียบ → ลูกค้าเห็นตะกร้าว่าง
       // ไม่ทราบสาเหตุ (ภาพ 7-8) → ห้ามเงียบ ต้องบอกสาเหตุ + ทางออกเสมอ
-      showToast('ลิงก์รายการในแชทไม่สมบูรณ์หรือเสียหาย — เปิดรายการให้ไม่ได้ เลือกเมนูใหม่ที่หน้าร้านได้เลย', 'warning')
+      if (searchParams.has('cart')) {
+        showToast('ลิงก์รายการในแชทไม่สมบูรณ์หรือเสียหาย — เปิดรายการให้ไม่ได้ เลือกเมนูใหม่ที่หน้าร้านได้เลย', 'warning')
+      }
       return
     }
+    const raw = norm.raw
+    const items = norm.items
     // R96 Fix → R100d (Owner 2026-11-14 "copy ไป Chrome แล้วไม่มีสินค้า"): เดิมเก็บ sessionStorage
     // แต่ไม่มีจุดอ่านเลย + sessionStorage ข้ามแอป (FB IAB ↔ Chrome) ไม่แชร์กัน = ของตาย
     // → เก็บ localStorage (อยู่ข้าม reload ในแอป/เครื่องเดียวกัน) และมีจุดอ่านจริงที่ effect ถัดไป

@@ -4,6 +4,12 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-15 รอบ 2 (R101-fix — A-4 hotfix · Owner live test รอบ 1 = 12/17 ผ่าน):**
+- **ผล live รอบ 1 (Owner verified):** ✅ 12 ข้อ = A-1/2/3 · **B-1/2/6/7 (R97 ทำงานจริงครบ — history/cancel/guard)** · **C-1/2/3 (server timeline ข้ามเครื่องครบ)** · D-1/2 · ❌ **A-4 FAIL** (copy ปุ่มสีส้ม → Chrome ไม่มีตะกร้า) — หลักฐาน Owner: "เคยมีสินค้าแต่ในเบราว์เซอร์เฟซเอง" = Layout decode ถูกแล้วทั้งคู่ฝั่ง → ปัญหา = clipboard ข้าม WebView + payload โดน encode มั่ว
+- **HOTFIX (Owner อนุมัติ):** ① Banner copy 3 ชั้น (clipboard→execCommand→**prompt**) + **กล่องลิงก์เต็มคัดลอกเองได้ทุก WebView** (`inapp-link-box`/`inapp-select-link`) ② `normalizeCartParam` (cartDeepLink) ถอด `%` มั่วถึง 3 ชั้น ใช้ทั้ง Layout+Banner ③ R43 B6/R61/§T-1 contract อัปเดต (เข้มขึ้น — ไม่อ่อนลง)
+- **Gates หลัง hotfix:** tsc ✅ lint ✅ **vitest 217 ไฟล์ / 2291 tests PASS** (test ใหม่ `r101CartHandoffFix` 14 ข้อ) · build ✅ · **frontend only** (ไม่ต้อง deploy EF)
+- **รอบ 2 = 5 ข้อ:** A-4R (retest) · A-5 · B-3/4/5 — คู่มือ = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md` (รายการเดียว แทน 11-08/09/10)
+
 **🔒 LIVE STATE 2026-11-15 (R206 — Mascot Self-Service ใช้งานได้จริง: bucket `Bite_Mascot` APPLIED PROD + preview/upload/live-refresh · vitest 2277/2277):**
 - **R206 ปิดครบ + M206 APPLIED PROD (verified=true · bucket_public=1 · policy_count=4):** บั๊กจริงจากภาพจอ Owner — bucket `Bite_Mascot` (Owner สร้างเอง + อัปโหลด Bite_main.gif) ไม่มี policies ในโค้ด · หน้าแอดมินบันทึกแล้ว fail เงียบ (ไม่เช็คผล RPC) · ไม่มี preview · mascot โหลด URL ไม่ได้ = silent-fallback รูปเดิม
 - **แก้:** Migration 206 (bucket public + mime GIF/PNG/WebP/JPG ≤15MB + policies 4 ตัว pattern 119 — public read · admin-only write) · `mascotService.ts` (MASCOT_BUCKET + validateMascotFile + uploadMascotAsset + listMascotBucketFiles + event live-refresh · withDeadline ครบ 4) · MascotBadge/BiteMascot ฟัง event เปลี่ยนรูปทันทีไม่ต้อง deploy · MascotSettingsPage (preview + error state + save feedback ✅/❌ + อัปโหลดตรง + ↩ ค่าเริ่มต้น + quick-pick)

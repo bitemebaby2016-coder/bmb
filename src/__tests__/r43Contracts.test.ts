@@ -42,11 +42,15 @@ describe('R43 B1 — ปุ่มตั้งเวลา gate approval (ห้�
 })
 
 describe('R43 B6 — /shop?cart= decode-fail ห้ามเงียบ', () => {
-  it('Layout: items null/ว่าง → showToast บอกสาเหตุก่อน return (ไม่ใช่ return เปล่า)', () => {
-    // R61 (§T-1 ซ่อม): wiring เปลี่ยนเป็น decodeCartParam(raw) — guard "ว่าง → ฟ้อง ห้ามเงียบ" คงเดิมทุกประการ
-    expect(layoutSrc).toMatch(/const items = decodeCartParam\(raw\)/)
-    expect(layoutSrc).toMatch(/if \(!items \|\| items\.length === 0\) \{/)
+  it('Layout: decode-fail (normalize คืน null) → showToast บอกสาเหตุก่อน return (ไม่ใช่ return เปล่า)', () => {
+    // R101-fix (Owner 2026-11-15 A-4): wiring อัปเกรดเป็น normalizeCartParam(searchParams.get('cart'))
+    // (⊇ decodeCartParam — ถอด % มั่วจาก copy/paste ได้ด้วย) — กติกา "decode-fail → ฟ้อง ห้ามเงียบ" คงเดิมทุกประการ
+    // และเข้มขึ้น: toast เฉพาะเมื่อ URL มี ?cart= จริง (ไม่รบกวนหน้าปกติที่ไม่มี param)
+    expect(layoutSrc).toMatch(/const norm = normalizeCartParam\(searchParams\.get\('cart'\)\)/)
+    expect(layoutSrc).toMatch(/if \(!norm\) \{/)
+    expect(layoutSrc).toMatch(/if \(searchParams\.has\('cart'\)\)/)
     expect(layoutSrc).toMatch(/ลิงก์รายการในแชทไม่สมบูรณ์/)
+    expect(layoutSrc).toMatch(/showToast\('ลิงก์รายการในแชทไม่สมบูรณ์หรือเสียหาย[^']*', 'warning'\)/)
   })
 })
 

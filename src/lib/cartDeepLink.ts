@@ -64,6 +64,34 @@ export function decodeCartParam(raw: string | null | undefined): CartDeepItem[] 
   }
 }
 
+/**
+ * R101-fix (Owner 2026-11-15 · A-4 live FAIL "คัดลอกลิงก์จากปุ่มสีส้ม → Chrome ไม่มีตะกร้า
+ * แต่ใน WebView ของเฟซมีสินค้า"): WebView decode/restore ผ่านทั้งคู่ = decode ถูกแล้ว —
+ * ค่า `?cart=` (b64url: A-Za-z0-9_-) ที่ปกติปลอดภัยใน URL อาจ **ถูก re-encode มั่ว**
+ * ระหว่าง copy/paste ข้าม WebView→address bar (`%2D` → `%252D` double-encode)
+ * → helper นี้ถอดชั้น `%` พิเศษได้ best-effort (ค่าปกติไม่มี `%` = ไม่ถูกแตะเลย)
+ * คืนรายการ + raw ที่ "สะอาด" (เก็บต่อเป็น snapshot/คัดลอกได้)
+ */
+export function normalizeCartParam(
+  raw: string | null | undefined,
+): { items: CartDeepItem[]; raw: string } | null {
+  if (!raw || typeof raw !== 'string') return null
+  const direct = decodeCartParam(raw)
+  if (direct) return { items: direct, raw }
+  // ถอด % ได้หลายชั้น (re-encode ซ้ำ = %252D double-encode) — จำกัด 3 ชั้นกันวน
+  let cur = raw
+  for (let i = 0; i < 3 && cur.includes('%'); i++) {
+    try {
+      const dec = decodeURIComponent(cur)
+      if (dec === cur) break
+      const items = decodeCartParam(dec)
+      if (items) return { items, raw: dec }
+      cur = dec
+    } catch { /* ไม่ใช่ encoded ที่ถอดได้ = null ตามเดิม */ break }
+  }
+  return null
+}
+
 /** สร้าง URL เต็มของร้าน (Origin ฝั่งโซเชียลเขียนตายตัว = biteme-baby.com) */
 export function cartShareUrl(items: Array<{ id: string; q: number }>, origin = 'https://biteme-baby.com'): string {
   const enc = encodeCartParam(items)

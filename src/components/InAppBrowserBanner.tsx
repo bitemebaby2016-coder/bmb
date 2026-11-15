@@ -16,9 +16,9 @@
 //   ไม่ dispatch รูปแบบนี้ = ERR_UNKNOWN_URL_SCHEME หน้าพัง (R76/R79/R81-B2) ห้ามใส่อีก
 // ============================================
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useInAppBrowser } from '@/hooks/useInAppBrowser'
-import { decodeCartParam } from '@/lib/cartDeepLink'
+import { normalizeCartParam } from '@/lib/cartDeepLink'
 
 // ============================================
 // Global beforeinstallprompt capture — shared across all banner instances
@@ -130,17 +130,14 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
   // lazy initializer:รันครั้งเดียวตอน mount ซึ่ง URL ยังไม่ถูก strip โดย Layout
   const [cartHandoff] = useState<CartHandoff | null>(() => {
     try {
-      const raw = new URLSearchParams(window.location.search).get('cart')
-      if (!raw) return readCartResume() // R96-R100d: จุดจับ ณ mount พลาด = ใช้สแนปชอตสำรอง
-      const items = decodeCartParam(raw)
-      if (!items || items.length === 0) {
-        console.warn('[InAppBanner] ?cart= มีแต่ถอดไม่สำเร็จ —', raw.slice(0, 24))
-        return readCartResume() // decode fail = ห้ามแค่ null เงียบ — ลองสแนปชอตสำรองก่อน
-      }
+      // R101-fix (A-4): normalizeCartParam = ถอด % มั่วจาก copy/paste ได้ด้วย
+      // (ค่าปกติ b64url ไม่มี % = เหมือน decodeCartParam ตรง ๆ)
+      const cap = normalizeCartParam(new URLSearchParams(window.location.search).get('cart'))
+      if (!cap) return readCartResume() // จุดจับ ณ mount พลาด = ใช้สแนปชอตสำรอง
       try {
-        localStorage.setItem(CART_RESUME_KEY, JSON.stringify({ raw, items: items.length, at: Date.now() }))
+        localStorage.setItem(CART_RESUME_KEY, JSON.stringify({ raw: cap.raw, items: cap.items.length, at: Date.now() }))
       } catch { /* localStorage ถูกบล็อก = มี state ในหน้าพอแล้ว */ }
-      return { raw, count: items.length }
+      return { raw: cap.raw, count: cap.items.length }
     } catch {
       return readCartResume()
     }
@@ -165,34 +162,55 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
   // ที่ใช้ได้จริงคือ คัดลอกลิงก์ + เปิดเบราว์เซอร์เอง (หรือเมนู ⋯ ของแอป) → ให้ปุ่มสำรองเสมอ
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [guideOpen, setGuideOpen] = useState(false)
+  // R101-fix (Owner 2026-11-15 A-4 FAIL "คัดลอก → Chrome ไม่มีตะกร้า · แต่ใน WebView เฟซมีสินค้า"):
+  // WebView decode/restore ผ่านแล้วทั้งคู่ = ปัญหาแคบอยู่ที่ clipboard ข้าม WebView→Chrome
+  // → copy 3 ชั้น (clipboard API → execCommand → prompt modal) + กล่องลิงก์เต็มที่ user
+  //   เลือก/คัดลอกเองได้ (ทำงานทุก WebView ทุกเครื่อง — สะพานเดียวที่พิสูจน์ว่าใช้ได้จริง)
+  const linkBoxRef = useRef<HTMLTextAreaElement>(null)
   const ua = navigator.userAgent
   const isMessengerUA = /MESSENGER/i.test(ua)
   const isIOS = /iPhone|iPad/i.test(ua)
 
   const copyHandoff = useCallback(async () => {
+    let done = false
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(handoffUrl)
-        setCopyState('copied')
-        setGuideOpen(true)
-        return
+        done = true
       }
     } catch { /* fall through → textarea */ }
-    try {
-      const ta = document.createElement('textarea')
-      ta.value = handoffUrl
-      ta.setAttribute('readonly', '')
-      ta.style.cssText = 'position:fixed;opacity:0'
-      document.body.appendChild(ta)
-      ta.select()
-      const ok = document.execCommand('copy')
-      document.body.removeChild(ta)
-      setCopyState(ok ? 'copied' : 'failed')
-      setGuideOpen(true)
-    } catch {
-      setCopyState('failed')
+    if (!done) {
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = handoffUrl
+        ta.setAttribute('readonly', '')
+        ta.style.cssText = 'position:fixed;opacity:0'
+        document.body.appendChild(ta)
+        ta.select()
+        done = document.execCommand('copy')
+        document.body.removeChild(ta)
+      } catch { /* fall through → prompt */ }
     }
+    if (!done) {
+      // R101-fix: WebView บางรุ่นบล็อกทั้ง clipboard API และ execCommand →
+      // prompt modal = ทางเดียวที่ user คัดลอกเองได้แน่นอน (ทุก platform)
+      try {
+        window.prompt('คัดลอกลิงก์นี้เองครับ (กดค้าง/Ctrl+C):', handoffUrl)
+        done = true // user เห็น/คัดลอกเองแล้ว — ไม่รู้ผลจริง แต่ guide ต่อไปช่วยได้
+      } catch { /* prompt ถูกบล็อก (หายาด) = ปุ่มกล่องลิงก์ด้านล่างรับช่วงต่อ */ }
+    }
+    setCopyState(done ? 'copied' : 'failed')
+    setGuideOpen(true)
   }, [handoffUrl])
+
+  // R101-fix: เลือกทั้งหมดในกล่องลิงก์ (user กดค้าง → คัดลอกเองได้ทุก WebView)
+  const selectLinkBox = useCallback(() => {
+    const el = linkBoxRef.current
+    if (!el) return
+    el.focus()
+    el.select()
+    try { el.setSelectionRange(0, el.value.length) } catch { /* iOS รุ่นเก่า */ }
+  }, [])
 
   if (!isFB || dismissed) return <>{children}</>
 
@@ -268,6 +286,29 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
               )}
             </ol>
             <p className="mt-1 opacity-90">สำรองทุกเครื่อง: คัดลอกลิงก์แล้ว <b>วางใน Chrome / Safari</b> = เข้าเว็บจริงเสมอ</p>
+            {/* R101-fix (A-4): กล่องลิงก์เต็ม — WebView บางรุ่นคัดลอกโปรแกรมไม่ได้จริง →
+                user เลือกทั้งหมด + กดค้าง/Ctrl+C คัดลอกเองได้ทุกเครื่อง (สะพานที่พิสูจน์ว่าใช้ได้จริง) */}
+            {cartHandoff && (
+              <div className="mt-2">
+                <textarea
+                  ref={linkBoxRef}
+                  readOnly
+                  value={handoffUrl}
+                  rows={2}
+                  data-testid="inapp-link-box"
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="w-full rounded bg-white text-amber-900 text-[11px] px-2 py-1 break-all"
+                />
+                <button
+                  type="button"
+                  onClick={selectLinkBox}
+                  data-testid="inapp-select-link"
+                  className="mt-1 text-white underline text-xs"
+                >
+                  🔗 เลือกทั้งหมด แล้วกดค้าง/Ctrl+C คัดลอกเอง
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

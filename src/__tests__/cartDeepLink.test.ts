@@ -83,9 +83,12 @@ describe('EF buildCartLink / footer (mirror ต้องตรงกับเว
 
 describe('Layout — ?cart= deep-link wiring', () => {
   it('อ่านค่า แล้ว strip ออกจาก URL เติมลงตะกร้า + เปิดแผง (source contract)', () => {
-    // R61 (§T-1): ต้องถอดค่าด้วย decodeCartParam — ห้ามใช้ readCartParam(raw) (รอ query string = null ทุกครั้ง)
-    expect(layoutSrc).toContain('decodeCartParam(raw)')
+    // R61 (§T-1): ต้องถอดค่าด้วย decode ตรง ๆ — ห้ามใช้ readCartParam(raw) (รอ query string = null ทุกครั้ง)
+    // R101-fix (Owner 2026-11-15 A-4): อัปเกรดเป็น normalizeCartParam (⊇ decodeCartParam —
+    // ถอด % มั่วจาก copy/paste ข้าม WebView→address bar ได้ด้วย) — ไม่ใช่การอ่อน assertion
+    expect(layoutSrc).toContain("normalizeCartParam(searchParams.get('cart'))")
     expect(layoutSrc).not.toContain('readCartParam(raw)')
+    expect(layoutSrc).not.toContain('decodeCartParam(raw)')
     expect(layoutSrc).toMatch(/searchParams\.delete\('cart'\)/)
     expect(layoutSrc).toMatch(/addItem\(p, it\.q, \{\}, 'SAME_DAY'\)/)
     expect(layoutSrc).toMatch(/setCheckoutOpen\(true\)/)

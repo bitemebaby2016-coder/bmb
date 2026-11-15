@@ -1,3 +1,24 @@
+## 🔒 SESSION CLOSE 2026-11-15 รอบ 2 (R101-fix — A-4 live FAIL "copy ปุ่มสีส้ม → Chrome ไม่มีตะกร้า" · สาเหตุพิสูจน์จากหลักฐาน Owner + hotfix · Gates 4/4 · vitest 2291/2291) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** กรอกผล remain test รอบ 1 (12 ข้อผ่าน · **A-4 FAIL**) + หลักฐานสำคัญ "เคยมีสินค้าในตะกร้า — แต่ในเบราว์เซอร์ของเฟซบุ๊คเอง" → "ดูว่าเกิดจากอะไรกันแน่แล้วรายงานก่อนแก้" → รายงาน 3 สาเหตุ + ยกเลิกข้อเสนอที่ผิดเอง (encodeURIComponent ซ้อน searchParams.set = double-encode) → "อนุมัติ hot fix ทำงานตามกฏ อ่าน ai entry point ก่อนลงมือ"
+
+> **สาเหตุที่พิสูจน์ (จากหลักฐาน Owner):** A-3 PASS (WebView โชว์จำนวน) + "เคยมีสินค้าใน WebView" = **Layout decode/restore ถูกแล้วทั้งคู่ฝั่ง** → ปัญหาแคบอยู่ที่ ① clipboard ข้าม WebView→Chrome (clipboard API/execCommand ใน WebView บางรุ่นไม่เขียน clipboard ระบบจริง) ② payload b64url โดน re-encode มั่วระหว่าง copy/paste (b64 ของ ASCII payload ได้ `+`/`/` เฉพาะ chunk align กับ byte สูง — `~` 0x7E พิสูจน์ probe) → `%2D`/`%252D` → decode fail
+
+> **แก้ 3 ชั้น:**
+> 1. **`InAppBrowserBanner.tsx`** — copy **3 ชั้น** (clipboard API → execCommand textarea → **`window.prompt` modal ให้ user คัดลอกเอง**) + **กล่องลิงก์เต็ม** (`inapp-link-box` textarea readOnly + ปุ่ม "เลือกทั้งหมด" `inapp-select-link` — กดค้าง/Ctrl+C คัดลอกเองได้ทุก WebView ทุกเครื่อง = สะพานที่ใช้ได้จริงเสมอ) · snapshot `bmb:cart-resume` ยังเก็บทันทีที่ capture ✓ · hooks (useRef ใหม่) ก่อน early return ✓ · ห้าม intent:// ✓
+> 2. **`cartDeepLink.ts`** — `normalizeCartParam()` ใหม่: decode ตรงก่อน · ถ้า fail และมี `%` → ถอด `decodeURIComponent` ได้**ถึง 3 ชั้น** (ค่าปกติ b64url ไม่มี `%` = ไม่ถูกแตะเลย) · คืน `{items, raw สะอาด}`
+> 3. **`Layout.tsx`** — ใช้ `normalizeCartParam(searchParams.get('cart'))` (⊇ decodeCartParam เดิม) · **R43 B6 ยังบังคับครบ**: decode-fail เมื่อ URL มี `?cart=` = toast บอกสาเหตุ (เข้มขึ้น: ไม่รบกวนหน้าปกติที่ไม่มี param) · strip/retry 700ms/2.5s คงเดิม
+
+> **Tests:** ใหม่ `r101CartHandoffFix.test.ts` (14 ข้อ — normalize มั่ว 1/หลายชั้น + payload มี `-`/`_` จริง (พิสูจน์ด้วย `~` probe) + copy 3 ชั้น + กล่องลิงก์ + contract เดิม) · contract อัปเดตให้ตรง refactor (ไม่อ่อนลง): `r43Contracts` (B6 toast + guard `.has('cart')`) · `cartDeepLink` wiring · `r61Contracts` (§T-1 สืบทอด normalize) · **Gates: tsc ✅ lint ✅ vitest 217 ไฟล์/2291 tests PASS ✅ build ✅**
+
+> **ผล remain test รอบ 1 (บันทึกใน test pack):** ✅ 12 ข้อ = A-1/2/3 · B-1/2/6/7 · C-1/2/3 · D-1/2 — **R97 (R205) ทำงานจริงบน live ครบ** (history/cancel/guard/เว็บ timeline ข้ามเครื่อง/grounding สด) · ❌ A-4 → hotfix นี้ · ⏳ รอบ 2 = A-4R (ใช้กล่องลิงก์เต็มถ้า clipboard อัตโนมัติยังไม่ได้) + A-5 + B-3/4/5
+
+> **Files Changed:** `src/components/InAppBrowserBanner.tsx` · `src/lib/cartDeepLink.ts` · `src/components/layout/Layout.tsx` · `src/__tests__/r101CartHandoffFix.test.ts` (ใหม่) · `src/__tests__/r43Contracts.test.ts` · `src/__tests__/cartDeepLink.test.ts` · `src/__tests__/r61Contracts.test.ts` · `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md` (ผลรอบ 1 + รอบ 2) — **frontend only ไม่ต้อง deploy EF**
+
+> **Next Exact Action:** Owner hard reload → รอบ 2 = A-4R/A-5/B-3/4/5 (5 ข้อ — คู่มือใน test pack) · จบครบ = ปิด R101 ตาม two-try
+
+---
+
 > **✅ LIVE STATE ยืนยันสุดท้าย 2026-11-15 (`e2e/_r205_live_check.json` = R205_LIVE_CHECK_OK=true):** EF `social-ai-worker` **v86 ACTIVE** (deploy ล่าสุด · verify_jwt=true) · DB: RPC 205 ทั้ง 2 อยู่ + grants ถูก (wrapper=service_role · timeline=authenticated) + m204 คอลัมน์ครบ 3 · **เอกสาร live test ใหม่ = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md`** (กลุ่ม A §T-A/R100 · B R97 ข้อละ 7 · C R96 P2 เว็บ · D grounding สด — ตารางบันทึกผลพร้อมกรอก) — **แทนฉบับ 11-08/09/10 ทั้งหมด**
 
 ## 🔒 SESSION CLOSE 2026-11-15 (รอบ 36 · R206 — Mascot Self-Service ใช้งานได้จริง: bucket `Bite_Mascot` + preview + upload + live refresh · m206 APPLIED PROD · Gates 4/4 · vitest 2277/2277) — **CODE_CLOSED + APPLIED**
