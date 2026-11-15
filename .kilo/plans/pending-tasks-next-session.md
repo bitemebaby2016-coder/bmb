@@ -11,14 +11,9 @@
 
 ## ค้างรอ Owner (ทดสอบพร้อมกันตามคำสั่ง)
 
-| # | รายการ | วิธีทดสอบ |
-|---|--------|-----------|
-| 1 | **§T-A** cart retry 2.5s | Hard reload `https://biteme-baby.com` → กดลิงก์ `?cart=` จาก FB → Chrome ต้องมีของภายใน 2.5 วิ |
-| 2 | **R98/§R100** IAB + PWA | ตาม checklist 5 ข้อใน AI_WORK_STATE บล็อก R100e |
-| 3 | **R97** history | Messenger ทัก "ทบทวน order" → ต้องสรุปจากประวัติจริง หรือบอกไม่พบ (ห้ามมโน) |
-| 4 | **R97** cancel | "ยกเลิกออเดอร์ BMB-xxx" → เฉพาะ pending ในหน้าต่างยกเลิก — ใบอื่นบอกตามจริง |
-| 5 | **R97** modify | "แก้เป็น..." → ถามยืนยันก่อน → ยืนยัน = ยกเลิกเดิม + สร้างใหม่ (เลขที่ใหม่จากระบบ) |
-| 6 | **R96 P2 เว็บ** | ล็อกอินบนเครื่องใหม่ → Bite ต้องต่อบริบทจาก Facebook/Messenger (server timeline) |
+**📄 รายการเดียว = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md`** (แทนฉบับ 11-08/09/10) — กลุ่ม A (§T-A/R100 5 ข้อ) · B (R97 7 ข้อ: history/cancel/modify/guard) · C (R96 P2 เว็บ 3 ข้อ) · D (grounding สด 2 ข้อ) · พร้อมตารางบันทึกผล
+
+**สถานะ deployment ยืนยันแล้ว (`_r205_live_check.json` R205_LIVE_CHECK_OK=true):** Migration 205 APPLIED PROD + EF `social-ai-worker` v86 ACTIVE (โค้ด R97 ใหม่ขึ้นจริง) + frontend รอ auto-deploy จาก push `1aa9f7a` (Cloudflare Pages)
 
 ## Known Risks (จดไว้)
 

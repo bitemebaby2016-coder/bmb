@@ -1,3 +1,5 @@
+# ⛔ ฉบับนี้ถูกแทนที่แล้ว → ไปที่ `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md` (รายการเดียวที่ต้องรัน · เก็บเฉพาะที่ปิดไม่ได้)
+
 # BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-13 09:15)
 
 > **อัปเดต 2026-11-13 09:15 (Owner verified):** **R98 ✅ 5/5 PASS** — InAppBrowserBanner + PWA Install + Cart Continuity ครบ · **R96 ✅ COMPLETE** — AI Grounding + Cross-Channel Context + Data Freshness (Migration 203/204 APPLIED PROD) · D2 ✅, D5 ✅, R92-S ✅ — **เหลือ §T-A เท่านั้น** ต้อง retest ต่อ

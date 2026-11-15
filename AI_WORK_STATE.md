@@ -1,3 +1,5 @@
+> **✅ LIVE STATE ยืนยันสุดท้าย 2026-11-15 (`e2e/_r205_live_check.json` = R205_LIVE_CHECK_OK=true):** EF `social-ai-worker` **v86 ACTIVE** (deploy ล่าสุด · verify_jwt=true) · DB: RPC 205 ทั้ง 2 อยู่ + grants ถูก (wrapper=service_role · timeline=authenticated) + m204 คอลัมน์ครบ 3 · **เอกสาร live test ใหม่ = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md`** (กลุ่ม A §T-A/R100 · B R97 ข้อละ 7 · C R96 P2 เว็บ · D grounding สด — ตารางบันทึกผลพร้อมกรอก) — **แทนฉบับ 11-08/09/10 ทั้งหมด**
+
 ## 🔒 SESSION CLOSE 2026-11-15 (รอบ 35 · R101 — R96/R97 ปิดครบ: "รวมใช้บริบทเดียวกันทุกช่องทางและรับต่อเนื่องกัน" · m205 APPLIED PROD + EF deployed + probe ผ่าน · Gates 4/4 · vitest 2257/2257) — **CODE_CLOSED + APPLIED + DEPLOYED**
 
 > **สถานะ ณ 2026-11-15 11:25:** R101 **COMPLETE + APPLIED PROD + DEPLOYED** · tsc ✅ lint ✅ vitest ✅ (**215 files / 2257 tests PASS — `e2e/_r97_vitest_full2.log`**) · build ✅ · **m205 applied (http=201 + verify functions + grants ถูก + probe runtime `PROBE_OK=true`)** · **EF `social-ai-worker` deployed (exit=0)** · รอ Owner live test รวม (R98/§T-A + R97)

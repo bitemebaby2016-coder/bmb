@@ -1,0 +1,26 @@
+{
+  "at": "2026-11-15T04:23:47.600Z",
+  "checks": {
+    "ef_worker": {
+      "http": 200,
+      "version": 86,
+      "updated_at": 1794715903298,
+      "status": "ACTIVE",
+      "verify_jwt": true
+    },
+    "ef_worker_new_enough": true,
+    "db": {
+      "http": 201,
+      "row": {
+        "has_cancel_wrapper": true,
+        "has_web_timeline": true,
+        "wrapper_service_grants": 1,
+        "timeline_auth_grants": 1,
+        "m204_columns": 3
+      }
+    },
+    "db_ok": true,
+    "guarded_not_mutating": true
+  },
+  "ok": true
+}
