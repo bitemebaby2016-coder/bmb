@@ -26,6 +26,7 @@ import { AdminAssetAudit } from '@/pages/admin/AdminAssetAudit'
 const KIND_LABEL: Record<string, string> = {
   image: 'รูปภาพ',
   video: 'วิดีโอ',
+  audio: 'เสียง',
   logo: 'โลโก้',
   hero: 'Hero',
   mascot: 'มาสคอต',
@@ -242,8 +243,8 @@ export function AdminMediaPortfolio() {
             <div>
               <label className="block text-sm font-medium text-brand-muted mb-1">ไฟล์</label>
               <div className="flex flex-wrap items-center gap-2">
-                <input type="file" className="input border rounded px-3 py-2" accept="image/*,video/mp4" disabled={uploading} onChange={(e) => handleUpload(e.target.files?.[0] || undefined)} data-testid="media-file-input" />
-                <label className="btn btn-outline btn-sm cursor-pointer" title="ถ่ายภาพ/อัดวิดีโอด้วยกล้อง">📷 ถ่ายภาพ<input type="file" accept="image/*,video/mp4" capture="environment" disabled={uploading} onChange={(e) => handleUpload(e.target.files?.[0] || undefined)} className="hidden" data-testid="media-camera-input" /></label>
+                <input type="file" className="input border rounded px-3 py-2" accept="image/*,video/*,audio/*" disabled={uploading} onChange={(e) => handleUpload(e.target.files?.[0] || undefined)} data-testid="media-file-input" />
+                <label className="btn btn-outline btn-sm cursor-pointer" title="ถ่ายภาพ/อัดวิดีโอด้วยกล้อง">📷 ถ่ายภาพ<input type="file" accept="image/*,video/*,audio/*" capture="environment" disabled={uploading} onChange={(e) => handleUpload(e.target.files?.[0] || undefined)} className="hidden" data-testid="media-camera-input" /></label>
               </div>
             </div>
           </div>
@@ -262,7 +263,7 @@ export function AdminMediaPortfolio() {
                     <td className="py-2 pr-3">{a.category || a.kind}</td>
                     <td className="py-2 pr-3 text-xs text-brand-muted">{a.tenant_id ? a.tenant_id.slice(0, 8) + '…' : 'global'} / {a.brand_id ? a.brand_id.slice(0, 8) + '…' : 'global'}</td>
                     <td className="py-2 pr-3">{a.is_active ? <span className="text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5 text-xs">ACTIVE</span> : <span className="text-gray-500 bg-gray-100 border rounded px-2 py-0.5 text-xs">INACTIVE</span>}{a.is_mock && <span className="ml-1 text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 text-xs">MOCK</span>}</td>
-                    <td className="py-2 pr-3">{a.url && a.kind !== 'video' ? <img src={a.url} alt={a.alt || a.asset_key || ''} className="w-10 h-10 object-cover rounded" /> : '—'}</td>
+<td className="py-2 pr-3">{a.url && a.kind === 'image' ? <img src={a.url} alt={a.alt || a.asset_key || ''} className="w-10 h-10 object-cover rounded" /> : a.url && a.kind === 'video' ? <video src={a.url} className="w-10 h-10 rounded" controls muted /> : a.url && a.kind === 'audio' ? <audio src={a.url} className="w-20" controls /> : '—'}</td>
                     <td className="py-2"><button onClick={() => handleToggleActive(a)} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded px-2 py-1 hover:bg-blue-100">{a.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button></td>
                   </tr>
                 ))}
@@ -275,7 +276,7 @@ export function AdminMediaPortfolio() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {assets.map((a) => (
               <div key={a.id} className="card overflow-hidden"><div className="aspect-square bg-gray-100 flex items-center justify-center">
-                {a.url ? <img src={a.url} alt={a.alt || 'media'} className="w-full h-full object-cover" /> : <span className="text-4xl">🎬</span>}</div>
+                {a.url && a.kind === 'image' ? <img src={a.url} alt={a.alt || 'media'} className="w-full h-full object-cover" /> : a.url && a.kind === 'video' ? <video src={a.url} className="w-full h-full object-cover rounded" controls muted /> : a.url && a.kind === 'audio' ? <div className="w-full h-full flex items-center justify-center p-4"><audio src={a.url} controls className="w-full max-w-xs" /></div> : <span className="text-4xl">🎬</span>}</div>
                 <div className="p-3"><div className="text-xs font-medium">{KIND_LABEL[a.kind] || a.kind}</div><div className="text-sm text-brand-muted truncate">{a.alt || a.url}</div>
                 <button onClick={() => handleDelete(a)} className="mt-2 text-xs bg-red-50 text-red-700 border border-red-200 rounded px-2 py-1 hover:bg-red-100">ลบ</button></div></div>
             ))}

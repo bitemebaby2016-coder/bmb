@@ -22,6 +22,7 @@ import {
 const KIND_LABEL: Record<string, string> = {
   image: 'รูปภาพ',
   video: 'วิดีโอ',
+  audio: 'เสียง',
   logo: 'โลโก้',
   hero: 'Hero',
   mascot: 'มาสคอต',
@@ -137,32 +138,32 @@ export function AdminMedia() {
               data-testid="media-asset-key"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-brand-muted mb-1">ไฟล์</label>
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                type="file"
-                className="input border rounded px-3 py-2"
-                accept="image/*,video/mp4"
-                disabled={uploading}
-                onChange={(e) => handleUpload(e.target.files?.[0] || undefined)}
-                data-testid="media-file-input"
-              />
-              {/* Owner request: เพิ่มรูปต้องถ่ายจากกล้องได้ด้วย (มีแต่เลือกจากอัลบั้ม) */}
-              <label className="btn btn-outline btn-sm cursor-pointer" title="ถ่ายภาพ/อัดวิดีโอด้วยกล้อง">
-                📷 ถ่ายภาพ
+<div>
+              <label className="block text-sm font-medium text-brand-muted mb-1">ไฟล์</label>
+              <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="file"
-                  accept="image/*,video/mp4"
-                  capture="environment"
+                  className="input border rounded px-3 py-2"
+                  accept="image/*,video/*,audio/*"
                   disabled={uploading}
                   onChange={(e) => handleUpload(e.target.files?.[0] || undefined)}
-                  className="hidden"
-                  data-testid="media-camera-input"
+                  data-testid="media-file-input"
                 />
-              </label>
+                {/* Owner request: เพิ่มรูปต้องถ่ายจากกล้องได้ด้วย (มีแต่เลือกจากอัลบั้ม) */}
+                <label className="btn btn-outline btn-sm cursor-pointer" title="ถ่ายภาพ/อัดวิดีโอด้วยกล้อง">
+                  📷 ถ่ายภาพ
+                  <input
+                    type="file"
+                    accept="image/*,video/*,audio/*"
+                    capture="environment"
+                    disabled={uploading}
+                    onChange={(e) => handleUpload(e.target.files?.[0] || undefined)}
+                    className="hidden"
+                    data-testid="media-camera-input"
+                  />
+                </label>
+              </div>
             </div>
-          </div>
         </div>
         <p className="text-xs text-brand-muted mt-2">
           ไฟล์จะถูกเก็บใน Storage bucket <code className="bg-gray-100 px-1 rounded">bmb-images</code> และ
@@ -209,8 +210,12 @@ export function AdminMedia() {
                       )}
                     </td>
                     <td className="py-2 pr-3">
-                      {a.url && a.kind !== 'video' ? (
+                      {a.url && a.kind === 'image' ? (
                         <img src={a.url} alt={a.alt || a.asset_key || ''} className="w-10 h-10 object-cover rounded" />
+                      ) : a.url && a.kind === 'video' ? (
+                        <video src={a.url} className="w-10 h-10 rounded" controls muted />
+                      ) : a.url && a.kind === 'audio' ? (
+                        <audio src={a.url} className="w-20" controls />
                       ) : ('—')}
                     </td>
                     <td className="py-2">
@@ -236,8 +241,14 @@ export function AdminMedia() {
           {assets.map((a) => (
             <div key={a.id} className="card overflow-hidden">
               <div className="aspect-square bg-gray-100 flex items-center justify-center">
-                {a.url ? (
+                {a.url && a.kind === 'image' ? (
                   <img src={a.url} alt={a.alt || 'media'} className="w-full h-full object-cover" />
+                ) : a.url && a.kind === 'video' ? (
+                  <video src={a.url} className="w-full h-full object-cover rounded" controls muted />
+                ) : a.url && a.kind === 'audio' ? (
+                  <div className="w-full h-full flex items-center justify-center p-4">
+                    <audio src={a.url} controls className="w-full max-w-xs" />
+                  </div>
                 ) : (
                   <span className="text-4xl">🎬</span>
                 )}

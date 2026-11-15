@@ -10,14 +10,14 @@ export interface MediaAssetRow {
   id: string
   url: string
   alt: string
-  kind: 'image' | 'video' | 'logo' | 'hero' | 'mascot'
+  kind: 'image' | 'video' | 'audio' | 'logo' | 'hero' | 'mascot'
   created_by?: string | null
   created_at?: string
 }
 
 export const MEDIA_BUCKET = 'bmb-images'
 
-export const MEDIA_KINDS: MediaAssetRow['kind'][] = ['image', 'video', 'logo', 'hero', 'mascot']
+export const MEDIA_KINDS: MediaAssetRow['kind'][] = ['image', 'video', 'audio', 'logo', 'hero', 'mascot']
 
 export async function listMediaAssets(): Promise<MediaAssetRow[]> {
   const { data, error } = await supabase
@@ -37,9 +37,17 @@ export async function uploadMediaAsset(
   kind: MediaAssetRow['kind'],
   alt = '',
 ): Promise<MediaAssetRow | null> {
+  // Validate file first (image/audio/video)
+  const validation = validateMediaFile(file)
+  if (!validation.ok) {
+    console.error('[uploadMediaAsset] validation error:', validation.error)
+    return null
+  }
+
   // IMG-1 (Owner 2026-11-03): ทุกภาพที่ระบบเอามาใช้ = ย่ออัตโนมัติก่อนขึ้นคลัง
   // (idempotent — ไฟล์ที่ย่อแล้ว/เล็กพอ = คืนเดิม · GIF/decode ไม่ได้ = zero-fake คืนเดิม)
   // R92 (Owner 2026-11-09): บังคับ 300×300 + ≤100KB สำหรับรูปที่เอามาใช้ (ทั้งเว็บ + supabase)
+  // Note: compressToWebLimits returns GIF as-is (preserves animation), skips audio/video
   const sized = await compressToWebLimits(file)
   const path = `uploads/${Date.now()}-${sanitizeName(sized.name)}`
   const { data: up, error: upErr } = await supabase.storage
@@ -104,6 +112,73 @@ export function validateImageFile(file: File): ImageValidation {
     return { ok: false, error: `ERR_INVALID_SIZE (${(file.size / 1024 / 1024).toFixed(2)} MB — สูงสุด 5 MB)` }
   }
   return { ok: true }
+}
+
+// ============================================
+// Audio/Video validation (R61/R63 extension: support audio/* and video/* in Media Library)
+// ============================================
+
+export const AUDIO_MIME_WHITELIST = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3', 'audio/webm', 'audio/aac']
+export const MAX_AUDIO_BYTES = 20 * 1024 * 1024 // 20 MB
+
+export const VIDEO_MIME_WHITELIST = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska']
+export const MAX_VIDEO_BYTES = 50 * 1024 * 1024 // 50 MB
+
+// GIF can be larger than 5MB when animated — allow up to 15MB for GIF specifically
+export const MAX_GIF_BYTES = 15 * 1024 * 1024 // 15 MB
+
+export interface MediaValidation {
+  ok: boolean
+  error?: string
+}
+
+/**
+ * Unified validation for all media types in Media Library.
+ * Routes to appropriate validator based on file MIME type.
+ * - image/* (including GIF): uses validateImageFile with GIF size allowance
+ * - audio/*: validates against AUDIO_MIME_WHITELIST and MAX_AUDIO_BYTES
+ * - video/*: validates against VIDEO_MIME_WHITELIST and MAX_VIDEO_BYTES
+ */
+export function validateMediaFile(file: File): MediaValidation {
+  const type = file.type || ''
+  
+  // Image (including GIF)
+  if (type.startsWith('image/')) {
+    if (!IMAGE_MIME_WHITELIST.includes(type)) {
+      return { ok: false, error: `ERR_INVALID_MIME (${type} — รองรับ JPEG/PNG/WebP/GIF)` }
+    }
+    // GIF gets larger size limit for animation
+    const maxBytes = type === 'image/gif' ? MAX_GIF_BYTES : MAX_IMAGE_BYTES
+    if (file.size <= 0 || file.size > maxBytes) {
+      const maxMB = maxBytes / 1024 / 1024
+      return { ok: false, error: `ERR_INVALID_SIZE (${(file.size / 1024 / 1024).toFixed(2)} MB — สูงสุด ${maxMB} MB)` }
+    }
+    return { ok: true }
+  }
+  
+  // Audio
+  if (type.startsWith('audio/')) {
+    if (!AUDIO_MIME_WHITELIST.includes(type)) {
+      return { ok: false, error: `ERR_INVALID_MIME (${type} — รองรับ MP3/WAV/OGG/AAC/WebM)` }
+    }
+    if (file.size <= 0 || file.size > MAX_AUDIO_BYTES) {
+      return { ok: false, error: `ERR_INVALID_SIZE (${(file.size / 1024 / 1024).toFixed(2)} MB — สูงสุด 20 MB)` }
+    }
+    return { ok: true }
+  }
+  
+  // Video
+  if (type.startsWith('video/')) {
+    if (!VIDEO_MIME_WHITELIST.includes(type)) {
+      return { ok: false, error: `ERR_INVALID_MIME (${type} — รองรับ MP4/WebM/MOV/AVI/MKV)` }
+    }
+    if (file.size <= 0 || file.size > MAX_VIDEO_BYTES) {
+      return { ok: false, error: `ERR_INVALID_SIZE (${(file.size / 1024 / 1024).toFixed(2)} MB — สูงสุด 50 MB)` }
+    }
+    return { ok: true }
+  }
+  
+  return { ok: false, error: `ERR_INVALID_MIME (${type || 'unknown'} — รองรับ image/*, audio/*, video/*)` }
 }
 
 export interface ProductImageResult {
@@ -202,6 +277,8 @@ export async function compressToWebLimits(
   maxSide: number = DISPLAY_MAX_SIDE,
   maxBytes: number = DISPLAY_MAX_BYTES,
 ): Promise<File> {
+  // Skip compression for audio/video — return as-is
+  if (file.type.startsWith('audio/') || file.type.startsWith('video/')) return file
   if (file.type === 'image/gif') return file
   let bmp: ImageBitmap | null = null
   try {
@@ -384,8 +461,9 @@ export async function uploadRegisteredAsset(
 ): Promise<RegistryAssetRow | null> {
   // IMG-1: ย่อก่อน validate — รูปใหญ่ (เช่น 5.8MB เจน) จะผ่าน 5MB cap หลังย่อ (แบบ T-C3)
   // R92 (Owner 2026-11-09): บังคับ 300×300 + ≤100KB สำหรับรูปที่เอามาใช้ (asset registry)
+  // compressToWebLimits returns audio/video/GIF as-is
   const sized = await compressToWebLimits(file)
-  const v = validateImageFile(sized)
+  const v = validateMediaFile(sized)
   if (!v.ok) return null
   const { data: user } = await supabase.auth.getUser()
   const callerTenant = await getCallerTenantId()

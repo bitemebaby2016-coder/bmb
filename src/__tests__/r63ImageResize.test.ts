@@ -13,11 +13,12 @@ describe('R63 IMG-1 · ทุก path ที่ภาพเข้าระบบ
   it('media lib = จุดกลาง: uploadMediaAsset + uploadRegisteredAsset เรียก downscale ก่อน upload (Registered = ย่อก่อน validate)', () => {
     expect(mediaSrc).toContain('export async function downscaleImageFile')
     expect(mediaSrc).toContain('export async function compressToWebLimits') // R92: บังคับ 300×300/100KB
-    // uploadMediaAsset: sized ก่อน build path (R92 = compressToWebLimits)
-    expect(mediaSrc).toMatch(/uploadMediaAsset\([\s\S]{0,400}?const sized = await compressToWebLimits\(file\)/)
-    expect(mediaSrc).toMatch(/uploadMediaAsset\([\s\S]{0,700}?\.upload\(path, sized/)
-    // uploadRegisteredAsset: ย่อก่อน validate (5MB cap = ผ่านหลังย่อ แบบ T-C3)
-    expect(mediaSrc).toMatch(/uploadRegisteredAsset\([\s\S]{0,400}?const sized = await compressToWebLimits\(file\)[\s\S]{0,200}?validateImageFile\(sized\)/)
+    expect(mediaSrc).toContain('export function validateMediaFile') // unified validation for image/audio/video
+    // uploadMediaAsset: validate ก่อน → sized = compressToWebLimits(file)
+    expect(mediaSrc).toMatch(/uploadMediaAsset\([\s\S]{0,1000}?const sized = await compressToWebLimits\(file\)/)
+    expect(mediaSrc).toMatch(/uploadMediaAsset\([\s\S]{0,1200}?\.upload\(path, sized/)
+    // uploadRegisteredAsset: ย่อก่อน validate (5MB cap = ผ่านหลังย่อ แบบ T-C3) — ใช้ validateMediaFile แทน validateImageFile
+    expect(mediaSrc).toMatch(/uploadRegisteredAsset\([\s\S]{0,400}?const sized = await compressToWebLimits\(file\)[\s\S]{0,200}?validateMediaFile\(sized\)/)
     expect(mediaSrc).toMatch(/uploadRegisteredAsset\([\s\S]{0,900}?\.upload\(path, sized/)
   })
 
