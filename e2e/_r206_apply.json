@@ -1,0 +1,18 @@
+{
+  "at": "2026-11-15T07:29:11.159Z",
+  "file": "supabase/migrations/206_mascot_bucket_selfservice.sql",
+  "project": "ivkdfognyiwjcmrhcnwz",
+  "sql_bytes": 3830,
+  "sql_has_begin": true,
+  "http": 201,
+  "response": "[]",
+  "ok": true,
+  "verify_http": 201,
+  "verify": [
+    {
+      "bucket_public": 1,
+      "policy_count": 4
+    }
+  ],
+  "verified": true
+}

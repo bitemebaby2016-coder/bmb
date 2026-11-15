@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import type { MascotPose, MascotSize } from '@/types'
-import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
+import { loadMascotOverrides, getOverrideUrl, MASCOT_OVERRIDES_CHANGED_EVENT } from '@/lib/mascotService'
 import { useStoreClosed } from '@/lib/storeStatus'
 import { enforceClosedPose } from '@/lib/mascotClosed'
 
@@ -111,6 +111,23 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
       if (o) setSrc(o)
     })
     return () => { active = false }
+  }, [effectivePose])
+
+  // R206: admin บันทึก override ใหม่ → badge ที่แสดงอยู่เปลี่ยนทันที (ไม่ต้อง deploy/refresh หน้า)
+  useEffect(() => {
+    let active = true
+    const onChanged = () => {
+      void loadMascotOverrides(true).then(() => {
+        if (!active) return
+        const o = getOverrideUrl(effectivePose)
+        setSrc(o ?? POSE_ASSETS[effectivePose].src)
+      })
+    }
+    window.addEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
+    return () => {
+      active = false
+      window.removeEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
+    }
   }, [effectivePose])
 
   // ลำดับ fallback: admin override → 3D asset จริง → เวกเตอร์เดิม (กัน infinite loop)

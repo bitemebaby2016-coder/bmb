@@ -1,5 +1,26 @@
 > **✅ LIVE STATE ยืนยันสุดท้าย 2026-11-15 (`e2e/_r205_live_check.json` = R205_LIVE_CHECK_OK=true):** EF `social-ai-worker` **v86 ACTIVE** (deploy ล่าสุด · verify_jwt=true) · DB: RPC 205 ทั้ง 2 อยู่ + grants ถูก (wrapper=service_role · timeline=authenticated) + m204 คอลัมน์ครบ 3 · **เอกสาร live test ใหม่ = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md`** (กลุ่ม A §T-A/R100 · B R97 ข้อละ 7 · C R96 P2 เว็บ · D grounding สด — ตารางบันทึกผลพร้อมกรอก) — **แทนฉบับ 11-08/09/10 ทั้งหมด**
 
+## 🔒 SESSION CLOSE 2026-11-15 (รอบ 36 · R206 — Mascot Self-Service ใช้งานได้จริง: bucket `Bite_Mascot` + preview + upload + live refresh · m206 APPLIED PROD · Gates 4/4 · vitest 2277/2277) — **CODE_CLOSED + APPLIED**
+
+> **สถานะ ณ 2026-11-15 14:30:** R206 **COMPLETE IN CODE + M206 APPLIED PROD (verified)** · tsc ✅ lint ✅ vitest ✅ (**216 files / 2277 tests PASS — `e2e/_r206_vitest_full.log`**) · build ✅
+
+> **บั๊กจริงจากภาพจอ Owner (2026-11-15):** ① Owner สร้าง bucket `Bite_Mascot` เอง + อัปโหลด `Bite_main.gif` (image/gif 279.74KB) — **bucket ไม่มีในโค้ด/มิเกรชันเลย** (ไม่มี policies → ถ้า private = public URL โหลดไม่ได้) ② MascotSettingsPage บันทึกแล้วไม่มี preview/feedback — `upsertMascotOverride` คืน boolean แต่ **UI ไม่เช็ค** = fail เงียบ ③ MascotBadge **silent-fallback** รูปเดิมเมื่อโหลด URL ไม่ได้ (handleError) = แอดมินไม่รู้สาเหตุ ④ badge ที่ mount อยู่ไม่รู้ว่า override เปลี่ยน (cache ต่อ session)
+
+> **แก้ (7 ไฟล์):**
+> 1. **Migration 206** (`supabase/migrations/206_mascot_bucket_selfservice.sql`): bucket `Bite_Mascot` public + mime GIF/PNG/WebP/JPG + ≤15MB (idempotent ON CONFLICT) + policies 4 ตัว pattern 119 (bucket_id literal): public read · admin-only INSERT/UPDATE/DELETE (profiles.role='admin')
+> 2. **`mascotService.ts`**: `MASCOT_BUCKET` · `validateMascotFile` (≤15MB) · `uploadMascotAsset` (อัปโหลดตรงเข้า bucket · withDeadline · ZERO-FAKE error→null+log) · `listMascotBucketFiles` (quick-pick · withDeadline) · `MASCOT_OVERRIDES_CHANGED_EVENT` + `notifyMascotOverridesChanged()` — R67 contract อัปเดต: withDeadline ครบ **4** call (เข้มขึ้น)
+> 3. **`MascotBadge.tsx` + `BiteMascot.tsx`**: ฟัง event → `loadMascotOverrides(true)` → เปลี่ยนรูปทันทีใน session เดิม (**ไม่ต้อง deploy/refresh หน้า** · ล้าง override = คืนค่าเริ่มต้น)
+> 4. **`MascotSettingsPage.tsx`**: preview ต่อ role (onLoad/onError — โหลดไม่ได้ = แสดง "bucket ต้อง public + URL ชี้ไฟล์จริง") · save feedback ✅/❌ จากผล RPC จริง · ปุ่มอัปโหลดไฟล์เข้า bucket ตรง → เติม URL อัตโนมัติ · ปุ่ม ↩ ค่าเริ่มต้น · quick-pick ไฟล์ใน bucket + คัดลอก URL · ข้อความบอก bucket จริง (เลิกชี้ bmb-images) · R52 testids ครบเดิม
+> 5. **Tests ใหม่** `r206MascotSelfService.test.ts` (20 ข้อ — service/upload/validate/event · UI preview/feedback/upload/clear · migration contract) · แก้ fixture `mascotClosed.test.ts` (mock ครบ export ใหม่) · `r67Contracts.test.ts` (wrapped 2→4 — สัญญา "ทุก call ถูกห่อ" ยังอยู่)
+
+> **Evidence (production จริง):** `e2e/_r206_apply.json` (http=201 · **verified=true · bucket_public=1 · policy_count=4**) · สคริปต์ `e2e/_r206Apply.cjs`
+
+> **ทดสอบ live (Owner):** ① เปิด /admin/settings → กด "📤 เลือกไฟล์อัปโหลด" ใส่ GIF (เช่น Bite_main.gif) → preview โชว์ → กด 💾 บันทึก → ข้อความ ✅ ② mascot บนหน้าร้าน (badge + ตัวลอย) เปลี่ยนทันทีทั้งเครื่องนี้ (event) และผู้เยี่ยมชมใหม่เห็นทันที ③ วาง URL เสีย/ไฟล์ถูกลบ → การ์ดแสดง ⚠ พร้อมสาเหตุ ④ ปุ่ม ↩ ค่าเริ่มต้น → กลับรูปเดิม
+
+> **Known Risks:** ไฟล์เก่าที่ Owner อัปโหลดก่อน migration (Bite_main.gif) อยู่ root ของ bucket — ใช้ได้ปกติเพราะ policy ครอบทั้ง bucket
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-15 (รอบ 35 · R101 — R96/R97 ปิดครบ: "รวมใช้บริบทเดียวกันทุกช่องทางและรับต่อเนื่องกัน" · m205 APPLIED PROD + EF deployed + probe ผ่าน · Gates 4/4 · vitest 2257/2257) — **CODE_CLOSED + APPLIED + DEPLOYED**
 
 > **สถานะ ณ 2026-11-15 11:25:** R101 **COMPLETE + APPLIED PROD + DEPLOYED** · tsc ✅ lint ✅ vitest ✅ (**215 files / 2257 tests PASS — `e2e/_r97_vitest_full2.log`**) · build ✅ · **m205 applied (http=201 + verify functions + grants ถูก + probe runtime `PROBE_OK=true`)** · **EF `social-ai-worker` deployed (exit=0)** · รอ Owner live test รวม (R98/§T-A + R97)

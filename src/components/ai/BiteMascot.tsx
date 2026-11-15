@@ -16,7 +16,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { useCartStore } from '@/stores/useCartStore'
 import { usePlatformConfig } from '@/config/platformConfig'
-import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
+import { loadMascotOverrides, getOverrideUrl, MASCOT_OVERRIDES_CHANGED_EVENT } from '@/lib/mascotService'
 import { sectionFromPath, pageContextLine } from '@/lib/bitePageContext'
 import { useStoreClosed } from '@/lib/storeStatus'
 import { enforceClosedFloatingPose, floatingPosePool } from '@/lib/mascotClosed'
@@ -196,6 +196,24 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
       setOverrideUrl(getOverrideUrl(p.replace('bite_', '')))
     })
     return () => { active = false }
+  }, [currentPoseIndex, storeClosed])
+
+  // R206: admin บันทึก override ใหม่ → mascot ลอยที่แสดงอยู่เปลี่ยนทันที (ไม่ต้อง deploy)
+  useEffect(() => {
+    let active = true
+    const onChanged = () => {
+      void loadMascotOverrides(true).then(() => {
+        if (!active) return
+        const pool = floatingPosePool(storeClosed, MASCOT_POSES)
+        const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
+        setOverrideUrl(getOverrideUrl(p.replace('bite_', '')))
+      })
+    }
+    window.addEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
+    return () => {
+      active = false
+      window.removeEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
+    }
   }, [currentPoseIndex, storeClosed])
 
   // Cycle to next pose on each tap/interaction (ภายในชุดท่าที่อนุญาตเท่านั้น)

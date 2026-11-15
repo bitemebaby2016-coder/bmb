@@ -186,6 +186,8 @@ describe('MascotBadge — แสดงรูปท่าร้านปิดจ
     vi.doMock('@/lib/mascotService', () => ({
       loadMascotOverrides: async () => [],
       getOverrideUrl: () => undefined,
+      // R206: mock ต้องครบทุก export ที่ MascotBadge ใช้จริง (event สำหรับ live refresh)
+      MASCOT_OVERRIDES_CHANGED_EVENT: 'bmb:mascot-overrides-changed',
     }))
     const { MascotBadge } = await import('@/components/MascotBadge')
     const { createRoot } = await import('react-dom/client')

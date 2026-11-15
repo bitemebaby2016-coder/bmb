@@ -36,8 +36,9 @@ describe('R67 Chat-Hang — mascotService ทุก query มี deadline (READM
   it('source: ทุก supabase call ถูกห่อด้วย withDeadline + มี timeout คงที่', () => {
     expect(mascotSrc).toContain('export const MASCOT_LOAD_TIMEOUT_MS = 8000')
     expect(mascotSrc).toContain('function withDeadline<T>(promise: PromiseLike<T>')
+    // R206: +uploadMascotAsset +listMascotBucketFiles = ครบ 4 — ทุก supabase call ต้องถูกห่อเสมอ
     const wrapped = mascotSrc.match(/await withDeadline\(/g) || []
-    expect(wrapped.length).toBe(2)
+    expect(wrapped.length).toBe(4)
   })
 
   it('source: timeout ของ getMascotOverrides คืน [] (static fallback ไม่ throw เข้าแชต)', () => {
