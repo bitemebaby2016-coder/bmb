@@ -4,6 +4,17 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-15 (R101 — R96/R97 ปิดครบ + M205 APPLIED PROD + EF deployed · "รวมใช้บริบทเดียวกันทุกช่องทางและรับต่อเนื่องกัน" ตามคำสั่ง Owner):**
+- **R97 (Order memory + cancel/modify ผ่าน AI) — ปิดครบ + APPLIED PROD + DEPLOYED:** พิสูจน์จากโค้ดว่า **R97 เดิมไม่เคยทำงานจริง** (ยิง PSID ที่ `orders.customer_id` = auth uuid ไม่ match + select คอลัมน์ไม่มีจริง `items/total/order_id` = 400 ตาย 3 ชั้น · cancel PATCH ตรง bypass canonical · modify มี heuristic อันตราย "ชื่อเมนูในคำตอบ → ทับ x1") → **แก้+ออกแบบใหม่:** **Migration 205 APPLIED PROD** (`cancel_order_as_customer` = identity-guarded + เรียก canonical `cancel_order` 025/195 ภายใต้ JWT claims ลูกค้า = release capacity/inventory/void/audit ครบ · `social_timeline_for_web` = บริบทข้ามช่องทางฝั่งเว็บ) · `orderMemory.ts` ใหม่ (resolve PSID→customer_ref ผ่าน 046 + query ถูก schema + order_items จริง + **ลบ modifyOrder**) · worker: history + cancel (order_number · เฉพาะ pending ล่าสุด) + `runModifyIntake` (extract→match→ยืนยัน→cancel+สร้างใหม่ผ่าน intake — แนวเดียวกับเว็บ) + แจ้งแอดมินเมื่อ cancel สำเร็จแต่ create fail (ห้ามลูกค้าไม่มีออเดอร์เงียบหาย)
+- **R96 P2 (เว็บรับบริบทต่อเนื่องจาก server) — ปิดครบ:** `socialTimelineClient.ts` (RPC `social_timeline_for_web` · fail = []) + TalkToBite โหลด server timeline เมื่อล็อกอิน → **ทุกเครื่องเห็นบริบทเดียวกัน** (เดิมมีแค่ sessionStorage ของเครื่องเดียว)
+- **G6 contract อัปเดต (Owner 2026-11-15 · เข้มขึ้นไม่ใช่อ่อนลง):** ห้ามเรียก `cancel_order` ตรง — ผ่าน wrapper 205 เท่านั้น + บังคับ resolve identity ก่อน history + pending-only + graph URLs ห้ามมี order fields
+- **Evidence:** `e2e/_r205_apply.json` (http=201 + verify functions) · `_r205_verify_grants.json` (grants ถูกต้อง — wrapper=service_role เท่านั้น) · `_r205_probe.json` (**PROBE_OK=true** — runtime guard จริง) · EF `social-ai-worker` deployed exit=0
+- **Gates 4/4** — tsc ✅ lint ✅ **vitest 215 ไฟล์ / 2257 tests PASS** (`e2e/_r97_vitest_full2.log`) · build ✅
+- **OMNI-5 ปลด BLOCKED แล้ว** (Owner 2026-11-15 ยืนยันยกเลิกหลายครั้ง · ผ่าน live มาแล้วตามบล็อก 2026-11-08)
+- **รอ Owner live test รวม:** R98/§T-A + R97 (history/cancel/modify บน Messenger จริง + เว็บบริบทข้ามเครื่อง) — คู่มือใน AI_WORK_STATE บล็อก R101
+
+**🔒 LIVE STATE 2026-11-14 (R100e + R100d + R100c):** R100e — แบนเนอร์ in-app ปิดมีอายุ 24 ชม. + ลิงก์ `?cart=` ใหม่แจ้งเสมอ · R100d — copy ลิงก์จาก FB in-app ไป Chrome มีตะกร้าเสมอ (snapshot localStorage + แบนเนอร์ fallback + guardrail `cart_link_missing`) · R100c — การ์ดรีวิวลดความสูง + avatar ทึบ · CODE_CLOSED + PUSHED (`67edd6a`/`733b220`/`4e86e0b`) · vitest 214 files / 2238 tests PASS · รอ Owner live test รวม
+
 **🔒 LIVE STATE 2026-11-13 (R98 + R96 + Migrations 203/204 APPLIED PROD):**
 - **R98** — InAppBrowserBanner ปรับข้อความ + ปุ่มติดตั้งแอป PWA: **CODE_CLOSED + DEPLOYED + LIVE TEST 5/5 PASS** (2026-11-13 08:41) · Gates 4/4 ✅
 - **R96** — AI Grounding + Cross-Channel Context + Data Freshness: **CODE_CLOSED + DEPLOYED + MIGRATIONS 203/204 APPLIED PROD** (2026-11-13 09:15) · Gates 4/4 ✅ (214 files / 2238 tests PASS)

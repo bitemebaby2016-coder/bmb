@@ -33,6 +33,9 @@ import { recommendReason } from '@/lib/theaterReasons'
 import { showToast } from '@/components/ui/ToastContainer'
 import { chatWithAI } from '@/lib/aiService'
 import { buildSocialHandoffContext, readSocialHandoffTimeline } from '@/lib/socialHandoff'
+// R96 Phase 2 (fix 2026-11-15): ประวัติคุยข้ามช่องทาง "จาก server" — เครื่องใหม่/แท็บใหม่
+// ก็รับต่อเนื่องได้ (เดิมมีแค่ sessionStorage ของเครื่องเดียว = บริบทหายข้ามเครื่อง)
+import { buildServerTimelineContext, fetchSocialTimelineForWeb, type SocialTimelineRow } from '@/lib/socialTimelineClient'
 import { pageContextLine, sectionFromPath } from '@/lib/bitePageContext'
 import {
   getAIVoiceService,
@@ -170,6 +173,20 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     })()
     return () => { active = false }
   }, [])
+
+  // R96 Phase 2 (fix 2026-11-15): โหลดประวัติคุยข้ามช่องทางจาก server (RPC
+  // social_timeline_for_web — migration 205) เมื่อลูกค้าล็อกอิน — best-effort
+  // (fail = [] ไม่กระทบแชต) · ให้เครื่องใหม่ก็รับบริบทต่อเนื่องจาก FB/Messenger ได้
+  const [serverTimeline, setServerTimeline] = useState<SocialTimelineRow[]>([])
+  useEffect(() => {
+    let active = true
+    if (!customer?.id) { setServerTimeline([]); return }
+    void (async () => {
+      const rows = await fetchSocialTimelineForWeb()
+      if (active) setServerTimeline(rows)
+    })()
+    return () => { active = false }
+  }, [customer?.id])
 
   // Greeting — deterministic 7-day rotation personalised ONLY with verified
   // server memory for the signed-in customer (name + favorite category); guests
@@ -786,21 +803,28 @@ pushAssistant(`ออเดอร์ล่าสุดของคุณ (${Math
       parts.push(`กำลังดูผลิตภัณฑ์ ID=${currentProductId} — กรุณาตอบข้อมูลจริงเท่านั้น (ชื่อ/ราคา/สถานะจาก DB เท่านั้น)`)
     }
     
-    // R96 Phase 2: Include cross-channel timeline
-    const timeline = readSocialHandoffTimeline()
-    if (timeline.length > 0) {
-      const recentTimeline = timeline.slice(-3)
-      const timelineStr = recentTimeline.map(e => {
-        const timeStr = new Date(e.time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
-        const channelLabel = e.channel === 'facebook_post' ? 'โพสต์ FB' : 
-                            e.channel === 'facebook_comment' ? 'คอมเมนต์ FB' :
-                            e.channel === 'messenger' ? 'Messenger' : 'เว็บ'
-        const topicStr = e.topic ? ` "${e.topic}"` : ''
-        return `${channelLabel} @ ${timeStr}${topicStr}`
-      }).join(' → ')
-      parts.push(`ประวัติข้ามช่องทาง: ${timelineStr}`)
+    // R96 Phase 2 (fix 2026-11-15): ประวัติข้ามช่องทาง — server ก่อนเสมอ (social_events
+    // จริง ทุกเครื่องเห็นเหมือนกัน) · ถ้า server ไม่มี (ยังไม่ผูก identity/ยังไม่ล็อกอิน)
+    // ใช้ sessionStorage timeline ของเครื่องนี้ต่อ (ของเดิม R91/R92)
+    if (serverTimeline.length > 0) {
+      const serverCtx = buildServerTimelineContext(serverTimeline)
+      if (serverCtx) parts.push(serverCtx)
+    } else {
+      const timeline = readSocialHandoffTimeline()
+      if (timeline.length > 0) {
+        const recentTimeline = timeline.slice(-3)
+        const timelineStr = recentTimeline.map(e => {
+          const timeStr = new Date(e.time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+          const channelLabel = e.channel === 'facebook_post' ? 'โพสต์ FB' :
+                              e.channel === 'facebook_comment' ? 'คอมเมนต์ FB' :
+                              e.channel === 'messenger' ? 'Messenger' : 'เว็บ'
+          const topicStr = e.topic ? ` "${e.topic}"` : ''
+          return `${channelLabel} @ ${timeStr}${topicStr}`
+        }).join(' → ')
+        parts.push(`ประวัติข้ามช่องทาง (เครื่องนี้): ${timelineStr}`)
+      }
     }
-    
+
     return parts.join(' | ')
   }
 

@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-15T04:13:16.889Z",
+  "cancel_probe": {
+    "http": 400,
+    "body": "{\"message\":\"Failed to run sql query: ERROR:  P0001: ERR_ORDER_NOT_FOUND\\nCONTEXT:  PL/pgSQL function cancel_order_as_customer(text,uuid,text) line 22 at RAISE\\n\"}",
+    "not_found_as_expected": true,
+    "forbidden_leak": false
+  },
+  "timeline_probe": {
+    "http": 400,
+    "body": "{\"message\":\"Failed to run sql query: ERROR:  P0001: ERR_NOT_AUTHENTICATED\\nCONTEXT:  PL/pgSQL function social_timeline_for_web() line 7 at RAISE\\n\"}",
+    "not_authenticated_as_expected": true
+  },
+  "ok": true
+}

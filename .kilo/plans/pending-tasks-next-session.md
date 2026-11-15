@@ -1,66 +1,32 @@
-# Pending Tasks for Next Session (Owner Approved 2026-11-09 18:09, Updated 2026-11-11)
+# Pending Tasks — 2026-11-15 (R101 ปิดแล้ว · ยกไปรอบหน้า)
 
-Record of tasks to be completed in the next session. These should be merged into AI_WORK_STATE.md.
+## สถานะจริงตอนนี้ (จากโค้ด + production evidence)
 
----
+- **R96 P1 (grounding)** — ✅ ปิดครบมาแล้ว (R101 ตรวจยืนยัน: `fetchGroundingData` ยิงต้น processEvent ทุกครั้ง + grounding อยู่ใน draftSystem ทั้ง 2 รอบ + fallback + เก็บ `grounding_data`)
+- **R96 P2 (cross-channel)** — ✅ ปิดครบ (worker thread ข้ามช่องทาง + **เว็บดึง server timeline ผ่าน RPC `social_timeline_for_web`** (m205) — ทุกเครื่องเห็นบริบทเดียวกัน)
+- **R96 P3 (product cache)** — ✅ ปิดครบ (`aiDbContext` ใช้ `getCachedProducts` + AdminProducts invalidate)
+- **R97 (order memory + cancel/modify ผ่าน AI)** — ✅ ปิดครบ + **m205 APPLIED PROD + social-ai-worker DEPLOYED** (แก้บั๊กตาย 3 ชั้น + cancel ผ่าน identity-guarded canonical RPC + modify แนวเดียวกับเว็บ)
+- **OMNI-5** — ✅ **ยกเลิก/ปลด BLOCKED แล้ว** (Owner ยืนยัน 2026-11-15 — ผ่าน live มาแล้ว)
+- **Gates** — ✅ tsc · lint · **vitest 215 ไฟล์/2257 tests PASS** · build
 
-## ✅ Completed This Session (2026-11-10)
+## ค้างรอ Owner (ทดสอบพร้อมกันตามคำสั่ง)
 
-- [x] **Floating Ad + Promotion Banner Settings** — `floating_ad_enabled` Kill Switch (AdminSettings) + max cards 2→3 + real links (href=/menu?coupon=CODE) + image upload/browse (Supabase album + external URL) + CNT-01 approve/reject wired + onBannerChange reloads — **CODE_CLOSED + PUSHED + DEPLOYED** (`260351c`)
+| # | รายการ | วิธีทดสอบ |
+|---|--------|-----------|
+| 1 | **§T-A** cart retry 2.5s | Hard reload `https://biteme-baby.com` → กดลิงก์ `?cart=` จาก FB → Chrome ต้องมีของภายใน 2.5 วิ |
+| 2 | **R98/§R100** IAB + PWA | ตาม checklist 5 ข้อใน AI_WORK_STATE บล็อก R100e |
+| 3 | **R97** history | Messenger ทัก "ทบทวน order" → ต้องสรุปจากประวัติจริง หรือบอกไม่พบ (ห้ามมโน) |
+| 4 | **R97** cancel | "ยกเลิกออเดอร์ BMB-xxx" → เฉพาะ pending ในหน้าต่างยกเลิก — ใบอื่นบอกตามจริง |
+| 5 | **R97** modify | "แก้เป็น..." → ถามยืนยันก่อน → ยืนยัน = ยกเลิกเดิม + สร้างใหม่ (เลขที่ใหม่จากระบบ) |
+| 6 | **R96 P2 เว็บ** | ล็อกอินบนเครื่องใหม่ → Bite ต้องต่อบริบทจาก Facebook/Messenger (server timeline) |
 
----
+## Known Risks (จดไว้)
 
-## 🚀 Deploy & Migration (Must Complete Before Live Test)
+1. ลูกค้าที่ยังไม่มี `customer_channel_identities` = ยังไม่เห็นประวัติ/แก้ไม่ได้ จน intake provision แถว (เกิดอัตโนมัติเมื่อสั่งของผ่าน social)
+2. cancel ผ่าน AI อยู่ภายใต้กติกาเดียวกับเว็บ (pending + หน้าต่าง 5 นาที) — ยกเลิกใบเก่า = ระบบปฏิเสธตามกติกา
+3. `social_events.customer_id` คุมเฉพาะ event หลัง deploy (event เก่าไม่มีค่า = ไม่โผล่ timeline)
 
-- [x] **Apply Migration 201** on Production DB — ✅ APPLIED 2026-11-09T18:15Z (`e2e/prodApplyMigrations.cjs --files 201`) · history version='201' recorded
-- [x] **Deploy Edge Functions** (social-ai-worker) — ✅ DEPLOYED exit=0 (`node e2e/_ttDeployFns.cjs` log `TT_DEPLOY_DONE 2026-11-09T18:15:38.863Z`)
+## ข้อผิดพลาดเดิมในไฟล์นี้ (แก้แล้ว)
 
----
-
-## 🧪 Live Retest Sequence (from BMB_REMAIN_TESTS_LIVE_2026-11-10.md — Owner verified 2026-11-10 16:37)
-
-**Owner verified PASS (7/7):** IMG-GEN, D4, R91, R92-G, D2, D5, R92-S — **all code-deployed, gates 4/4 green**
-
-**Remaining Live Retest (1 item):**
-- [ ] **§T-A** — Cart retry 2.5s (Layout.tsx:131-138) · hard reload `https://biteme-baby.com` · test `?cart=` from FB → Chrome jump → cart has items within 2.5s
-
----
-
-## 🏃 Test Suites Not Yet Run (Owner workflow — not code tasks)
-
-- [ ] RT-4 · RT-HOURS · RT-6.2 · RT-6.1 (E1 waived) · RT-6.4B2 · CAP-14 + CAP 7·8·13·16·17·19
-- [ ] **RT-8 = STILL BLOCKED** (meta-rule: cannot close until RT-1..7 all pass)
-
----
-
-## 🐛 Pre-existing Test Failures (Fix in Separate PRs)
-
-These are NOT caused by recent changes:
-
-| Test File | Issue |
-|-----------|-------|
-| `roleSystem.test.ts` | navGroupsForRole expects old routes (`/admin/marketing`, `/admin/promotions`, `/admin/media`) vs new (`/admin/marketing-promotions`, `/admin/media-portfolio`) |
-| `r86TestHygieneRules.test.ts` | Expects `testId="cod-enabled-toggle"` but code has `testId="cod-switch-toggle"` |
-| `socialAiContinuity.test.ts` | Expects pattern `/social-links-config/` and `.filter((key) => !TYPED_FORM_KEYS.has(key))` but code refactored |
-
----
-
-## 📦 Backlog — Not Live Retest (Code mostly fixed; awaiting Owner verification / separate phase)
-
-| Item | Status | Notes |
-|------|--------|-------|
-| **R88** Contract Tests | CI green 51/51 passing (`c08c93f`), `m199` applied PROD | Code complete; not part of live retest sequence |
-| **R81** Review Moderation | RPC missing `status` column → filter `undefined` fixed | Code complete; Owner retest pending (web push, Smart Escape) |
-| **R82** Chat/Web Push Identity | `eq.` fix, subscription check, `orderWindow.ts` mirror | Code complete; Owner retest pending (A2', B8', B9') |
-| **R73h/R73g** Birthday/Consent UI | `m193` consent, day/time grid | Code complete; Owner test pending |
-
----
-
-## 📝 Note for Next Session
-
-Update `AI_WORK_STATE.md` with the above checklist at the top (after SESSION CLOSE banner). The three test failures are pre-existing and should be fixed in a dedicated PR/phase separate from live testing work.
-
-**Key reconciliation done 2026-11-11:**
-- `AI_WORK_STATE.md` round 11 updated: D2/D5/R92-G/R92-S marked ✅ code-deployed, §T-A only pending live retest
-- `BMB_MASTER_STATUS.md` top entry updated: LIVE-TEST 2026-11-10 reflects 7/7 Owner-verified, §T-A only remaining
-- `pending-tasks-next-session.md` restructured: Live retest = §T-A only; R88/R81/R82 moved to backlog
+- ก่อนหน้า: "pre-existing test failures 3 ไฟล์" — จริง ๆ รอบล่าสุด vitest **2257/2257 PASS** ไม่มี fail ค้าง
+- ก่อนหน้า: "OMNI-5 BLOCKED" — ยกเลิกตามคำสั่ง Owner แล้ว ห้ามอ้างอีก

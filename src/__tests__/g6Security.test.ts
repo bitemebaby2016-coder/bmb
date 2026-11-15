@@ -78,11 +78,21 @@ describe('G6-06..08 prompt injection defense', () => {
 // not trip the not-match assertions below)
 const codeOnly = workerSrc.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n')
 
-// ---------- G6-09 (revised Owner 2026-10-17 §3): create-only intake; mutation impossible ----------
+// ---------- G6-09 (revised Owner 2026-10-17 §3 · R97 closure Owner 2026-11-15):
+// create ผ่าน shared intake เท่านั้น · ออเดอร์เดิมแตะได้ทางเดียว = identity-guarded
+// cancel wrapper RPC (m205 cancel_order_as_customer — ตรวจผูกตัวตน + เรียก canonical
+// cancel_order ภายใต้ JWT claims ของลูกค้า · ลบ modifyOrder PATCH-ตรงทิ้งถาวร)
+// — ทุกทาง mutate อื่นยังห้ามเด็ดขาด ----------
 describe('G6-09 order boundary: create-only via shared intake, mutation impossible', () => {
   it('worker REST surface: PATCH = social_events เท่านั้น · GET = social_events + identity/customer/push_subscriptions (R81+R82 notify) — ห้ามแตะ order/payment/inventory/delivery', () => {
-    // ห้ามแก้ไข/ยกเลิก/เปลี่ยนแปลงออเดอร์เดิม — create ผ่าน shared intake เท่านั้น (§3)
-    expect(codeOnly).not.toMatch(/create_order|record_payment|confirm_offline_payment|transition_order_status|mark_payment_failed|cancel_order|refund|update_order|delete_order|inventory|delivery_assignments|assign_driver/)
+    // ห้าม mutate ทุกทางยกเว้น cancel wrapper — โดยเฉพาะ: ห้ามเรียก cancel_order
+    // ตรง (ต้องผ่าน cancel_order_as_customer เท่านั้น · ห้าม PATCH orders)
+    expect(codeOnly).not.toMatch(/create_order|record_payment|confirm_offline_payment|transition_order_status|mark_payment_failed|cancel_order(?!_as_customer)|refund|update_order|delete_order|inventory|delivery_assignments|assign_driver/)
+    // R97 (Owner 2026-11-15): ทางยกเลิกเดียว = wrapper ที่ guard ผูกตัวตนใน migration 205
+    expect(workerSrc).toMatch(/cancelOrder\(/)
+    expect(workerSrc).toMatch(/targetOrder\.order_number/)
+    // ยกเลิกได้เฉพาะใบล่าสุดที่ยังรอดำเนินการ (owner branch ของ cancel_order บังคับ)
+    expect(workerSrc).toMatch(/orderHistory\.filter\(\(o\) => o\.status === 'pending'\)/)
     const calls = [...codeOnly.matchAll(/rest\('(PATCH|GET|POST)',\s*`([^`]+)`/g)].map((m) => ({ verb: m[1], path: m[2] }))
     expect(calls.length).toBeGreaterThan(0)
     for (const c of calls) {
@@ -183,8 +193,12 @@ describe('G6-19/20 Meta boundary + reserved task', () => {
     for (const u of graphUrls) expect(u).toMatch(/\$\{[^}]+\}\/(comments|messages|private_replies)$/)
     expect(workerSrc).toMatch(/reply_status: 'sent'/)
     expect(workerSrc).toMatch(/reply_status: 'failed'/)
-    // send step still writes no business authority fields
-    expect(codeOnly).not.toMatch(/action_type|order_number/)
+    // send step still writes no business authority fields — R97: order_number
+    // ใน worker = อ่านจาก DB เพื่อยกเลิก/อ้างอิงในข้อความเท่านั้น (ห้ามเขียนลง
+    // social_events เป็น order data และห้ามส่งเป็น field ไป Meta) — ยังห้าม
+    // action_type เด็ดขาด
+    expect(codeOnly).not.toMatch(/action_type/)
+    for (const u of graphUrls) expect(u).not.toMatch(/order/)
   })
   it('G7/D-G7-A: social_post_draft is ACTIVE but client-blocked; only post-worker context executes it', () => {
     expect(TASK_POLICY.social_post_draft.status).toBe('ACTIVE')

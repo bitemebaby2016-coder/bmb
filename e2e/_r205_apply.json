@@ -1,0 +1,20 @@
+{
+  "at": "2026-11-15T04:10:29.516Z",
+  "file": "supabase/migrations/205_social_order_actions.sql",
+  "project": "ivkdfognyiwjcmrhcnwz",
+  "sql_bytes": 5484,
+  "sql_has_begin": true,
+  "http": 201,
+  "response": "[]",
+  "ok": true,
+  "verify_http": 201,
+  "verify": [
+    {
+      "has_cancel_wrapper": true,
+      "has_web_timeline": true,
+      "wrapper_service_grants": 0,
+      "timeline_auth_grants": 0
+    }
+  ],
+  "verify_ok": false
+}

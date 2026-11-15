@@ -1,3 +1,34 @@
+## 🔒 SESSION CLOSE 2026-11-15 (รอบ 35 · R101 — R96/R97 ปิดครบ: "รวมใช้บริบทเดียวกันทุกช่องทางและรับต่อเนื่องกัน" · m205 APPLIED PROD + EF deployed + probe ผ่าน · Gates 4/4 · vitest 2257/2257) — **CODE_CLOSED + APPLIED + DEPLOYED**
+
+> **สถานะ ณ 2026-11-15 11:25:** R101 **COMPLETE + APPLIED PROD + DEPLOYED** · tsc ✅ lint ✅ vitest ✅ (**215 files / 2257 tests PASS — `e2e/_r97_vitest_full2.log`**) · build ✅ · **m205 applied (http=201 + verify functions + grants ถูก + probe runtime `PROBE_OK=true`)** · **EF `social-ai-worker` deployed (exit=0)** · รอ Owner live test รวม (R98/§T-A + R97)
+
+> **คำสั่ง Owner:** "อ่าน entry point/working state/master rules" + ยืนยัน R96 P1-P2-P3 และ R97 ยังไม่สมบูรณ์ ต้อง "รวมใช้บริบทเดียวกันทุกช่องทางและรับต่อเนื่องกัน" · R98 รอทดสอบพร้อมกัน · **OMNI-5 แจ้งยกเลิกหลายครั้งแล้ว (ตรวจดีๆ)** · "implementation เพิ่มแล้วทดสอบผ่านทั้งหมดจริง อนุญาติอัพเดทลงเอกสารและคอมมิท deploy ตามกฏ" · ทำงานภาษาไทย
+
+> **บั๊กจริงที่พิสูจน์จากโค้ด (R97 เดิมไม่เคยทำงานเลย):**
+> 1. `getCustomerOrders` ยิง **PSID** ที่ `orders.customer_id` — แต่คอลัมน์จริงเก็บ **auth uuid** (`025:307 v_uid::text`) → ไม่มีวัน match
+> 2. select **`items`/`total`/`order_id`** — คอลัมน์ไม่มีใน orders (จริง = `total_amount`/`id`/`order_number`; items อยู่ตารางลูก `order_items`) → PostgREST **400 ตาย 3 ชั้น** → history ว่างตลอด
+> 3. `cancelOrder` **PATCH orders ตรง** = bypass canonical `cancel_order` (025/195) → capacity ไม่ release · inventory ไม่ restore · payment ไม่ void · ไม่มี audit
+> 4. `modifyOrder` มีบั๊ก query (`is_available.eq.true`) + PATCH items/total ตรง + worker ใช้ heuristic **"ชื่อเมนูปรากฏในคำตอบ → ทับออเดอร์เป็น x1"** = อันตรายจริง
+
+> **แก้+ออกแบบใหม่ (ทั้งหมดผ่าน canonical · ห้าม PATCH orders ตรง):**
+> 1. **Migration 205** (`supabase/migrations/205_social_order_actions.sql`): ① `cancel_order_as_customer(p_order_number, p_customer_ref, p_reason)` — guard claims (service-role เท่านั้น) + **guard ผูกตัวตน** (`orders.customer_ref = p_customer_ref` — ห้ามแตะคนอื่น) + ตั้ง JWT claims เป็นลูกค้า (transaction-local) แล้วเรียก **canonical `cancel_order` (025/195)** = owner branch pending-only + หน้าต่างยกเลิก + release capacity + restore inventory + void payment + audit ครบ ② `social_timeline_for_web()` — SECURITY DEFINER ตรวจ `auth.uid()` → identity map ย้อน (`customer_channel_identities.customer_ref → external_user_id`) → `social_events.customer_id` (PSID ทุกช่องทาง) → คืน timeline 10 แถวล่าสุด (comment+message)
+> 2. **`orderMemory.ts` ใหม่**: `resolveCustomerRef()` (PSID→uuid ผ่าน 046) · `getCustomerOrders(deps, customerRef)` query **ถูก schema** + items จริงจาก `order_items` · `cancelOrder` ผ่าน RPC 205 · **ลบ modifyOrder ทิ้งถาวร**
+> 3. **Worker** (`social-ai-worker/index.ts`): ① resolve identity ก่อนดึง history ② `order_cancel` ใช้ `order_number` + customerRef (เฉพาะใบ pending ล่าสุด) ③ `order_modify` = `runModifyIntake` ใหม่: extract (ORDER_EXTRACT ชุดเดียวกับ intake) → match catalog จริง → ยืนยันชัด = ยกเลิกเดิม (canonical) + **สร้างใหม่ผ่าน intake** (`externalRef = event_id + ':modify'` idempotent — แนวเดียวกับเว็บ `handleModifyOrder`) · ไม่ยืนยัน/จับไม่ครบ = ห้ามแตะ ให้ถามยืนยัน ④ cancel สำเร็จแต่สร้างใหม่ fail/ไม่มีรอบ = **แจ้งแอดมินทันที** (enqueueAdminAlert — ห้ามลูกค้าไม่มีออเดอร์เงียบหาย) ⑤ ลบ heuristic อันตราย + แก้ prompt ที่บอก AI "เรียก cancelOrder/modifyOrder RPC" (โกหก) เป็น "ตอบตามสถานะการดำเนินการที่ระบบแนบเท่านั้น"
+> 4. **R96 P2 เว็บสมบูรณ์**: `src/lib/socialTimelineClient.ts` ใหม่ (RPC `social_timeline_for_web` · fail = []) + TalkToBite โหลด timeline **จาก server** เมื่อล็อกอิน → ทุกเครื่องเห็นบริบทเดียวกัน (sessionStorage timeline เดิม = fallback ของเครื่องนี้)
+> 5. **G6 contract อัปเดตตามคำสั่ง Owner 2026-11-15** (`g6Security.test.ts` — **เข้มขึ้นไม่ใช่อ่อนลง**): ห้ามเรียก `cancel_order` ตรง (ต้องผ่าน wrapper 205 — negative lookahead) + บังคับ `resolveCustomerRef` ก่อน history + pending-only + graph URLs ห้ามมี order fields + `action_type` ยังห้าม
+
+> **Tests ใหม่**: `src/__tests__/r97SocialOrderMemory.test.ts` (19 ข้อ — orderMemory identity/query/cancel + m205 guards/grants + worker cancel/modify + web timeline)
+
+> **Evidence (production จริง):** `e2e/_r205_apply.json` (http=201 · verify `has_cancel_wrapper=true` + `has_web_timeline=true`) · `e2e/_r205_verify_grants.json` (wrapper = service_role เท่านั้น · timeline = authenticated ✓) · `e2e/_r205_probe.json` (**PROBE_OK=true** — cancel เลขที่ปลอม = `ERR_ORDER_NOT_FOUND` (ถึง logic หลัง guard ไม่ใช่ ERR_FORBIDDEN) · timeline ไม่มี JWT = `ERR_NOT_AUTHENTICATED` ตามออกแบบ) · deploy social-ai-worker exit=0 (`e2e/_r74_deploy.log`) · scripts ใหม่ `e2e/_r205Apply.cjs` + `_r205VerifyGrants.cjs` + `_r205Probe.cjs`
+
+> **เอกสารอัปเดต:** closure plan (สถานะ 100% + ปลด OMNI-5 ตามคำสั่ง) · master status · pending-tasks · ไฟล์ที่แตะ = `supabase/migrations/205_social_order_actions.sql` (ใหม่) · `supabase/functions/_shared/orderMemory.ts` (เขียนใหม่) · `supabase/functions/social-ai-worker/index.ts` · `src/lib/socialTimelineClient.ts` (ใหม่) · `src/components/ai/TalkToBite.tsx` · `src/__tests__/r97SocialOrderMemory.test.ts` (ใหม่) · `src/__tests__/g6Security.test.ts` (ขอบเขต Owner 2026-11-15)
+
+> **ทดสอบ live รวม (Owner · พร้อมกัน R98/§T-A + R97):** ① R98/§T-A ตาม R100e/R100d ② Messenger: "ทบทวน order" → ต้องสรุปจากประวัติจริง หรือบอกไม่พบ (ห้ามมโน) ③ "ยกเลิกออเดอร์ BMB-xxx" → ยกเลิกได้เฉพาะ pending ในหน้าต่างยกเลิก — ใบอื่นบอกตามจริง ④ "แก้เป็นเมนูอื่น 2 ที่" → ถามยืนยันก่อน → ยืนยันแล้วระบบยกเลิกเดิม+สร้างใหม่ (เลขที่ใหม่จากระบบ) ⑤ เว็บ: ล็อกอิน → ทัก Bite บนเครื่องใหม่ → ต้องต่อบริบทจาก Facebook/Messenger ได้ (server timeline) ⑥ ข้อ fail ใด = ทัก AI แก้ two-try
+
+> **Known Risks:** ① ลูกค้าที่ยังไม่มี `customer_channel_identities` (ไม่เคยสั่งผ่าน social) = ยังไม่เห็นประวัติ จน intake provision แถวให้ ② cancel ผ่าน AI อยู่ภายใต้กติกาเดียวกับเว็บ (pending + หน้าต่าง 5 นาที) — ลูกค้าขอยกเลิกใบเก่า = ระบบปฏิเสธตามกติกา (ชวนแอดมิน) ③ `social_events.customer_id` คุมเฉพาะ event หลัง deploy นี้ (เก่าที่ไม่มีค่า = ไม่โผล่ timeline)
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-14 (รอบ 34 · R100e — อาการ "ลิงก์ในข้อความ FB ต่อออกไป = ไม่มีป๊อปอัพสีส้มเลย" · สาเหตุ dismiss ถาวรไม่มีอายุ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-14 19:15:** R100e **COMPLETE IN CODE + PUSHED** (`67edd6a`) · tsc ✅ lint ✅ vitest ✅ (214 files / 2238 tests PASS — `e2e/_r100e_*.log`) · **รอ Owner ทดสอบไลฟ์ร่วมกับ R100d**

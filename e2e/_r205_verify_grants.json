@@ -1,0 +1,31 @@
+{
+  "at": "2026-11-15T04:11:18.921Z",
+  "http": 201,
+  "rows": [
+    {
+      "grantee": "postgres",
+      "privilege_type": "EXECUTE",
+      "specific_name": "cancel_order_as_customer_25812"
+    },
+    {
+      "grantee": "service_role",
+      "privilege_type": "EXECUTE",
+      "specific_name": "cancel_order_as_customer_25812"
+    },
+    {
+      "grantee": "authenticated",
+      "privilege_type": "EXECUTE",
+      "specific_name": "social_timeline_for_web_25813"
+    },
+    {
+      "grantee": "postgres",
+      "privilege_type": "EXECUTE",
+      "specific_name": "social_timeline_for_web_25813"
+    },
+    {
+      "grantee": "service_role",
+      "privilege_type": "EXECUTE",
+      "specific_name": "social_timeline_for_web_25813"
+    }
+  ]
+}

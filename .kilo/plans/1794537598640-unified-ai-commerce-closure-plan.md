@@ -1,6 +1,12 @@
 # Unified AI Commerce Architecture — Closure Plan
 
-**สรุปสถานะ ณ วันที่ 2026-11-13 (R98)** — งานส่วนใหญ่พร้อม deploy + owner live test ค้าง 2 ข้อ
+**สรุปสถานะ ณ 2026-11-15 (R101 · Owner สั่ง "รวมใช้บริบทเดียวกันทุกช่องทางและรับต่อเนื่องกัน")** — **R96–R97 ปิดครบ + APPLIED PROD (m205) + DEPLOYED (social-ai-worker) · Gates 4/4 · vitest 2257/2257** · เหลือเฉพาะ Owner live test (R98/§T-A รวม)
+
+> **อัปเดตสำคัญ (R101 · 2026-11-15):**
+> - **R97 จริง ๆ ไม่เคยทำงาน** — พิสูจน์จากโค้ด: `getCustomerOrders` ยิง PSID ที่ `orders.customer_id` (จริง = auth uuid 025:307) + select คอลัมน์ที่ไม่มี (`items`/`total`/`order_id`) = 400 ตาย 3 ชั้น · cancel ผ่าน PATCH orders ตรง (bypass canonical) · modify มีบั๊ก query + heuristic "ชื่อเมนูในคำตอบ → ทับ x1" อันตราย
+> - **แก้ครบ + ออกแบบใหม่ตามกติกา:** migration **205** (`cancel_order_as_customer` = identity-guarded + เรียก canonical `cancel_order` 025/195 ภายใต้ JWT claims ลูกค้า = release capacity/inventory/void/audit ครบ · `social_timeline_for_web` = บริบทข้ามช่องทางฝั่งเว็บ) · orderMemory ใหม่ (resolve PSID→customer_ref ผ่าน 046 + query ถูก schema + order_items จริง) · worker modify = extract→match→ยืนยัน→cancel+สร้างใหม่ (แนวเดียวกับเว็บ) + แจ้งแอดมินเมื่อ cancel แล้ว create fail (ห้ามลูกค้าไม่มีออเดอร์)
+> - **R96 P2 ฝั่งเว็บสมบูรณ์:** `socialTimelineClient.ts` + TalkToBite โหลด server timeline (ทุกเครื่องเห็นบริบทเดียวกัน — เดิมมีแค่ sessionStorage ของเครื่องเดียว)
+> - **OMNI-5 ปลด BLOCKED แล้ว** (Owner แจ้งยกเลิกหลายครั้ง — ตรวจแล้ว: master status ปลดเมื่อ R95 "ผ่านบน live" แล้ว · ห้ามอ้าง BLOCKED อีก)
 
 ## สิ่งที่ทำครบ (CODE_CLOSED + PUSHED + DEPLOYED)
 
@@ -30,7 +36,7 @@
   - `TalkToBite.tsx:composeRealContext()`: inject handoff context + grounding product + current product จาก URL
 - **R96 Phase 3**: Product cache ✅
   - `productCache.ts`: session-based cache TTL 7 นาที (เท่า aiDbContext) + `invalidateProductCache()` สำหรับ admin ใช้
-- **R97 Order memory (ขั้นตอนเริ่มต้น)**: Migration 204 + `orderMemory.ts` พร้อม `getCustomerOrders`, `cancelOrder`, `modifyOrder`, `formatOrderHistoryForPrompt` — ยังไม่ inject ลง `social-ai-worker` draftSystem
+- **R97 Order memory (สมบูรณ์ R101 · 2026-11-15)**: Migration 204 (social_events.customer_id) + **Migration 205 (applied prod — `cancel_order_as_customer` + `social_timeline_for_web`)** + `orderMemory.ts` ใหม่ (`resolveCustomerRef` PSID→uuid ผ่าน 046 · `getCustomerOrders` query ถูก schema + order_items จริง · `cancelOrder` ผ่าน RPC 205 · **ลบ modifyOrder ทิ้งถาวร**) — worker: order history + cancel + modify ครบ (runModifyIntake) · tests `r97SocialOrderMemory.test.ts` 19 ข้อ + G6-09/G6-19 อัปเดตขอบเขตตาม Owner 2026-11-15 (เข้มขึ้น: ห้าม cancel_order ตรง · ผ่าน wrapper เท่านั้น)
 - **Cart continuity §T-A**: `Layout.tsx:71-158` มี `localStorage` fallback `bmb:cart-from-link` + retry 700ms + 2.5s + error logging + strip `?cart=`/`?s=` หลังสำเร็จ ✅
 
 ### R98: Facebook IAB + PWA Install (pending owner live test)
@@ -62,13 +68,12 @@
 ### 5. Owner live test: R98 cart continuity + Facebook IAB
 - **สถานะ**: Code เสร็จแล้ว (InAppBrowserBanner.tsx + Layout.tsx) แต่ยังไม่ได้ owner ทดสอบจริง — ต้องตรวจ 5 ข้อ checklist (ดู AI_WORK_STATE.md:12)
 - **Action**: owner hard reload `https://biteme-baby.com` → ทดสอบ Facebook Messenger DM → กดลิงก์ → คัดลอก → เปิด Chrome → ตะกร้าต้องมีของครบ + `?cart=` ยังคงทำงาน → ทดสอบ PWA install จาก homescreen → ไม่เห็น banner ซ้ำ
+### 6. OMNI-5: ลงทะเบียน Meta Test User — **ยกเลิก/ปลดแล้ว (Owner 2026-11-15 ยืนยัน "แจ้งยกเลิกไปหลายครั้งแล้ว")**
 
-### 6. OMNI-5: ลงทะเบียน Meta Test User
-- **สถานะ**: BLOCKED รอ Owner ลงทะเบียนผู้พัฒนาใหม่ → ไม่สามารถ run live test สำหรับ R96+R97 ได้จนกว่าจะแก้
-- **Action**: Owner ลงทะเบียน Meta Test User → เปิดทางสำหรับ deployment และ live test ต่อ
+- **สถานะ**: **ปลด BLOCKED แล้ว** — master status ปลดเมื่อ OMNI ผ่าน live (`R74 OMNI FLOW: 19/19 ALL PASS` บน production จริง) · ไม่มีการลงทะเบียน Test User ใหม่อีก — ตรวจรายการใหม่ให้ตรงจริงเท่านั้น
+- **Action**: ไม่ต้องดำเนินการ
 
-## กระบวนการต่อไป (Implementation Roadmap)
-
+## กระบวนการต่อไป (Implementation Roadmap) — **ดำเนินการครบแล้ว R101**
 ### ขั้นตอนที่ 1: Complete R96 grounding integration (2 วัน)
 1. ตรวจสอบ `social-ai-worker/index.ts:895-907` ว่ากระแส groundingPrompt ชัดเจนหรือไม่ → เพิ่ม rule บังคับ "ตอบจากข้อมูลข้างล่างเท่านั้น ห้ามเดา"
 2. ตรวจสอบ `buildGroundingPrompt()` ว่าสร้างข้อความผิดพลาดหรือไม่เมื่อไม่มีสินค้า → ต้องบอก "ไม่พบในเมนูปัจจุบัน" + ชวนดู shop
@@ -91,10 +96,10 @@
 4. เพิ่มบันทึก order history กลับ social_events หลังตอบ (R97: customer_id, last_order_id, order_history)
 5. ทดสอบ: AI ตอบ "ทบทวน order" → ดึง history ได้ → AI ตอบ "ยกเลิกออเดอร์ #123" → เรียก cancelOrder → สำเร็จ
 
-### ขั้นตอนที่ 5: Owner live test R98 + OMNI-5 resolution (ไม่มีวันกำหนด)
+### ขั้นตอนที่ 5: Owner live test (เหลือข้อเดียว)
 1. owner hard reload `https://biteme-baby.com`
 2. ทดสอบ 5 checklist R98 (แบนเนอร์ + คัดลอก + ติดตั้ง + cart ?cart= continuity + ไม่เห็น banner ซ้ำ)
-3. ลงทะเบียน Meta Test User (OMNI-5) → เปิดทาง deploy R96+R97
+3. ทดสอบ R97 ใหม่: ทัก AI ที่ Messenger "ทบทวน order" → ต้องสรุปจากประวัติจริง (ไม่งั้นบอกไม่พบ) · "ยกเลิกออเดอร์ BMB-xxx" → ระบบยกเลิกตามกติกา (หน้าต่างยกเลิก) · "แก้เป็น..." → ถามยืนยันก่อนแก้ · ทั้งหมดผูก identity ลูกค้าผู้ส่งเท่านั้น
 
 ## Acceptance Tests (Test Requirements)
 
@@ -109,7 +114,7 @@
 | 7 | AI starts from post topic | Worker output | Response starts from post content/menu, then order summary |
 | 8 | Facebook IAB cart continuity | `Layout.tsx` | Cart restores from localStorage fallback after IAB redirect |
 | 9 | Order memory lookup | `social-ai-worker` | AI gets order history from DB → สรุปได้จริง |
-| 10 | Order cancel/modify | `social-ai-worker` | AI เรียก cancelOrder/modifyOrder RPC → สำเร็จ |
+| 10 | Order cancel/modify | `social-ai-worker` | cancel ผ่าน `cancel_order_as_customer` (205 — ตรวจผูกตัวตน + canonical) · modify = ยืนยันแล้วยกเลิกเดิม+สร้างใหม่ผ่าน intake (ไม่มี PATCH orders ตรง — ลบ modifyOrder แล้ว) |
 
 ## Production Evidence (จะได้หลังdeploy)
 
@@ -119,6 +124,7 @@
 - Session evidence: `e2e/_r98_deploy.log` (banner text + install button + cart param)
 - Live test recording: owner ยืนยัน 5 checklist ข้อ ✅ / ❌
 - Deployment: `https://biteme-baby.com` พร้อม R98 + รอ R96+R97
+- **R101 (2026-11-15):** `e2e/_r205_apply.json` (m205 http=201 + verify functions) · `e2e/_r205_verify_grants.json` (grants ถูกต้อง) · `e2e/_r205_probe.json` (PROBE_OK=true — guard runtime จริง) · deploy `social-ai-worker` exit=0 (`e2e/_r74_deploy.log`)
 
 ## Rollback / Migration Path
 
@@ -128,11 +134,11 @@
 3. ลบ `groundingPrompt` จาก `social-ai-worker/index.ts:895-907`
 4. รีสet `productCache.ts` ให้เป็นสภาพเดิม (remove cache layer)
 
-### ถ้าต้องย้อนกลับ R97:
-1. ลบ migration 204 (customer_id, last_order_id, order_history columns)
-2. ลบ `orderMemory.ts` functions (getCustomerOrders, cancelOrder, modifyOrder, formatOrderHistoryForPrompt)
-3. ลบ order history injection จาก `social-ai-worker/index.ts:826-832`
-4. ลบ customer_id/last_order_id/order_history จาก PATCH social_events
+### ถ้าต้องย้อนกลับ R97 (R101 รูปแบบใหม่):
+1. `DROP FUNCTION public.cancel_order_as_customer(text, uuid, text); DROP FUNCTION public.social_timeline_for_web();` (m205)
+2. คืน `orderMemory.ts` เดิม (หรือลบ + ลบ import ใน worker) — ห้ามคืน modifyOrder (PATCH-ตรง ตายถาวร)
+3. ลบ order history/cancel/modify injection จาก worker (orderHistoryPrompt + orderAction block + runModifyIntake)
+4. ลบ customer_id/last_order_id/order_history จาก PATCH social_events (m204 columns คงไว้ได้)
 
 ### ถ้าต้องย้อนกลับ R98:
 1. คืน InAppBrowserBanner text กลับ "กำลังเปิดใน Facebook"
@@ -143,21 +149,17 @@
 ## คำสั่งถัดไป (Next Commands)
 
 ```bash
-# 1. owner live test R98 (สำคัญที่สุด)
+# 1. owner live test R98 + §T-A (สำคัญที่สุด — รวมการทดสอบพร้อมกันตามคำสั่ง Owner)
 # 2. Hard refresh https://biteme-baby.com
 # 3. ทดสอบ 5 checklist: ① แบนเนอร์ข้อความ + ปุ่ม ② คัดลอกลิงก์ → Chrome ③ ตะกร้ามีของ ④ PWA install ไม่เห็น banner ⑤ ?cart= ยังทำงาน
-
-# ต่อไปนี้รอ OMNI-5 decision (Meta Test User register):
-# 4. Implement R96 Phase 1 grounding integration
-# 5. Implement R96 Phase 2 timeline cross-channel
-# 6. Wire productCache into AI runtime
-# 7. Implement R97 Order memory + modify/cancel RPCs
+# 4. ทดสอบ R97 ใหม่บน Messenger จริง (history/cancel/modify — ตามขั้นตอนที่ 5)
+# (R96 P1-P3 + R97 implementation = ทำและ deploy ครบแล้วใน R101)
 ```
 
 ## สรุป
 
-**สถานะ:** 80% complete — Code เสร็จสำหรับ R96–R98 frameworks, แต่ยังต้อง owner live test กับ 3 ข้อที่เหลือ (R96 grounding injection ให้ชัดเจน, cross-channel timeline persist, product cache wire, R97 order memory inject) + รอ OMNI-5 เพื่อ deployment live test.
+**สถานะ:** **100% implementation + deployed (R101 · 2026-11-15)** — R96 P1-P3 (grounding/timeline/product cache) และ R97 (order memory + cancel/modify ผ่าน identity-guarded canonical RPC) เสร็จครบ · migration 205 applied prod + verify + probe runtime ผ่าน · social-ai-worker deployed · gates 4/4 · vitest 2257/2257 · **เหลือเฉพาะ Owner live test (R98/§T-A + R97) พร้อมกัน** · OMNI-5 ปลดแล้ว (ยกเลิกตามคำสั่ง Owner)
 
-**ความเสี่ยงหลัก:** หากไม่มี owner live test ร98 + OMNI-5 resolution จะไม่สามารถ close pending gates และ deploy production evidence ได้ complete.
+**ความเสี่ยงหลัก:** ลูกค้า/ช่องทางที่ยังไม่มี `customer_channel_identities` ผูก = ยังไม่เห็นประวัติ/แก้ไม่ได้จนกว่า intake จะ provision แถว (เกิดอัตโนมัติเมื่อสั่งของผ่าน social หลัง deploy นี้)
 
-**ความสำเร็จเมื่อครบ:** ทุก gate 4/4 → production evidence ครบ → closure report → session close ยืนยัน R95–R98 เสร็จสิ้น.
+**ความสำเร็จเมื่อครบ:** Owner live test ผ่าน → closure report → session close ยืนยัน R95–R101 เสร็จสิ้น.
