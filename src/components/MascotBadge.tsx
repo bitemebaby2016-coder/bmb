@@ -96,20 +96,24 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
   const storeClosed = useStoreClosed()
 
   // R207c fix: โชว์ static ทันที ไม่รอ override — admin override จะ swap เข้ามาเองผ่าน event
-  const [overrideUrl, setOverrideUrl] = useState<string | undefined>(undefined)
+  // ใช้ synchronous cache check สำหรับ initial state: ถ้า cache โหลดแล้ว = ได้ override ทันที
+  const [overrideUrl, setOverrideUrl] = useState<string | undefined>(() => getOverrideUrl(pose))
+  const [overrideChecked, setOverrideChecked] = useState(() => isMascotOverridesLoaded())
 
   // โหลด override ตาม pose ต้นฉบับ (admin ตั้ง GIF ให้ "ready" = ใช้แม้ร้านปิด)
   useEffect(() => {
+    if (overrideChecked) return // cache มีแล้ว = checked แล้ว
     let active = true
     const load = async () => {
       await loadMascotOverrides()
       if (!active) return
       const o = getOverrideUrl(pose)  // ใช้ pose ต้นฉบับ
       if (o) setOverrideUrl(o)
+      setOverrideChecked(true)
     }
     load()
     return () => { active = false }
-  }, [pose])
+  }, [pose, overrideChecked])
 
   // R206: admin บันทึก override ใหม่ → badge ที่แสดงอยู่เปลี่ยนทันที
   useEffect(() => {
@@ -128,8 +132,12 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
     }
   }, [pose])
 
-  // มี override = ใช้เลย (ไม่ remap) · ไม่มี = static ตาม effectivePose (ร้านปิด remap)
-  const effectivePose = overrideUrl ? pose : enforceClosedPose(pose, storeClosed)
+  // มี override = ใช้เลย (ไม่ remap) · ยังไม่รู้ override = pose ต้นฉบับ · รู้แล้วไม่มี = remap ตามร้านปิด
+  const effectivePose = overrideUrl
+    ? pose
+    : overrideChecked && storeClosed
+      ? enforceClosedPose(pose, storeClosed)
+      : pose
   const baseSrc = overrideUrl ?? POSE_ASSETS[effectivePose].src
 
   // Fallback chain: admin override → 3D asset → vector fallback
