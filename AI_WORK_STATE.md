@@ -21,6 +21,18 @@
 
 > **✅ LIVE STATE ยืนยันสุดท้าย 2026-11-15 (`e2e/_r205_live_check.json` = R205_LIVE_CHECK_OK=true):** EF `social-ai-worker` **v86 ACTIVE** (deploy ล่าสุด · verify_jwt=true) · DB: RPC 205 ทั้ง 2 อยู่ + grants ถูก (wrapper=service_role · timeline=authenticated) + m204 คอลัมน์ครบ 3 · **เอกสาร live test ใหม่ = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md`** (กลุ่ม A §T-A/R100 · B R97 ข้อละ 7 · C R96 P2 เว็บ · D grounding สด — ตารางบันทึกผลพร้อมกรอก) — **แทนฉบับ 11-08/09/10 ทั้งหมด**
 
+## 🔒 SESSION CLOSE 2026-11-16 (รอบ 37 · R207 — ถอด mascot ภาพนิ่งออกจากจอโหลด · Owner ยืนยัน R206 "ทำได้แล้ว" · Gates 4/4 · vitest 2294/2294) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-16 12:35:** R207 **COMPLETE IN CODE + PUSHED** · tsc ✅ lint ✅ vitest ✅ (**217 files / 2294 tests PASS — `e2e/_r207_vitest_full.log`**) · build ✅ · **R206 ผ่าน live แล้ว (Owner: "ทำได้แล้ว")**
+
+> **งาน (Owner 2026-11-16):** "มีมาสคอตอันนึงเป็นภาพนิ่งกระพริบ ตอนโหลดดิ้งแล้วหายไปกลายเป็นมาสคอตที่แอดมินตั้ง น่าจะผิดไหม เอาออกด้วย อย่าให้กระทบงานอย่างอื่น" — จอโหลด (`LoadingSpinner` ใน App.tsx · Suspense fallback + auth-init ทุก route) เรนเดอร์ `MascotBadge pose="ready"` + `animate-bounce` = ภาพนิ่งเด้งก่อน override โหลดเสร็จแล้วสลับเป็นรูปแอดมิน (กระพริบผิดตา)
+
+> **แก้ (1 ไฟล์ App.tsx + test lock):** ① ถอด `<MascotBadge>` + `animate-bounce` + import ออกจาก LoadingSpinner — เหลือ spinner (`animate-spin` Tailwind ที่ใช้อยู่แล้ว) + ข้อความ "น้อง Bite กำลังจัดเตรียมของ…" เดิม (shopRoute lock อ้างคำว่า 'กำลัง' ยังอยู่) ② mascot ทุกตัวแสดงหลัง app โหลดเสร็จเสมอ (ใช้ override แอดมินตรง ๆ ไม่มี static-then-swap) ③ test lock ใหม่ 3 ข้อใน `r206MascotSelfService.test.ts` (R207 · ห้ามกลับไปใส่ mascot ในจอโหลด) — call site `<LoadingSpinner />` ทุกจุด + testid/authProbe lock ไม่ถูกแตะ
+
+> **ทดสอบ live (Owner):** hard refresh → จอโหลดต้องเหลือวง spinner หมุน + ข้อความ (ไม่มีตัวมาสคอตภาพนิ่งเด้ง) → หน้าโหลดเสร็จ mascot (GIF แอดมิน) โชว์ตามปกติทุกจุด
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-15 (รอบ 36 · R206 — Mascot Self-Service ใช้งานได้จริง: bucket `Bite_Mascot` + preview + upload + live refresh · m206 APPLIED PROD · Gates 4/4 · vitest 2277/2277) — **CODE_CLOSED + APPLIED**
 
 > **สถานะ ณ 2026-11-15 14:30:** R206 **COMPLETE IN CODE + M206 APPLIED PROD (verified)** · tsc ✅ lint ✅ vitest ✅ (**216 files / 2277 tests PASS — `e2e/_r206_vitest_full.log`**) · build ✅

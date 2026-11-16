@@ -16,6 +16,7 @@ import serviceSrc from '../lib/mascotService.ts?raw'
 import badgeSrc from '../components/MascotBadge.tsx?raw'
 import biteMascotSrc from '../components/ai/BiteMascot.tsx?raw'
 import pageSrc from '../pages/admin/MascotSettingsPage.tsx?raw'
+import appSrc from '../App.tsx?raw'
 import migrationSrc from '../../supabase/migrations/206_mascot_bucket_selfservice.sql?raw'
 
 describe('R206 · mascotService — bucket จริง + upload + live refresh event', () => {
@@ -144,6 +145,23 @@ describe('R206 · MascotSettingsPage — preview + feedback + upload + clear (�
     expect(pageSrc).toContain('data-testid="mascot-bucket-files"')
     expect(pageSrc).toContain('{MASCOT_BUCKET}')
     expect(pageSrc).not.toContain('bmb-images')
+  })
+})
+
+describe('R207 · จอโหลด (LoadingSpinner ใน App.tsx) — ถอด mascot ภาพนิ่งออก (Owner 2026-11-16)', () => {
+  it('จอโหลดไม่มี MascotBadge/animate-bounce อีก — ภาพนิ่งเด้งแล้วสลับเป็นรูปแอดมิน = ผิดตา', () => {
+    // สัญญา = ไม่มี import/การใช้จริงใน App.tsx (การอ้างชื่อในคอมเมนต์ไม่นับ)
+    expect(appSrc).not.toMatch(/import \{ MascotBadge/)
+    expect(appSrc).not.toMatch(/<MascotBadge/)
+    expect(appSrc).not.toContain('animate-bounce')
+  })
+
+  it('จอโหลดเหลือ spinner + ข้อความเดิม (shopRoute lock อ้างคำว่า "กำลัง" ยังอยู่)', () => {
+    expect(appSrc).toMatch(/LoadingSpinner\(\) \{[\s\S]{0,500}?animate-spin[\s\S]{0,300}?น้อง Bite กำลังจัดเตรียมของ…/)
+  })
+
+  it('mascot ทุกตัวแสดงหลังโหลดเสร็จเท่านั้น — import ถูกถอดจาก App.tsx (ไม่มี unused)', () => {
+    expect(appSrc).not.toContain("import { MascotBadge }")
   })
 })
 

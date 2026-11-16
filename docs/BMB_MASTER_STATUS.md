@@ -10,6 +10,11 @@
 - **Gates หลัง hotfix:** tsc ✅ lint ✅ **vitest 217 ไฟล์ / 2291 tests PASS** (test ใหม่ `r101CartHandoffFix` 14 ข้อ) · build ✅ · **frontend only** (ไม่ต้อง deploy EF)
 - **รอบ 2 = 5 ข้อ:** A-4R (retest) · A-5 · B-3/4/5 — คู่มือ = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md` (รายการเดียว แทน 11-08/09/10)
 
+**🔒 LIVE STATE 2026-11-16 (R207 — ถอด mascot ภาพนิ่งออกจากจอโหลด · R206 ผ่าน live แล้ว · vitest 2294/2294):**
+- **R207 CODE_CLOSED + PUSHED:** จอโหลด (`LoadingSpinner` App.tsx — Suspense/auth-init ทุก route) เคยเรนเดอร์ `MascotBadge pose="ready"` + `animate-bounce` = ภาพนิ่งเด้ง → สลับเป็นรูปแอดมินเมื่อ override โหลดเสร็จ (กระพริบผิดตา · Owner รายงาน 2026-11-16) → **ถอด mascot + import ออก** เหลือ spinner (`animate-spin`) + ข้อความเดิม · mascot ทุกตัวแสดงหลังโหลดเสร็จเสมอ · test lock 3 ข้อใหม่ (r206 file) · call site/testid เดิมครบ
+- **R206 ยืนยัน live แล้ว (Owner: "ทำได้แล้ว")** — Mascot Self-Service ใช้งานจริง: bucket `Bite_Mascot` + preview + upload + live refresh
+- **Gates 4/4** — tsc ✅ lint ✅ **vitest 217 files / 2294 tests PASS** (`e2e/_r207_vitest_full.log`) · build ✅
+
 **🔒 LIVE STATE 2026-11-15 (R206 — Mascot Self-Service ใช้งานได้จริง: bucket `Bite_Mascot` APPLIED PROD + preview/upload/live-refresh · vitest 2277/2277):**
 - **R206 ปิดครบ + M206 APPLIED PROD (verified=true · bucket_public=1 · policy_count=4):** บั๊กจริงจากภาพจอ Owner — bucket `Bite_Mascot` (Owner สร้างเอง + อัปโหลด Bite_main.gif) ไม่มี policies ในโค้ด · หน้าแอดมินบันทึกแล้ว fail เงียบ (ไม่เช็คผล RPC) · ไม่มี preview · mascot โหลด URL ไม่ได้ = silent-fallback รูปเดิม
 - **แก้:** Migration 206 (bucket public + mime GIF/PNG/WebP/JPG ≤15MB + policies 4 ตัว pattern 119 — public read · admin-only write) · `mascotService.ts` (MASCOT_BUCKET + validateMascotFile + uploadMascotAsset + listMascotBucketFiles + event live-refresh · withDeadline ครบ 4) · MascotBadge/BiteMascot ฟัง event เปลี่ยนรูปทันทีไม่ต้อง deploy · MascotSettingsPage (preview + error state + save feedback ✅/❌ + อัปโหลดตรง + ↩ ค่าเริ่มต้น + quick-pick)

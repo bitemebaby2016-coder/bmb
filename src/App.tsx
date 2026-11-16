@@ -9,7 +9,6 @@ import { AdminNav } from './components/admin/AdminNav'
 import { InAppBrowserBanner } from '@/components/InAppBrowserBanner'
 // Bite / AI accessibility lives in BottomNav ('Bite' → /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet, TrackOrderSeo, ReviewDetailSeo, PaymentSeo } from './components/SeoHelmet'
-import { MascotBadge } from './components/MascotBadge'
 import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrdersMeta, getNotificationsMeta, getReviewsMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta, getResetPasswordMeta, getTrackIndexMeta, getTalkToBiteMeta, getVoiceDemoMeta, getRiderMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
 import { subscribeSeoSettings, getSeoSettingsVersion } from './lib/seoSettings'
@@ -94,11 +93,13 @@ const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ defaul
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })))
 const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })))
 
-// Loading component for Suspense — มาสคอตน้อง Bite รอโหลด (แทน spinner วงกลม)
+// Loading component for Suspense — R207 (Owner 2026-11-16): ถอด mascot ออกจากจอโหลด
+// (ภาพนิ่งเด้งแล้วสลับเป็นรูปที่แอดมินตั้ง = กระพริบผิดตา) — เหลือ spinner + ข้อความ
+// mascot ทุกตัวแสดงหลัง app โหลดเสร็จเสมอ (MascotBadge/BiteMascot ใช้ override ของแอดมินตรง ๆ)
 function LoadingSpinner() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-      <MascotBadge pose="ready" size="md" alt="น้อง Bite กำลังโหลด" className="animate-bounce" loading="eager" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+      <div className="w-8 h-8 rounded-full border-2 border-brand-accent border-t-transparent animate-spin" aria-hidden="true" />
       <span className="text-sm text-brand-muted">น้อง Bite กำลังจัดเตรียมของ…</span>
     </div>
   )
