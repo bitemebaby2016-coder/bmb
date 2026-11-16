@@ -8,13 +8,18 @@
 // Guard: wrapper is fixed pointer-events-none; only the tap target has
 // pointer-events-auto so order CTAs are never blocked.
 // ============================================
+// Mascot Asset System — ใช้ GIF จาก Admin Override (bucket Bite_Mascot) เท่านั้น
+// - ไม่มี local asset fallback (public/assets/mascot/ ไม่ได้ใช้)
+// - ไม่มี vector fallback
+// - ถ้า override ว่าง = ไม่โชว์อะไรเลย (admin จะอัปโหลด GIF ครบทุกท่า)
+// ============================================
 
 import { useEffect, useRef, useState, useCallback, lazy, Suspense, type PointerEvent as ReactPointerEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { MascotWrapper } from '@/components/ui/MascotWrapper'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
-import { useCartStore } from '@/stores/useCartStore'
+import { useCartStore } from '@/store/cartStore'
 import { usePlatformConfig } from '@/config/platformConfig'
 import { loadMascotOverrides, getOverrideUrl, MASCOT_OVERRIDES_CHANGED_EVENT } from '@/lib/mascotService'
 import { sectionFromPath, pageContextLine } from '@/lib/bitePageContext'
@@ -30,39 +35,37 @@ export interface BiteMascotProps {
   activeSection?: string
 }
 
-// All 24 mascot poses from public/assets/mascot/
+// All 24 mascot poses (keys matching mascot_overrides table)
 const MASCOT_POSES = [
-  'bite_ready',
-  'bite_menu',
-  'bite_cooking',
-  'bite_recommend',
-  'bite_hero_greeting',
-  'bite_thinking',
-  'bite_shopping',
-  'bite_pointing',
-  'bite_waiting',
-  'bite_success',
-  'bite_eating',
-  'bite_delivery_run',
-  'bite_goodbye',
+  'ready',
+  'menu',
+  'cooking',
+  'recommend',
+  'greeting',
+  'thinking',
+  'shopping',
+  'pointing',
+  'waiting',
+  'success',
+  'eating',
+  'delivery_run',
+  'goodbye',
 ] as const
 
 type MascotPose = (typeof MASCOT_POSES)[number]
 
-function getMascotUrl(pose: MascotPose): string {
-  return `/assets/mascot/${pose}.webp`
-}
+// ไม่มี getMascotUrl แล้ว — ใช้ getOverrideUrl จาก mascotService เท่านั้น
 
 /** ท่าเริ่มต้นตามบริบทหน้าที่ลูกค้ากำลังดู (สลับมาสคอตให้เข้ากับสถานการณ์) */
 function contextPose(activeSection: string): MascotPose {
   switch (activeSection) {
-    case 'menu': return 'bite_menu'
-    case 'cart': case 'checkout': return 'bite_shopping'
-    case 'pre-order': return 'bite_shopping'
-    case 'orders': case 'rider': return 'bite_delivery_run'
-    case 'ai-chat': return 'bite_recommend'
-    case 'account': return 'bite_ready'
-    default: return 'bite_ready'
+    case 'menu': return 'menu'
+    case 'cart': case 'checkout': return 'shopping'
+    case 'pre-order': return 'shopping'
+    case 'orders': case 'rider': return 'delivery_run'
+    case 'ai-chat': return 'recommend'
+    case 'account': return 'ready'
+    default: return 'ready'
   }
 }
 
@@ -196,7 +199,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
       if (!active) return
       const pool = floatingPosePool(storeClosed, MASCOT_POSES)
       const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
-      setOverrideUrl(getOverrideUrl(p.replace('bite_', '')))
+      setOverrideUrl(getOverrideUrl(p))
       // R207b: โหลดจบแล้วเท่านั้นค่อยอนุญาตให้วาดภาพนิ่ง (ไม่มี static-then-swap)
       setOverrideSettled(true)
     })
@@ -211,7 +214,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
         if (!active) return
         const pool = floatingPosePool(storeClosed, MASCOT_POSES)
         const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
-        setOverrideUrl(getOverrideUrl(p.replace('bite_', '')))
+        setOverrideUrl(getOverrideUrl(p))
         setOverrideSettled(true)
       })
     }
@@ -268,7 +271,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   // state (bitePageContext). Skipped while an upsell/full-chat is active so it
   // never overwrites the Stage-2 upsell message.
   useEffect(() => {
-    if (chatOpen || stage === 'personalization') return
+    if (chatOpen || stage === 'fullchat') return
     const line = pageContextLine(section, { cartCount, cartTotal })
     if (line) setBubble(line)
   }, [section, cartCount, cartTotal, chatOpen, stage, setBubble])
@@ -292,7 +295,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   const currentPose = posePool[Math.min(currentPoseIndex, posePool.length - 1)] as (typeof MASCOT_POSES)[number]
   // R207b: override อยู่ → ใช้ override ตั้งแต่เฟรมแรก · ไม่มี override → ภาพนิ่งหลังโหลดจบเท่านั้น
   // (ยังไม่ settle = ไม่วาดอะไร — ห้ามโชว์ภาพนิ่งเก่าแล้วสลับทีหลัง)
-  const mascotUrl: string | null = overrideUrl || (overrideSettled ? getMascotUrl(currentPose) : null)
+  const mascotUrl: string | null = overrideUrl ?? (overrideSettled ? (getOverrideUrl(currentPose) ?? null) : null)
   // R44: คำนวณเงื่อนไขรอบเดียว (กัน TS narrowing error จากการเช็ค stage ซ้ำใน JSX)
   const showBubble = Boolean(bubble) && stage !== 'fullchat' && section !== 'checkout'
   const showUpsell = Boolean(delivery.freeShippingEnforced && upsell && upsell.remaining > 0 && stage === 'personalization')
@@ -353,11 +356,6 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
                 alt={`Bite mascot - ${currentPose}`}
                 className="h-full w-full object-cover"
                 loading="lazy"
-                onError={(e) => {
-                  // override เสีย → กลับไปใช้ 3D asset ปกติของ pose
-                  const el = e.currentTarget as HTMLImageElement
-                  if (el.dataset.fbk !== '1') { el.dataset.fbk = '1'; el.src = getMascotUrl(currentPose) }
-                }}
               />
             ) : (
               // ช่องว่างขนาดเดิมระหว่างรอผล override (~นับส่วนพันวินาที) — ปุ่มแตะยังอยู่ครบ
@@ -388,4 +386,3 @@ function readHistoryName(): string | null {
     return null
   }
 }
-

@@ -415,14 +415,12 @@ export function HomePage() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-10 min-h-screen flex items-center justify-center">
         <div className="text-center text-brand-muted">
-          <img
-            src="/assets/mascot/bite_cooking.webp"
+          <MascotBadge
+            pose="cooking"
+            size="lg"
             alt="น้อง Bite กำลังเตรียมเมนู"
-            width={72}
-            height={72}
             className="mx-auto mb-3 animate-float"
-            style={{ objectFit: 'contain' }}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/mascot_Bite_Main.webp' }}
+            loading="eager"
           />
           <p>กำลังเตรียมเมนูให้จ้า…</p>
         </div>

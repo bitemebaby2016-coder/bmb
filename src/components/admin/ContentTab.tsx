@@ -16,6 +16,7 @@ import { type Product } from '@/types'
 import { flashTo } from '@/lib/uiFlash'
 import { PostForm, PostFormImperativeHandle } from './PostForm'
 import { ToggleSwitch } from './ToggleSwitch'
+import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 
 // R44: URL ภาพที่ AI สร้าง (bmb-images/ai-generated/) — กติกา "มีภาพเจน = ใช้ภาพเจนรูปเดียว"
 const isGenImage = (u: string) => u.includes('/ai-generated/')
@@ -42,18 +43,13 @@ export async function checkGenQuality(url: string, kind: string): Promise<GenQa>
 }
 
 export function autoMascotForKind(kind: string): string {
-  if (kind === 'menu') return 'bite_menu'
-  if (kind === 'festival') return 'bite_award'
-  return 'bite_recommend'
+  if (kind === 'menu') return 'menu'
+  if (kind === 'festival') return 'award'
+  return 'recommend'
 }
 
-const MASCOT_ROTATION = [
-  '/assets/mascot/bite_recommend.webp',
-  '/assets/mascot/bite_menu.webp',
-  '/assets/mascot/bite_eating.webp',
-  '/assets/mascot/bite_cooking.webp',
-  '/assets/mascot/bite_award.webp',
-] as const
+// Mascot poses from Admin Override (bucket Bite_Mascot)
+const MASCOT_POSES = ['recommend', 'menu', 'eating', 'cooking', 'award'] as const
 
 export interface ContentTabProps {
   load: () => Promise<void>
@@ -318,7 +314,13 @@ if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
   async function applyBrandWatermark(srcUrl: string, kind: string, mascotChoice: string): Promise<string> {
     try {
       const mascotKey = mascotChoice === 'auto' ? autoMascotForKind(kind) : mascotChoice
-      const [img, logo, mascot] = await Promise.all([fetchBitmap(srcUrl), fetchBitmap('/Logo_Sticker_Circle.webp'), fetchBitmap(`/assets/mascot/${mascotKey}.webp`)])
+      // ใช้ getOverrideUrl จาก Admin Override (bucket Bite_Mascot) แทนไฟล์ local
+      const mascotUrl = getOverrideUrl(mascotKey)
+      const [img, logo, mascot] = await Promise.all([
+        fetchBitmap(srcUrl),
+        fetchBitmap('/Logo_Sticker_Circle.webp'),
+        mascotUrl ? fetchBitmap(mascotUrl) : Promise.resolve(null)
+      ])
       if (!img) return srcUrl
       const w = img.width, h = img.height
       const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h
@@ -1230,18 +1232,21 @@ if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-semibold text-brand-muted">🎭 มาสคอต:</span>
-                {MASCOT_ROTATION.map((src, i) => (
-                  <button
-                    key={src}
-                    type="button"
-                    onClick={() => setPromoForm((f) => ({ ...f, banner_mascot: src }))}
-                    data-testid={`promo-mascot-std-${i}`}
-                    className={`rounded-lg border p-0.5 ${promoForm.banner_mascot === src ? 'border-brand-primary ring-2 ring-brand-primary/60' : 'border-brand-border'}`}
-                    title={`มาสคอตมาตรฐานท่า ${i + 1}`}
-                  >
-                    <img src={src} alt="" className="h-10 w-10 object-contain" />
-                  </button>
-                ))}
+                {MASCOT_POSES.map((pose, i) => {
+                  const src = getOverrideUrl(pose)
+                  return src ? (
+                    <button
+                      key={pose}
+                      type="button"
+                      onClick={() => setPromoForm((f) => ({ ...f, banner_mascot: src }))}
+                      data-testid={`promo-mascot-std-${i}`}
+                      className={`rounded-lg border p-0.5 ${promoForm.banner_mascot === src ? 'border-brand-primary ring-2 ring-brand-primary/60' : 'border-brand-border'}`}
+                      title={`มาสคอตท่า ${pose}`}
+                    >
+                      <img src={src} alt="" className="h-10 w-10 object-contain" />
+                    </button>
+                  ) : null
+                })}
                 <input
                   type="file"
                   accept="image/*"
@@ -1340,17 +1345,20 @@ if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
 
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-brand-muted">🎭 มาสคอต:</span>
-              {MASCOT_ROTATION.map((src, i) => (
-                <button
-                  key={src}
-                  type="button"
-                  onClick={() => setBannerForm((f) => ({ ...f, banner_mascot: src }))}
-                  className={`rounded-lg border p-0.5 ${bannerForm.banner_mascot === src ? 'border-brand-primary ring-2 ring-brand-primary/60' : 'border-brand-border'}`}
-                  title={`มาสคอตมาตรฐานท่า ${i + 1}`}
-                >
-                  <img src={src} alt="" className="h-10 w-10 object-contain" />
-                </button>
-              ))}
+              {MASCOT_POSES.map((pose, i) => {
+                const src = getOverrideUrl(pose)
+                return src ? (
+                  <button
+                    key={pose}
+                    type="button"
+                    onClick={() => setBannerForm((f) => ({ ...f, banner_mascot: src }))}
+                    className={`rounded-lg border p-0.5 ${bannerForm.banner_mascot === src ? 'border-brand-primary ring-2 ring-brand-primary/60' : 'border-brand-border'}`}
+                    title={`มาสคอตท่า ${pose}`}
+                  >
+                    <img src={src} alt="" className="h-10 w-10 object-contain" />
+                  </button>
+                ) : null
+              })}
               <input
                 type="file"
                 accept="image/*"

@@ -21,6 +21,7 @@ import { autoScheduleApprovedPosts } from '@/lib/marketingAutoSchedule'
 import { flashTo } from '@/lib/uiFlash'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 import { compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE } from '@/lib/bmbAdminApi_media'
+import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 
 type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'schedule' | 'rules' | 'analytics'
 const TABS: Array<{ id: Tab; label: string }> = [
@@ -71,9 +72,9 @@ export async function checkGenQuality(url: string, kind: string): Promise<GenQa>
 }
 
 export function autoMascotForKind(kind: string): string {
-  if (kind === 'menu') return 'bite_menu'
-  if (kind === 'festival') return 'bite_award'
-  return 'bite_recommend'
+  if (kind === 'menu') return 'menu'
+  if (kind === 'festival') return 'award'
+  return 'recommend'
 }
 
 export function AdminMarketing() {
@@ -599,10 +600,12 @@ export function AdminMarketing() {
   async function applyBrandWatermark(srcUrl: string, kind: string, mascotChoice: string): Promise<string> {
     try {
       const mascotKey = mascotChoice === 'auto' ? autoMascotForKind(kind) : mascotChoice
+      // ใช้ getOverrideUrl จาก Admin Override (bucket Bite_Mascot) แทนไฟล์ local
+      const mascotUrl = getOverrideUrl(mascotKey)
       const [img, logo, mascot] = await Promise.all([
         fetchBitmap(srcUrl),
         fetchBitmap('/Logo_Sticker_Circle.webp'),
-        fetchBitmap(`/assets/mascot/${mascotKey}.webp`),
+        mascotUrl ? fetchBitmap(mascotUrl) : Promise.resolve(null)
       ])
       if (!img) return srcUrl
       const w = img.width, h = img.height

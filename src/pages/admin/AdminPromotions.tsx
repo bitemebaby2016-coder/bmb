@@ -9,7 +9,8 @@ import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, 
 import { submitContentForApproval } from '@/lib/contentApproval'
 import { validatePromotionForm } from '@/lib/promotionClient'
 import { uploadMediaAsset, listAiAlbumFiles, type AiAlbumFile } from '@/lib/bmbAdminApi_media'
-import { MASCOT_ROTATION } from '@/components/home/FloatingAdBanners'
+import { MASCOT_POSES } from '@/components/home/FloatingAdBanners'
+import { getOverrideUrl, loadMascotOverrides } from '@/lib/mascotService'
 import { getProducts } from '@/lib/bmbAdminApi_products'
 
 const EMPTY_FORM = {
@@ -50,6 +51,7 @@ export function AdminPromotions() {
   useEffect(() => {
     void loadPromotions()
     void (async () => setProducts(await getProducts()))()
+    void loadMascotOverrides()
   }, [])
 
   async function loadPromotions() {
@@ -369,18 +371,21 @@ export function AdminPromotions() {
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-semibold text-brand-muted">🎭 มาสคอต:</span>
-                {MASCOT_ROTATION.map((src, i) => (
-                  <button
-                    key={src}
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, banner_mascot: src }))}
-                    data-testid={`promo-mascot-std-${i}`}
-                    className={`rounded-lg border p-0.5 ${form.banner_mascot === src ? 'border-brand-primary ring-2 ring-brand-primary/60' : 'border-brand-border'}`}
-                    title={`มาสคอตมาตรฐานท่า ${i + 1}`}
-                  >
-                    <img src={src} alt="" className="h-10 w-10 object-contain" />
-                  </button>
-                ))}
+                {MASCOT_POSES.map((pose, i) => {
+                  const src = getOverrideUrl(pose)
+                  return src ? (
+                    <button
+                      key={pose}
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, banner_mascot: src }))}
+                      data-testid={`promo-mascot-std-${i}`}
+                      className={`rounded-lg border p-0.5 ${form.banner_mascot === src ? 'border-brand-primary ring-2 ring-brand-primary/60' : 'border-brand-border'}`}
+                      title={`มาสคอตท่า ${pose}`}
+                    >
+                      <img src={src} alt="" className="h-10 w-10 object-contain" />
+                    </button>
+                  ) : null
+                })}
                 <input
                   type="file"
                   accept="image/*"

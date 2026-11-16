@@ -13,7 +13,7 @@ import {
   pickMarketingAiImage,
   mascotForPosition,
   mascotCornerForPosition,
-  MASCOT_ROTATION,
+  MASCOT_POSES,
 } from '@/components/home/FloatingAdBanners'
 import { buildMenuCalendarLines } from '../../supabase/functions/_shared/shopContext.ts'
 
@@ -44,8 +44,7 @@ describe('R58 ① — การ์ดประกาศ: ภาพเจนก�
     const first = [0, 1, 2, 3].map(mascotForPosition)
     expect(new Set(first).size).toBe(4)
     expect(mascotForPosition(4)).toBe(first[0]) // วนรอบ
-    expect(MASCOT_ROTATION.length).toBeGreaterThanOrEqual(4)
-    for (const src of MASCOT_ROTATION) expect(src.startsWith('/assets/mascot/')).toBe(true)
+    expect(MASCOT_POSES.length).toBeGreaterThanOrEqual(4)
     // มุมสลับ 4 มุม
     expect([0, 1, 2, 3].map(mascotCornerForPosition)).toEqual([0, 1, 2, 3])
     expect(mascotCornerForPosition(5)).toBe(1)

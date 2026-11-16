@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DEFAULT_SITE_COPY } from '@/lib/homePopular'
+import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 
 const DEFAULT_AD_NOTICE = DEFAULT_SITE_COPY.adNotice
 
@@ -47,18 +48,17 @@ export function pickMarketingAiImage(images: unknown): string {
   return ok[ok.length - 1] || ''
 }
 
-/** R58: มาสคอตต่อโพส — สลับตามลำดับโพสไม่ให้ซ้ำกัน (Owner: "โพสของมาสคอตต้องสลับไม่ซ้ำกัน") */
-export const MASCOT_ROTATION = [
-  '/assets/mascot/bite_recommend.webp',
-  '/assets/mascot/bite_pointing.webp',
-  '/assets/mascot/bite_shopping.webp',
-  '/assets/mascot/bite_cooking.webp',
-] as const
+/** R58: มาสคอตต่อโพส — สลับตามลำดับโพสไม่ให้ซ้ำกัน (Owner: "โพสของมาสคอตต้องสลับไม่ซ้ำกัน")
+ *  ใช้ Admin Override (bucket Bite_Mascot) ผ่าน getOverrideUrl */
+export const MASCOT_POSES = ['recommend', 'pointing', 'shopping', 'cooking'] as const
+
+/** Backward compatibility — old name for tests */
+export const MASCOT_ROTATION = MASCOT_POSES.map(p => getOverrideUrl(p) || '') as string[]
 
 /** pure — รูปมาสคอตสำหรับลำดับโพสที่ pos (mod ยาวรายการ · การ์ดติดกันไม่ซ้ำกัน) */
 export function mascotForPosition(pos: number): string {
-  const i = Math.abs(Number.isFinite(pos) ? Math.trunc(pos) : 0) % MASCOT_ROTATION.length
-  return MASCOT_ROTATION[i]
+  const i = Math.abs(Number.isFinite(pos) ? Math.trunc(pos) : 0) % MASCOT_POSES.length
+  return getOverrideUrl(MASCOT_POSES[i]) || ''
 }
 
 /** pure — มุมของรูปที่วางมาสคอตต่อโพส (0=ขวาล่าง 1=ซ้ายล่าง 2=ขวาบน 3=ซ้ายบน) */
@@ -123,7 +123,19 @@ export function FloatingAdBanners({
   const [floatAdSources, setFloatAdSources] = useState<FloatingAdSource[]>(sources)
   // Fallback images จาก ai-generated album (promo/festival)
   const [albumImgs, setAlbumImgs] = useState<string[]>([])
-  
+  // Mascot overrides loaded flag
+  const [mascotsLoaded, setMascotsLoaded] = useState(false)
+
+  // โหลด mascot overrides จาก Admin (bucket Bite_Mascot)
+  useEffect(() => {
+    let alive = true
+    void loadMascotOverrides().then(() => {
+      if (alive) setMascotsLoaded(true)
+    })
+    return () => { alive = false }
+  }, [])
+
+  // Kill switch สำหรับ floating ad (โหลดจาก business_settings)
   useEffect(() => {
     let alive = true
     void (async () => {
@@ -361,7 +373,7 @@ export function FloatingAdBanners({
                 />
                 {/* R55+R58: น้อง Bite ตัวเล็กทับมุมรูป — รูป wm-* มีมาสคอตในไฟล์อยู่แล้ว = ไม่ซ้ำ
                     R61: เว้นแต่แอดมิน "ประกอบเอง" (promo.mascot) = คนเลือกเอง ต้องโชว์ตามที่เลือก */}
-                {(promo.mascot || !mediaSrc.includes('/wm-')) && (
+                {promoMascot && (promo.mascot || !mediaSrc.includes('/wm-')) && (
                   <img src={promoMascot} alt="" loading="lazy" className={`flad-mascot-composed flad-mascot-pos-${mascotCorner}`} data-testid="floating-ad-mascot" />
                 )}
               </>
@@ -369,7 +381,9 @@ export function FloatingAdBanners({
               <div className="flad-media flad-media-fallback" aria-hidden="true">
                 {/* ช่องสื่อว่าง (ยังไม่มีภาพโปรโมตเลย) → มาสคอตคนละตัวตามลำดับโพส ไม่ทิ้งบล็อกเปล่า
                     R61: ถ้าแอดมินตั้งมาสคอตของโปรโมชั่นไว้ = ใช้ของโปรโมชั่น */}
-                <img src={promoMascot} alt="" loading="lazy" className="flad-fallback-mascot" />
+                {promoMascot && (
+                  <img src={promoMascot} alt="" loading="lazy" className="flad-fallback-mascot" />
+                )}
               </div>
             )}
           </div>

@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react'
 import { enablePush, getPushPermissionState, getCurrentPushSubscription } from '@/lib/pushService'
 import { useAuthStore } from '@/store/authStore'
 import { showToast } from '@/components/ui/ToastContainer'
+import { MascotBadge } from '@/components/MascotBadge'
 
 const DISMISS_KEY = 'bmb:push-prompt-dismissed-at'
 const DISMISS_MS = 7 * 24 * 3600 * 1000
@@ -127,13 +128,13 @@ export function PushPermissionPrompt() {
           boxShadow: '0 18px 34px -12px rgba(255,120,20,.55), inset 0 3px 0 rgba(255,255,255,.75), inset 0 -6px 14px rgba(180,80,0,.28)',
         }}
       >
-        {/* น้อง Bite โผล่ = claymation entrance (pose จริงจาก assets/mascot) */}
-        <img
-          src="/assets/mascot/bite_peeking.webp"
+        {/* น้อง Bite โผล่ = claymation entrance (pose จริงจาก Admin Override) */}
+        <MascotBadge
+          pose="peeking"
+          size="md"
           alt="น้อง Bite ชวนเปิดการแจ้งเตือน"
-          className="w-16 h-16 object-contain drop-shadow-[0_6px_6px_rgba(120,50,0,.35)] shrink-0"
+          className="w-16 h-16 drop-shadow-[0_6px_6px_rgba(120,50,0,.35)] shrink-0"
           loading="eager"
-          decoding="async"
         />
         <div className="min-w-0 flex-1">
           <p className="font-display font-bold text-[15px] leading-snug text-[#5b2a00]">

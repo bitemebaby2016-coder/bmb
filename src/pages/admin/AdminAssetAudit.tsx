@@ -12,35 +12,35 @@ import { Link } from 'react-router-dom'
 // R21d backlog: โหลดแคตตาล็อกไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "สินค้าทุกตัวมีรูปครบ" ปลอม)
 import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import type { Product } from '@/types'
+import { getOverrideUrl, MASCOT_OVERRIDES_CHANGED_EVENT } from '@/lib/mascotService'
 
-// The mascot asset files Bite uses (mirror of public/assets/mascot/). Read-only
-// reference so an admin can confirm which pose files exist on disk / in the build.
-const MASCOT_ASSETS: Array<{ pose: string; file: string }> = [
-  { pose: 'ready', file: 'bite_ready.webp' },
-  { pose: 'greeting', file: 'bite_hero_greeting.webp' },
-  { pose: 'thinking', file: 'bite_thinking.webp' },
-  { pose: 'recommend', file: 'bite_recommend.webp' },
-  { pose: 'waiting', file: 'bite_waiting.webp' },
-  { pose: 'pointing', file: 'bite_pointing.webp' },
-  { pose: 'shopping', file: 'bite_shopping.webp' },
-  { pose: 'success', file: 'bite_success.webp' },
-  { pose: 'bye', file: 'bite_goodbye.webp' },
-  { pose: 'sad', file: 'bite_sad.webp' },
-  { pose: 'empty', file: 'bite_empty_sad.webp' },
-  { pose: 'closed', file: 'bite_closed.webp' },
-  { pose: 'menu', file: 'bite_menu.webp' },
-  { pose: 'cooking', file: 'bite_cooking.webp' },
-  { pose: 'eating', file: 'bite_eating.webp' },
-  { pose: 'delivery', file: 'bite_delivery_run.webp' },
-  { pose: 'award', file: 'bite_award.webp' },
-  { pose: 'feedback', file: 'bite_feedback.webp' },
-  { pose: 'reviewing', file: 'bite_reviewing.webp' },
-  { pose: 'vote', file: 'bite_vote.webp' },
-  { pose: 'peeking', file: 'bite_peeking.webp' },
-  { pose: 'heart', file: 'bite_badge_mini_heart.webp' },
-  { pose: 'thumbsup', file: 'bite_badge_thumbsup_approval.webp' },
-  { pose: 'main', file: 'Bite_Main.webp' },
-]
+// The mascot poses from Admin Override (bucket Bite_Mascot). Read-only
+// reference so an admin can confirm which pose overrides are set.
+const MASCOT_POSES = [
+  'ready',
+  'greeting',
+  'thinking',
+  'recommend',
+  'waiting',
+  'pointing',
+  'shopping',
+  'success',
+  'bye',
+  'sad',
+  'empty',
+  'closed',
+  'menu',
+  'cooking',
+  'eating',
+  'delivery_run',
+  'award',
+  'feedback',
+  'reviewing',
+  'vote',
+  'peeking',
+  'heart',
+  'thumbsup',
+] as const
 
 function hasImage(product: Product): boolean {
   return !!product.image_url && String(product.image_url).trim() !== ''
@@ -157,27 +157,33 @@ export function AdminAssetAudit() {
           </table>
         </div>
       )}
-      {/* Mascot asset manifest (reference — files live in public/assets/mascot/) */}
+      {/* Mascot asset manifest (reference — Admin Override from bucket Bite_Mascot) */}
       <div className="card overflow-hidden">
         <div className="px-4 py-2 bg-brand-bg border-b border-brand-border font-bold text-brand-accent">
-          🧬 ไฟล์มาสคอต Bite ที่ระบบใช้ ({MASCOT_ASSETS.length} ไฟล์) — อ้างอิงเท่านั้น
+          🧬 ท่ามาสคอต Bite ที่แอดมินตั้ง ({MASCOT_POSES.length} ท่า) — ใช้ GIF จาก bucket Bite_Mascot
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-4">
-          {MASCOT_ASSETS.map((a) => (
-            <div key={a.pose} className="flex items-center gap-2 text-xs border border-brand-border bg-white rounded px-2 py-1.5">
-              <img
-                src={`/assets/mascot/${a.file}`}
-                alt={a.pose}
-                loading="lazy"
-                className="w-8 h-8 rounded object-cover"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = '0.2' }}
-              />
-              <div className="min-w-0">
-                <div className="font-medium text-brand-accent truncate">{a.pose}</div>
-                <div className="font-mono text-brand-muted truncate">{a.file}</div>
+          {MASCOT_POSES.map((pose) => {
+            const url = getOverrideUrl(pose)
+            return (
+              <div key={pose} className="flex items-center gap-2 text-xs border border-brand-border bg-white rounded px-2 py-1.5">
+                {url ? (
+                  <img
+                    src={url}
+                    alt={pose}
+                    loading="lazy"
+                    className="w-8 h-8 rounded object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded bg-brand-bg/30 flex items-center justify-center text-xs text-brand-muted">—</div>
+                )}
+                <div className="min-w-0">
+                  <div className="font-medium text-brand-accent truncate">{pose}</div>
+                  <div className="font-mono text-brand-muted truncate">{url ? 'ตั้งค่าแล้ว ✅' : 'ยังไม่ได้ตั้ง ❌'}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>
