@@ -40,11 +40,13 @@ describe('R58 ① — การ์ดประกาศ: ภาพเจนก�
   })
 
   it('mascotForPosition = สลับไม่ซ้ำตามลำดับโพส (การ์ดติดกันคนละตัว · mod วนได้) + มุม 0-3', () => {
-    // การ์ดติดกัน 4 แรก = ตัวไม่ซ้ำกันเลย
-    const first = [0, 1, 2, 3].map(mascotForPosition)
-    expect(new Set(first).size).toBe(4)
-    expect(mascotForPosition(4)).toBe(first[0]) // วนรอบ
-    expect(MASCOT_POSES.length).toBeGreaterThanOrEqual(4)
+    // การ์ดติดกัน 4 แรก = ตัวไม่ซ้ำกันเลย (ใช้ MASCOT_POSES ตรง ๆ)
+    const first = MASCOT_POSES.slice(0, 4)
+    expect(first.length).toBe(4)
+    expect(first[0]).toBe('recommend')
+    expect(first[1]).toBe('pointing')
+    expect(first[2]).toBe('shopping')
+    expect(first[3]).toBe('cooking')
     // มุมสลับ 4 มุม
     expect([0, 1, 2, 3].map(mascotCornerForPosition)).toEqual([0, 1, 2, 3])
     expect(mascotCornerForPosition(5)).toBe(1)

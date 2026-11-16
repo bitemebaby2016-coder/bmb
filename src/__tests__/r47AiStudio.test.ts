@@ -41,19 +41,19 @@ describe('R47 — ยุบสองเซคชั่นเป็นใบเ�
 })
 
 describe('R47 — ลายน้ำโลโก้จริง + มาสคอตอัตโนมัติ + จำค่า', () => {
-  it('applyBrandWatermark ใช้ Logo_Sticker_Circle + mascot จาก /assets/mascot + เลือกตาม kind + จำ localStorage', () => {
+  it('applyBrandWatermark ใช้ Logo_Sticker_Circle + mascot จาก Admin Override + เลือกตาม kind + จำ localStorage', () => {
     expect(marketingSrc).toContain('applyBrandWatermark(data.url, genKind, wmMascot)')
     expect(marketingSrc).toContain("fetchBitmap('/Logo_Sticker_Circle.webp')")
-    expect(marketingSrc).toContain('`/assets/mascot/${mascotKey}.webp`')
+    expect(marketingSrc).toContain('getOverrideUrl(mascotKey)')
     expect(marketingSrc).toContain("localStorage.getItem('bmb:wm-mascot') || 'auto'")
     expect(marketingSrc).toContain("localStorage.setItem('bmb:wm-mascot', v)")
     expect(marketingSrc).toContain('data-testid="mk-wm-mascot"')
     expect(marketingSrc).toContain("'Bite Me Baby'")
   })
 
-  it('autoMascotForKind: menu→bite_menu · festival→bite_award · อื่น ๆ →bite_recommend', () => {
-    expect(autoMascotForKind('menu')).toBe('bite_menu')
-    expect(autoMascotForKind('festival')).toBe('bite_award')
-    expect(autoMascotForKind('promo')).toBe('bite_recommend')
+  it('autoMascotForKind: menu→menu · festival→award · อื่น ๆ →recommend', () => {
+    expect(autoMascotForKind('menu')).toBe('menu')
+    expect(autoMascotForKind('festival')).toBe('award')
+    expect(autoMascotForKind('promo')).toBe('recommend')
   })
 })

@@ -28,12 +28,12 @@ describe('R61 · /admin/promotions — ภาพ+มาสคอต แนบเ
     expect(promoSrc).toContain('aria-label="เลือกรูปแบนเนอร์จากเครื่อง"')
     expect(promoSrc).toContain('data-testid="promo-banner-album"')
     expect(promoSrc).toContain('listAiAlbumFiles()')
-    // มาสคอต: จากเครื่อง + จากคลังภาพ + มาตรฐาน MASCOT_ROTATION + ล้าง
+    // มาสคอต: จากเครื่อง + จากคลังภาพ + มาตรฐาน MASCOT_POSES + ล้าง
     expect(promoSrc).toContain('data-testid="promo-mascot-file"')
     expect(promoSrc).toContain("uploadMediaAsset(file, 'mascot'")
     expect(promoSrc).toContain('data-testid="promo-mascot-album"')
     expect(promoSrc).toContain('data-testid={`promo-mascot-std-${i}`}')
-    expect(promoSrc).toContain('MASCOT_ROTATION.map')
+    expect(promoSrc).toContain('MASCOT_POSES.map')
     expect(promoSrc).toContain('data-testid="promo-mascot-clear"')
     // คลังภาพ: เลือกแล้วใส่ "ภาพ" หรือ "มาสคอต" ตามปุ่มที่เปิด
     expect(promoSrc).toContain("albumPanel === 'mascot'")
