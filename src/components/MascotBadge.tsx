@@ -94,36 +94,30 @@ export function mascotDefaultSrc(pose: MascotPose): string {
 export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 'lazy' }: MascotBadgeProps) {
   // บังคับท่าตอนร้านปิด (กติกาเจ้าของร้าน) — คุมทุกเซกชันที่จุดนี้จุดเดียว
   const storeClosed = useStoreClosed()
-  const effectivePose = enforceClosedPose(pose, storeClosed)
 
   // R207c fix: โชว์ static ทันที ไม่รอ override — admin override จะ swap เข้ามาเองผ่าน event
   const [overrideUrl, setOverrideUrl] = useState<string | undefined>(undefined)
 
-  // pose เปลี่ยน (รวมตอนร้านเปิด/ปิดสลับกัน) → reset override ใหม่
-  useEffect(() => {
-    setOverrideUrl(undefined)
-  }, [effectivePose])
-
-  // โหลด override ครั้งแรก (async, ไม่บล็อก render)
+  // โหลด override ตาม pose ต้นฉบับ (admin ตั้ง GIF ให้ "ready" = ใช้แม้ร้านปิด)
   useEffect(() => {
     let active = true
     const load = async () => {
       await loadMascotOverrides()
       if (!active) return
-      const o = getOverrideUrl(effectivePose)
+      const o = getOverrideUrl(pose)  // ใช้ pose ต้นฉบับ
       if (o) setOverrideUrl(o)
     }
     load()
     return () => { active = false }
-  }, [effectivePose])
+  }, [pose])
 
-  // R206: admin บันทึก override ใหม่ → badge ที่แสดงอยู่เปลี่ยนทันที (ไม่ต้อง deploy/refresh หน้า)
+  // R206: admin บันทึก override ใหม่ → badge ที่แสดงอยู่เปลี่ยนทันที
   useEffect(() => {
     let active = true
     const onChanged = async () => {
       await loadMascotOverrides(true)
       if (!active) return
-      const o = getOverrideUrl(effectivePose)
+      const o = getOverrideUrl(pose)  // ใช้ pose ต้นฉบับ
       if (o) setOverrideUrl(o)
       else setOverrideUrl(undefined)
     }
@@ -132,9 +126,10 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
       active = false
       window.removeEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
     }
-  }, [effectivePose])
+  }, [pose])
 
-  // โชว์ static ทันที · ถ้ามี override = ใช้ override (GIF แอดมิน)
+  // มี override = ใช้เลย (ไม่ remap) · ไม่มี = static ตาม effectivePose (ร้านปิด remap)
+  const effectivePose = overrideUrl ? pose : enforceClosedPose(pose, storeClosed)
   const baseSrc = overrideUrl ?? POSE_ASSETS[effectivePose].src
 
   // Fallback chain: admin override → 3D asset → vector fallback
