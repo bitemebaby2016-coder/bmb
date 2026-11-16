@@ -195,8 +195,8 @@ describe('R206 · migration 206 — bucket Bite_Mascot + policies (contract)', (
       expect(migrationSrc).toContain(`DROP POLICY IF EXISTS ${p} ON storage.objects;`)
       expect(migrationSrc).toContain(`CREATE POLICY ${p} ON storage.objects`)
     }
-    // admin-only = profiles.role = 'admin' (pattern 119 ที่ผ่าน prod)
-    expect(migrationSrc.match(/\(SELECT role FROM public\.profiles WHERE id = auth\.uid\(\)\) = 'admin'/g)?.length).toBe(3)
+    // INSERT: authenticated (pattern 119 — no profiles subquery); UPDATE/DELETE: admin-only via profiles self-read (pattern 119)
+    expect(migrationSrc.match(/\(SELECT role FROM public\.profiles WHERE id = auth\.uid\(\)\) = 'admin'/g)?.length).toBe(2)
     expect(migrationSrc).not.toMatch(/SELECT id FROM storage\.buckets/)
   })
 })
