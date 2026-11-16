@@ -96,21 +96,15 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
   const storeClosed = useStoreClosed()
   const effectivePose = enforceClosedPose(pose, storeClosed)
 
-  // R207c: รอรู้ผล override ก่อนวาดภาพ — กันภาพนิ่งเก่าโชว์ก่อนแล้วสลับเป็น GIF แอดมิน
-  // ใช้ synchronous cache check สำหรับ initial state: ถ้า cache โหลดแล้ว = settled ทันที
+  // R207c fix: โชว์ static ทันที ไม่รอ override — admin override จะ swap เข้ามาเองผ่าน event
   const [overrideUrl, setOverrideUrl] = useState<string | undefined>(undefined)
-  const [overrideSettled, setOverrideSettled] = useState(() => isMascotOverridesLoaded())
 
-  // pose เปลี่ยน (รวมตอนร้านเปิด/ปิดสลับกัน) → reset state รอ override ใหม่
-  const [settledPose, setSettledPose] = useState<string | null>(null)
-
+  // pose เปลี่ยน (รวมตอนร้านเปิด/ปิดสลับกัน) → reset override ใหม่
   useEffect(() => {
-    // pose เปลี่ยน → รีเซ็ต รอ override ใหม่
     setOverrideUrl(undefined)
-    setOverrideSettled(false)
   }, [effectivePose])
 
-  // โหลด override ครั้งแรก
+  // โหลด override ครั้งแรก (async, ไม่บล็อก render)
   useEffect(() => {
     let active = true
     const load = async () => {
@@ -118,7 +112,6 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
       if (!active) return
       const o = getOverrideUrl(effectivePose)
       if (o) setOverrideUrl(o)
-      setOverrideSettled(true)
     }
     load()
     return () => { active = false }
@@ -133,7 +126,6 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
       const o = getOverrideUrl(effectivePose)
       if (o) setOverrideUrl(o)
       else setOverrideUrl(undefined)
-      setOverrideSettled(true)
     }
     window.addEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
     return () => {
@@ -142,9 +134,8 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
     }
   }, [effectivePose])
 
-  // R207c: ยังไม่รู้ผล override = ยังไม่วาดภาพใดเลย (placeholder โปร่งใส ขนาดเดิม)
-  // มี override = โชว์ GIF แอดมินทันที · ไม่มี = ภาพนิ่งตามชุดท่า (ร้านปิดเดิม)
-  const baseSrc = overrideUrl || (overrideSettled ? POSE_ASSETS[effectivePose].src : null)
+  // โชว์ static ทันที · ถ้ามี override = ใช้ override (GIF แอดมิน)
+  const baseSrc = overrideUrl ?? POSE_ASSETS[effectivePose].src
 
   // Fallback chain: admin override → 3D asset → vector fallback
   const [currentSrc, setCurrentSrc] = useState<string | null>(baseSrc)

@@ -84,15 +84,15 @@ describe('R206 · validateMascotFile — พฤติกรรมจริง (u
 })
 
 describe('R206 · MascotBadge + BiteMascot — ฟัง event เปลี่ยนรูปทันทีใน session เดิม', () => {
-it('MascotBadge: addEventListener + removeEventListener ตาม event ของ service', () => {
+  it('MascotBadge: addEventListener + removeEventListener ตาม event ของ service', () => {
     expect(badgeSrc).toContain('MASCOT_OVERRIDES_CHANGED_EVENT')
     expect(badgeSrc).toMatch(/window\.addEventListener\(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged\)/)
     expect(badgeSrc).toMatch(/window\.removeEventListener\(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged\)/)
     // reload แบบ force หลัง event + คืนค่าเริ่มต้นเมื่อ override ถูกล้าง
     expect(badgeSrc).toMatch(/const onChanged = async \(\) => \{[\s\S]{0,300}?loadMascotOverrides\(true\)/)
-    // R207c: ใช้ setOverrideUrl + setOverrideSettled แทน setSrc เดิม
+    // R207c fix: โชว์ static ทันที แล้ว swap override — ไม่มี overrideSettled state
     expect(badgeSrc).toMatch(/setOverrideUrl\(o\)/)
-    expect(badgeSrc).toMatch(/setOverrideSettled\(true\)/)
+    expect(badgeSrc).not.toMatch(/setOverrideSettled\(true\)/)
   })
 
   it('BiteMascot: ฟัง event เดียวกัน (mascot ลอยหน้าร้านเปลี่ยนด้วย)', () => {
