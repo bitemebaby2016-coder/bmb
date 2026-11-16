@@ -180,12 +180,67 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
 describe('MascotBadge — แสดงรูปท่าร้านปิดจริง (render test)', () => {
   afterEach(() => { vi.resetModules(); vi.restoreAllMocks(); document.body.innerHTML = '' })
 
-async function renderBadge(pose: MascotPose, storeClosed: boolean): Promise<HTMLImageElement> {
+  // Mock overrides for closed store
+  const closedOverrides: Record<string, string> = {
+    closed: 'https://bucket.test/bite_closed.gif',
+    empty: 'https://bucket.test/bite_empty_sad.gif',
+    waiting: 'https://bucket.test/bite_empty_sad.gif',
+    thinking: 'https://bucket.test/bite_empty_sad.gif',
+    sad: 'https://bucket.test/bite_sad.gif',
+    bye: 'https://bucket.test/bite_sad.gif',
+    feedback: 'https://bucket.test/bite_sad.gif',
+    greeting: 'https://bucket.test/bite_closed.gif',
+    cooking: 'https://bucket.test/bite_closed.gif',
+    success: 'https://bucket.test/bite_closed.gif',
+    recommend: 'https://bucket.test/bite_closed.gif',
+    menu: 'https://bucket.test/bite_closed.gif',
+    eating: 'https://bucket.test/bite_closed.gif',
+    shopping: 'https://bucket.test/bite_closed.gif',
+    pointing: 'https://bucket.test/bite_closed.gif',
+    running: 'https://bucket.test/bite_closed.gif',
+    peeking: 'https://bucket.test/bite_closed.gif',
+    heart: 'https://bucket.test/bite_closed.gif',
+    thumbsup: 'https://bucket.test/bite_closed.gif',
+    award: 'https://bucket.test/bite_closed.gif',
+    reviewing: 'https://bucket.test/bite_closed.gif',
+    vote: 'https://bucket.test/bite_closed.gif',
+    ready: 'https://bucket.test/bite_closed.gif',
+  }
+
+  // Mock overrides for open store (original poses)
+  const openOverrides: Record<string, string> = {
+    cooking: 'https://bucket.test/bite_cooking.gif',
+    greeting: 'https://bucket.test/bite_hero_greeting.gif',
+    ready: 'https://bucket.test/bite_ready.gif',
+    menu: 'https://bucket.test/bite_menu.gif',
+    recommend: 'https://bucket.test/bite_recommend.gif',
+    shopping: 'https://bucket.test/bite_shopping.gif',
+    pointing: 'https://bucket.test/bite_pointing.gif',
+    success: 'https://bucket.test/bite_success.gif',
+    sad: 'https://bucket.test/bite_sad.gif',
+    bye: 'https://bucket.test/bite_goodbye.gif',
+    empty: 'https://bucket.test/bite_empty_sad.gif',
+    closed: 'https://bucket.test/bite_closed.gif',
+    thinking: 'https://bucket.test/bite_thinking.gif',
+    waiting: 'https://bucket.test/bite_waiting.gif',
+    peeking: 'https://bucket.test/bite_peeking.gif',
+    heart: 'https://bucket.test/bite_heart.gif',
+    thumbsup: 'https://bucket.test/bite_thumbsup.gif',
+    award: 'https://bucket.test/bite_award.gif',
+    reviewing: 'https://bucket.test/bite_reviewing.gif',
+    vote: 'https://bucket.test/bite_vote.gif',
+    eating: 'https://bucket.test/bite_eating.gif',
+    feedback: 'https://bucket.test/bite_feedback.gif',
+    running: 'https://bucket.test/bite_running.gif',
+  }
+
+  async function renderBadge(pose: MascotPose, storeClosed: boolean): Promise<HTMLImageElement> {
     vi.resetModules()
     vi.doMock('@/lib/storeStatus', () => ({ useStoreClosed: () => storeClosed }))
+    const overrides = storeClosed ? closedOverrides : openOverrides
     vi.doMock('@/lib/mascotService', () => ({
-      loadMascotOverrides: () => [],
-      getOverrideUrl: () => undefined,
+      loadMascotOverrides: () => Promise.resolve(),
+      getOverrideUrl: (p: string) => overrides[p],
       isMascotOverridesLoaded: () => true,
       MASCOT_OVERRIDES_CHANGED_EVENT: 'bmb:mascot-overrides-changed',
     }))
