@@ -20,18 +20,28 @@
 BEGIN;
 
 -- 1) bucket Bite_Mascot — มีอยู่แล้ว = ปรับให้ถูกต้อง (public + mime + ขนาด), ไม่มี = สร้าง
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'Bite_Mascot',
-  'Bite_Mascot',
-  true,
-  15728640, -- 15 MB (GIF แอนิเมตใหญ่ได้ — ตรง MAX_GIF_BYTES ฝั่งเว็บ)
-  ARRAY['image/gif','image/png','image/webp','image/jpeg']::text[]
-)
-ON CONFLICT (id) DO UPDATE
-  SET public            = true,
-      file_size_limit   = EXCLUDED.file_size_limit,
-      allowed_mime_types = EXCLUDED.allowed_mime_types;
+-- ใช้ pattern 133: insert core columns ก่อน แล้ว conditional update optional columns (file_size_limit, allowed_mime_types)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('Bite_Mascot', 'Bite_Mascot', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'storage' AND table_name = 'buckets' AND column_name = 'file_size_limit'
+  ) THEN
+    UPDATE storage.buckets SET file_size_limit = 15728640 WHERE id = 'Bite_Mascot';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'storage' AND table_name = 'buckets' AND column_name = 'allowed_mime_types'
+  ) THEN
+    UPDATE storage.buckets
+       SET allowed_mime_types = ARRAY['image/gif','image/png','image/webp','image/jpeg']::text[]
+     WHERE id = 'Bite_Mascot';
+  END IF;
+END $$;
 
 -- 2) canonical policies — public read
 DROP POLICY IF EXISTS bite_mascot_public_read ON storage.objects;
