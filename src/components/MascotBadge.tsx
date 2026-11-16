@@ -147,7 +147,10 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
     setCurrentSrc((current) => {
       if (!current) return POSE_ASSETS[effectivePose].fallback
       const { src: asset, fallback } = POSE_ASSETS[effectivePose]
-      if (current === asset || current === overrideUrl) return fallback
+      // current เป็น override URL → ลอง 3D asset ก่อน
+      if (current === overrideUrl) return asset
+      // current เป็น 3D asset → fallback ไป vector
+      if (current === asset) return fallback
       return current
     })
   }
