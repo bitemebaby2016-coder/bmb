@@ -104,7 +104,7 @@ describe('R206 · MascotBadge + BiteMascot — ฟัง event เปลี่�
   it('R207b: ตัวลอยไม่วาดภาพนิ่งก่อนรู้ผล override — ห้ามภาพนิ่ง sad แล้วสลับเป็นรูปแอดมิน', () => {
     // state กันสับ: ยังไม่ settle = ไม่วาดอะไร
     expect(biteMascotSrc).toContain('overrideSettled')
-    expect(biteMascotSrc).toMatch(/overrideUrl \|\| \(overrideSettled \? getMascotUrl\(currentPose\) : null\)/)
+    expect(biteMascotSrc).toMatch(/overrideUrl \?\? \(overrideSettled \? \(getOverrideUrl\(currentPose\) \?\? null\) : null\)/)
     // img เรนเดอร์เมื่อมี URL เท่านั้น — ไม่มีรูป = placeholder เปล่า (ปุ่มแตะยังอยู่)
     expect(biteMascotSrc).toMatch(/\{mascotUrl \? \(/)
     expect(biteMascotSrc).toMatch(/aria-hidden="true" \/>/)
