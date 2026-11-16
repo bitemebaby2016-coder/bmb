@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import type { MascotPose, MascotSize } from '@/types'
-import { loadMascotOverrides, getOverrideUrl, MASCOT_OVERRIDES_CHANGED_EVENT } from '@/lib/mascotService'
+import { loadMascotOverrides, getOverrideUrl, isMascotOverridesLoaded, MASCOT_OVERRIDES_CHANGED_EVENT } from '@/lib/mascotService'
 import { useStoreClosed } from '@/lib/storeStatus'
 import { enforceClosedPose } from '@/lib/mascotClosed'
 
@@ -95,33 +95,45 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
   // บังคับท่าตอนร้านปิด (กติกาเจ้าของร้าน) — คุมทุกเซกชันที่จุดนี้จุดเดียว
   const storeClosed = useStoreClosed()
   const effectivePose = enforceClosedPose(pose, storeClosed)
-  const [src, setSrc] = useState<string>(POSE_ASSETS[effectivePose].src)
 
-  // pose เปลี่ยน (รวมตอนร้านเปิด/ปิดสลับกัน) → reset src
+  // R207c: รอรู้ผล override ก่อนวาดภาพ — กันภาพนิ่งเก่าโชว์ก่อนแล้วสลับเป็น GIF แอดมิน
+  // ใช้ synchronous cache check สำหรับ initial state: ถ้า cache โหลดแล้ว = settled ทันที
+  const [overrideUrl, setOverrideUrl] = useState<string | undefined>(undefined)
+  const [overrideSettled, setOverrideSettled] = useState(() => isMascotOverridesLoaded())
+
+  // pose เปลี่ยน (รวมตอนร้านเปิด/ปิดสลับกัน) → reset state รอ override ใหม่
+  const [settledPose, setSettledPose] = useState<string | null>(null)
+
   useEffect(() => {
-    setSrc(POSE_ASSETS[effectivePose].src)
+    // pose เปลี่ยน → รีเซ็ต รอ override ใหม่
+    setOverrideUrl(undefined)
+    setOverrideSettled(false)
   }, [effectivePose])
 
-  // Admin override (mascot_overrides) — role_name = pose key, โหลดครั้งเดียวต่อ session
+  // โหลด override ครั้งแรก
   useEffect(() => {
     let active = true
-    void loadMascotOverrides().then(() => {
+    const load = async () => {
+      await loadMascotOverrides()
       if (!active) return
       const o = getOverrideUrl(effectivePose)
-      if (o) setSrc(o)
-    })
+      if (o) setOverrideUrl(o)
+      setOverrideSettled(true)
+    }
+    load()
     return () => { active = false }
   }, [effectivePose])
 
   // R206: admin บันทึก override ใหม่ → badge ที่แสดงอยู่เปลี่ยนทันที (ไม่ต้อง deploy/refresh หน้า)
   useEffect(() => {
     let active = true
-    const onChanged = () => {
-      void loadMascotOverrides(true).then(() => {
-        if (!active) return
-        const o = getOverrideUrl(effectivePose)
-        setSrc(o ?? POSE_ASSETS[effectivePose].src)
-      })
+    const onChanged = async () => {
+      await loadMascotOverrides(true)
+      if (!active) return
+      const o = getOverrideUrl(effectivePose)
+      if (o) setOverrideUrl(o)
+      else setOverrideUrl(undefined)
+      setOverrideSettled(true)
     }
     window.addEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
     return () => {
@@ -130,27 +142,42 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
     }
   }, [effectivePose])
 
-  // ลำดับ fallback: admin override → 3D asset จริง → เวกเตอร์เดิม (กัน infinite loop)
+  // R207c: ยังไม่รู้ผล override = ยังไม่วาดภาพใดเลย (placeholder โปร่งใส ขนาดเดิม)
+  // มี override = โชว์ GIF แอดมินทันที · ไม่มี = ภาพนิ่งตามชุดท่า (ร้านปิดเดิม)
+  const baseSrc = overrideUrl || (overrideSettled ? POSE_ASSETS[effectivePose].src : null)
+
+  // Fallback chain: admin override → 3D asset → vector fallback
+  const [currentSrc, setCurrentSrc] = useState<string | null>(baseSrc)
+
   const handleError = () => {
-    setSrc((current) => {
+    setCurrentSrc((current) => {
+      if (!current) return POSE_ASSETS[effectivePose].fallback
       const { src: asset, fallback } = POSE_ASSETS[effectivePose]
-      if (current === asset) return fallback
-      if (current === fallback) return current
-      return asset
+      if (current === asset || current === overrideUrl) return fallback
+      return current
     })
   }
+
+  const src = currentSrc
 
   const sizeClass = size === 'fluid' ? '' : `mascot-badge--${size}`
   const roleLabel = alt || `น้อง Bite — ${POSE_LABELS[effectivePose]}`
 
   return (
-    <img
-      src={src}
-      alt={roleLabel}
-      loading={loading}
-      decoding="async"
-      className={`mascot-badge ${sizeClass} ${className}`.trim()}
-      onError={handleError}
-    />
+    <>
+      {src ? (
+        <img
+          src={src}
+          alt={alt || `น้อง Bite — ${POSE_LABELS[effectivePose]}`}
+          loading={loading}
+          decoding="async"
+          className={`mascot-badge ${size === 'fluid' ? '' : `mascot-badge--${size}`} ${className}`.trim()}
+          onError={handleError}
+        />
+      ) : (
+        // placeholder โปร่งใสขนาดเดียวกัน (ป้องกัน layout shift) — รอ override เสร็จ
+        <span className={`mascot-badge ${size === 'fluid' ? '' : `mascot-badge--${size}`} ${className}`.trim()} aria-hidden="true" />
+      )}
+    </>
   )
 }

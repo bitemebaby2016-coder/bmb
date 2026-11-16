@@ -21,6 +21,31 @@
 
 > **✅ LIVE STATE ยืนยันสุดท้าย 2026-11-15 (`e2e/_r205_live_check.json` = R205_LIVE_CHECK_OK=true):** EF `social-ai-worker` **v86 ACTIVE** (deploy ล่าสุด · verify_jwt=true) · DB: RPC 205 ทั้ง 2 อยู่ + grants ถูก (wrapper=service_role · timeline=authenticated) + m204 คอลัมน์ครบ 3 · **เอกสาร live test ใหม่ = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md`** (กลุ่ม A §T-A/R100 · B R97 ข้อละ 7 · C R96 P2 เว็บ · D grounding สด — ตารางบันทึกผลพร้อมกรอก) — **แทนฉบับ 11-08/09/10 ทั้งหมด**
 
+## 🔒 SESSION CLOSE 2026-11-16 (รอบ 39 · R207c — MascotBadge ทุกจุดไม่วาดภาพนิ่งก่อนรู้ผล override · Owner รายงาน "ภาพนิ่ง sad แล้วกลายเป็นรูปแอดมิน" · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-16 14:12:** R207c **COMPLETE IN CODE + PUSHED** · tsc ✅ lint ✅ vitest ✅ (**217 files / 2295 tests PASS**) · build ✅ · **R206/R207 ยืนยัน live แล้ว**
+
+> **บั๊กที่แท้จริง (Owner รายงาน 2026-11-16):** หน้าแรก biteme-baby.com มี mascot กว่า 3 ตัวโชพร้อมกันตอนโหลด:
+> 1. TalkToBite landing (กลางจอใหญ่) pose="ready"
+> 2. ปunjuk CTA pose="pointing"
+> 4. ตัวลอย BiteMascot มุมขวา
+> **ร้านปิดวันนี้ → ทุกตัวถูก remap เป็น pose "sad/empty_sad" (ภาพนิ่งร้องไห้)**
+> ทุกตัวโชว์ **ภาพนิ่งร้อนไห้ก่อน แล้วค่อยสลับเป็น GIF ที่แอดมินตั้ง** = "ภาพนิ่ง sad แล้วหายไปกลายเป็นมาสคอตที่แอดมินตั้ง"
+
+> **แก้ที่ MascotBadge.tsx (จุดกลางทุก mascot):**
+> - เพิ่ม `isMascotOverridesLoaded()` sync check + `overrideSettled` state
+> - **ยังไม่รู้ผล override = ยังไม่วาดภาพใดเลย** (placeholder โปร่งใส ขนาดเดิม ปุ่มแตะยังอยู่)
+> - **มี override = โชว์ GIF แอดมินตั้งแต่เฟรมแรก** (ไม่มีการสลับเลย)
+> - **ไม่มี override = ภาพนิ่งตามชุดท่า** (ร้านปิด remap เป็น sad/empty_sad ตามเดิม — ดีไซน์เจ้าของร้านคงอยู่)
+> - pose เปลี่ยน → รอ override ใหม่ (ไม่ใช้ภาพนิ่งเก่า)
+> - AdminMedia/AdminPromotions/MascotSettingsPage/AdminMascotBubble/โฮมเพจทุกเซกชัน/ตัวลอย — **หมดบั๊กเหมือนกันเพราะจุดเดียว**
+
+> **ทดสอบ live (Owner):** ① hard refresh → กลางจอไม่มีภาพนิ่ง sad นำอีก ② ตัวลอยมุมจอ = รูปแอดมินตั้งแต่แรกเห็น (ไม่มีภาพนิ่ง sad นำอีก) ③ pose เปลี่ยนตามร้านเปิด/ปิดตามปกติ ④ admin GIF โชว์ทันที ไม่มี "ภาพนิ่งแล้วสลับ"
+
+> **Known Risks:** ไม่มี — เป็นการแก้จุดกลาง (single source of truth) ครอบคลุมทุก mascot พร้อมกัน
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-16 (รอบ 38 · R207b — ตัวลอย BiteMascot ไม่วาดภาพนิ่งก่อนรู้ผล override · Owner ชี้ "ภาพนิ่งมาสคอต sad" · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-16 13:15:** R207b **COMPLETE IN CODE + PUSHED** · tsc ✅ lint ✅ vitest ✅ (**217 files / 2295 tests PASS — `e2e/_r207b_vitest_full.log`**) · build ✅

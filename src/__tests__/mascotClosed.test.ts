@@ -180,13 +180,13 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
 describe('MascotBadge — แสดงรูปท่าร้านปิดจริง (render test)', () => {
   afterEach(() => { vi.resetModules(); vi.restoreAllMocks(); document.body.innerHTML = '' })
 
-  async function renderBadge(pose: MascotPose, storeClosed: boolean): Promise<HTMLImageElement> {
+async function renderBadge(pose: MascotPose, storeClosed: boolean): Promise<HTMLImageElement> {
     vi.resetModules()
     vi.doMock('@/lib/storeStatus', () => ({ useStoreClosed: () => storeClosed }))
     vi.doMock('@/lib/mascotService', () => ({
-      loadMascotOverrides: async () => [],
+      loadMascotOverrides: () => [],
       getOverrideUrl: () => undefined,
-      // R206: mock ต้องครบทุก export ที่ MascotBadge ใช้จริง (event สำหรับ live refresh)
+      isMascotOverridesLoaded: () => true,
       MASCOT_OVERRIDES_CHANGED_EVENT: 'bmb:mascot-overrides-changed',
     }))
     const { MascotBadge } = await import('@/components/MascotBadge')
@@ -198,7 +198,23 @@ describe('MascotBadge — แสดงรูปท่าร้านปิดจ
     await act(async () => {
       root.render(createElement(MascotBadge, { pose, size: 'sm', alt: 'test', className: '', loading: 'eager' }))
     })
-    return host.querySelector('img') as HTMLImageElement
+    // R207c: รอ override settled ก่อนจับ img (async rendering)
+    // ใช้ flushPromises pattern เพื่อให้ act รอ microtasks จบ
+    await act(async () => {
+      await new Promise(r => setTimeout(r, 0))
+    })
+    let img = host.querySelector('img')
+    let attempts = 0
+    while (!img && attempts < 50) {
+      await new Promise(r => setTimeout(r, 20))
+      img = host.querySelector('img')
+      attempts++
+    }
+    // Debug: log what's actually rendered
+    if (!img) {
+      console.log('DEBUG host innerHTML:', host.innerHTML)
+    }
+    return img as HTMLImageElement
   }
 
   it('ร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น', async () => {

@@ -117,6 +117,11 @@ export function invalidateMascotOverrides(): void {
   overridesPromise = null
 }
 
+/** ตรวจสอบว่า cache โหลดเสร็จแล้วหรือยัง (ใช้สำหรับ synchronous check ใน component) */
+export function isMascotOverridesLoaded(): boolean {
+  return overridesCache !== null
+}
+
 /** หา URL จาก override ของ pose (sync — ใช้กับ cache ที่โหลดแล้วเท่านั้น) */
 export function getOverrideUrl(pose: string): string | undefined {
   const hit = resolveOverride(overridesCache ?? [], pose)
