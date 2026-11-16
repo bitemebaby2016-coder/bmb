@@ -10,6 +10,11 @@
 - **Gates หลัง hotfix:** tsc ✅ lint ✅ **vitest 217 ไฟล์ / 2291 tests PASS** (test ใหม่ `r101CartHandoffFix` 14 ข้อ) · build ✅ · **frontend only** (ไม่ต้อง deploy EF)
 - **รอบ 2 = 5 ข้อ:** A-4R (retest) · A-5 · B-3/4/5 — คู่มือ = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md` (รายการเดียว แทน 11-08/09/10)
 
+**🔒 LIVE STATE 2026-11-16 (R207b — ตัวลอยไม่วาดภาพนิ่งก่อนรู้ผล override · R207 ยืนยัน live แล้วจาก bundle จริง · vitest 2295/2295):**
+- **R207b CODE_CLOSED + PUSHED:** ตัวลอย BiteMascot เดิมวาดภาพนิ่ง `bite_sad/empty_sad` (ชุดร้านปิด) เป็น src แรกแล้วสลับเป็น GIF แอดมินเมื่อ override โหลดเสร็จ = "ภาพนิ่ง sad → มาสคอตแอดมิน" ทุกครั้งที่เปิดหน้า (Owner ชี้ 2026-11-16) → **แก้:** `overrideSettled` — ยังไม่รู้ผล override = ไม่วาดภาพ (placeholder) · settle: มี override = รูปแอดมินเฟรมแรก · ไม่มี = ภาพนิ่งตามชุดท่า (ดีไซน์ร้านปิดเดิม)
+- **R207 ยืนยัน live แล้วจากหลักฐานจริง:** bundle `index-D7hQ6ryX.js` บน https://biteme-baby.com มี LoadingSpinner = spinner ล้วน (ไม่มี MascotBadge) — จอโหลดกลางจอที่เห็นในภาพ 12:23 = build เก่าจาก service worker → ต้อง hard refresh / SW update
+- **Gates 4/4** — tsc ✅ lint ✅ **vitest 217 files / 2295 tests PASS** (`e2e/_r207b_vitest_full.log`) · build ✅
+
 **🔒 LIVE STATE 2026-11-16 (R207 — ถอด mascot ภาพนิ่งออกจากจอโหลด · R206 ผ่าน live แล้ว · vitest 2294/2294):**
 - **R207 CODE_CLOSED + PUSHED:** จอโหลด (`LoadingSpinner` App.tsx — Suspense/auth-init ทุก route) เคยเรนเดอร์ `MascotBadge pose="ready"` + `animate-bounce` = ภาพนิ่งเด้ง → สลับเป็นรูปแอดมินเมื่อ override โหลดเสร็จ (กระพริบผิดตา · Owner รายงาน 2026-11-16) → **ถอด mascot + import ออก** เหลือ spinner (`animate-spin`) + ข้อความเดิม · mascot ทุกตัวแสดงหลังโหลดเสร็จเสมอ · test lock 3 ข้อใหม่ (r206 file) · call site/testid เดิมครบ
 - **R206 ยืนยัน live แล้ว (Owner: "ทำได้แล้ว")** — Mascot Self-Service ใช้งานจริง: bucket `Bite_Mascot` + preview + upload + live refresh

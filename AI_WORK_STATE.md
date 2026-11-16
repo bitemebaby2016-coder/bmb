@@ -21,6 +21,18 @@
 
 > **✅ LIVE STATE ยืนยันสุดท้าย 2026-11-15 (`e2e/_r205_live_check.json` = R205_LIVE_CHECK_OK=true):** EF `social-ai-worker` **v86 ACTIVE** (deploy ล่าสุด · verify_jwt=true) · DB: RPC 205 ทั้ง 2 อยู่ + grants ถูก (wrapper=service_role · timeline=authenticated) + m204 คอลัมน์ครบ 3 · **เอกสาร live test ใหม่ = `docs/BMB_REMAIN_TESTS_LIVE_2026-11-15.md`** (กลุ่ม A §T-A/R100 · B R97 ข้อละ 7 · C R96 P2 เว็บ · D grounding สด — ตารางบันทึกผลพร้อมกรอก) — **แทนฉบับ 11-08/09/10 ทั้งหมด**
 
+## 🔒 SESSION CLOSE 2026-11-16 (รอบ 38 · R207b — ตัวลอย BiteMascot ไม่วาดภาพนิ่งก่อนรู้ผล override · Owner ชี้ "ภาพนิ่งมาสคอต sad" · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-16 13:15:** R207b **COMPLETE IN CODE + PUSHED** · tsc ✅ lint ✅ vitest ✅ (**217 files / 2295 tests PASS — `e2e/_r207b_vitest_full.log`**) · build ✅
+
+> **สิ่งที่พิสูจน์ได้ (หลักฐานจริง):** ① bundle live `index-D7hQ6ryX.js` (ดึงจาก https://biteme-baby.com ตรง ๆ) **มีโค้ด R207 แล้ว** — LoadingSpinner = spinner ล้วน (`w-8 h-8 rounded-full … animate-spin`) + ข้อความ ไม่มี MascotBadge → จอโหลดกลางจอ (ภาพ 12:23) **ถอดแล้วจริง** ② ตัวที่ยังเห็น = **ตัวลอย BiteMascot** — เดิม `mascotUrl = overrideUrl || getMascotUrl(currentPose)` วาดภาพนิ่ง `bite_sad/empty_sad` (ร้านปิดวันนี้ → ชุดร้านปิดตาม mascotClosed) เป็น src แรก **แล้วสลับเป็น GIF แอดมิน** เมื่อ override โหลดเสร็จ = "ภาพนิ่ง sad → กลายเป็นมาสคอตที่แอดมินตั้ง" ทุกครั้งที่เปิดหน้า ③ เบราว์เซอร์ Owner อาจยังเสิร์ฟ build เก่าจาก service worker (PWA) — ต้อง hard refresh
+
+> **แก้ (BiteMascot.tsx):** เพิ่ม `overrideSettled` — ยังไม่รู้ผล override = **ไม่วาดภาพใดเลย** (placeholder เปล่าขนาดเดิม ปุ่มแตะยังอยู่) · settle แล้ว: มี override = รูปแอดมินตั้งแต่เฟรมแรก (ไม่มีสลับ) · ไม่มี override = ภาพนิ่งตามชุดท่า (ดีไซน์ร้านปิดเดิมคงอยู่ ไม่มีการสลับ) · event R206 ก็ settle ด้วย · ท่าอื่น/enforceClosedPose/floatingPosePool ไม่ถูกแตะ
+
+> **ทดสอบ live (Owner):** ① hard refresh (`Ctrl+Shift+R`) หรือปิด-เปิด PWA 2 รอบ (SW update) → จอโหลดกลางจอ = วง spinner + ข้อความ (ไม่มี mascot ภาพนิ่ง) ② ตัวลอยมุมจอ = รูปแอดมินที่ตั้งไว้ตั้งแต่แรกเห็น (ไม่มีภาพนิ่ง sad นำแล้วสลับ) ③ ถ้ายังเห็นภาพนิ่ง sad กลางจอ = เบราว์เซอร์ยังถือ build เก่า — ลอง DevTools → Application → Service Workers → Unregister แล้วรีโหลด
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-16 (รอบ 37 · R207 — ถอด mascot ภาพนิ่งออกจากจอโหลด · Owner ยืนยัน R206 "ทำได้แล้ว" · Gates 4/4 · vitest 2294/2294) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-16 12:35:** R207 **COMPLETE IN CODE + PUSHED** · tsc ✅ lint ✅ vitest ✅ (**217 files / 2294 tests PASS — `e2e/_r207_vitest_full.log`**) · build ✅ · **R206 ผ่าน live แล้ว (Owner: "ทำได้แล้ว")**

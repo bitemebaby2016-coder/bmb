@@ -98,6 +98,17 @@ describe('R206 · MascotBadge + BiteMascot — ฟัง event เปลี่�
     expect(biteMascotSrc).toMatch(/window\.addEventListener\(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged\)/)
     expect(biteMascotSrc).toMatch(/loadMascotOverrides\(true\)/)
   })
+
+  it('R207b: ตัวลอยไม่วาดภาพนิ่งก่อนรู้ผล override — ห้ามภาพนิ่ง sad แล้วสลับเป็นรูปแอดมิน', () => {
+    // state กันสับ: ยังไม่ settle = ไม่วาดอะไร
+    expect(biteMascotSrc).toContain('overrideSettled')
+    expect(biteMascotSrc).toMatch(/overrideUrl \|\| \(overrideSettled \? getMascotUrl\(currentPose\) : null\)/)
+    // img เรนเดอร์เมื่อมี URL เท่านั้น — ไม่มีรูป = placeholder เปล่า (ปุ่มแตะยังอยู่)
+    expect(biteMascotSrc).toMatch(/\{mascotUrl \? \(/)
+    expect(biteMascotSrc).toMatch(/aria-hidden="true" \/>/)
+    // ทั้ง effect โหลดครั้งแรกและ event ต้อง setOverrideSettled(true)
+    expect(biteMascotSrc.match(/setOverrideSettled\(true\)/g)?.length).toBe(2)
+  })
 })
 
 describe('R206 · MascotSettingsPage — preview + feedback + upload + clear (ไม่เงียบอีก)', () => {

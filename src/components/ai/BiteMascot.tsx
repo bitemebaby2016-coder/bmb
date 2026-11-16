@@ -115,6 +115,9 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
     Math.max(0, MASCOT_POSES.indexOf(contextPose(section)))
   )
   const [overrideUrl, setOverrideUrl] = useState<string | undefined>(undefined)
+  // R207b (Owner 2026-11-16): ยังไม่รู้ผล override = ยังไม่วาดภาพนิ่ง — กันภาพนิ่งเก่า
+  // (เช่น bite_sad ตอนร้านปิด) โชว์ก่อนแล้วสลับเป็นมาสคอตที่แอดมินตั้ง = กระพริบผิดตา
+  const [overrideSettled, setOverrideSettled] = useState(false)
 
   // --- Persistent Floating Bite ---
   // Draggable, snaps to an edge, remembers position, respects safe area and
@@ -194,6 +197,8 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
       const pool = floatingPosePool(storeClosed, MASCOT_POSES)
       const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
       setOverrideUrl(getOverrideUrl(p.replace('bite_', '')))
+      // R207b: โหลดจบแล้วเท่านั้นค่อยอนุญาตให้วาดภาพนิ่ง (ไม่มี static-then-swap)
+      setOverrideSettled(true)
     })
     return () => { active = false }
   }, [currentPoseIndex, storeClosed])
@@ -207,6 +212,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
         const pool = floatingPosePool(storeClosed, MASCOT_POSES)
         const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
         setOverrideUrl(getOverrideUrl(p.replace('bite_', '')))
+        setOverrideSettled(true)
       })
     }
     window.addEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
@@ -284,7 +290,9 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   useEffect(() => setChatVisible(chatOpen), [chatOpen])
 
   const currentPose = posePool[Math.min(currentPoseIndex, posePool.length - 1)] as (typeof MASCOT_POSES)[number]
-  const mascotUrl = overrideUrl || getMascotUrl(currentPose)
+  // R207b: override อยู่ → ใช้ override ตั้งแต่เฟรมแรก · ไม่มี override → ภาพนิ่งหลังโหลดจบเท่านั้น
+  // (ยังไม่ settle = ไม่วาดอะไร — ห้ามโชว์ภาพนิ่งเก่าแล้วสลับทีหลัง)
+  const mascotUrl: string | null = overrideUrl || (overrideSettled ? getMascotUrl(currentPose) : null)
   // R44: คำนวณเงื่อนไขรอบเดียว (กัน TS narrowing error จากการเช็ค stage ซ้ำใน JSX)
   const showBubble = Boolean(bubble) && stage !== 'fullchat' && section !== 'checkout'
   const showUpsell = Boolean(delivery.freeShippingEnforced && upsell && upsell.remaining > 0 && stage === 'personalization')
@@ -339,17 +347,22 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
             className="pointer-events-auto touch-none flex h-16 w-16 items-center justify-center rounded-full shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden cursor-grab active:cursor-grabbing bg-transparent"
             data-testid="bite-mascot"
           >
-            <img
-              src={mascotUrl}
-              alt={`Bite mascot - ${currentPose}`}
-              className="h-full w-full object-cover"
-              loading="lazy"
-              onError={(e) => {
-                // override เสีย → กลับไปใช้ 3D asset ปกติของ pose
-                const el = e.currentTarget as HTMLImageElement
-                if (el.dataset.fbk !== '1') { el.dataset.fbk = '1'; el.src = getMascotUrl(currentPose) }
-              }}
-            />
+            {mascotUrl ? (
+              <img
+                src={mascotUrl}
+                alt={`Bite mascot - ${currentPose}`}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                onError={(e) => {
+                  // override เสีย → กลับไปใช้ 3D asset ปกติของ pose
+                  const el = e.currentTarget as HTMLImageElement
+                  if (el.dataset.fbk !== '1') { el.dataset.fbk = '1'; el.src = getMascotUrl(currentPose) }
+                }}
+              />
+            ) : (
+              // ช่องว่างขนาดเดิมระหว่างรอผล override (~นับส่วนพันวินาที) — ปุ่มแตะยังอยู่ครบ
+              <span className="h-full w-full" aria-hidden="true" />
+            )}
           </button>
         </div>
       </MascotWrapper>
