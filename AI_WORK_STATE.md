@@ -1,3 +1,25 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 49 · UI fix 2 จุด — ①ลบเธียเตอร์ซ้ำ "Bite เลือกเมนูให้แล้ววันนี้" (home-sec-bite-picks จากรอบ 42) หน้า /shop — ซ้ำกับ FoodTheater ข้างบน (หัวเดิม + popularItems ชุดเดียวกัน) เหลือโรงละครจุดเดียว + ลบ dead CSS .mascot-pick-accent ②dark theme ปุ่ม ✕ ปิดมองไม่เห็นทุกจุด (.flad-close แบนเนอร์ลอย + .ob-close หน้าสั่งซื้อ = ดำบนดำ) + ข้อความอ่านไม่ออก (.flad-notice ตัวอักษร #B45309 บนพื้นเข้ม + .flad-coupon chip พื้นหาย) → เพิ่ม dark/graphite override พื้นสว่างโปร่ง + ตัวอักษรสว่าง · Gates 3/3 · vitest 2350/2350) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "จากสถานะโปรเจคล่าสุด เธียเตอร์มีซ้ำ ที่เซ็กชั่นก่อนโปรโมชั่น ต้องลบ dark theme ตอนนี้ ปุ่มXปิด มองไม่เห็นทุกจุดเลย ตัวอักษรบางข้อความด้วย อ่าน ai entry point, working state, master rules ก่อนทำงานตามกฏ ทำงานและอธิบายภาษาไทย" + "โอเคอนุมัติโค้ด ... ทดสอบผ่านหมดจริงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
+
+> **สาเหตุที่พิสูจน์จากโค้ดจริง:**
+> 1. **เธียเตอร์ซ้ำ:** รอบ 42 เพิ่มเซกชัน `home-sec-bite-picks` ("🍽️ Bite เลือกเมนูให้แล้ววันนี้" ก่อนโปรโมชั่น) — ซ้ำโดยตรงกับ FoodTheater ลำดับ 1 ของหน้า (`theater-title` = "Bite เลือกเมนูมาให้แล้ววันนี้" + `<HorizontalCarousel items={popularItems}>` ชุดเดียวกัน) — Owner สั่งลบ ✓ (ตรวจแล้ว: ไม่มีเทส/scroll-target อื่นอ้าง id นี้ · ตัดสินใจ fallback scrollToSectionOrTop กัน target หายอยู่แล้ว)
+> 2. **ปุ่ม ✕ มองไม่เห็นใน dark:** `.flad-close` (index.css) = `background: rgba(28,25,23,0.10); color: #1C1917` บนการ์ด dark (`--color-brand-surface: #1B1B20`) = ดำบนดำ · `.ob-close` เดียวกัน — ทั้งคู่ไม่มี dark override เลย (ต่างจาก .theater-cart-btn/.review-gallery-close ที่ใช้ token/พื้นขาว = เห็นได้อยู่แล้ว)
+> 3. **ตัวอักษรอ่านไม่ออกใน dark:** `.flad-notice` สี #B45309 บนพื้นเข้ม · `.flad-coupon` พื้น chip rgba(28,25,23,0.08) หายบนพื้นเข้ม
+
+> **แก้ 2 ไฟล์ + เทส regression:**
+> 1. **`src/pages/HomePage.tsx`** — ลบ block `<section id="home-sec-bite-picks">` (รวม h2/carousel/mascots) เหลือคอมเมนต์บันทึก R49 — FoodTheater เป็นโรงละครจุดเดียวของ /shop
+> 2. **`src/index.css`** — ลบ `.mascot-pick-accent` (ใช้เฉพาะเซกชันที่ลบ) · เพิ่ม dark/graphite override 4 กฎ: `.flad-close` + `.ob-close` (พื้น rgba(255,255,255,0.16) + สี #F5F5F5 — hover แดงคงเดิม) · `.flad-notice` (สี #FBBF24 + พื้น/เส้น amber โปร่ง) · `.flad-coupon` (พื้น rgba(255,255,255,0.12) + สี --color-brand-text-secondary)
+> 3. **`src/__tests__/themeCss.test.ts`** (+4 เทส) — dark/graphite ต้องมี override .flad-close/.ob-close/.flad-notice/.flad-coupon · ต้องไม่ใช่สีดำ #1C1917 · /shop ห้ามมี home-sec-bite-picks/mascot-pick-accent กลับมา (strip comment ก่อนเช็ค ตาม pattern เดิม) + FoodTheater ต้องยังอยู่
+
+> **Gates:** `npm run lint` ✅ (584 ไฟล์ + brandNameGuard + languageSanity) · `npm run test` ✅ (**222 files / 2350 tests PASS** — +4 จาก 2346) · `npm run build` ✅ (tsc + vite build + PWA v1.3.0)
+
+> **Files Changed:** `src/pages/HomePage.tsx` · `src/index.css` · `src/__tests__/themeCss.test.ts`
+
+> **รอ Owner ทดสอบ live:** (1) /shop — หน้าแรกเหลือเธียเตอร์จุดเดียว (FoodTheater บนสุด) ก่อนถึงเซกชันโปรโมชั่นไม่มี "Bite เลือกเมนูให้แล้ววันนี้" ซ้ำ (2) dark theme — แบนเนอร์โฆษณาลอย: ปุ่ม ✕ เห็นชัด · ข้อความเตือน/รหัสคูปองอ่านออก (3) กดสั่งเมนู → หน้าต่างสั่งซื้อ (OrderBuilder): ปุ่ม ✕ มุมขวาบนเห็นชัด
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 48b · แก้ CI Contract fail จากรอบ 48 — m181 ทำ overload ambiguous · เปลี่ยนเป็น 207_rider_history_dates.sql (ทั้ง 5 params REQUIRED + DROP 5-arg เดิม + verification กัน 42725 ในไฟล์) · พิสูจน์บน Docker postgres:16 แบบ CI-exact: **repro ล้ม 135+020 (รอบ 1) → ALL_GREEN ทั้ง 30 contract (รอบ 2)** · vitest 2346/2346) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "กูบอกให้อ่านกฏก่อนทำงาน ทดสอบให้ผ่านจริงถึงอนุญาติแอพพลายมิเกรชั่น อัพเดทเอกสารและคอมมิทพุช ทำงานตามกฏๆๆๆๆๆๆ" — **ผิดจริง:** รอบ 48 อ้าง "Gates 4/4" โดยไม่รัน SQL contract tests (ephemeral PG) ที่ CI รันจริง → push แล้ว CI ล้ม (run 44086503471, step "Contract 135 — dispatch offers") = ยังไม่มีสิทธิ์ claim ผ่าน

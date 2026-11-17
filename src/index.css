@@ -772,12 +772,8 @@ p { color: var(--color-brand-text-secondary); }
   50%      { transform: translate(3px, -4px) rotate(-4deg); }
 }
 
-/* --- Bite's Daily Picks section accent mascots --- */
-.mascot-pick-accent {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.18));
-  pointer-events: none;
-  opacity: 0.9;
-}
+/* R49 (Owner 2026-11-17): .mascot-pick-accent ถูกลบ — ใช้เฉพาะเซกชัน "Bite เลือกเมนูให้แล้ววันนี้"
+   ที่ถูกถอดออก (ซ้ำกับ FoodTheater) ไม่มี consumer เหลืออยู่ */
 
 /* --- LazyVideo (Menu Highlight ≤ 2 คลิป) --- */
 .lazy-video {
@@ -1238,6 +1234,11 @@ p { color: var(--color-brand-text-secondary); }
   padding: 2px 8px;
   white-space: nowrap;
 }
+/* R49 (Owner 2026-11-17): dark theme — พื้น chip คูปองหายบนพื้นเข้ม → ใช้พื้นสว่างโปร่งให้ chip เห็นตัวตน */
+html[data-theme='dark'] .flad-coupon, html[data-theme='graphite'] .flad-coupon {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--color-brand-text-secondary);
+}
 .flad-cta { font-size: 12px; font-weight: 700; color: var(--color-brand-primary, #FF5E1E); }
 .flad-close {
   position: absolute;
@@ -1254,6 +1255,15 @@ p { color: var(--color-brand-text-secondary); }
   z-index: 20;
 }
 .flad-close:hover { background: rgba(239, 68, 68, 0.85); color: #fff; }
+/* R49 (Owner 2026-11-17): dark theme — ปุ่ม ✕ ปิดแบนเนอร์ลอยมองไม่เห็น (ดำบนดำ) → ใช้พื้นขาวโปร่ง + ตัวอักษรสว่าง */
+html[data-theme='dark'] .flad-close, html[data-theme='graphite'] .flad-close {
+  background: rgba(255, 255, 255, 0.16);
+  color: #F5F5F5;
+}
+html[data-theme='dark'] .flad-close:hover, html[data-theme='graphite'] .flad-close:hover {
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+}
 @keyframes fladIn {
   from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -1271,6 +1281,12 @@ p { color: var(--color-brand-text-secondary); }
   border: 1px dashed rgba(180, 83, 9, 0.5);
   border-radius: 10px;
   padding: 5px 8px;
+}
+/* R49 (Owner 2026-11-17): dark theme — ตัวอักษรเตือน #B45309 บนพื้นเข้มอ่านไม่ออก → สีสว่างขึ้น + พื้น/เส้นปรับตามธีม */
+html[data-theme='dark'] .flad-notice, html[data-theme='graphite'] .flad-notice {
+  color: #FBBF24;
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.4);
 }
 /* --- AI-CLEANUP: brand fallback visuals (replaces mock svg assets) --- */
 .img-fallback {
@@ -1837,6 +1853,11 @@ html[data-theme='dark'] .sched-cal-corner, html[data-theme='graphite'] .sched-ca
   color: #1C1917;
   font-size: 16px;
   cursor: pointer;
+}
+/* R49 (Owner 2026-11-17): dark theme — ปุ่ม ✕ ปิดหน้าสั่งซื้อมองไม่เห็น (ดำบนดำ) → พื้นขาวโปร่ง + ตัวอักษรสว่าง */
+html[data-theme='dark'] .ob-close, html[data-theme='graphite'] .ob-close {
+  background: rgba(255, 255, 255, 0.16);
+  color: #F5F5F5;
 }
 .ob-body {
   flex: 1;

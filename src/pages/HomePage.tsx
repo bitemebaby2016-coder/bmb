@@ -591,26 +591,8 @@ export function HomePage() {
         onReviewCta={handleReviewCta}
       />
 
-      {/* 6b. Bite's Daily Picks — "Bite เลือกเมนูให้แล้ววันนี้" (Theater section with mascot poses) */}
-      <section id="home-sec-bite-picks" className="mb-10 scroll-mt-20" aria-labelledby="home-bite-picks-heading">
-        <div className="flex items-center justify-between mb-2">
-          <h2 id="home-bite-picks-heading" className="text-xl font-display font-bold text-brand-accent flex items-center gap-2">
-            🍽️ Bite เลือกเมนูให้แล้ววันนี้
-            <MascotBadge pose="recommend" size="sm" alt="น้อง Bite แนะนำเมนูวันนี้" className="section-float-mascot" />
-          </h2>
-          <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
-        </div>
-        <h3 className="sr-only">เมนูที่ Bite คัดสรรมาให้วันนี้</h3>
-        <div className="flex items-center gap-3 mb-4 flex-wrap">
-          <MascotBadge pose="menu" size="sm" alt="น้อง Bite ถือเมนู" className="mascot-pick-accent" />
-          <span className="text-sm text-brand-muted">เลื่อนดูเมนูที่ Bite คัดสรรมาให้ · กดเพิ่มได้เลย</span>
-          <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite ยกนิ้วรับรอง" className="mascot-pick-accent" />
-        </div>
-        <HorizontalCarousel
-          items={popularItems}
-          aria-label="Bite เลือกเมนูให้แล้ววันนี้ เลื่อนได้"
-        />
-      </section>
+      {/* R49 (Owner 2026-11-17): ลบเซกชัน "Bite เลือกเมนูให้แล้ววันนี้" (home-sec-bite-picks เดิมจากรอบ 42)
+          — ซ้ำกับ FoodTheater ข้างบนของหน้า (ส่วนหัว + popularItems ชุดเดียวกัน) เหลือโรงละครจุดเดียว */}
 
       {/* N4 (Owner 2026-11-01): ยุบรีวิว 2 เซกชั่น — อัลบั้มรูปสกรีนช็อตย้ายเข้าไปใน
           ReviewCarouselSection (เซกชั่นเดียว "📸 รีวิวจริงจากลูกค้า") แล้ว — ห้าม render ซ้ำ */}
