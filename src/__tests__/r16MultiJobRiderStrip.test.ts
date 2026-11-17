@@ -141,6 +141,18 @@ describe('R16 — RiderPwaPage/RiderMiniMap source: route card + แผนที
     expect(miniMapSrc).toContain('g.maps.Polyline')
     expect(miniMapSrc).toContain('old?.setMap?.(null)')
   })
+
+  // 2026-11-17 render-order fix — บั๊กจริง production: div แผนที่เดิม render เฉพาะตอน
+  // status='ready' → mapRef.current = null ตอน Google init เสร็จ → ตัดสินใจ unavailable
+  // ทั้งที่ key ใช้ได้ (หลักฐาน: AdminLiveMap แสดง Google ได้ปกติ ไรเดอร์/ลูกค้า = ขาว+เตือน)
+  it('map div ต้อง render ตลอด (mapRef ต้องพร้อมก่อน init) — ห้าม gate ด้วย isGoogleReady/isLeafletReady/shouldRenderMap อีก', () => {
+    expect(miniMapSrc).toContain('<div ref={mapRef} data-testid="rider-mini-map-canvas"')
+    expect(miniMapSrc).not.toContain('shouldRenderMap')
+    expect(miniMapSrc).not.toContain('isGoogleReady')
+    expect(miniMapSrc).not.toContain('isLeafletReady')
+    // Leaflet ต้องเคลียร์ DOM ค้างของ Google ก่อนยึด div
+    expect(miniMapSrc).toContain('innerHTML')
+  })
 })
 
 describe('R16 — migration 168: multi-job (delivered ห้ามปลด busy ถ้างานค้าง)', () => {

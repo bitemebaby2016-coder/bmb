@@ -1,3 +1,29 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 45 · แผนที่ RiderMiniMap ไม่แสดงทั้งหน้าลูกค้า+ไรเดอร์ — สาเหตุแท้ = บั๊กลำดับ render (mapRef=null ตอน Google init) ไม่ใช่ key/env/แคช · probe ยืนยัน key อยู่ใน prod bundle · แก้ div render ตลอด + Leaflet เคลียร์ DOM ก่อนยึด div · Gates 4/4 · vitest 2296/2296) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "รูปแรกฝั่งลูกค้า รูปสองฝั่งไรเดอร์ รูปสามฝั่งแอดมิน — ตรวจเช็คให้ละเอียดทุกทาง ทำมาหลายรอบแล้ว / นำทางกูเกิ้ลmap ใช้ได้แล้ว เปิดเว็บบนแผนที่ยังให้ไปลงแอพใหม่ทั้งที่มีแอพแล้วก็ให้ไปลงอุปกรณ์อื่น / แผนที่ยังไม่แสดงลองดูรูปหน่อยสาเหตุอะไรแน่ / ระวังเรื่องภาษาเพี้ยน / โค้ดงานตามกฏ อ่าน ai entry point, workingstate, master rules ก่อนทำงาน / ทดสอบทั้งหมดผ่านจริงถึงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
+
+> **สาเหตุแท้จริง (ยืนยันจากหลักฐาน 3 ภาพ + โค้ดจริง + probe production):**
+> 1. **AdminLiveMap แสดง Google Maps ได้ปกติ (ภาพ 3 เห็น "Map Data ©2026 Google")** = key ใน production build ใช้ได้จริง — probe `e2e/r44_maps_bundle_probe.cjs` (2026-11-17T08:10Z) ยืนยัน `AIzaSyD0…` อยู่ใน `/assets/googleMaps-CyjdDS2Q.js` (109 chunks · CHECKED=109)
+> 2. **บั๊ก render-order ใน RiderMiniMap:** div `ref={mapRef}` เดิม render เฉพาะตอน `status === 'ready'` → ตอน mount status='loading' div ยังไม่มี → ตอน `loadGoogleMapsJS().then()` รัน `mapRef.current = null` → เข้าสาย `if (!mapRef.current || !g?.maps) setStatus('unavailable')` → **ตัดสินใจว่าแผนที่ใช้ไม่ได้ทั้งที่ key ใช้ได้** — เส้นทางนี้ไม่ set `googleMapsLoadError` → UI โชว์ข้อความ default "(ยังไม่ได้ตั้งค่า Google Maps API key หรือโหลด SDK ไม่สำเร็จ)" ตรงกับภาพลูกค้า/ไรเดอร์เป๊ะ (ส่วนแอดมิน render div ตั้งแต่ loading เลยผ่าน)
+> 3. **Leaflet fallback พังด้วยวงจรเดียวกัน:** effect รอ `status === 'unavailable'` แล้วเช็ค `!mapRef.current → return` — แต่ div เดิม gate ด้วย `mode === 'leaflet'` (set หลัง init สำเร็จเท่านั้น) → div ไม่มีวัน render → Leaflet บอกเงียบ → แผนที่ขาวตลอด (รวมถึง fix รอบก่อน `shouldRenderMap = ready || (unavailable && leaflet)` ยังติดวงจรเดิม)
+> 4. ปุ่ม "🌐 เปิดเว็บแผนที่" (RiderPwaPage line 602, 664) ยังคง `target="_blank"` → Google Maps web ใน PWA/Custom Tab เสิร์ฟหน้า "ติดตั้งแอป" — Owner เห็นด้วยเอาออก
+
+> **แก้ 3 ข้อ:**
+> 1. **Render div แผนที่ตลอดเวลา** — `RiderMiniMap.tsx` div `rider-mini-map-canvas` render ตั้งแต่ mount (ตาม pattern ที่พิสูจน์แล้วของ AdminLiveMap) · ลบตัวแปร gate `shouldRenderMap`/`isGoogleReady`/`isLeafletReady` · ข้อความเตือนแสดง "ใต้" div แทนการแทนที่ div → Google init เจอ mapRef → แผนที่ Google จริงแสดงทันที (เหมือนแอดมิน) · ถ้าวันหนึ่ง key ล้ม Leaflet ยึด div เดิมต่อได้จริง
+> 2. **Leaflet เคลียร์ DOM ค้างก่อนยึด div** — `mapRef.current.innerHTML = ''` ก่อน `L.map()` (กัน Google inject DOM ค้างก่อน fail) + มี error log ชัดทั้ง init fail และ CDN fail (จากรอบ 44)
+> 3. **ลบ `target="_blank"` ปุ่มเว็บแผนที่ 2 จุด** — `RiderPwaPage.tsx` `rider-open-gmaps-web` + `rider-nav-active-web` → same-tab (ไม่โดน interstitial ติดตั้งแอป)
+> + **Debug log** — `googleMaps.ts loadGoogleMapsJS()` log MAPS_KEY masked (`AIzaSyD0…22pM length:39`) ตอนโหลด — วินิจฉัยครั้งหน้าได้ทันทีจาก console (mask แล้ว ปลอดภัย)
+
+> **เทส regression ใหม่:** `r16MultiJobRiderStrip.test.ts` — "map div ต้อง render ตลอด (mapRef ต้องพร้อมก่อน init) — ห้าม gate ด้วย isGoogleReady/isLeafletReady/shouldRenderMap อีก" (assert div ไม่ถูก gate + Leaflet เคลียร์ innerHTML) → กันบั๊กนี้กลับมาอีก
+
+> **Gates:** `npm run lint` ✅ (eslint + brandNameGuard + languageSanity — ไม่มีภาษาเพี้ยน) · `npm run test` ✅ (**217 files / 2296 tests PASS** — เพิ่ม 1 regression test จาก 2295) · `npm run build` ✅ (tsc + vite build + PWA · `RiderMiniMap-4Wbz0kH7.js` 7.23 kB)
+
+> **Files Changed:** `src/components/rider/RiderMiniMap.tsx` · `src/pages/RiderPwaPage.tsx` · `src/__tests__/r16MultiJobRiderStrip.test.ts` · `src/lib/googleMaps.ts`
+
+> **รอ Owner ทดสอบจริงบนมือถือ:** (1) hard refresh/Clear storage PWA แล้วเปิด /rider + /track — แผนที่ควรเป็น Google Maps จริงเหมือนหน้าแอดมิน (2) กด "🌐 เปิดเว็บแผนที่" — ต้องเปิดแผนที่ใน browser ไม่โดนหน้าติดตั้งแอป (3) ถ้ายังไม่แสดง → ดู console บรรทัด `[GoogleMaps] loadGoogleMapsJS called, MAPS_KEY: …` แจ้งค่าที่เห็น
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 44 · Rider navigation fix v2 + Leaflet fallback map — เปลี่ยน intent:// ให้ไม่ใช้ target="_blank" + เพิ่ม Leaflet (OpenStreetMap) fallback เมื่อ Google Maps ไม่พร้อม · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "ตรวจดูให้ละเอียด / ลิ้งทั้งสองแบบ ยังต่อไปบราวเซอร์แมพ และกดใช้งานไม่ให้ให้เป็นติดตั้งที่สโตร์แทน / มันต้องเปิดแผนที่ในบราวเซอร์ได้ใช้งานได้และของที่ลิ้งไปแอพกูเกิลแมพเลยต้องใช้ได้ / แผนที่ก็ไม่แสดงต้องแสดงแผนที่และตำแหน่งปัจจุบันด้วยสิ่ / key มีแน่นอนตรวจดูได้ ในenv local ห้ามแก้เด็ดขาด / VITE_GOOGLE_MAPS_API_KEY ไม่ได้ตั้งค่าใน production environment / หรือ API key นั้นไม่มี Maps JavaScript API เปิดอยู่ / หรือ billing/restriction ไม่ผ่าน / มีหมดทุกอย่างตรวจเช็คหาสาเหตุแท้จริงอย่ามโน / โค้ดงานตามกฏ อ่าน ai entry point, workingstate, master rules ก่อนทำงาน / หลังทดสอบทั้งหมดผ่านจริงอนุญาติอัพเดทเอกสารและคอมมิทพุช"

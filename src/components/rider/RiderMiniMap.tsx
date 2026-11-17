@@ -66,9 +66,6 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
   const [mode, setMode] = useState<MapMode>('google')
   const stopList = stops && stops.length > 0 ? stops : null
 
-  // Render map container whenever we have a map to show (google ready OR leaflet fallback)
-  const shouldRenderMap = status === 'ready' || (status === 'unavailable' && mode === 'leaflet')
-
   // Google Maps effect
   useEffect(() => {
     let cancelled = false
@@ -118,6 +115,8 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
       if (!mapRef.current || (window as any).L === undefined) return
       try {
         const L = (window as any).L
+        // 2026-11-17: Google อาจ inject DOM ค้างใน div ก่อน fail — เคลียร์ก่อน Leaflet ยึดครอง
+        if (mapRef.current) mapRef.current.innerHTML = ''
         // Delete default marker icon images to use emoji markers instead
         delete (L.Icon.Default.prototype as any)._getIconUrl
         L.Icon.Default.mergeOptions({
@@ -256,14 +255,13 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
     ? Math.round(haversineDistanceSimple(rider.latitude, rider.longitude, dropOff.latitude, dropOff.longitude) * 1000)
     : null
 
-  const isGoogleReady = status === 'ready' && mode === 'google'
-  const isLeafletReady = status === 'unavailable' && mode === 'leaflet'
-
   return (
     <div className="mt-2" data-testid="rider-mini-map">
-      {shouldRenderMap && (
-        <div ref={mapRef} data-testid="rider-mini-map-canvas" className="w-full h-52 rounded-xl border-2 border-brand-border" style={{ zIndex: mode === 'leaflet' ? 0 : undefined }} />
-      )}
+      {/* 2026-11-17 render-order fix: div ต้องมีใน DOM ตั้งแต่ mount — เดิม render เฉพาะตอน
+          status='ready' → mapRef.current = null ตอน Google init เสร็จ → เข้าสาย unavailable
+          ทั้งที่ key ใช้ได้ (AdminLiveMap render div ตั้งแต่ loading = ทำงานได้ · Leaflet
+          fallback ก็ต้องใช้ ref เดียวกัน ไม่งั้นวงจรติดกับดักโหลดไม่ขึ้นทั้งสองเจ้า) */}
+      <div ref={mapRef} data-testid="rider-mini-map-canvas" className="w-full h-52 rounded-xl border-2 border-brand-border" style={{ zIndex: 0 }} />
       {status === 'loading' && <p className="text-xs text-brand-muted mt-1">⏳ กำลังโหลดแผนที่…</p>}
       {status === 'unavailable' && mode === 'google' && (
         <div className="mt-2 p-3 rounded-lg border border-amber-400" data-testid="rider-mini-map-unavailable">
