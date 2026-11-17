@@ -596,7 +596,7 @@ export function RiderPwaPage() {
                   </h3>
                   {dirUrl ? (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <a className="btn btn-primary text-xs" href={openMapsUrl(dirUrl) ?? undefined} target="_blank" rel="noreferrer" data-testid="rider-open-gmaps">
+                      <a className="btn btn-primary text-xs" href={openMapsUrl(dirUrl) ?? undefined} rel="noreferrer" data-testid="rider-open-gmaps">
                         🧭 เปิดนำทาง Google Maps
                       </a>
                       <a className="btn btn-outline text-xs" href={dirUrl} target="_blank" rel="noreferrer" data-testid="rider-open-gmaps-web">
@@ -658,7 +658,7 @@ export function RiderPwaPage() {
                 const webFallback = webNavigationFallbackUrl(lat, lng)
                 return (
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <a className="btn btn-primary text-xs" href={openNavigationUrl(navUrl, webFallback) ?? undefined} target="_blank" rel="noreferrer" data-testid="rider-nav-active">
+                    <a className="btn btn-primary text-xs" href={openNavigationUrl(navUrl, webFallback) ?? undefined} rel="noreferrer" data-testid="rider-nav-active">
                       🧭 เปิดนำทางไปจุดส่งนี้
                     </a>
                     <a className="btn btn-outline text-xs" href={webFallback} target="_blank" rel="noreferrer" data-testid="rider-nav-active-web">

@@ -1,3 +1,23 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 44 · Rider navigation fix v2 + Leaflet fallback map — เปลี่ยน intent:// ให้ไม่ใช้ target="_blank" + เพิ่ม Leaflet (OpenStreetMap) fallback เมื่อ Google Maps ไม่พร้อม · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "ตรวจดูให้ละเอียด / ลิ้งทั้งสองแบบ ยังต่อไปบราวเซอร์แมพ และกดใช้งานไม่ให้ให้เป็นติดตั้งที่สโตร์แทน / มันต้องเปิดแผนที่ในบราวเซอร์ได้ใช้งานได้และของที่ลิ้งไปแอพกูเกิลแมพเลยต้องใช้ได้ / แผนที่ก็ไม่แสดงต้องแสดงแผนที่และตำแหน่งปัจจุบันด้วยสิ่ / key มีแน่นอนตรวจดูได้ ในenv local ห้ามแก้เด็ดขาด / VITE_GOOGLE_MAPS_API_KEY ไม่ได้ตั้งค่าใน production environment / หรือ API key นั้นไม่มี Maps JavaScript API เปิดอยู่ / หรือ billing/restriction ไม่ผ่าน / มีหมดทุกอย่างตรวจเช็คหาสาเหตุแท้จริงอย่ามโน / โค้ดงานตามกฏ อ่าน ai entry point, workingstate, master rules ก่อนทำงาน / หลังทดสอบทั้งหมดผ่านจริงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
+
+> **สถานะปัจจุบัน (ยืนยันจากโค้ดจริง):**
+> 1. ปุ่มนำทางไรเดอร์ 2 ปุ่ม (multi-stop line 598, single-stop line 657) ใช้ `target="_blank"` บน `intent://` link → PWA/Custom Tab ไม่ dispatch intent → ตก web URL → Play Store
+> 2. `RiderMiniMap` ตรวจสอบ `isGoogleMapsConfigured()` → production ไม่มี `VITE_GOOGLE_MAPS_API_KEY` → `status = 'unavailable'` → แผนที่ไม่แสดง
+> 3. `.env.local` มี `VITE_GOOGLE_MAPS_API_KEY` แต่ production environment (Cloudflare Pages) ต้องตั้งแยกต่างหาก — local env ห้ามแก้ตามคำสั่ง
+
+> **แก้ 3 ข้อ:**
+> 1. **Navigation links: same-tab สำหรับ intent://** — `src/pages/RiderPwaPage.tsx:599,661` ลบ `target="_blank"` ออกจากปุ่มหลัก (`🧭 เปิดนำทาง Google Maps`, `🧭 เปิดนำทางไปจุดส่งนี้`) คง `target="_blank"` ไว้เฉพาะปุ่ม fallback web ("🌐 เปิดเว็บแผนที่") → intent:// ทำงานใน same-tab context ได้
+> 2. **Leaflet fallback map** — `src/components/rider/RiderMiniMap.tsx` เพิ่มโหมด fallback โหลด Leaflet (CDN) + OpenStreetMap tiles เมื่อ Google Maps โหลดไม่ได้ → แสดงแผนที่ + markers (🏠 ปลายทาง, 🛵 ไรเดอร์, 🍳 ครัว, 🔢 จุดส่งหลายจุด) + polyline เส้นทางเสมอ
+> 3. **Loading state** — แสดง "กำลังโหลด OpenStreetMap แทน…" ระหว่างรอ Leaflet โหลด
+
+> **Gates:** `npm run lint` ✅ (eslint + brandNameGuard) · `npm run test` ✅ (**217 files / 2295 tests PASS**) · `npm run build` ✅ (tsc + vite build + PWA)
+
+> **Files Changed:** `src/pages/RiderPwaPage.tsx` · `src/components/rider/RiderMiniMap.tsx`
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 43 · Rider navigation fix — ปุ่มนำทางไรเดอร์เปิดแอป Google Maps ได้จริง · google.navigation: scheme + web fallback + iOS support · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "ตรวจเช็คปรับปรุงส่วนของไรเด้อร์ / ลิ้งนำทางสถานที่ส่งของไรเด้อร์กดใช้ แล้วเป็นแผนที่ในบราวเซอร์ แต่นำทางไม่ได้ ให้ไปเปิดต่อในแอพ แต่กดเปิดต่อไปแล้วกลายเป็น ให้อินสตอลแอพอย่างเดียวใช้งานไม่ได้ / โค้ดงานตามกฏ อ่าน ai entry point, workingstate, master rules ก่อนทำงาน / หลังทดสอบทั้งหมดผ่านจริงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
