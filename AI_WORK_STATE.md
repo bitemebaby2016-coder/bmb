@@ -14,7 +14,7 @@
 
 > **Files Changed:** `supabase/migrations/207_rider_history_dates.sql` (แทน 181_rider_history_dates — git mv) · `src/lib/driverService.ts` · `src/__tests__/r48RiderHistoryTabs.test.ts` · `e2e/ci/r48_contract_repro.sh` (ใหม่ = tool พิสูจน์ CI replica ท้องถิ่น)
 
-> **รอ Owner:** apply **207_rider_history_dates.sql** ที่ Supabase (แทน 181 — ไฟล์เดิมใช้ไม่ได้ ห้าม apply · ถ้า apply 181 ตัวเก่าไปแล้ว ให้ apply 207 ทับ = DROP 5-arg เก่า + สร้างตัวถูกให้ หาย ambiguous ทันที)
+> **✅ OWNER CONFIRMED (2026-11-17):** ① **m207 APPLIED PROD แล้ว** ("apply 207_rider_history_dates.sql ทับไปแล้ว") ② **CI ผ่านจริงหลัง push `15b5fc0`** (Contract Tests (isolated PostgreSQL) = success + CI = success — ยืนยันผ่าน GitHub API · job เดิมที่ล้ม = เขียวแล้ว) ③ คอมมิทพุชผ่าน ④ เอกสารอัปเดตครบ (BMB_MASTER_STATUS LIVE STATE 2026-11-17 + BMB_REMAIN_TESTS_LIVE กลุ่ม E 7 ข้อ) ⑤ **เซสชันปิด — โอน live test กลุ่ม E ให้แชทหน้าทำต่อ** (รอทดสอบไลฟ์ · carried: A-4R/A-5/B-3/4/5 รอบ 2 คงอยู่)
 
 ---
 
