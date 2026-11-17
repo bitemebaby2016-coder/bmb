@@ -1,3 +1,27 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 47 · AdminLiveMap เพิ่ม Leaflet/OSM fallback — แอดมินเป็นฝั่งเดียวที่ไม่มี fallback map เลยโชว์แต่ข้อความพิกัดตอน Google ล้ม · ยก loadLeaflet เป็น lib กลางทั้งระบบ · Owner ยืนยันไรเดอร์ "พอล ไมท์ไดร์" = ของจริง พิกัดใกล้ครัว + ล่าสุด 16:59 ถูกต้อง ไม่ลบ · Gates 4/4 · vitest 2318/2318) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "เฉพาะของแอดมินที่ไม่ขึ้นเหมือนเดิม ทั้งที่มันเป็นต้นแบบให้แก้อีก 2 อันได้ อะไรวะ / 'พลอย' ที่มึงหมายถึง คือ พอล ไมท์ไดร์ ใช่ไหม นี่คือของจริงไม่ต้องลบ ทดสอบอยู่ตอนนี้มีงานค้างอยู่ตำแหน่งไกล้ครัวที่บอกจริง / อนุมัติ เพิ่ม Leaflet/OSM fallback ให้ AdminLiveMap ทำงานตามกฏ"
+
+> **สถานะปัจจุบัน (ยืนยันจากหลักฐาน):**
+> 1. Google Maps SDK ยังล้มในเบราว์เซอร์ Owner (key ถูกปฏิเสธ — รอ Owner เช็ค Console/Google Cloud ตามรอบ 45) — ไรเดอร์/ลูกค้ารอดด้วย Leaflet fallback แอดมินไม่มี fallback เลยโชว์แต่ข้อความ
+> 2. ไรเดอร์ "พอล ไมท์ไดร์" = **ของจริง** (Owner ยืนยัน) — พิกัด 12.61569,102.09797 (ใกล้ครัว จันทบุรี) + "ล่าสุด 16:59" สด = ระบบ R46 ทำงานถูก · **m180 ลบไรเดอร์ matched 0** (ชื่อใน DB ไม่ตรงรายการใน m180 — จึงไม่โดนของจริง ปลอดภัย) · **ห้ามลบ/ห้ามมีรายการลบชื่อนี้**
+> 3. R46 ทำงานจริงแล้วบน production (m180 applied) — fallback ข้อความแอดมินโชว์ label อายุตำแหน่งถูกต้อง
+
+> **แก้ 3 ข้อ:**
+> 1. **`src/lib/leafletLoader.ts` (ใหม่)** — ยก `loadLeaflet()` + `OSM_TILE` + `OSM_ATTRIBUTION` จาก RiderMiniMap มาเป็น lib กลาง (CDN unpkg 1.9.4 + SRI คงเดิม รอบ 44)
+> 2. **`AdminLiveMap.tsx`** — เพิ่ม Leaflet fallback ตามต้นแบบ RiderMiniMap: div render ตลอด (mapRef พร้อมก่อน init) · Google ล้ม → Leaflet ยึด div เดิม (เคลียร์ innerHTML ก่อน) → OSM tiles + จุดไรเดอร์จริง (circleMarker สด=เขียว/เก่า=เทา จาง + tooltip label อายุ) + polyline เส้นทางย้อนหลัง · cleanup remove() · คงสัญญาเดิม `admin-map-fallback`/`admin-live-map` + ไม่มีข้อมูลปลอม
+> 3. **`RiderMiniMap.tsx`** — import loader กลาง ลบ copy ท้องถิ่น (ไม่มี CDN URL ซ้ำ 2 ที่)
+
+> **เทส regression ใหม่:** `r47AdminLeafletFallback.test.ts` (8 เทส) — lib single source + SRI · AdminLiveMap div ตลอด/Leaflet ยึด div/จุดจริงไม่มี FAKE/จุดเก่าจางทั้ง 2 โหมด/polyline/คงสัญญาเดิม
+
+> **Gates:** `npm run lint` ✅ (581 ไฟล์ + languageSanity) · `npm run test` ✅ (**220 files / 2318 tests PASS** — +8 จาก 2310) · `npm run build` ✅ (leafletLoader-BXmL7KR0.js 0.86 kB แชร์ทั้ง 2 ฝั่ง)
+
+> **Files Changed:** `src/lib/leafletLoader.ts` · `src/components/admin/AdminLiveMap.tsx` · `src/components/rider/RiderMiniMap.tsx` · `src/__tests__/r47AdminLeafletFallback.test.ts`
+
+> **รอ Owner ทดสอบ:** เปิด /admin/delivery ใหม่ (hard refresh) — แม้ Google ยังปฏิเสธ key ก็ต้องโชว์แผนที่ OSM + จุด "พอล ไมท์ไดร์" (สีเขียว=สด/เทา=เก่า) และ polyline งานที่เลือกดู · เรื่อง Google key ยังเปิดอยู่ (แผนที่จะเปลี่ยนกลับเป็น Google อัตโนมัติเมื่อ key ผ่าน — ไม่ต้องแก้โค้ดเพิ่ม)
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 46 · ระบบพิกัดจริงร่วมกัน 3 ฝั่ง — ลบไรเดอร์ทดสอบ AI "พลอย ในไทยโกฯ" (จุด กทม. ค้างใน DB) + list_drivers กรอง tenant + last_seen_at + ทุกฝั่งตัดสิน "ตำแหน่งเก่า" ไม่อวด live · ยืนยันแล้วว่าไม่มีพิกัดฮาร์ดโค้ดเหลือใน production code · Gates 4/4 · vitest 2310/2310) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "ดูระบบลิ้งขนส่งแล้วใช้จากตำแหน่งจริงที่ร่วมกันของผู้ใช้ทั้ง 3 แบบให้ถูกต้องจริง อย่าฮาร์ดโค้ดทุกตำแหน่ง ไรเดอร์อยู่จันทบุรี ตรวจสอบให้ละเอียดจริงอย่ามโน / ยืนยันเอไอสร้างทดสอบไม่ใช่ของจริง ยกเลิกใช้ลบทิ้งไปเลย / โค้ดงานตามกฏ อ่าน ai entry point, workingstate, master rules ก่อนทำงาน / ทดสอบทั้งหมดผ่านจริงถึงอนุญาติอัพเดทเอกสารและคอมมิทพุช"

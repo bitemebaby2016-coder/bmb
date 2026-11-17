@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { loadGoogleMapsJS, isGoogleMapsConfigured, getGoogleMapId, getGoogleMapsLoadError, haversineDistanceSimple } from '@/lib/googleMaps'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
+import { loadLeaflet, OSM_TILE, OSM_ATTRIBUTION } from '@/lib/leafletLoader'
 import type { PlanStop } from '@/lib/deliveryPlan'
 
 export interface RiderMiniMapProps {
@@ -25,35 +26,6 @@ export interface RiderMiniMapProps {
 
 type MapMode = 'google' | 'leaflet' | 'none'
 type MapStatus = 'loading' | 'ready' | 'unavailable'
-
-const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-const OSM_TILE = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-
-function loadLeaflet(): Promise<void> {
-  if ((window as any).L) return Promise.resolve()
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`link[href="${LEAFLET_CSS}"]`)) {
-      // CSS already loaded
-    } else {
-      const cssLink = document.createElement('link')
-      cssLink.rel = 'stylesheet'
-      cssLink.href = LEAFLET_CSS
-      cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY='
-      cssLink.crossOrigin = ''
-      document.head.appendChild(cssLink)
-    }
-    if ((window as any).L) { resolve(); return }
-    const script = document.createElement('script')
-    script.src = LEAFLET_JS
-    script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo='
-    script.crossOrigin = ''
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load Leaflet'))
-    document.head.appendChild(script)
-  })
-}
 
 export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
   const mapRef = useRef<HTMLDivElement | null>(null)
