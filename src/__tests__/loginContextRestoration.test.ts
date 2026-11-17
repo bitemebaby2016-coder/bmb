@@ -52,9 +52,11 @@ describe('returnTo plumbing — ปลายทางก่อนเข้าส
 })
 
 describe('safe fallback — ไม่มี context ก็ไม่พัง ไม่เดาทาง', () => {
-  it('ไม่มี state.from → ใช้ readSocialNext() (ซึ่ง fallback "/" ปลอดภัยกัน open-redirect)', () => {
-    expect(loginSrc).toMatch(/returnTo =\s*\n?\s*\(routerLocation\.state/)
-    expect(registerSrc).toMatch(/returnTo =\s*\n?\s*\(routerLocation\.state/)
+  it('ไม่มี state.from → ใช้ readSocialNext() แล้ว normalize "/" เป็น null (ไม่เด้ง Landing)', () => {
+    expect(loginSrc).toContain('rawReturnTo')
+    expect(loginSrc).toContain('returnTo = rawReturnTo && rawReturnTo !==')
+    expect(registerSrc).toContain('rawReturnTo')
+    expect(registerSrc).toContain('returnTo = rawReturnTo && rawReturnTo !==')
   })
 
   it('LoginPage ส่ง state เฉพาะเมื่อมี returnTo (undefined เมื่อไม่มี — ไม่สร้าง state ปลอม)', () => {

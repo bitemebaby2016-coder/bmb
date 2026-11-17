@@ -31,14 +31,14 @@ export function migrateTheme(raw: string | null | undefined): ThemeName {
   if (raw === 'dark' || raw === 'gray') return 'dark'
   if (raw === 'light' || raw === 'orange') return 'light'
   if (raw === 'graphite') return 'graphite'
-  return 'light'
+  return 'dark'
 }
 
 export function getTheme(): ThemeName {
   try {
     return migrateTheme(localStorage.getItem(THEME_STORAGE_KEY))
   } catch {
-    return 'light'
+    return 'dark'
   }
 }
 

@@ -38,9 +38,12 @@ export function LoginPage() {
   const navigate = useNavigate()
   const routerLocation = useLocation()
   // Launch-closure (case B/D): กลับไปหน้าที่ผู้ใช้ตั้งใจ (ProtectedRoute/Checkout ส่งมา)
-  const returnTo =
+  // ไม่ถือ '/' ว่าเป็นปลายทางที่ตั้งใจ — ให้ fallback ไป /shop แทน
+  const rawReturnTo =
     (routerLocation.state as { from?: string } | null)?.from ||
-    readSocialNext() || null
+    readSocialNext() ||
+    null
+  const returnTo = rawReturnTo && rawReturnTo !== '/' ? rawReturnTo : null
   const login = useAuthStore((s) => s.login)
   const loginByLocation = useAuthStore((s) => s.loginByLocation)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)

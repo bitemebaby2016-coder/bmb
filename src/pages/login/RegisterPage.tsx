@@ -12,10 +12,12 @@ export function RegisterPage() {
   // Login context restoration (PRE-OPENING): หน้าที่ผู้ใช้ตั้งใจก่อนเข้าสู่ระบบ
   // (ProtectedRoute/Checkout ส่ง state.from มา) — ส่งต่อผ่าน register → login
   // เพื่อไม่ให้เด้งกลับ Landing โดยไม่จำเป็น
-  const returnTo =
+  // ไม่ถือ '/' ว่าเป็นปลายทางที่ตั้งใจ — ให้ fallback ไป /shop แทน
+  const rawReturnTo =
     (routerLocation.state as { from?: string } | null)?.from ||
     readSocialNext() ||
     null
+  const returnTo = rawReturnTo && rawReturnTo !== '/' ? rawReturnTo : null
 
   const [formData, setFormData] = useState({
     name: '',

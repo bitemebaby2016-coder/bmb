@@ -14,11 +14,11 @@
       (function () {
         try {
           var t = localStorage.getItem('bmb-theme');
-          var theme = (t === 'dark' || t === 'gray') ? 'dark' : (t === 'graphite' ? 'graphite' : 'light');
+          var theme = (t === 'dark' || t === 'gray') ? 'dark' : (t === 'graphite' ? 'graphite' : 'dark');
           document.documentElement.setAttribute('data-theme', theme);
           var m = document.querySelector('meta[name="theme-color"]');
           if (m) m.content = theme === 'light' ? '#FF5E1E' : theme === 'graphite' ? '#1B1B20' : '#121214';
-        } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+        } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
       })();
     </script>
 

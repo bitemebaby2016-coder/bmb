@@ -1,3 +1,27 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 40 · Dark mode default + Login redirect /shop + Mascot peek position — Owner ให้ทำ 3 ข้อ + ระบุ mascot top:-30px · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "จากสถานะล่าสุดของโปรเจค ปรับปรุง เพิ่ม: ทุก user เริ่มต้นด้วย dark mode / หลังล้อกอินแล้วส่งต่อไปที่ /shop เลยไม่ต้องกลับมาหน้าแรกเพื่อกดเข้าร้านอีกครั้ง / ตำแหน่ง มาสคอตท่า peeking ที่โผล่มาตรงรีวิว ให้เลื่อนตำแหน่งลงมา จากปัจจุบัน 20% — ตรวจสิปัจจุบันเป็นยังไงแล้วต้องทำยังไง" + ระบุ mascot peek `top: -30px` · "1 ,2 ตกลงทำ โค้ดงานตามกฏ อ่าน ai entry point, work state ,master rules ก่อนทำงานอย่างซื่อสัตย์ ทดสอบผ่านหมดจริงถึงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
+
+> **สถานะปัจจุบัน (ยืนยันจากโค้ดจริง):**
+> 1. ธีม: `theme.ts` fallback = `light` / `index.html` inline script default = `light` → ผู้ใช้ใหม่ได้ธีมสว่าง
+> 2. Login redirect: `readSocialNext()` fallback `/` → เข้า `/login` ตรงๆ ได้ `returnTo = '/'` → navigate('/') กลับหน้าแลนดิ้งแทน `/shop`
+> 3. Mascot peek: `.mascot-peek { top: -10px }` ขอบบนการ์ด · `.review-card-glass { top: 20% }` → Owner ระบุเลื่อนลง `top: -30px`
+
+> **แก้ 3 ข้อ:**
+> 1. **Dark mode default** — `src/lib/theme.ts`: `migrateTheme()` fallback `'light'` → `'dark'` (บรรทัด 34) + `getTheme()` catch `'light'` → `'dark'` (บรรทัด 41); `index.html` inline script fallback `'light'` → `'dark'` (บรรทัด 17) · ผู้ใช้ที่มีค่า localStorage เดิมยังใช้ธีมเดิม
+> 2. **Login/Register → /shop โดยตรง** — `src/pages/login/LoginPage.tsx` + `RegisterPage.tsx`: เพิ่ม `rawReturnTo` normalize — ค่า `'/'` ให้เท่ากับ `null` แล้ว fallback `/shop`; คง `navigate(returnTo || '/shop')` และ `navigate(returnTo || (role === 'admin' ? '/admin' : '/shop'))` ไว้ (deep-link จริงเช่น `/checkout`, `/admin/orders?tab=x` ยังส่งกลับตามเดิม)
+> 3. **Mascot peek ตำแหน่งใหม่** — `src/index.css:746` `.mascot-peek { top: -10px }` → `top: -30px`
+
+> **Tests อัปเดต:**
+> - `src/__tests__/theme.test.ts`: `migrateTheme(null/undefined/'purple')` → `'dark'`; `getTheme()` default → `'dark'`
+> - `src/__tests__/loginContextRestoration.test.ts`: pattern test เช็ก `rawReturnTo` + normalize แทน pattern เดิม
+
+> **Gates:** `npm run lint` ✅ (eslint + brandNameGuard) · `npm run test` ✅ (**217 files / 2295 tests PASS**) · `npm run build` ✅ (tsc + vite build + PWA)
+
+> **Files Changed:** `src/lib/theme.ts` · `index.html` · `src/pages/login/LoginPage.tsx` · `src/pages/login/RegisterPage.tsx` · `src/index.css` · `src/__tests__/theme.test.ts` · `src/__tests__/loginContextRestoration.test.ts`
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-15 รอบ 2 (R101-fix — A-4 live FAIL "copy ปุ่มสีส้ม → Chrome ไม่มีตะกร้า" · สาเหตุพิสูจน์จากหลักฐาน Owner + hotfix · Gates 4/4 · vitest 2291/2291) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** กรอกผล remain test รอบ 1 (12 ข้อผ่าน · **A-4 FAIL**) + หลักฐานสำคัญ "เคยมีสินค้าในตะกร้า — แต่ในเบราว์เซอร์ของเฟซบุ๊คเอง" → "ดูว่าเกิดจากอะไรกันแน่แล้วรายงานก่อนแก้" → รายงาน 3 สาเหตุ + ยกเลิกข้อเสนอที่ผิดเอง (encodeURIComponent ซ้อน searchParams.set = double-encode) → "อนุมัติ hot fix ทำงานตามกฏ อ่าน ai entry point ก่อนลงมือ"

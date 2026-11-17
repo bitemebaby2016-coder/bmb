@@ -43,16 +43,16 @@ describe('theme manager (3 themes: light / dark / graphite)', () => {
     it("maps 'graphite' -> 'graphite' (theme 3 stays)", () => {
       expect(migrateTheme('graphite')).toBe('graphite')
     })
-    it('falls back to light for null/unknown values', () => {
-      expect(migrateTheme(null)).toBe('light')
-      expect(migrateTheme(undefined)).toBe('light')
-      expect(migrateTheme('purple')).toBe('light')
+    it('falls back to dark for null/unknown values', () => {
+      expect(migrateTheme(null)).toBe('dark')
+      expect(migrateTheme(undefined)).toBe('dark')
+      expect(migrateTheme('purple')).toBe('dark')
     })
   })
 
   describe('getTheme', () => {
-    it('defaults to light when storage is empty', () => {
-      expect(getTheme()).toBe('light')
+    it('defaults to dark when storage is empty', () => {
+      expect(getTheme()).toBe('dark')
     })
     it('reads legacy gray as dark (migration applied on read)', () => {
       localStorage.setItem(THEME_STORAGE_KEY, 'gray')
