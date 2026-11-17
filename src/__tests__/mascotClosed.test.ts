@@ -165,12 +165,12 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
     expect(s.preOrderLine).toContain('ปิดรับ 09:00 AM')
   })
 
-  it('สองเลน: ทุกรอบวันนี้เลยปิดรอบ + ไม่มีรอบอนาคต → preOrderLine = ปิดรับแล้ว (ร้านยังเปิดรับเซมเดย์)', () => {
+  it('สองเลน: ทุกรอบวันนี้เลย delivery_start แล้ว + ไม่มีรอบอนาคต → preOrderLine = ปิดรับแล้ว (ร้านยังเปิดรับเซมเดย์)', () => {
     publishDeliveryRounds([
       { status: 'active', display_name: 'รอบเย็น', cutoff_time: '16:00', pre_order_cutoff: '15:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 50, current_count: 0, scheduled_date: '2026-10-14' },
     ] as never)
-    // 16:00 ICT = 09:00Z — เลย pre_order_cutoff 15:00 แล้ว · ไม่มีรอบอนาคต
-    const s = currentStoreStatus(new Date('2026-10-14T09:00:00Z'))
+    // 18:00 ICT = 11:00Z — เลย delivery_start 17:00 ของรอบเย็นแล้ว · ไม่มีรอบวันถัดไป
+    const s = currentStoreStatus(new Date('2026-10-14T11:00:00Z'))
     expect(s.preOrderLine).toContain('ปิดรับแล้ว')
     expect(s.isOpen).toBe(true)
     expect(s.state).toBe('open')

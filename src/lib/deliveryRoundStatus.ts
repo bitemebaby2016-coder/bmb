@@ -49,7 +49,7 @@ export interface RoundBookabilityOpts {
 /** 'HH:mm' or 'HH:mm:ss' → ms-of-day, or null when absent/invalid.
  *  NOTE: `Number('')` is 0 — empty/blank must be rejected BEFORE Number() or a
  *  missing time would read as 00:00 and wrongly close every round. */
-function msOfDay(value: string | null | undefined): number | null {
+export function msOfDay(value: string | null | undefined): number | null {
   const raw = String(value ?? '').trim()
   if (!raw) return null
   const parts = raw.split(':')

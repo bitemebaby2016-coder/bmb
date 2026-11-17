@@ -40,7 +40,7 @@ import type {
 import { SOCIAL_PROOF_REVIEWS } from './socialProofReviews'
 import { masterClosedStatus } from './storeMaster'
 import { sameDayEligible, preorderEligible } from './talkToBite'
-import { roundBookability, roundCutoffLabel, roundCutoffMs } from './deliveryRoundStatus'
+import { roundBookability, roundCutoffLabel, roundCutoffMs, msOfDay } from './deliveryRoundStatus'
 import { bangkokMsOfDay } from './bangkokTime'
 import { bangkokDateKey } from './promotionClient'
 import type { ProductScheduleMap } from './productSchedule'
@@ -270,8 +270,16 @@ export function getStoreStatusFromRounds(rounds: Array<{
           if (key === 'midday' && op.midday_open === false) return false
           if (key === 'evening' && op.evening_open === false) return false
         }
-        const t = cutoffAtUtc(r)
-        return t === null || now.getTime() < t
+        // แสดงรอบถัดไปตามเวลาเริ่มส่ง (delivery_start) — ไม่ filter โดย cutoff
+        // หาเวลา delivery_start ใน UTC ของวัน scheduled_date
+        const day = String(r.scheduled_date ?? '').slice(0, 10)
+        if (!day) return false
+        const startMs = msOfDay(r.delivery_start)
+        if (startMs === null) return false
+        const base = Date.parse(`${day}T00:00:00+07:00`)
+        if (Number.isNaN(base)) return false
+        const deliveryStartUtc = base + startMs
+        return deliveryStartUtc > now.getTime()
       })
       .sort((a, b) => {
         const da = String(a.scheduled_date ?? '').slice(0, 10)

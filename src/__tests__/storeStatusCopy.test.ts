@@ -67,12 +67,12 @@ describe('N1 — default copy ต้องตรงกับข้อควา�
     const none = getStoreStatusFromRounds([] as never, at(`${TODAY}T10:00:00+07:00`))
     expect(none.preOrderLine).toBeUndefined()
 
-    // ทุกรอบวันนี้เลยปิดรอบแล้ว + ไม่มีรอบอนาคต → บรรทัด "ปิดรับแล้ว" (ค่าคงที่ของ default)
-    const pastCutoff = getStoreStatusFromRounds(
+    // ทุกรอบวันนี้เลย delivery_start แล้ว + ไม่มีรอบอนาคต → บรรทัด "ปิดรับแล้ว" (ค่าคงที่ของ default)
+    const pastAllDelivery = getStoreStatusFromRounds(
       [{ status: 'active', display_name: 'รอบเย็น', cutoff_time: '16:00', pre_order_cutoff: '15:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 50, current_count: 0, scheduled_date: TODAY }] as never,
-      at(`${TODAY}T15:30:00+07:00`), // เลย pre_order_cutoff 15:00 แล้ว
+      at(`${TODAY}T18:00:00+07:00`), // เลย delivery_start 17:00 ของรอบเย็นแล้ว
     )
-    expect(pastCutoff.preOrderLine).toBe(DEFAULT_STORE_STATUS_COPY.preOrderClosed)
+    expect(pastAllDelivery.preOrderLine).toBe(DEFAULT_STORE_STATUS_COPY.preOrderClosed)
 
     const live = getStoreStatusFromRounds(
       [{ status: 'active', display_name: 'เช้า', delivery_start: '06:00', delivery_end: '09:00', cutoff_time: '05:00', max_capacity: 60, current_count: 0, scheduled_date: TOMORROW }] as never,

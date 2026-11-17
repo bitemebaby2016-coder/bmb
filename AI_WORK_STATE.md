@@ -1,3 +1,27 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 41 · Mascot peek ทิศทางผิดแก้ + หน้าแรกสถานะรอบส่ง Pre-Order/Same-Day logic ใหม่ — Owner ระบุ mascot top:-30px ผิด (สูงกว่าเดิม) ต้องเลื่อนลง + แสดงรอบถัดไปตาม delivery_start ไม่ filter cutoff · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "มาสคอต peeking รีวิว เลื่อนตำแหน่ง — src/index.css:746 เปลี่ยน .mascot-peek { top: -10px } → top: -30px ตามที่ระบุ : ทำผิดทาง ต้องเลื่อนลงมา ปัจจุบันนี้มันสูงกว่าก่อนคำสั่ง นายทำผิดทิศ / 1,2 ใช้ได้แล้ว / งานเพิ่มใหม่ การแสดงผลสถานะ ในหน้าแรก 🟢 เปิดรับออเดอร์ จองล่วงหน้า/📅Pre-Order — 🟢 เปิดรับออเดอร์ ส่งวันนี้/⚡Same-Day / **🛵 จองล่วงหน้า/📅Pre-Order : รอบส่ง 7.00 AM เช้า 18/11/2026 (ปิดรับ 05:00 AM)** / **🛵 ส่งวันนี้/⚡Same-Day : เริ่มส่ง (8:00–20:00)** / จากเวลาปัจจุบัน9.20 จองล่วงหน้าบรรทัดที่สองควรแสดงเป็น **🛵 จองล่วงหน้า/📅Pre-Order : รอบส่ง 11.00 AM เช้า 18/11/2026 (ปิดรับ 09:00 AM)** เพราะว่าปิดรอบของ 7โมงแล้ว เหลือรอบ 11 โมง และรอบเย็น(ปัจจุบันปิดอยู่) ถ้าเลยรอบ 11โมงไปก็เป็นรอบ7โมงพุ่งนี้ เข้าใจไหม ปรับใช้ให้ถูกต้องสำหรับการแสดงผลทุกช่วงเวลา / งาน2ข้อ ทำงานตามกฏ"
+
+> **สถานะปัจจุบัน (ยืนยันจากโค้ดจริง):**
+> 1. Mascot peek: `src/index.css:746` `.mascot-peek { top: -30px }` — ผิดทิศ (สูงกว่าเดิม -10px) ต้องเลื่อนลง
+> 2. หน้าแรก Pre-Order line: `homeProviders.ts` filter `nextPre` โดย `cutoffAtUtc` (cutoff time) → ที่ 9:20 โชว์รอบ 7:00 AM (cutoff 5:00 ผ่านแล้ว) แทนรอบ 11:00 AM
+> 3. Same-Day line: `sameDayLineFromHours` ใช้ `hoursOpen/hoursClose` จาก business_settings → โชว์ "เริ่มส่ง (08:00–20:00)" ตรงตามสเปก
+
+> **แก้ 2 ข้อ:**
+> 1. **Mascot peek เลื่อนลง** — `src/index.css:746` `.mascot-peek { top: -30px }` → `top: 20px` (เลื่อนลงจากขอบบนการ์ดเข้าไปในพื้นที่การ์ด)
+> 2. **Pre-Order line: แสดงรอบถัดไปตาม delivery_start** — `src/lib/homeProviders.ts` `nextPre` logic: filter โดย `delivery_start_utc > now.getTime()` แทน `cutoffAtUtc` (ยังคงโชว์ cutoff time ในข้อความ) · export `msOfDay` จาก `deliveryRoundStatus.ts` มาใช้ · รอบเย็นที่ปิด (operating_hours.evening_open=false) ถูกกรองออกแล้ว
+> 3. **Same-Day line: ใช้เวลาเปิด-ปิดร้าน** — คงเดิม `sameDayLineFromHours(hoursOpen, hoursClose)` → "เริ่มส่ง (08:00–20:00)" (ไม่ผูกเวลาของรอบ)
+
+> **Tests อัปเดต:**
+> - `src/__tests__/mascotClosed.test.ts`: test "ทุกรอบวันนี้เลยปิดรอบ" → เปลี่ยนเวลาทดสอบเป็น 18:00 ICT (เลย delivery_start 17:00 แล้ว) คาดหวัง "ปิดรับแล้ว"
+> - `src/__tests__/storeStatusCopy.test.ts`: test "บรรทัดพรีออเดอร์ปิดรับ" → เปลี่ยนเวลาทดสอบเป็น 18:00 ICT คาดหวัง default "ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป"
+
+> **Gates:** `npm run lint` ✅ (eslint + brandNameGuard) · `npm run test` ✅ (**217 files / 2295 tests PASS**) · `npm run build` ✅ (tsc + vite build + PWA)
+
+> **Files Changed:** `src/index.css` · `src/lib/deliveryRoundStatus.ts` · `src/lib/homeProviders.ts` · `src/__tests__/mascotClosed.test.ts` · `src/__tests__/storeStatusCopy.test.ts`
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 40 · Dark mode default + Login redirect /shop + Mascot peek position — Owner ให้ทำ 3 ข้อ + ระบุ mascot top:-30px · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "จากสถานะล่าสุดของโปรเจค ปรับปรุง เพิ่ม: ทุก user เริ่มต้นด้วย dark mode / หลังล้อกอินแล้วส่งต่อไปที่ /shop เลยไม่ต้องกลับมาหน้าแรกเพื่อกดเข้าร้านอีกครั้ง / ตำแหน่ง มาสคอตท่า peeking ที่โผล่มาตรงรีวิว ให้เลื่อนตำแหน่งลงมา จากปัจจุบัน 20% — ตรวจสิปัจจุบันเป็นยังไงแล้วต้องทำยังไง" + ระบุ mascot peek `top: -30px` · "1 ,2 ตกลงทำ โค้ดงานตามกฏ อ่าน ai entry point, work state ,master rules ก่อนทำงานอย่างซื่อสัตย์ ทดสอบผ่านหมดจริงถึงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
