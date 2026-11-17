@@ -37,6 +37,7 @@ import {
   type MyDeliveryAssignment,
   type DriverActionKind,
 } from '@/lib/driverService'
+import { buildHistoryData, filterAssignments, getAvailableMonths, formatMonthLabel, type HistoryMode, type DateAnchor } from '@/lib/riderHistory'
 import { fetchAddressPhotoPath, getAddressPhotoUrl } from '@/lib/addressPhoto'
 import { planMultiStopRoute, googleMapsDirUrl, openMapsUrl, googleNavigationUrl, openNavigationUrl, webNavigationFallbackUrl, toPlanStops } from '@/lib/deliveryPlan'
 // R51: แชตออเดอร์ฝั่งไรเดอร์ (component เดียวกับลูกค้า/แอดมิน — เขียนผ่าน RPC m182)
@@ -117,6 +118,11 @@ export function RiderPwaPage() {
   const [notice, setNotice] = useState<string | null>(null)
   // R38 (Owner 2026-10-31): "ส่งสำเร็จแล้วให้โชว์แค่ 3 ออเดอร์ล่าสุด — นอกนั้นไว้ในอัลบั้มประวัติ"
   const [showHistory, setShowHistory] = useState(false)
+
+  // R48: Rider history tabs — today/month + anchor (assigned/scheduled)
+  const [historyMode, setHistoryMode] = useState<HistoryMode>('today')
+  const [historyAnchor, setHistoryAnchor] = useState<DateAnchor>('scheduled')
+  const [historyMonthKey, setHistoryMonthKey] = useState<string>('')
 
   const [pushState, setPushState] = useState<{
     supported: boolean
@@ -759,14 +765,53 @@ export function RiderPwaPage() {
                   ยังไม่มีงานที่ได้รับมอบหมาย — งานใหม่จะโหลดอัตโนมัติทุก ~25 วินาที
                 </GlassCard>
               )}
+              {/* R48: History tabs — วันนี้ / เดือนย้อนหลัง + anchor (assigned/scheduled) */}
+              <div className="mb-3" data-testid="rider-history-tabs">
+                <div className="flex flex-wrap gap-1 mb-2">
+                  <button
+                    className={`btn text-xs ${historyMode === 'today' ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => { setHistoryMode('today'); setHistoryMonthKey('') }}
+                    data-testid="rider-tab-today"
+                  >
+                    📅 วันนี้
+                  </button>
+                  {(() => {
+                    const months = getAvailableMonths(assignments, historyAnchor)
+                    return months.map((m) => (
+                      <button
+                        key={m}
+                        className={`btn text-xs ${historyMode === 'month' && historyMonthKey === m ? 'btn-primary' : 'btn-outline'}`}
+                        onClick={() => { setHistoryMode('month'); setHistoryMonthKey(m) }}
+                        data-testid={`rider-tab-month-${m}`}
+                      >
+                        📅 {formatMonthLabel(m)}
+                      </button>
+                    ))
+                  })()}
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-slate-600">วันที่นับ:</label>
+                  <select
+                    value={historyAnchor}
+                    onChange={(e) => { setHistoryAnchor(e.target.value as 'assigned' | 'scheduled'); setHistoryMonthKey('') }}
+                    className="input input-bordered text-xs w-auto"
+                    data-testid="rider-anchor-select"
+                  >
+                    <option value="scheduled">📅 วันส่ง (scheduled)</option>
+                    <option value="assigned">📝 วันมอบหมาย (assigned)</option>
+                  </select>
+                </div>
+              </div>
               {/* R38 (Owner): delivered เรียงใหม่สุดก่อน (pod_captured_at) — โชว์ 3 ล่าสุดในรายการหลัก
                   ที่เหลือเก็บไว้ในอัลบั้มประวัติด้านล่าง (กดเปิด/ปิด) */}
               {(() => {
-                const deliveredAll = assignments
+                // R48: กรองตาม history mode + anchor ก่อน
+                const historyFiltered = filterAssignments(assignments, historyMode, historyAnchor, historyMonthKey)
+                const deliveredAll = historyFiltered
                   .filter((x) => x.assignment_status === 'delivered')
                   .sort((x, y) => String(y.pod_captured_at || y.assigned_at).localeCompare(String(x.pod_captured_at || x.assigned_at)))
                 const recentSet = new Set(deliveredAll.slice(0, 3).map((x) => x.order_number))
-                const visible = assignments.filter((x) => x.assignment_status !== 'delivered' || recentSet.has(x.order_number))
+                const visible = historyFiltered.filter((x) => x.assignment_status !== 'delivered' || recentSet.has(x.order_number))
                 const overflow = deliveredAll.slice(3)
                 return (
                 <>

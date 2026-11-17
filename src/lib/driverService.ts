@@ -33,6 +33,8 @@ export interface MyDeliveryAssignment {
   assignment_status: 'offered' | 'assigned' | 'accepted' | 'picked_up' | 'in_transit' | 'delivered' | 'declined' | 'cancelled'
   assigned_at: string
   accepted_at: string | null
+  /** R48: วันส่งจริง (จาก delivery_rounds.scheduled_date) — ใช้สำหรับแท็บย้อนหลัง */
+  scheduled_date: string | null
   dropoff_detail: string
   dropoff_latitude: number | null
   dropoff_longitude: number | null
@@ -94,10 +96,20 @@ export async function driverLogin(): Promise<DriverRecord | null> {
   return (data as unknown as { driver: DriverRecord }).driver ?? null
 }
 
-export async function myDeliveriesResult(): Promise<
+export async function myDeliveriesResult(params?: {
+  assignedFrom?: string // ISO timestamp 'YYYY-MM-DDTHH:mm:ss.sssZ'
+  assignedTo?: string
+  scheduledFrom?: string // 'YYYY-MM-DD'
+  scheduledTo?: string
+}): Promise<
   { ok: true; assignments: MyDeliveryAssignment[]; offers: MyDeliveryAssignment[] } | { ok: false; error: string; kind: DriverActionKind }
 > {
-  const { data, error } = await supabase.rpc('my_deliveries')
+  const { data, error } = await supabase.rpc('my_deliveries', {
+    p_assigned_from: params?.assignedFrom ?? null,
+    p_assigned_to: params?.assignedTo ?? null,
+    p_scheduled_from: params?.scheduledFrom ?? null,
+    p_scheduled_to: params?.scheduledTo ?? null,
+  })
   if (error) return { ok: false, ...classifyDriverError(error) }
   return {
     ok: true,

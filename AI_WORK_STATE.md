@@ -1,3 +1,26 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 48 · Rider history tabs — วันนี้ / ย้อนหลังรายเดือน + anchor assigned/scheduled · my_deliveries v3 + scheduled_date + filter params · m181 migration · timezone-safe filtering UTC · Gates 4/4 · vitest 2329/2329) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "งานของไรเดอร์ให้แสดงเฉพาะวันปัจจุบัน วันที่ผ่านไปแล้วสร้างแท็บเก็บไว้เป็นเดือนไว้ดูย้อนหลัง / มอบหมายงานล่วงหน้าได้ จอย delivery_rounds.scheduled_date ใน RPC ด้วย ต้องการทำได้ทั้งคู่ / โค้ดงานตามกฏ อ่าน ai entry point, ai working state, master universal ก่อนลงมือ ทดสอบทั้งหมดผ่านจริงถึงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
+
+> **สถานะก่อนหน้า:** หน้า /rider โชว์งานทั้งหมดรวมกัน (ไม่มี filter วันที่) · RPC my_deliveries v2 คืน assigned_at เท่านั้น · ไม่มี scheduled_date · UI ไม่มีแท็บย้อนหลัง
+
+> **แก้ 5 ข้อ:**
+> 1. **Migration 181** `181_rider_history_dates.sql` — my_deliveries v3: เพิ่ม `scheduled_date` (JOIN delivery_rounds) + filter params `p_assigned_from/to`, `p_scheduled_from/to` (date) + verification block
+> 2. **TypeScript** — `MyDeliveryAssignment` เพิ่ม `scheduled_date` · `myDeliveriesResult(params?)` รับ filter params 4 ตัว (ISO timestamp/date) ส่งต่อ RPC
+> 3. **`src/lib/riderHistory.ts` (ใหม่)** — `filterAssignments`, `getAvailableMonths`, `formatMonthLabel`, `buildHistoryData` · **timezone-safe**: คำนวณ "วันนี้" ใน UTC (Date.UTC) กันบั๊ก timezone test env · anchor 'assigned' | 'scheduled' สลับได้
+> 4. **RiderPwaPage.tsx** — Tab bar: 📅 วันนี้ + 📅 พฤศจิกายน 2569 / ตุลาคม 2569 ... (สร้างจากข้อมูลจริง) + dropdown anchor (📅 วันส่ง / 📝 วันมอบหมาย) · ใช้ `filterAssignments` กรองก่อนโชว์ · รองรับโหมด today/month สลับได้
+> 5. **Migration 181 applied** → RPC คืน scheduled_date + filter ทำงานจริง
+
+> **เทส regression ใหม่:** `riderHistory.test.ts` (12 tests: filter today/month, anchor assigned/scheduled, months extraction, label Thai+พ.ศ., timezone UTC) · `r48RiderHistoryTabs.test.ts` (contract tests: tab UI, filter, anchor, month label, RPC params) · **รวม +11 tests** (2318 → 2329)
+
+> **Gates:** `npm run lint` ✅ (583 ไฟล์ + languageSanity) · `npm run test` ✅ (**221 files / 2329 tests PASS** — +11 จาก 2318) · `npm run build` ✅
+
+> **Files Changed:** `supabase/migrations/181_rider_history_dates.sql` · `src/lib/driverService.ts` · `src/lib/riderHistory.ts` · `src/pages/RiderPwaPage.tsx` · `src/__tests__/riderHistory.test.ts` · `src/__tests__/r48RiderHistoryTabs.test.ts`
+
+> **รอ Owner:** (1) apply migration 181 ที่ Supabase (my_deliveries v3) (2) ทดสอบหน้า /rider: แท็บ "วันนี้" โชว์งานวันนี้ · แท็บเดือนโชว์งานเดือนนั้น · สลับ anchor วันส่ง/วันมอบหมายได้ · pagination/performance ถ้าข้อมูลเยอะ (อนาคต: RPC filter ทำฝั่ง server)
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 47 · AdminLiveMap เพิ่ม Leaflet/OSM fallback — แอดมินเป็นฝั่งเดียวที่ไม่มี fallback map เลยโชว์แต่ข้อความพิกัดตอน Google ล้ม · ยก loadLeaflet เป็น lib กลางทั้งระบบ · Owner ยืนยันไรเดอร์ "พอล ไมท์ไดร์" = ของจริง พิกัดใกล้ครัว + ล่าสุด 16:59 ถูกต้อง ไม่ลบ · Gates 4/4 · vitest 2318/2318) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "เฉพาะของแอดมินที่ไม่ขึ้นเหมือนเดิม ทั้งที่มันเป็นต้นแบบให้แก้อีก 2 อันได้ อะไรวะ / 'พลอย' ที่มึงหมายถึง คือ พอล ไมท์ไดร์ ใช่ไหม นี่คือของจริงไม่ต้องลบ ทดสอบอยู่ตอนนี้มีงานค้างอยู่ตำแหน่งไกล้ครัวที่บอกจริง / อนุมัติ เพิ่ม Leaflet/OSM fallback ให้ AdminLiveMap ทำงานตามกฏ"
