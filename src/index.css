@@ -743,7 +743,7 @@ p { color: var(--color-brand-text-secondary); }
 /* --- Mascot pose: `peeking` — โผล่จากมุมบนของ Glass Overlay Card (CustomerReviewCard) --- */
 .mascot-peek {
   position: absolute;
-  top: 20px;
+  top: 10px;
   right: -6px;
   width: 58px;
   height: 58px;
@@ -770,6 +770,13 @@ p { color: var(--color-brand-text-secondary); }
 @keyframes mascotNudge {
   0%, 100% { transform: translate(0, 0) rotate(6deg); }
   50%      { transform: translate(3px, -4px) rotate(-4deg); }
+}
+
+/* --- Bite's Daily Picks section accent mascots --- */
+.mascot-pick-accent {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.18));
+  pointer-events: none;
+  opacity: 0.9;
 }
 
 /* --- LazyVideo (Menu Highlight ≤ 2 คลิป) --- */

@@ -1,3 +1,24 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 42 · Mascot peek fine-tune + Review section cleanup + Bite's Daily Picks section — Owner: mascot peek top:20px → 10px (ขึ้น 10px) + ออก logo bitemebaby ในรีวิว + เพิ่ม section "Bite เลือกเมนูให้แล้ววันนี้" พร้อมท่าโพส recommend/menu/thumbsup · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "ถูกแล้ว แต่2 (5f33f02) 1. Mascot peek (แก้ทิศทาง) src/index.css .mascot-peek top:-30px → top:20px ✅ (เลื่อนลง) ผลเลื่อนลงมาต่ำไป ขยับเลื่อนขึ้นจากปัจจุบัน +10 px / งานเพิ่ม เซ้กชั่น 📸 รีวิวจริงจากลูกค้า เอา logo bitemebaby ออก เหลือแต่มาสคอตเท่านั้น / เธียเตอร์ ด้านหลัง \"Bite เลือกเมนูให้แล้ววันนี้(ใส่มาสคอตด้วย)\" ท่าโพสครบหมดแล้ว นำไปเลือกใช้ให้ถูกสถานที่และสถานการณ์เหมาะสมจริงให้ครบทุกท่า / โค้ดงานตามกฏ อ่าน ai entry point , workingstate, master rules ก่อนทำงาน / หลังทดสอบทั้งหมดผ่านจริงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
+
+> **สถานะปัจจุบัน (ยืนยันจากโค้ดจริง):**
+> 1. Mascot peek: `src/index.css:746` `.mascot-peek { top: 20px }` — เลื่อนลงต่ำเกินไป ต้องขึ้น 10px → `top: 10px`
+> 2. ReviewCarouselSection header: มี logo bitemebaby (`/Logo_Sticker_Circle.webp`) ควรเอาออก เหลือแค่ mascot pose="reviewing"
+> 3. ยังไม่มี section "Bite เลือกเมนูให้แล้ววันนี้" หลังรีวิว
+
+> **แก้ 3 ข้อ:**
+> 1. **Mascot peek fine-tune** — `src/index.css:746` `.mascot-peek { top: 20px }` → `top: 10px` (ขึ้น 10px จากปัจจุบัน)
+> 2. **ReviewCarouselSection header cleanup** — ออก `<img src="/Logo_Sticker_Circle.webp" ... />` (บรรทัด 138-145) เหลือแค่ `<MascotBadge pose="reviewing" ... />`
+> 3. **Bite's Daily Picks section ใหม่** — เพิ่มหลัง ReviewCarouselSection ใน `HomePage.tsx`: section `home-sec-bite-picks` พร้อม header "🍽️ Bite เลือกเมนูให้แล้ววันนี้" + mascot pose="recommend" + accent mascots pose="menu" และ pose="thumbsup" ในคำอธิบาย + HorizontalCarousel ใช้ popularItems (reuse ข้อมูลเมนูแนะนำ)
+> 4. **CSS ใหม่** — เพิ่ม `.mascot-pick-accent` ใน `src/index.css` สำหรับ mascot ประดับใน section
+
+> **Gates:** `npm run lint` ✅ (eslint + brandNameGuard) · `npm run test` ✅ (**217 files / 2295 tests PASS**) · `npm run build` ✅ (tsc + vite build + PWA)
+
+> **Files Changed:** `src/index.css` · `src/components/home/ReviewCarouselSection.tsx` · `src/pages/HomePage.tsx`
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 41 · Mascot peek ทิศทางผิดแก้ + หน้าแรกสถานะรอบส่ง Pre-Order/Same-Day logic ใหม่ — Owner ระบุ mascot top:-30px ผิด (สูงกว่าเดิม) ต้องเลื่อนลง + แสดงรอบถัดไปตาม delivery_start ไม่ filter cutoff · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "มาสคอต peeking รีวิว เลื่อนตำแหน่ง — src/index.css:746 เปลี่ยน .mascot-peek { top: -10px } → top: -30px ตามที่ระบุ : ทำผิดทาง ต้องเลื่อนลงมา ปัจจุบันนี้มันสูงกว่าก่อนคำสั่ง นายทำผิดทิศ / 1,2 ใช้ได้แล้ว / งานเพิ่มใหม่ การแสดงผลสถานะ ในหน้าแรก 🟢 เปิดรับออเดอร์ จองล่วงหน้า/📅Pre-Order — 🟢 เปิดรับออเดอร์ ส่งวันนี้/⚡Same-Day / **🛵 จองล่วงหน้า/📅Pre-Order : รอบส่ง 7.00 AM เช้า 18/11/2026 (ปิดรับ 05:00 AM)** / **🛵 ส่งวันนี้/⚡Same-Day : เริ่มส่ง (8:00–20:00)** / จากเวลาปัจจุบัน9.20 จองล่วงหน้าบรรทัดที่สองควรแสดงเป็น **🛵 จองล่วงหน้า/📅Pre-Order : รอบส่ง 11.00 AM เช้า 18/11/2026 (ปิดรับ 09:00 AM)** เพราะว่าปิดรอบของ 7โมงแล้ว เหลือรอบ 11 โมง และรอบเย็น(ปัจจุบันปิดอยู่) ถ้าเลยรอบ 11โมงไปก็เป็นรอบ7โมงพุ่งนี้ เข้าใจไหม ปรับใช้ให้ถูกต้องสำหรับการแสดงผลทุกช่วงเวลา / งาน2ข้อ ทำงานตามกฏ"

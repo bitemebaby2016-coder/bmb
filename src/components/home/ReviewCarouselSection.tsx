@@ -135,14 +135,6 @@ export function ReviewCarouselSection({ reviews, verifiedReviews, products, onRe
           {/* R50 (Owner 2026-11-01): ยุบรวม + ชื่อใหม่ = รีวิวจริงจากลูกค้า */}
           <span className="truncate">📸 รีวิวจริงจากลูกค้า</span>
             <MascotBadge pose="reviewing" size="sm" alt="น้อง Bite อ่านรีวิวจริง" className="section-float-mascot shrink-0" />
-          <img
-            src="/Logo_Sticker_Circle.webp"
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="review-float-logo shrink-0"
-            aria-hidden="true"
-          />
         </h2>
         <Link
           to="/reviews"
