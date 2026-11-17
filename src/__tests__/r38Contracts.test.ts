@@ -40,12 +40,16 @@ describe('R38 · openMapsUrl — ปุ่มนำทางไรเดอร�
     expect(openMapsUrl('', 'Android')).toBeNull()
   })
 
-  it('RiderPwaPage ปุ่มนำทาง = ยุบรวมตามคำสั่ง R44 (เหลือ เส้นทางรวม + จุดส่งงานปัจจุบัน)', () => {
+  it('RiderPwaPage ปุ่มนำทาง = ยุบรวมตามคำสั่ง R44 (เหลือ เส้นทางรวม + จุดส่งงานปัจจุบัน) + มี fallback เปิดเว็บ', () => {
     expect(riderSrc).toContain('href={openMapsUrl(dirUrl) ?? undefined}')
-    expect(riderSrc.match(/openMapsUrl\(/g)!.length).toBeGreaterThanOrEqual(2)
+    expect(riderSrc).toContain('openNavigationUrl(')
+    expect(riderSrc).toContain('googleNavigationUrl(')
+    expect(riderSrc).toContain('webNavigationFallbackUrl(')
     expect(riderSrc).toContain('rider-open-gmaps')
-    expect(riderSrc).not.toContain('rider-nav-stop-') // R44: ถอดปุ่มรายจุดซ้ำแล้ว (ยุบรวม)
+    expect(riderSrc).toContain('rider-open-gmaps-web')
     expect(riderSrc).toContain('rider-nav-active')
+    expect(riderSrc).toContain('rider-nav-active-web')
+    expect(riderSrc).not.toContain('rider-nav-stop-') // R44: ถอดปุ่มรายจุดซ้ำแล้ว (ยุบรวม)
   })
 })
 

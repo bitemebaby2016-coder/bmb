@@ -38,7 +38,7 @@ import {
   type DriverActionKind,
 } from '@/lib/driverService'
 import { fetchAddressPhotoPath, getAddressPhotoUrl } from '@/lib/addressPhoto'
-import { planMultiStopRoute, googleMapsDirUrl, openMapsUrl, toPlanStops } from '@/lib/deliveryPlan'
+import { planMultiStopRoute, googleMapsDirUrl, openMapsUrl, googleNavigationUrl, openNavigationUrl, webNavigationFallbackUrl, toPlanStops } from '@/lib/deliveryPlan'
 // R51: แชตออเดอร์ฝั่งไรเดอร์ (component เดียวกับลูกค้า/แอดมิน — เขียนผ่าน RPC m182)
 import { OrderChatPanel } from '@/components/messages/OrderChatPanel'
 // R72 (Owner "แจ้งเตือนไรเดอร์มีซ้ำ"): ถอด RiderBell ออก — /rider มีกระดิ่งมุมจอ (Header) อยู่แล้ว
@@ -595,9 +595,14 @@ export function RiderPwaPage() {
                     🗺️ เส้นทางส่งของวันนี้ ({plan.stops.length} จุด{activeJobs.length > stops.length ? ` + ${activeJobs.length - stops.length} งานไม่มีพิกัด` : ''})
                   </h3>
                   {dirUrl ? (
-                    <a className="btn btn-primary text-xs" href={openMapsUrl(dirUrl) ?? undefined} target="_blank" rel="noreferrer" data-testid="rider-open-gmaps">
-                      🧭 เปิดนำทาง Google Maps
-                    </a>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <a className="btn btn-primary text-xs" href={openMapsUrl(dirUrl) ?? undefined} target="_blank" rel="noreferrer" data-testid="rider-open-gmaps">
+                        🧭 เปิดนำทาง Google Maps
+                      </a>
+                      <a className="btn btn-outline text-xs" href={dirUrl} target="_blank" rel="noreferrer" data-testid="rider-open-gmaps-web">
+                        🌐 เปิดเว็บแผนที่
+                      </a>
+                    </div>
                   ) : null}
                 </div>
                 <ol className="text-sm text-slate-700 mb-2 space-y-1">
@@ -647,17 +652,20 @@ export function RiderPwaPage() {
 
               {/* R21f (Owner): ปุ่มนำทางเฉพาะจุดส่งของงานนี้ (gps คุณ → จุดส่ง) */}
               {activeOrder.dropoff_latitude != null && activeOrder.dropoff_longitude != null && (() => {
-                const u = googleMapsDirUrl(riderGps, [{
-                  order_number: activeOrder.order_number,
-                  latitude: Number(activeOrder.dropoff_latitude),
-                  longitude: Number(activeOrder.dropoff_longitude),
-                  detail: activeOrder.dropoff_detail || undefined,
-                }])
-                return u ? (
-                  <a className="btn btn-primary text-xs mb-2" href={openMapsUrl(u) ?? undefined} target="_blank" rel="noreferrer" data-testid="rider-nav-active">
-                    🧭 เปิดนำทางไปจุดส่งนี้
-                  </a>
-                ) : null
+                const lat = Number(activeOrder.dropoff_latitude)
+                const lng = Number(activeOrder.dropoff_longitude)
+                const navUrl = googleNavigationUrl(lat, lng)
+                const webFallback = webNavigationFallbackUrl(lat, lng)
+                return (
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <a className="btn btn-primary text-xs" href={openNavigationUrl(navUrl, webFallback) ?? undefined} target="_blank" rel="noreferrer" data-testid="rider-nav-active">
+                      🧭 เปิดนำทางไปจุดส่งนี้
+                    </a>
+                    <a className="btn btn-outline text-xs" href={webFallback} target="_blank" rel="noreferrer" data-testid="rider-nav-active-web">
+                      🌐 เปิดเว็บแผนที่
+                    </a>
+                  </div>
+                )
               })()}
 
               {/* PHASE 2: แผนที่จุดปัก — ปลายทาง/คุณ(GPS)/ครัว แยกชนิดชัดเจน */}

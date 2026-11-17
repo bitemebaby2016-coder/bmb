@@ -1,3 +1,32 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 43 · Rider navigation fix — ปุ่มนำทางไรเดอร์เปิดแอป Google Maps ได้จริง · google.navigation: scheme + web fallback + iOS support · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "ตรวจเช็คปรับปรุงส่วนของไรเด้อร์ / ลิ้งนำทางสถานที่ส่งของไรเด้อร์กดใช้ แล้วเป็นแผนที่ในบราวเซอร์ แต่นำทางไม่ได้ ให้ไปเปิดต่อในแอพ แต่กดเปิดต่อไปแล้วกลายเป็น ให้อินสตอลแอพอย่างเดียวใช้งานไม่ได้ / โค้ดงานตามกฏ อ่าน ai entry point, workingstate, master rules ก่อนทำงาน / หลังทดสอบทั้งหมดผ่านจริงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
+
+> **สถานะปัจจุบัน (ยืนยันจากโค้ดจริง):**
+> 1. `deliveryPlan.ts openMapsUrl()` — Android → `intent://www.google.com/maps/dir/…#Intent;package=com.google.android.apps.maps;S.browser_fallback_url=…` · iOS/desktop → https เดิม
+> 2. ปุ่ม "🧭 เปิดนำทาง Google Maps" (เส้นทางรวม multi-stop, line 598) + "🧭 เปิดนำทางไปจุดส่งนี้" (จุดเดี่ยว, line 657) ทั้งคู่ `target="_blank" rel="noreferrer"`
+> 3. อาการจริง: กดปุ่ม → เปิดแผนที่ใน browser (ไม่ใช่แอป) → โชว์ "เปิดในแอป" → กดแล้ว → หน้า "ติดตั้งแอป" = ทางตัน (Dead end)
+> 4. สาเหตุ: `intent://` ทำงานได้เฉพาะ Chrome หลัก — ใน PWA/TWA/Custom Tab (บริบทไรเดอร์จริง) Custom Tab ไม่ dispatch intent ไป external package → ตก `S.browser_fallback_url` → Google Maps web → interstitial "ติดตั้งแอป"
+> 5. ไม่มี `google.navigation:`, `geo:`, `comgooglemaps://`, `maps://` ในโปรเจคเลย
+
+> **แก้ 3 ข้อ:**
+> 1. **เพิ่มฟังก์ชันนำทางใหม่ใน `deliveryPlan.ts`:**
+>    - `googleNavigationUrl(lat, lng)` → `google.navigation:q=lat,lng&mode=d` (Android turn-by-turn direct)
+>    - `appleMapsFallbackUrl(lat, lng)` → `maps://?daddr=...` (iOS Apple Maps)
+>    - `webNavigationFallbackUrl(lat, lng)` → https dir URL (fallback ทุก platform)
+>    - `openNavigationUrl(navUrl, webFallbackUrl, ua)` — Android wrap `google.navigation:` ใน intent + package + fallback; iOS ใช้ `comgooglemaps://` + fallback `maps://`; other → web fallback
+> 2. **อัปเดตปุ่มใน `RiderPwaPage.tsx`:**
+>    - ปุ่มจุดส่งเดี่ยว (line 657): ใช้ `googleNavigationUrl` + `openNavigationUrl` + web fallback link "🌐 เปิดเว็บแผนที่"
+>    - ปุ่มเส้นทางรวม (line 598): คง `googleMapsDirUrl` + `openMapsUrl` + เพิ่ม web fallback link "🌐 เปิดเว็บแผนที่"
+>    - ทั้งคู่มีปุ่มสำรอง "🌐 เปิดเว็บแผนที่" กันทางตัน 100%
+> 3. **อัปเดต contract test `r38Contracts.test.ts`** — เช็ก `openNavigationUrl`, `googleNavigationUrl`, `webNavigationFallbackUrl`, data-testid ใหม่ (`rider-open-gmaps-web`, `rider-nav-active-web`)
+
+> **Gates:** `npm run lint` ✅ (eslint + brandNameGuard) · `npm run test` ✅ (**217 files / 2295 tests PASS**) · `npm run build` ✅ (tsc + vite build + PWA)
+
+> **Files Changed:** `src/lib/deliveryPlan.ts` · `src/pages/RiderPwaPage.tsx` · `src/__tests__/r38Contracts.test.ts`
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 42 · Mascot peek fine-tune + Review section cleanup + Bite's Daily Picks section — Owner: mascot peek top:20px → 10px (ขึ้น 10px) + ออก logo bitemebaby ในรีวิว + เพิ่ม section "Bite เลือกเมนูให้แล้ววันนี้" พร้อมท่าโพส recommend/menu/thumbsup · Gates 4/4 · vitest 2295/2295) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "ถูกแล้ว แต่2 (5f33f02) 1. Mascot peek (แก้ทิศทาง) src/index.css .mascot-peek top:-30px → top:20px ✅ (เลื่อนลง) ผลเลื่อนลงมาต่ำไป ขยับเลื่อนขึ้นจากปัจจุบัน +10 px / งานเพิ่ม เซ้กชั่น 📸 รีวิวจริงจากลูกค้า เอา logo bitemebaby ออก เหลือแต่มาสคอตเท่านั้น / เธียเตอร์ ด้านหลัง \"Bite เลือกเมนูให้แล้ววันนี้(ใส่มาสคอตด้วย)\" ท่าโพสครบหมดแล้ว นำไปเลือกใช้ให้ถูกสถานที่และสถานการณ์เหมาะสมจริงให้ครบทุกท่า / โค้ดงานตามกฏ อ่าน ai entry point , workingstate, master rules ก่อนทำงาน / หลังทดสอบทั้งหมดผ่านจริงอนุญาติอัพเดทเอกสารและคอมมิทพุช"

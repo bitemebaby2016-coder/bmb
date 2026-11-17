@@ -92,6 +92,79 @@ export function googleMapsDirUrl(
 }
 
 /**
+ * ลิงก์นำทาง Google Maps โหมด turn-byตรง (single destination) — ใช้ scheme google.navigation:
+ * Android: google.navigation:q=lat,lng&mode=d (เปิดแอป Maps เข้าโหมดนำทางทันที)
+ * iOS: comgooglemaps://?daddr=lat,lng&directionsmode=driving (ถ้ามี Google Maps) / maps:// (Apple Maps)
+ * Desktop/Other: https://www.google.com/maps/dir/?api=1&destination=lat,lng&travelmode=driving
+ */
+export function googleNavigationUrl(
+  latitude: number,
+  longitude: number,
+): string {
+  return `google.navigation:q=${latitude},${longitude}&mode=d`
+}
+
+/**
+ * iOS fallback URL สำหรับ google.navigation (เมื่อไม่มี Google Maps)
+ */
+export function appleMapsFallbackUrl(
+  latitude: number,
+  longitude: number,
+): string {
+  return `maps://?daddr=${latitude},${longitude}&dirflg=d`
+}
+
+/**
+ * Web fallback URL สำหรับ google.navigation (เมื่อไม่มีแอป หรือไม่ใช่ Android/iOS)
+ */
+export function webNavigationFallbackUrl(
+  latitude: number,
+  longitude: number,
+): string {
+  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`
+}
+
+/**
+ * R38+ (Owner 2026-11-17): แปลงลิงก์นำทางเดี่ยว (google.navigation: / comgooglemaps:// / maps://) ให้เปิดแอปได้จริง
+ * Android: wrap google.navigation: ใน intent URL พร้อม package + browser_fallback_url
+ * iOS: ใช้ comgooglemaps:// ก่อน ถ้าไม่มี fallback ไป Apple Maps (maps://)
+ * Desktop/Other: web fallback URL
+ * pure (รับ ua เป็น param — test ได้ไม่ต้องพึ่ง navigator)
+ */
+export function openNavigationUrl(
+  navUrl: string | null,
+  webFallbackUrl: string | null = null,
+  ua: string = typeof navigator !== 'undefined' ? navigator.userAgent : '',
+): string | null {
+  if (!navUrl) return null
+  const isAndroid = /Android/i.test(ua)
+  const isIOS = /iPhone|iPad|iPod/i.test(ua)
+  
+  // Android: wrap google.navigation: scheme ใน intent URL
+  if (isAndroid && navUrl.startsWith('google.navigation:')) {
+    const withoutScheme = navUrl.replace(/^google\.navigation:/, '')
+    const fallback = encodeURIComponent(webFallbackUrl ?? navUrl)
+    return `intent://${withoutScheme}#Intent;scheme=google.navigation;package=com.google.android.apps.maps;S.browser_fallback_url=${fallback};end`
+  }
+  
+  // iOS: ใช้ comgooglemaps:// (Google Maps) ถ้ามีใน navUrl; ไม่งั้นใช้ apple maps fallback
+  if (isIOS) {
+    // ถ้า navUrl เป็น google.navigation ให้แปลงเป็น comgooglemaps://
+    if (navUrl.startsWith('google.navigation:')) {
+      const q = navUrl.replace('google.navigation:', '')
+      return `comgooglemaps://?${q.replace('&mode=d', '&directionsmode=driving')}`
+    }
+    // ถ้าเป็น comgooglemaps:// หรือ maps:// ให้ใช้เลย
+    if (navUrl.startsWith('comgooglemaps://') || navUrl.startsWith('maps://')) {
+      return navUrl
+    }
+  }
+  
+  // Desktop / other: ใช้ web fallback
+  return webFallbackUrl ?? navUrl
+}
+
+/**
  * R38 (Owner 2026-10-31: "การนำทางของไรเดอร์ ลิงก์แผนที่ออกไป แต่ไปเข้าหน้าติดตั้งแอพ
  * เรียกใช้แอพแผนที่ไม่ได้"): ใน PWA/Custom Tab ลิงก์ https://www.google.com/maps ถูกกัน
  * ไม่ให้เปิดแอปข้ามโหมด → Google เสิร์ฟหน้า "ติดตั้งแอป Google Maps" แทนการนำทาง
