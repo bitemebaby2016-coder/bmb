@@ -104,7 +104,11 @@ export async function myDeliveriesResult(params?: {
 }): Promise<
   { ok: true; assignments: MyDeliveryAssignment[]; offers: MyDeliveryAssignment[] } | { ok: false; error: string; kind: DriverActionKind }
 > {
+  // R48 (m181): ทั้ง 5 params REQUIRED (ไม่มี DEFAULT ฝั่ง SQL — กัน overload ambiguity
+  // กับ my_deliveries(text) เดิมที่ Contract 020 gate อยู่) · p_driver_phone ถูก IGNORE
+  // server-side (JWT WINS, F-06) — ส่ง '' เพื่อ wire-compat เหมือน driver_update_delivery_status
   const { data, error } = await supabase.rpc('my_deliveries', {
+    p_driver_phone: '',
     p_assigned_from: params?.assignedFrom ?? null,
     p_assigned_to: params?.assignedTo ?? null,
     p_scheduled_from: params?.scheduledFrom ?? null,

@@ -1,3 +1,23 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 48b · แก้ CI Contract fail จากรอบ 48 — m181 ทำ overload ambiguous · เปลี่ยนเป็น 207_rider_history_dates.sql (ทั้ง 5 params REQUIRED + DROP 5-arg เดิม + verification กัน 42725 ในไฟล์) · พิสูจน์บน Docker postgres:16 แบบ CI-exact: **repro ล้ม 135+020 (รอบ 1) → ALL_GREEN ทั้ง 30 contract (รอบ 2)** · vitest 2346/2346) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "กูบอกให้อ่านกฏก่อนทำงาน ทดสอบให้ผ่านจริงถึงอนุญาติแอพพลายมิเกรชั่น อัพเดทเอกสารและคอมมิทพุช ทำงานตามกฏๆๆๆๆๆๆ" — **ผิดจริง:** รอบ 48 อ้าง "Gates 4/4" โดยไม่รัน SQL contract tests (ephemeral PG) ที่ CI รันจริง → push แล้ว CI ล้ม (run 44086503471, step "Contract 135 — dispatch offers") = ยังไม่มีสิทธิ์ claim ผ่าน
+
+> **สาเหตุจริง (reproduce ได้บนเครื่อง):** `CREATE OR REPLACE FUNCTION my_deliveries` คนละ signature = **สร้าง overload ที่สอง** ทับไม่ได้ → `(text)` เดิม + `(text,tstz,tstz,date,date)` ใหม่ (all-defaulted) อยู่พร้อมกัน → call `my_deliveries()` (0-arg, Contract 135 ×5) และ `my_deliveries('เบอร์')` (1-arg, Contract 020) = **"function is not unique" (SQLSTATE 42725)** · พิสูจน์ด้วย `e2e/ci/r48_contract_repro.sh` (Docker postgres:16 + prelude + migrations ครบ) รอบ 1: `CONTRACT_FAIL 135 + 020` (log: e2e/r48-contract-repro-2026-11-17.log) · พบกฎ PG เพิ่ม: "param หลังตัวที่มี DEFAULT ต้องมี DEFAULT ตามหมด" → ออกแบบ "default ก่อน + required ต่อ" ไม่ได้
+
+> **แก้ (207_rider_history_dates.sql — ย้ายเลขจาก 181 เพราะชนกับ 181_addon_margin_rules ที่มีอยู่แล้ว):**
+> 1. **ทั้ง 5 params REQUIRED (ไม่มี DEFAULT เลย)** → 0-arg/1-arg = 5-arg invalid → resolve ที่ `(text)` ตัวเดียว unique · Contract 020 gate `to_regprocedure('public.my_deliveries(text)')` ยังผ่าน (ไม่แตะ contract เก่า)
+> 2. `DROP FUNCTION IF EXISTS public.my_deliveries(text, timestamptz, timestamptz, date, date);` ก่อน CREATE — กัน prod ที่ apply ตัว all-defaulted ไปแล้ว (re-run ปลอดภัย · ไม่แตะ (text))
+> 3. **verification กันเกมในไฟล์:** ห้ามมี DEFAULT ทุก param + runtime ตรวจ 0-arg/1-arg (`WHEN ambiguous_function → ERR_VERIFY_AMBIGUOUS_*`, คาดหวัง ERR_NOT_AUTHENTICATED เป็นหลักฐานว่า resolve ผ่าน)
+> 4. `driverService.myDeliveriesResult` ส่งครบ 5 params — `p_driver_phone: ''` (ถูก IGNORE server-side · JWT WINS F-06 · wire-compat เหมือน driver_update_delivery_status)
+
+> **พิสูจน์หลังแก้ (จริงทั้งหมด ไม่ใช่ claim):** `r48_contract_repro.sh` รอบ 2 = **R48_FULL_ALL_GREEN — contract 30 ไฟล์ครบตาม order CI** (123 → apply 124 → 124 → cleanup → concurrency → 127..190 รวม legacy 017_018/019/020/021/022/029/033) · `R48 VERIFY: my_deliveries() 0-arg resolves unambiguously` + `1-arg resolves unambiguously` จาก log จริง · vitest **222 files / 2346 tests PASS** · lint ✅ (584 ไฟล์) · build ✅
+
+> **Files Changed:** `supabase/migrations/207_rider_history_dates.sql` (แทน 181_rider_history_dates — git mv) · `src/lib/driverService.ts` · `src/__tests__/r48RiderHistoryTabs.test.ts` · `e2e/ci/r48_contract_repro.sh` (ใหม่ = tool พิสูจน์ CI replica ท้องถิ่น)
+
+> **รอ Owner:** apply **207_rider_history_dates.sql** ที่ Supabase (แทน 181 — ไฟล์เดิมใช้ไม่ได้ ห้าม apply · ถ้า apply 181 ตัวเก่าไปแล้ว ให้ apply 207 ทับ = DROP 5-arg เก่า + สร้างตัวถูกให้ หาย ambiguous ทันที)
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 48 · Rider history tabs — วันนี้ / ย้อนหลังรายเดือน + anchor assigned/scheduled · my_deliveries v3 + scheduled_date + filter params · m181 migration · timezone-safe filtering UTC · Gates 4/4 · vitest 2329/2329) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "งานของไรเดอร์ให้แสดงเฉพาะวันปัจจุบัน วันที่ผ่านไปแล้วสร้างแท็บเก็บไว้เป็นเดือนไว้ดูย้อนหลัง / มอบหมายงานล่วงหน้าได้ จอย delivery_rounds.scheduled_date ใน RPC ด้วย ต้องการทำได้ทั้งคู่ / โค้ดงานตามกฏ อ่าน ai entry point, ai working state, master universal ก่อนลงมือ ทดสอบทั้งหมดผ่านจริงถึงอนุญาติอัพเดทเอกสารและคอมมิทพุช"

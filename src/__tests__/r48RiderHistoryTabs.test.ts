@@ -4,7 +4,7 @@
 // Owner: "งานของไรเดอร์ให้แสดงเฉพาะวันปัจจุบัน วันที่ผ่านไปแล้วสร้างแท็บเก็บไว้เป็นเดือนไว้ดูย้อนหลัง"
 //       "มอบหมายงานล่วงหน้าได้ จอย delivery_rounds.scheduled_date ใน RPC ด้วย ต้องการทำได้ทั้งคู่"
 import { describe, it, expect } from 'vitest'
-import mig181Src from '../../supabase/migrations/181_rider_history_dates.sql?raw'
+import mig181Src from '../../supabase/migrations/207_rider_history_dates.sql?raw'
 import riderPwaSrc from '../pages/RiderPwaPage.tsx?raw'
 import driverServiceSrc from '../lib/driverService.ts?raw'
 import riderHistorySrc from '../lib/riderHistory.ts?raw'
@@ -15,11 +15,29 @@ describe('R48 — migration 181: my_deliveries v3 scheduled_date + filters', () 
     expect(mig181Src).toContain('LEFT JOIN public.delivery_rounds dr ON dr.id = o.round_id')
   })
 
-  it('เพิ่ม filter params: assigned/scheduled from/to', () => {
-    expect(mig181Src).toContain('p_assigned_from timestamptz DEFAULT NULL')
-    expect(mig181Src).toContain('p_assigned_to timestamptz DEFAULT NULL')
-    expect(mig181Src).toContain('p_scheduled_from date DEFAULT NULL')
-    expect(mig181Src).toContain('p_scheduled_to date DEFAULT NULL')
+  it('เพิ่ม filter params: assigned/scheduled from/to (ทั้ง 5 params ห้ามมี DEFAULT — กัน overload ambiguity)', () => {
+    // CI พิสูจน์แล้ว (run 44086503471): params ที่มี DEFAULT ทำให้ my_deliveries() / (text)
+    // กลายเป็น "function is not unique" (42725) → Contract 135 + 020 ล้ม
+    // และ PG กฎ trailing-default: "default + required" = apply fail ทันที
+    expect(mig181Src).toContain('p_driver_phone text,')
+    expect(mig181Src).toContain('p_assigned_from timestamptz,')
+    expect(mig181Src).toContain('p_assigned_to timestamptz,')
+    expect(mig181Src).toContain('p_scheduled_from date,')
+    expect(mig181Src).toContain('p_scheduled_to date')
+    // ไม่มี DEFAULT ใน signature = runtime ตรวจจริงโดย verification block ในไฟล์เอง
+    // (ERR_VERIFY: p_driver_phone ห้ามมี DEFAULT + ERR_VERIFY_AMBIGUOUS_0ARG/1ARG)
+    expect(mig181Src).toContain('ERR_VERIFY: p_driver_phone ห้ามมี DEFAULT')
+  })
+
+  it('DROP 5-arg เดิมก่อน CREATE (กัน prod ค้างตัว all-defaulted) + ห้ามแตะ (text)', () => {
+    expect(mig181Src).toContain('DROP FUNCTION IF EXISTS public.my_deliveries(text, timestamptz, timestamptz, date, date);')
+    expect(mig181Src).not.toContain('DROP FUNCTION IF EXISTS public.my_deliveries(text);')
+  })
+
+  it('VERIFICATION กัน ambiguity แบบ runtime (0-arg / 1-arg ต้อง resolve ได้)', () => {
+    expect(mig181Src).toContain('ERR_VERIFY_AMBIGUOUS_0ARG')
+    expect(mig181Src).toContain('ERR_VERIFY_AMBIGUOUS_1ARG')
+    expect(mig181Src).toContain('ambiguous_function')
   })
 
   it('WHERE clause กรอง assigned_at และ scheduled_date', () => {
@@ -41,11 +59,12 @@ describe('R48 — TypeScript types + driverService', () => {
     expect(driverServiceSrc).toContain('R48: วันส่งจริง')
   })
 
-  it('myDeliveriesResult รับ filter params 4 ตัว (ISO timestamp/date)', () => {
+  it('myDeliveriesResult ส่งครบ 5 params (p_driver_phone wire-compat + 4 filters)', () => {
     expect(driverServiceSrc).toContain('assignedFrom?: string')
     expect(driverServiceSrc).toContain('assignedTo?: string')
     expect(driverServiceSrc).toContain('scheduledFrom?: string')
     expect(driverServiceSrc).toContain('scheduledTo?: string')
+    expect(driverServiceSrc).toContain("p_driver_phone: ''")
     expect(driverServiceSrc).toContain('p_assigned_from: params')
     expect(driverServiceSrc).toContain('p_scheduled_from: params')
   })
