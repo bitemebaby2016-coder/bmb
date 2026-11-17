@@ -66,6 +66,9 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
   const [mode, setMode] = useState<MapMode>('google')
   const stopList = stops && stops.length > 0 ? stops : null
 
+  // Render map container whenever we have a map to show (google ready OR leaflet fallback)
+  const shouldRenderMap = status === 'ready' || (status === 'unavailable' && mode === 'leaflet')
+
   // Google Maps effect
   useEffect(() => {
     let cancelled = false
@@ -136,9 +139,14 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
         setMode('leaflet')
         // Render markers after map is ready
         renderLeafletMarkers(L, map)
-      } catch {
-        // Leaflet failed, stay unavailable
+      } catch (e) {
+        console.error('[RiderMiniMap] Leaflet init failed:', e)
+        // Leaflet failed, stay unavailable but map container exists
       }
+    }).catch((e) => {
+      if (cancelled) return
+      console.error('[RiderMiniMap] Leaflet CDN load failed:', e)
+      // CDN failed - map container exists but no tiles
     })
     return () => {
       cancelled = true
@@ -253,11 +261,8 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
 
   return (
     <div className="mt-2" data-testid="rider-mini-map">
-      {isGoogleReady && (
-        <div ref={mapRef} data-testid="rider-mini-map-canvas" className="w-full h-52 rounded-xl border-2 border-brand-border" />
-      )}
-      {isLeafletReady && (
-        <div ref={mapRef} data-testid="rider-mini-map-canvas" className="w-full h-52 rounded-xl border-2 border-brand-border" style={{ zIndex: 0 }} />
+      {shouldRenderMap && (
+        <div ref={mapRef} data-testid="rider-mini-map-canvas" className="w-full h-52 rounded-xl border-2 border-brand-border" style={{ zIndex: mode === 'leaflet' ? 0 : undefined }} />
       )}
       {status === 'loading' && <p className="text-xs text-brand-muted mt-1">⏳ กำลังโหลดแผนที่…</p>}
       {status === 'unavailable' && mode === 'google' && (

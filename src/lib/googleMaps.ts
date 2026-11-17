@@ -212,10 +212,13 @@ export function getGoogleMapsLoadError(): string | null {
 export function loadGoogleMapsJS(): Promise<void> {
   if (googleMapsLoaded) return Promise.resolve()
   if (googleMapsPromise) return googleMapsPromise
+  // Debug: log key state at runtime (masked)
+  const maskedKey = MAPS_KEY ? MAPS_KEY.slice(0, 8) + '…' + MAPS_KEY.slice(-4) : 'EMPTY'
+  console.log('[GoogleMaps] loadGoogleMapsJS called, MAPS_KEY:', maskedKey, 'length:', MAPS_KEY.length)
   // Owner 2026-10-18: MAP_ID ต้องไม่บังคับ — ใช้แค่ key ก็โหลดแผนที่ได้ (Map ID เป็นคนละเรื่อง
   // กับการโหลด SDK เดิมบังคับทั้งคู่ → ถ้า env ฝั่ง prod ไม่ได้ตั้ง MAP_ID แผนที่จะว่างเงียบ ๆ)
   if (!MAPS_KEY || MAPS_KEY.length < 10) {
-    console.warn('[GoogleMaps] Missing API key')
+    console.warn('[GoogleMaps] Missing API key, MAPS_KEY length:', MAPS_KEY.length)
     googleMapsLoadError = 'ไม่พบ VITE_GOOGLE_MAPS_API_KEY ในการ build นี้'
     googleMapsLoaded = true
     return Promise.resolve()

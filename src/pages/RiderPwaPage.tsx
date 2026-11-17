@@ -599,7 +599,7 @@ export function RiderPwaPage() {
                       <a className="btn btn-primary text-xs" href={openMapsUrl(dirUrl) ?? undefined} rel="noreferrer" data-testid="rider-open-gmaps">
                         🧭 เปิดนำทาง Google Maps
                       </a>
-                      <a className="btn btn-outline text-xs" href={dirUrl} target="_blank" rel="noreferrer" data-testid="rider-open-gmaps-web">
+                      <a className="btn btn-outline text-xs" href={dirUrl} rel="noreferrer" data-testid="rider-open-gmaps-web">
                         🌐 เปิดเว็บแผนที่
                       </a>
                     </div>
@@ -661,7 +661,7 @@ export function RiderPwaPage() {
                     <a className="btn btn-primary text-xs" href={openNavigationUrl(navUrl, webFallback) ?? undefined} rel="noreferrer" data-testid="rider-nav-active">
                       🧭 เปิดนำทางไปจุดส่งนี้
                     </a>
-                    <a className="btn btn-outline text-xs" href={webFallback} target="_blank" rel="noreferrer" data-testid="rider-nav-active-web">
+                    <a className="btn btn-outline text-xs" href={webFallback} rel="noreferrer" data-testid="rider-nav-active-web">
                       🌐 เปิดเว็บแผนที่
                     </a>
                   </div>
