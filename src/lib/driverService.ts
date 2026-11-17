@@ -480,11 +480,13 @@ export interface AdminDriverRow {
   max_capacity: number | null
   current_latitude: number | null
   current_longitude: number | null
+  /** R46 (m180): เวลา heartbeat GPS ล่าสุด → UI ตัดสิน "ตำแหน่งเก่า" (positionFreshness) */
+  last_seen_at: string | null
   active_assignments: number
   last_active: string | null
 }
 
-/** Admin driver list via canonical RPC `list_drivers` (037; is_admin-guarded). */
+/** Admin driver list via canonical RPC `list_drivers` (037 + m180 tenant filter; is_admin-guarded). */
 export async function adminListDrivers(): Promise<{ ok: boolean; drivers: AdminDriverRow[] }> {
   const { data, error } = await supabase.rpc('list_drivers')
   if (error) { console.error('[Driver] list_drivers failed:', error); return { ok: false, drivers: [] } }

@@ -715,6 +715,7 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
       const rows = drs.map((d: any) => ({
         id: d.id, driver_name: d.name, phone_number: d.phone, status: d.status,
         max_capacity: null, current_latitude: d.current_latitude ?? null, current_longitude: d.current_longitude ?? null,
+        last_seen_at: d.last_seen_at ?? null, // R46 (m180): ให้ UI ตัดสินตำแหน่งเก่า
         active_assignments: asg.filter((a: any) => a.driver_id === d.id && ['assigned', 'accepted', 'in_transit'].includes(a.status)).length,
         last_active: d.last_seen_at ?? null,
       })).sort((a: any, b: any) => String(a.driver_name).localeCompare(String(b.driver_name)))

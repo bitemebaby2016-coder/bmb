@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { loadGoogleMapsJS, isGoogleMapsConfigured, getGoogleMapId, getGoogleMapsLoadError } from '@/lib/googleMaps'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
+import { positionAgeInfo } from '@/lib/positionFreshness'
 
 export interface AdminLiveMapDriver {
   id: string
@@ -15,6 +16,8 @@ export interface AdminLiveMapDriver {
   latitude: number | null
   longitude: number | null
   status?: string
+  /** R46 (m180): เวลา heartbeat GPS ล่าสุด — ใช้ตัดสิน "ตำแหน่งเก่า" (ไม่โชว์พิกัดค้างราวกับ live) */
+  lastSeenAt?: string | null
 }
 
 export interface AdminLiveMapProps {
@@ -70,10 +73,13 @@ export function AdminLiveMap({ drivers, route }: AdminLiveMapProps) {
       const MarkerCtor = g.maps.Marker as new (opts: Record<string, unknown>) => { setMap: (m: unknown) => void }
       for (const d of drivers) {
         if (d.latitude == null || d.longitude == null) continue
+        const age = positionAgeInfo(d.lastSeenAt)
+        // R46: ตำแหน่งเก่าเกินเกณฑ์ = จุดจาง + title บอกชัดว่าเก่า (ไม่หลอกว่า live)
         markerRefs.current.push(new MarkerCtor({
           position: { lat: Number(d.latitude), lng: Number(d.longitude) },
           map,
-          title: `${d.name}${d.status ? ` (${d.status})` : ''}`,
+          opacity: age.stale ? 0.4 : 1,
+          title: `${d.name}${d.status ? ` (${d.status})` : ''} · ${age.label}`,
           label: d.name.slice(0, 1),
         }))
       }
@@ -102,6 +108,7 @@ export function AdminLiveMap({ drivers, route }: AdminLiveMapProps) {
   }, [route, status])
 
   const positioned = drivers.filter((d) => d.latitude != null && d.longitude != null)
+  const staleCount = positioned.filter((d) => positionAgeInfo(d.lastSeenAt).stale).length
 
   return (
     <div>
@@ -110,7 +117,7 @@ export function AdminLiveMap({ drivers, route }: AdminLiveMapProps) {
           🗺️ แผนที่ไม่พร้อมใช้งานในเบราว์เซอร์นี้ — ตำแหน่งไรเดอร์ล่าสุด:{' '}
           {positioned.length === 0
             ? 'ยังไม่มีไรเดอร์ส่งพิกัด (ต้องเปิดหน้า /rider บนเครื่องไรเดอร์)'
-            : positioned.map((d) => `${d.name}: ${Number(d.latitude).toFixed(5)},${Number(d.longitude).toFixed(5)}`).join(' · ')}
+            : positioned.map((d) => `${d.name}: ${Number(d.latitude).toFixed(5)},${Number(d.longitude).toFixed(5)} · ${positionAgeInfo(d.lastSeenAt).label}`).join(' · ')}
           {route && route.length > 0 ? ` · เส้นทางย้อนหลัง ${route.length} จุด` : ''}
         </div>
       ) : (
@@ -118,6 +125,7 @@ export function AdminLiveMap({ drivers, route }: AdminLiveMapProps) {
           <div ref={mapRef} className="w-full h-64 rounded-lg border border-brand-border" data-testid="admin-live-map" />
           <p className="text-xs text-brand-muted mt-1">
             🛵 ไรเดอร์บนแผนที่ {positioned.length}/{drivers.length} คน
+            {staleCount > 0 ? ` · ตำแหน่งเก่า ${staleCount} คน (จุดจาง)` : ''}
             {route && route.length > 0 ? ` · เส้นทางย้อนหลัง ${route.length} จุด` : ''}
             {status === 'loading' ? ' · กำลังโหลดแผนที่…' : ''}
           </p>

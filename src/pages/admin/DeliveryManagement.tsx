@@ -23,6 +23,7 @@ import { resolveOrderDeliveryAddress } from '@/lib/orderAddress'
 import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
 import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText, adminCancelAssignment, getPodSignedUrl, dispatchOrder, adminCancelOffer, getRouteHistory, type RoutePoint, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
 import { AdminLiveMap } from '@/components/admin/AdminLiveMap'
+import { positionAgeInfo } from '@/lib/positionFreshness'
 import { getUsers, type User } from '@/lib/bmbAdminApi_users'
 import { showToast } from '@/components/ui/ToastContainer'
 import { useNotificationStore } from '@/store/notificationStore'
@@ -474,7 +475,7 @@ export function DeliveryManagement() {
                   <div className="font-bold">{d.driver_name}</div>
                   <span className={'badge ' + (d.status === 'available' ? 'badge-success' : d.status === 'busy' ? 'badge-primary' : 'badge-muted')}>{d.status}</span>
                 </div>
-                <div className="text-xs text-brand-muted">งานค้าง: {d.active_assignments} · ล่าสุด: {d.last_active ? new Date(d.last_active).toLocaleString('th-TH') : '—'}</div>
+                <div className="text-xs text-brand-muted">งานค้าง: {d.active_assignments} · ล่าสุด: {d.last_active ? new Date(d.last_active).toLocaleString('th-TH') : '—'}{d.last_seen_at ? ` · GPS: ${positionAgeInfo(d.last_seen_at).label}` : ''}</div>
               </div>
             ))}
           </div>
@@ -491,6 +492,7 @@ export function DeliveryManagement() {
             latitude: (d as { current_latitude?: number | null }).current_latitude ?? null,
             longitude: (d as { current_longitude?: number | null }).current_longitude ?? null,
             status: d.status,
+            lastSeenAt: (d as { last_seen_at?: string | null }).last_seen_at ?? null,
           }))}
           route={routePoints}
         />

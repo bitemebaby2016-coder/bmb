@@ -18,6 +18,7 @@ import { MascotBadge } from '@/components/MascotBadge'
 import { OrderTimeline } from '@/components/customer/OrderTimeline'
 // R21f (Owner): หน้าลูกค้าเห็นตำแหน่งไรเดอร์ระหว่างส่ง — RPC m174 + แผนที่เดิมของไรเดอร์
 import { getOrderRiderPosition, type RiderPosition } from '@/lib/riderPositionApi'
+import { positionAgeInfo } from '@/lib/positionFreshness'
 import { RiderMiniMap } from '@/components/rider/RiderMiniMap'
 // N-4/N-8 (Owner 2026-11-05): หน้าติดตามเส้นทาง "รับที่ร้าน" — ตำแหน่งร้าน/รูปหน้าร้าน
 import { getStoreFront, getStoreLocation, storeDirectionsUrl, type StoreFrontInfo, type StoreLocation } from '@/lib/storeFront'
@@ -343,7 +344,13 @@ export function OrderTrackPage() {
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-bold text-brand-accent">🛵 ตำแหน่งไรเดอร์</h4>
               {riderPos?.updated_at ? (
-                <span className="text-xs text-brand-muted">อัปเดตล่าสุด {new Date(riderPos.updated_at).toLocaleString('th-TH')}</span>
+                <span
+                  className={'text-xs ' + (positionAgeInfo(riderPos.updated_at).stale ? 'text-amber-700 font-medium' : 'text-brand-muted')}
+                  data-testid="track-rider-pos-age"
+                >
+                  {positionAgeInfo(riderPos.updated_at).label}
+                  {positionAgeInfo(riderPos.updated_at).stale ? ' — รอไรเดอร์เปิดหน้าส่งพิกัดใหม่' : ''}
+                </span>
               ) : null}
             </div>
             {riderPos ? (

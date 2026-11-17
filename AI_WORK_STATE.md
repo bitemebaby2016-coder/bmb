@@ -1,3 +1,26 @@
+## 🔒 SESSION CLOSE 2026-11-17 (รอบ 46 · ระบบพิกัดจริงร่วมกัน 3 ฝั่ง — ลบไรเดอร์ทดสอบ AI "พลอย ในไทยโกฯ" (จุด กทม. ค้างใน DB) + list_drivers กรอง tenant + last_seen_at + ทุกฝั่งตัดสิน "ตำแหน่งเก่า" ไม่อวด live · ยืนยันแล้วว่าไม่มีพิกัดฮาร์ดโค้ดเหลือใน production code · Gates 4/4 · vitest 2310/2310) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "ดูระบบลิ้งขนส่งแล้วใช้จากตำแหน่งจริงที่ร่วมกันของผู้ใช้ทั้ง 3 แบบให้ถูกต้องจริง อย่าฮาร์ดโค้ดทุกตำแหน่ง ไรเดอร์อยู่จันทบุรี ตรวจสอบให้ละเอียดจริงอย่ามโน / ยืนยันเอไอสร้างทดสอบไม่ใช่ของจริง ยกเลิกใช้ลบทิ้งไปเลย / โค้ดงานตามกฏ อ่าน ai entry point, workingstate, master rules ก่อนทำงาน / ทดสอบทั้งหมดผ่านจริงถึงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
+
+> **ผล audit (หลักฐานไฟล์/บรรทัดจริง):**
+> 1. **ไม่มีพิกัดฮาร์ดโค้ดเหลือใน production code** — ครัว = config เดียว `kitchenLocation.ts:10-11` (12.615659, 102.098063 จันทบุรี จริง) + DB `business_settings.kitchen_location` (storeFront.ts:72) · ไรเดอร์ = GPS จริงจากเครื่อง heartbeat (RiderPwaPage.tsx:438-448, fail = เงียบ ไม่ส่งค่าปลอม) · ลูกค้า = RPC m174 ตรวจสิทธิ์อ่านพิกัดไรเดอร์ที่ถูก assign เท่านั้น · ค่า fallback เก่าผิด (10.7016) เหลือแค่ในไฟล์เทส · ค้น `13.713` ทั้ง repo = 0 ผล
+> 2. **จุด กทม. (13.713, 100.4365) = ข้อมูล heartbeat ค้างใน DB** ของไรเดอร์ทดสอบ "พลอย ในไทยโกฯ" (Owner ยืนยันเป็นข้อมูลที่ AI สร้าง ให้ลบ) — หน้า /rider ส่ง GPS เฉพาะตอนเปิดหน้าค้างไว้ พิกัดเก่าจึงโชว์ราวกับ live
+> 3. **บั๊กจริง 2 จุด:** (a) `list_drivers()` (m037:238) SELECT drivers ทั้งตารางไม่กรอง tenant → Dispatch โชว์ไรเดอร์ข้ามแบรนด์ได้ (b) UI ไม่มีการตัดสินตำแหน่งเก่า
+
+> **แก้ 4 ข้อ:**
+> 1. **migration 180** `180_real_position_shared_3_sides.sql` — (a) ลบไรเดอร์ทดสอบ "พลอย ในไทยโกฯ" (+variants) พร้อม guard ห้ามลบถ้ามีงานกำลังส่งจริง (accepted/picked_up/in_transit/arrived) — FK ON DELETE CASCADE (m020:457/m135:40/m136:13) ลบ assignment + GPS history ปลอมตามอัตโนมัติ (b) `list_drivers()` v2 กรอง `WHERE d.tenant_id = v_tenant` (pattern m125: `public.default_tenant_id()`) + คืน `last_seen_at` เพิ่ม (c) verification block ตัดเกม (ERR_VERIFY_LIST_DRIVERS_TENANT/SEEN)
+> 2. **`src/lib/positionFreshness.ts` (ใหม่)** — `POSITION_STALE_MIN = 10` + `positionAgeInfo(updatedAt) → {stale, known, ageMin, label}` · ไม่มีเวลา/เวลาเสีย = ถือว่าเก่า (ห้ามอวด live)
+> 3. **UI ตัดสินตำแหน่งเก่าทุกฝั่ง** — AdminLiveMap: จุดเก่า opacity 0.4 + title/fallback มี label · DeliveryManagement: ส่ง lastSeenAt + การ์ดไรเดอร์โชว์ "GPS: ล่าสุด HH:MM/ตำแหน่งเก่า" · OrderTrackPage (/track): ตำแหน่งเก่า = สี amber + "รอไรเดอร์เปิดหน้าส่งพิกัดใหม่" (data-testid track-rider-pos-age)
+> 4. **เทส + mock** — `r46RealPosition.test.ts` (8: ลบ guard, tenant filter, verification, UI ทุกฝั่ง) · `positionFreshness.test.ts` (6: เกณฑ์/ขอบเขต/เวลาเสีย/อนาคต) · supabaseMock list_drivers เพิ่ม last_seen_at
+
+> **Gates:** `npm run lint` ✅ (eslint + brandNameGuard 579 ไฟล์ + languageSanity) · `npm run test` ✅ (**219 files / 2310 tests PASS** — +14 จาก 2296) · `npm run build` ✅
+
+> **Files Changed:** `supabase/migrations/180_real_position_shared_3_sides.sql` · `src/lib/positionFreshness.ts` · `src/lib/driverService.ts` · `src/components/admin/AdminLiveMap.tsx` · `src/pages/admin/DeliveryManagement.tsx` · `src/pages/OrderTrackPage.tsx` · `src/__tests__/r46RealPosition.test.ts` · `src/__tests__/positionFreshness.test.ts` · `src/__tests__/helpers/supabaseMock.ts`
+
+> **รอ Owner:** (1) apply migration 180 ที่ Supabase (ลบไรเดอร์ทดสอบ + list_drivers v2) (2) เรื่อง Google Maps key ยังอยู่ที่ Owner ตรวจ console + Cloud Console (รอบ 45) — Leaflet fallback ครอบไปแล้วทุกหน้าฝั่งลูกค้า/ไรเดอร์ ฝั่งแอดมินยังเป็นข้อความพิกัด (ถ้าต้องการ Leaflet fallback หน้าแอดมินด้วย แจ้งทำรอบถัดไป)
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 45 · แผนที่ RiderMiniMap ไม่แสดงทั้งหน้าลูกค้า+ไรเดอร์ — สาเหตุแท้ = บั๊กลำดับ render (mapRef=null ตอน Google init) ไม่ใช่ key/env/แคช · probe ยืนยัน key อยู่ใน prod bundle · แก้ div render ตลอด + Leaflet เคลียร์ DOM ก่อนยึด div · Gates 4/4 · vitest 2296/2296) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "รูปแรกฝั่งลูกค้า รูปสองฝั่งไรเดอร์ รูปสามฝั่งแอดมิน — ตรวจเช็คให้ละเอียดทุกทาง ทำมาหลายรอบแล้ว / นำทางกูเกิ้ลmap ใช้ได้แล้ว เปิดเว็บบนแผนที่ยังให้ไปลงแอพใหม่ทั้งที่มีแอพแล้วก็ให้ไปลงอุปกรณ์อื่น / แผนที่ยังไม่แสดงลองดูรูปหน่อยสาเหตุอะไรแน่ / ระวังเรื่องภาษาเพี้ยน / โค้ดงานตามกฏ อ่าน ai entry point, workingstate, master rules ก่อนทำงาน / ทดสอบทั้งหมดผ่านจริงถึงอนุญาติอัพเดทเอกสารและคอมมิทพุช"
