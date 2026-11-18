@@ -68,9 +68,21 @@ describe('L-4 source — /menu: chips ครบทุกหัวข้อ + ป
     expect(menuPageSrc).not.toContain('products.filter(p => !!scheduleMap[p.id]).length')
   })
 
-  it('MenuPage chips = headingChips ครบ (รวมหมวดโหมดขายที่ render เป็น section ด้านล่าง) ไม่กรองทิ้ง', () => {
-    expect(menuPageSrc).toContain('const chips = headingChips(categories, products)')
+  it('R50 (Owner 2026-11-18): chips จากสินค้าในแท็บที่แสดงจริง — ชิปกับรายการคือชุดเดียวกัน', () => {
+    // เดิม headingChips(categories, products) = ชิปคนละชุดกับรายการ → หมวด "จองล่วงหน้า" โชว์
+    // ทั้งที่แท็บนับ 0 และเมนูปฏิทินหลุดไปหมวดอื่นเมื่อกดเลือกหมวด
+    expect(menuPageSrc).toContain('const chips = headingChips(categories, ordered)')
     expect(menuPageSrc).not.toContain("headingChips(categories, products).filter((c) => saleModeOfCategory(c) === 'auto')")
+  })
+
+  it('R50: แท็บโหมดกรองทุกมุมมอง (ไม่เฉพาะ "ทั้งหมด") — เมนูปฏิทินห้ามหลุดหมวดอื่นตอนแท็บวันนี้', () => {
+    // เดิม tab filter อยู่ใน if (selectedCategory === 'all') → กดเลือกหมวดแล้วเมนูปฏิทินโผล่
+    // ในแท็บวันนี้ (ขัด "แยกสินค้าเมนูพรีออเดอร์ออกมาใส่หมวดหมู่แท็บของมัน")
+    const filterBlock = menuPageSrc.match(/const filtered = products\.filter\(\(p\) => \{[\s\S]*?\n {2}\}\)/)
+    expect(filterBlock).not.toBeNull()
+    expect(filterBlock![0]).not.toContain("if (selectedCategory === 'all') {")
+    expect(filterBlock![0]).toContain("if (menuTab === 'same-day' && isCalendar) return false")
+    expect(filterBlock![0]).toContain("if (menuTab === 'pre-order' && !isCalendar) return false")
   })
 
   it('FoodMenuCard รับ prop tab — ในแท็บจองล่วงหน้าซ่อนปุ่ม "สั่งเลยวันนี้" (โหมดถูกทั้งสองแท็บ)', () => {

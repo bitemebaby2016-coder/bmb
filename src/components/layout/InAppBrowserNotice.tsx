@@ -136,7 +136,7 @@ export function InAppBrowserNotice() {
           onClick={closeNotice}
           aria-label="ปิดแจ้งเตือนนี้"
           data-testid="inapp-close"
-          className="shrink-0 w-7 h-7 rounded-full border border-brand-primary text-brand-accent text-sm leading-none hover:bg-orange-50"
+          className="shrink-0 w-7 h-7 rounded-full border border-brand-primary text-brand-accent text-sm leading-none hover:bg-brand-bg"
         >
           ✕
         </button>

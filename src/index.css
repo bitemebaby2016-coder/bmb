@@ -2697,6 +2697,24 @@ html[data-theme='dark'] span.text-brand-primary, html[data-theme='graphite'] spa
 html[data-theme='dark'] p.text-brand-primary, html[data-theme='graphite'] p.text-brand-primary,
 html[data-theme='dark'] div.text-brand-primary, html[data-theme='graphite'] div.text-brand-primary { color: #FF7F47; }
 html[data-theme='dark'] .category-chip:not(.text-white), html[data-theme='graphite'] .category-chip:not(.text-white) { color: #FFA680; }
+/* R50 (Owner 2026-11-18): dark — hover ของชิป/แท็บเมนูเดิม bg-orange-50 (สว่าง hardcode) ทับด้วย
+   ตัวอักษรสว่าง = อ่านไม่ออก → พื้นโปร่งขาวจางตามธีม (specificity html[theme] .class:hover > .hover\:bg-orange-50:hover) */
+html[data-theme='dark'] .category-chip:hover, html[data-theme='graphite'] .category-chip:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+html[data-theme='dark'] .category-chip:active, html[data-theme='graphite'] .category-chip:active {
+  background: rgba(255, 255, 255, 0.16);
+}
+/* R50: แท็บใหญ่ (วันนี้ / จองล่วงหน้า) ในหน้าเมนู — inactive = ตัวอักษรดำบนพื้นเข้ม มองไม่เห็น
+   (active มี .text-white จึงไม่โดน — pattern เดียวกับ .category-chip:not(.text-white)) */
+html[data-theme='dark'] .menu-tab:not(.text-white), html[data-theme='graphite'] .menu-tab:not(.text-white) {
+  background: rgba(255, 255, 255, 0.06);
+  color: #F5F5F5;
+}
+html[data-theme='dark'] .menu-tab:not(.text-white):hover, html[data-theme='graphite'] .menu-tab:not(.text-white):hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #F5F5F5;
+}
 html[data-theme='dark'] .flad-cta, html[data-theme='graphite'] .flad-cta { color: #FF7F47; }
 /* gradient stops ที่ hardcode ขาว (header/hero ของแชท) ให้ตามธีม */
 html[data-theme='dark'] .to-white, html[data-theme='graphite'] .to-white { --tw-gradient-to: var(--color-brand-surface); }

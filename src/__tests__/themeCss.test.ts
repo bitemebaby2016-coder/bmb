@@ -93,4 +93,26 @@ describe('R49 — dark theme close buttons + theater dedup', () => {
     // FoodTheater ต้องยังอยู่เป็นโรงละครจุดเดียวของหน้า
     expect(homeSrc).toContain('<FoodTheater')
   })
+
+  // R50 (Owner 2026-11-18): dark — แท็บ/ชิปหน้าเมนูข้อความดำบนพื้นดำ มองไม่เห็น
+  // (inactive ไม่มี dark override + hover bg-orange-50 พื้นสว่าง hardcode)
+  it('dark/graphite ต้อง override แท็บใหญ่ inactive ให้อ่านออก (menu-tab)', () => {
+    expect(css).toContain("html[data-theme='dark'] .menu-tab:not(.text-white), html[data-theme='graphite'] .menu-tab:not(.text-white)")
+    const block = css.match(
+      /html\[data-theme='dark'\] \.menu-tab:not\(\.text-white\), html\[data-theme='graphite'\] \.menu-tab:not\(\.text-white\) \{[^}]*\}/,
+    )
+    expect(block).not.toBeNull()
+    expect(block![0]).toMatch(/color:\s*#F5F5F5/)
+    expect(block![0]).not.toContain('#1C1917')
+  })
+
+  it('dark/graphite ต้อง override hover ของ category-chip (ไม่ใช้พื้นสว่าง bg-orange-50)', () => {
+    const hover = css.match(
+      /html\[data-theme='dark'\] \.category-chip:hover, html\[data-theme='graphite'\] \.category-chip:hover \{[^}]*\}/,
+    )
+    expect(hover).not.toBeNull()
+    expect(hover![0]).not.toContain('bg-orange-50')
+    // hover ต้องเป็นพื้นโปร่งขาวจาง (สัญลักษณ์ override ตามธีม — ไม่มีค่า #fXX ทึบ)
+    expect(hover![0]).toMatch(/background:\s*rgba\(255,\s*255,\s*255,\s*0\.10\)/)
+  })
 })

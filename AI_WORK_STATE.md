@@ -1,3 +1,26 @@
+## 🔒 SESSION CLOSE 2026-11-18 (รอบ 50 · แก้ 2 งานจาก live รอบ 49: ①dark theme แท็บ/ชิปหน้าเมนูข้อความมองไม่เห็น (แท็บ "จองล่วงหน้า (0)" ดำบนดำ + hover พื้นสว่าง hardcode) ②หมวดหมู่แสดงไม่เหมือนกันระหว่างแท็บกับชิป/หัวข้อ — เมนูปฏิทินหลุดไปหมวดอื่นตอนกดเลือกหมวด · Gates 3/3 · vitest 2353/2353) — **CODE_CLOSED + PUSHED**
+
+> **คำสั่ง Owner:** "จากปุ่มเมนูด้านบนและ navbar ด้านล่าง จัดแยกหมวดหมู่สินค้าพรีออเดอร์กับเซมเดย์ให้ถูกต้องเหมือนกันทั้งหมด เวลาเมาส์ไปจิ้มตัวอักษรอ่านไม่ออก · แท็บจองล่วงหน้า (0) แสดงดำบนดำ ต่างจากอีกรูปพื้นขาว · แยกสินค้าเมนูพรีออเดอร์ออกมาใส่หมวดหมู่แท็บของมันทั้งปุ่มเมนูด้านบนและปุ่ม navbar ด้านล่าง"
+
+> **สาเหตุพิสูจน์จากโค้ดจริง:**
+> 1. **ดำบนดำ:** แท็บใหญ่ 2 ปุ่ม (MenuPage.tsx) inactive ใช้ `text-brand-accent hover:bg-orange-50` ไม่มี dark override (ต่างจาก .category-chip ที่มี) · ชิป inactive มีสี override แล้ว (#FFA680) แต่ **hover** ยังเป็น `bg-orange-50` (พื้นสว่าง hardcode ของ Tailwind) ทับด้วยตัวอักษรสว่าง = อ่านไม่ออก — ตรงกับที่ Owner บอก "เวลาเมาส์ไปจิ้มตัวอักษรอ่านไม่ออก"
+> 2. **หมวดไม่เหมือนกัน:** `filtered` เดิมกรองแท็บโหมด **เฉพาะตอน selectedCategory === 'all'** (กฎเก่า 2026-10-18) → กดเลือกหมวด "ส่งวันนี้ / Same Day" แล้วเมนูปฏิทิน (พรีออเดอร์) ในหมวดนั้นโผล่ในแท็บวันนี้ = ข้ามแท็บ · และ `chips = headingChips(categories, products)` อิงสินค้าทั้งแคตตาล็อก ไม่ใช่สินค้าในแท็บที่แสดง → หมวด "จองล่วงหน้า / Pre-Order" โชว์ในชิปทั้งที่แท็บนับ 0 (จุดที่ Owner เห็นใน 2 รูป)
+
+> **แก้ 3 ไฟล์ + เทส regression:**
+> 1. **`src/pages/MenuPage.tsx`** — ย้าย tab filter ออกจาก guard `selectedCategory === 'all'` (กรองทุกมุมมอง: แท็บวันนี้ = เมนูสั่งทันทีเท่านั้น · แท็บจองล่วงหน้า = เมนูปฏิทินเท่านั้น) · `chips = headingChips(categories, ordered)` อิงสินค้าในแท็บจริง → ชิปกับรายการ/หัวข้อด้านล่างคือชุดเดียวกัน · เพิ่ม class `menu-tab` (แท็บใหญ่ 2 ปุ่ม) + `category-chip` (ชิปหมวด + ชิปเลือกวัน — รับ dark override)
+> 2. **`src/index.css`** — dark/graphite override ใหม่: `.menu-tab:not(.text-white)` (inactive พื้น rgba(255,255,255,0.06) + ตัวอักษร #F5F5F5 — active มี .text-white จึงไม่โดน) + hover · `.category-chip:hover/:active` (ทับ bg-orange-50 ด้วยพื้นโปร่งขาวจาง — specificity html[theme].class:hover > .hover\:bg-orange-50:hover)
+> 3. **`src/components/layout/InAppBrowserNotice.tsx`** — ปุ่มปิด hover `bg-orange-50` → `hover:bg-brand-bg` (token ตามธีม)
+> 4. **เทส:** `menuTopTabs.test.ts` อัปเดต contract R50 (chips จาก ordered + tab filter ทุกมุมมอง regex block) · `themeCss.test.ts` +2 เทส (menu-tab inactive ต้องมี override #F5F5F5 · category-chip:hover ต้องเป็นพื้นโปร่ง ไม่ใช่ bg-orange-50)
+> 5. **ไม่แตะ:** Footer (ลิงก์หมวดจาก DB — เรียง displayRank เดิม L-7 ถูกต้องอยู่แล้ว) · BottomNav (4 แท็บไม่มีหมวด) · `menuTabItems` (สูตรนับแท็บ R77 คงเดิม)
+
+> **Gates:** `npm run lint` ✅ (584 ไฟล์ + brandNameGuard + languageSanity) · `npm run test` ✅ (**222 files / 2353 tests PASS** — +3 จาก 2350) · `npm run build` ✅ (tsc + vite + PWA v1.3.0)
+
+> **Files Changed:** `src/pages/MenuPage.tsx` · `src/index.css` · `src/components/layout/InAppBrowserNotice.tsx` · `src/__tests__/menuTopTabs.test.ts` · `src/__tests__/themeCss.test.ts`
+
+> **รอ Owner ทดสอบ live (dark theme):** (1) แท็บ "จองล่วงหน้า (0)" ตัวอักษรขาวชัด · hover มีพื้นจางไม่ทำข้อความจาง (2) ชิปหมวดทุกตัว hover/กดแล้วตัวอักษรอ่านออก (3) กดชิป "ส่งวันนี้ / Same Day" ตอนแท็บวันนี้ → เมนูป้ายปฏิทินหายจากหมวด (อยู่แท็บจองล่วงหน้าเท่านั้น) (4) แท็บจองล่วงหน้า → ชิปโชว์เฉพาะหมวดที่มีเมนูวันที่เลือก ตรงกับรายการด้านล่าง
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-17 (รอบ 49 · UI fix 2 จุด — ①ลบเธียเตอร์ซ้ำ "Bite เลือกเมนูให้แล้ววันนี้" (home-sec-bite-picks จากรอบ 42) หน้า /shop — ซ้ำกับ FoodTheater ข้างบน (หัวเดิม + popularItems ชุดเดียวกัน) เหลือโรงละครจุดเดียว + ลบ dead CSS .mascot-pick-accent ②dark theme ปุ่ม ✕ ปิดมองไม่เห็นทุกจุด (.flad-close แบนเนอร์ลอย + .ob-close หน้าสั่งซื้อ = ดำบนดำ) + ข้อความอ่านไม่ออก (.flad-notice ตัวอักษร #B45309 บนพื้นเข้ม + .flad-coupon chip พื้นหาย) → เพิ่ม dark/graphite override พื้นสว่างโปร่ง + ตัวอักษรสว่าง · Gates 3/3 · vitest 2350/2350) — **CODE_CLOSED + PUSHED**
 
 > **คำสั่ง Owner:** "จากสถานะโปรเจคล่าสุด เธียเตอร์มีซ้ำ ที่เซ็กชั่นก่อนโปรโมชั่น ต้องลบ dark theme ตอนนี้ ปุ่มXปิด มองไม่เห็นทุกจุดเลย ตัวอักษรบางข้อความด้วย อ่าน ai entry point, working state, master rules ก่อนทำงานตามกฏ ทำงานและอธิบายภาษาไทย" + "โอเคอนุมัติโค้ด ... ทดสอบผ่านหมดจริงอนุญาติอัพเดทเอกสารและคอมมิทพุช"

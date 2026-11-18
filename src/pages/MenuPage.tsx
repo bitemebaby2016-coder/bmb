@@ -138,13 +138,10 @@ export function MenuPage() {
 
   // ✓ v3.1: Filter by tab — canonical mode columns (migration 023), alias fallback
   // หัวข้อเมนู: เทียบด้วย category id ตรง ๆ (ค่าเดิมเทียบ slug slice ทำให้กดกรองแล้วเมนูหาย)
-  // ✓ Owner 2026-10-18: เลือกหัวข้อไหน = โชว์ครบทุกจานในหัวข้อนั้น — แท็บโหมดกรองเฉพาะมุม
-  // "ทั้งหมด" เท่านั้น (เดิมกรองซ้อนสองชั้น ทำให้กดหัวข้อ "จองล่วงหน้า / พรีออเดอร์"
-  // แล้วเจอของไม่ครบ = งานซ้ำสองระบบแย่งกันกรอง)
-  // R77 (Owner: "เมนูพรีออเดอร์ที่เลยรอบส่งของวันปัจจุบันไม่ต้องแสดงแล้ว ... ให้ขึ้น โชว์ 7 วันที่มีเมนูแล้ว"):
-  // วันเมนู = ค่าป้ายวัน (scheduleMap — วันถัดไปที่ยังไม่เลยรอบ) · เรียงใกล้สุด ตัดโชว์ 7 วัน
-  // · เลือกวัน = กรองเฉพาะเมนูวันนั้น (วันเดียวกับป้ายมุมการ์ดที่ checkout ใช้ล็อกวัน — ไม่ขัด R5)
-  // · เมนูที่ไม่มีวัน/เลยรอบ = ไม่มีใน map → ใช้กฎ "ยังไม่ลงปฏิทิน" เดิมต่อโดยอัตโนมัติ
+  // R50 (Owner 2026-11-18 · "จัดแยกหมวดหมู่สินค้าพรีออเดอร์กับเซมเดย์ให้ถูกต้องเหมือนกันทั้งหมด"):
+  // แท็บโหมดกรองทุกมุมมอง — ไม่เฉพาะ "ทั้งหมด" (กฎเก่า 2026-10-18 เดิมกรองเฉพาะ all ทำให้
+  // เมนูปฏิทินหลุดไปโผล่ในหมวด "ส่งวันนี้ / Same Day" / หัวข้ออื่นเมื่อกดเลือกหมวด)
+  // R77: แท็บจองล่วงหน้า = เฉพาะเมนูปฏิทิน ของวันที่เลือก (ดูได้ทีละวันจาก 7 วันเมนูด้านบน)
   const menuDays = useMemo(() => [...new Set(Object.values(scheduleMap))].sort().slice(0, 7), [scheduleMap])
   const [preOrderDay, setPreOrderDay] = useState('')
   const activeDay = preOrderDay && menuDays.includes(preOrderDay) ? preOrderDay : (menuDays[0] ?? '')
@@ -153,14 +150,11 @@ export function MenuPage() {
     const isCalendar = !!scheduleMap[p.id] // Owner 2026-10-27: พรีออเดอร์ = เมนูตาราง (menu_schedule)
     const matchCat = selectedCategory === 'all' || String(p.category_id) === selectedCategory
     if (!matchCat) return false
-    if (selectedCategory === 'all') {
-      // แท็บโหมด = มุมมอง "ทั้งหมด" เท่านั้น (Owner 2026-10-18) — พรีออเดอร์ = เฉพาะ
-      // เมนูปฏิทิน (ตรงกับหน้าเมนูตารางแอดมิน) · แท็บวันนี้ = เมนูสั่งทันทีที่เหลือ
-      if (menuTab === 'same-day' && isCalendar) return false
-      if (menuTab === 'pre-order' && !isCalendar) return false
-      // R77: แท็บจองล่วงหน้า = เฉพาะเมนูของวันที่เลือก (ดูได้ทีละวันจาก 7 วันเมนูด้านบน)
-      if (menuTab === 'pre-order' && activeDay && scheduleMap[p.id] !== activeDay) return false
-    }
+    // R50: กรองโหมดทุกมุมมอง — แท็บวันนี้ = เมนูสั่งทันทีเท่านั้น · แท็บจองล่วงหน้า = เมนูปฏิทินเท่านั้น
+    if (menuTab === 'same-day' && isCalendar) return false
+    if (menuTab === 'pre-order' && !isCalendar) return false
+    // R77: แท็บจองล่วงหน้า = เฉพาะเมนูของวันที่เลือก (ดูได้ทีละวันจาก 7 วันเมนูด้านบน)
+    if (menuTab === 'pre-order' && activeDay && scheduleMap[p.id] !== activeDay) return false
     return !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
   // แท็บจองล่วงหน้า: เรียง "วันจัดส่งใกล้วันปัจจุบันก่อน" (Owner R35) · ยังไม่มีป้ายวัน = ท้ายแถว · วันเท่ากันคงลำดับเดิม
@@ -238,10 +232,10 @@ export function MenuPage() {
   }
 
   // ปุ่มกรองหัวข้อเมนู — L-4 (N-4 #4 · Owner 2026-10-26): "แสดงครบทุกหัวข้อ"
-  // → chips โชว์ทุกหัวข้อที่มีสินค้า รวมหมวดโหมดขาย (ที่ render เป็น section ด้านล่างด้วย)
-  // ให้แถวบนกระโดดได้ครบทุก section — เดิมกรองเฉพาะ auto ทำให้หัวข้อหมวดโหมดหายจากแถบบน
-  // (L-7: ลำดับ = displayRank → ส่งวันนี้ → จองล่วงหน้า → สุขภาพ → ...)
-  const chips = headingChips(categories, products)
+  // R50 (Owner 2026-11-18): chips อ่านจากสินค้าในแท็บที่แสดงจริง (ordered) —
+  // หมวดที่โชว์ = หมวดที่มีเมนูในแท็บนั้นเสมอ ("เมนูส่งวันนี้ / Same Day" หายเมื่อแท็บจองล่วงหน้า
+  // และเมนูปฏิทินไม่ไปปนหมวดอื่น) — ชิปกับรายการด้านล่างคือชุดเดียวกัน ไม่ใช่ 2 ระบบ
+  const chips = headingChips(categories, ordered)
   // ✅ Phase 3B: canonical mode columns (migration 023) — alias fallback kept.
   // L-4: ป้ายตัวเลขบนแท็บ = จำนวนที่แท็บนั้น "แสดงจริง" (สูตรเดียวกับ list)
   // Owner 2026-10-27: นับด้วย menu_schedule เดียวกับ list — พรีออเดอร์ = เมนูตาราง
@@ -265,14 +259,14 @@ export function MenuPage() {
           <button
             onClick={() => switchTab('same-day')}
             data-testid="same-day-tab"
-            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'same-day' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
+            className={`menu-tab flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'same-day' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
           >
             🍽️ วันนี้ ({sameDayCount})
           </button>
           <button
             onClick={() => switchTab('pre-order')}
             data-testid="pre-order-tab"
-            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'pre-order' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
+            className={`menu-tab flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'pre-order' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
           >
             📅 จองล่วงหน้า ({preOrderCount})
           </button>
@@ -283,9 +277,9 @@ export function MenuPage() {
           <svg className="absolute left-3 top-3 w-5 h-5 text-brand-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-          <button onClick={() => pickCategory('all')} className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === 'all' ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>🜽 ทั้งหมด</button>
+          <button onClick={() => pickCategory('all')} className={`category-chip flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === 'all' ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>🜽 ทั้งหมด</button>
           {chips.map((cat) => (
-            <button key={cat.id} onClick={() => pickCategory(cat.id)} className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === cat.id ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>{cat.icon} {cat.name}</button>
+            <button key={cat.id} onClick={() => pickCategory(cat.id)} className={`category-chip flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === cat.id ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>{cat.icon} {cat.name}</button>
           ))}
         </div>
       </div>
@@ -313,7 +307,7 @@ export function MenuPage() {
               type="button"
               data-testid="preorder-day-chip"
               onClick={() => setPreOrderDay(d)}
-              className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${activeDay === d ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}
+              className={`category-chip px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${activeDay === d ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}
             >
               📅 {formatThaiDate(d)}
             </button>
