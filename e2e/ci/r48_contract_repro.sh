@@ -160,6 +160,7 @@ for f in \
   e2e/contracts_154_referral_program.sql \
   e2e/contracts_155_loyalty_tiers.sql \
   e2e/contracts_156_engagement_play.sql \
+  e2e/contracts_208_preorder_vote.sql \
   e2e/contracts_163_rider_step_sync.sql \
   e2e/contracts_184_pickup_outside_hours.sql \
   e2e/contracts_017_018.sql \

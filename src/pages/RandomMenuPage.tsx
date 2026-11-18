@@ -9,22 +9,34 @@ import {
   describeSpinIssue,
   type SpinStatus,
 } from '@/lib/engagementClient'
+// R53 (Owner 2026-11-18): สุ่มจาก "เมนูจริงของแอดมิน" เท่านั้น —
+// เดิม menuItems 6 ชิ้น hardcode + รูป unsplash ไม่ใช่เมนูร้าน (ไม่ซิงก์เมนู)
+// ใหม่: getProducts() กรอง archived/ไม่พร้อมขายออก + ซิงก์โปรโมชันจริงที่ใช้กับเมนูได้
+import { getProducts } from '@/lib/bmbAdminApi_products'
+import { getPromotionsWithStatus, attachPromotionScope, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
+import { isPromoLiveNow, promoDiscountLabel } from '@/pages/PromotionsPage'
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
+import type { Product } from '@/types'
 
-const menuItems = [
-  { id: '1', name: 'ผัดไทยกุ้งสด', price: 65, image: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?w=300' },
-  { id: '2', name: 'ข้าวหมทอดกระเทียม', price: 70, image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300' },
-  { id: '3', name: 'แกงเขียวหวานไก่', price: 75, image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=300' },
-  { id: '4', name: 'กาแฟเย็น', price: 35, image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=300' },
-  { id: '5', name: 'ไข่ดาวน้ำมัน', price: 25, image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=300' },
-  { id: '6', name: 'ขนมปังกรอบ', price: 30, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300' },
-]
+/** โปรโมชันที่ใช้กับเมนูนี้ได้จริง (scope ตามที่แอดมินตั้ง — all_products หรือ specific list) */
+function promosForProduct(promos: PromotionRow[], product: Product): PromotionRow[] {
+  return promos.filter((promo) =>
+    promo.applies_to === 'specific_products'
+      ? (promo.scope_product_ids ?? []).includes(product.id)
+      : true,
+  )
+}
 
 export function RandomMenuPage() {
-  const [selectedItem, setSelectedItem] = useState<typeof menuItems[0] | null>(null)
+  const [eligible, setEligible] = useState<Product[]>([])
+  const [promos, setPromos] = useState<PromotionRow[]>([])
+  const [selectedItem, setSelectedItem] = useState<Product | null>(null)
   const [isSpinning, setIsSpinning] = useState(false)
   const [lastAward, setLastAward] = useState<string | null>(null)
   const [spinStatus, setSpinStatus] = useState<SpinStatus | null>(null)
   const [spinLoaded, setSpinLoaded] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -34,11 +46,43 @@ export function RandomMenuPage() {
       setSpinStatus(s)
       setSpinLoaded(true)
     })
+
+    // R53: เมนูจริงที่ขายได้จากแอดมิน (archived = เก็บออกแล้ว · is_available=false = ปิดขายชั่วคราว)
+    async function loadMenu() {
+      setLoadError('')
+      try {
+        const products = await getProducts()
+        if (!active) return
+        setEligible(products.filter((p: Product) => !p.archived && p.is_available))
+      } catch (err) {
+        console.error('[RandomMenuPage] Load error:', err)
+        if (active) setLoadError('โหลดเมนูไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
+      }
+    }
+    loadMenu()
+
+    // R53: โปรโมชันจริงจากแอดมิน (live เท่านั้น) + ผูก scope เพื่อแสดง "ใช้ได้กับเมนูที่สุ่มได้"
+    void (async () => {
+      try {
+        const { rows, ok } = await getPromotionsWithStatus()
+        if (!active) return
+        if (!ok) return
+        const live = rows.filter((p) => isPromoLiveNow(p))
+        setPromos(await attachPromotionScope(live))
+      } catch {
+        /* โปรโหลดไม่ได้ = แถบโปรไม่แสดง (ไม่แสร้งว่ามีโปร) */
+      }
+    })()
+
     return () => { active = false }
-  }, [])
+  }, [retryKey])
 
   async function spinWheel() {
     if (isSpinning) return
+    if (eligible.length === 0) {
+      showToast('ยังไม่มีเมนูพร้อมขายให้สุ่มตอนนี้ค่ะ — ลองใหม่อีกครั้งนะคะ', 'warning')
+      return
+    }
     setIsSpinning(true)
     setLastAward(null)
 
@@ -55,7 +99,8 @@ export function RandomMenuPage() {
     }
 
     await new Promise((r) => setTimeout(r, 1500))
-    const picked = menuItems[Math.floor(Math.random() * menuItems.length)]
+    // R53: สุ่มจากเมนูจริงของร้าน (ไม่มีรายการปลอมในระบบ)
+    const picked = eligible[Math.floor(Math.random() * eligible.length)]
     setSelectedItem(picked)
     setLastAward(award)
     setIsSpinning(false)
@@ -67,8 +112,11 @@ export function RandomMenuPage() {
 
   function goOrder() {
     if (!selectedItem) return
-    navigate('/menu')
+    // R53: ไปยังเมนูจริงของเมนูที่สุ่มได้ (MenuPage อ่าน ?category= อยู่แล้ว — ตรงเป้าหมาย)
+    navigate(selectedItem.category_id ? `/menu?category=${encodeURIComponent(selectedItem.category_id)}` : '/menu')
   }
+
+  const pickedPromos = selectedItem ? promosForProduct(promos, selectedItem) : []
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 text-center">
@@ -94,12 +142,26 @@ export function RandomMenuPage() {
         )}
       </div>
 
+      {/* R53: เมนูจริงจากแอดมิน — โหลดล้มเหลวต้องฟ้อง (หน้าเปล่า ≠ ไม่มีเมนู) */}
+      {loadError && (
+        <div className="mb-4">
+          <LoadErrorBanner message={loadError} onRetry={() => setRetryKey((n) => n + 1)} testId="random-menu-load-error" />
+        </div>
+      )}
+      {!loadError && !isSpinning && !selectedItem && eligible.length === 0 && (
+        <div className="card mb-4 text-center">
+          <p className="text-brand-accent font-bold mb-2">ยังไม่มีเมนูพร้อมขายในขณะนี้ค่ะ</p>
+          <p className="text-sm text-brand-muted mb-4">กลับมาสุ่มอีกครั้งหลังร้านเปิดเมนูค่ะ</p>
+          <button onClick={() => setRetryKey((k) => k + 1)} className="btn btn-primary">ลองใหม่</button>
+        </div>
+      )}
+
       {/* Spin Wheel */}
       <div className="card mb-6">
-        {!isSpinning && !selectedItem && (
+        {!isSpinning && !selectedItem && eligible.length > 0 && (
           <div className="py-12">
             <div className="text-6xl mb-4 animate-bounce">🎰</div>
-            <p className="text-brand-muted mb-6">กดปุ่มเพื่อสุ่มเมน</p>
+            <p className="text-brand-muted mb-6">กดปุ่มเพื่อสุ่มเมนู — สุ่มจากเมนูจริงของร้าน ({eligible.length} เมนู)</p>
           </div>
         )}
 
@@ -112,7 +174,7 @@ export function RandomMenuPage() {
 
         {selectedItem && !isSpinning && (
           <div className="py-8">
-            <img src={selectedItem.image} alt={selectedItem.name} className="w-48 h-48 rounded-2xl object-cover mx-auto mb-4" />
+            <img src={selectedItem.image_url || '/placeholder.svg'} alt={selectedItem.name} className="w-48 h-48 rounded-2xl object-cover mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-brand-accent mb-2">{selectedItem.name}</h3>
             <p className="text-brand-primary text-xl font-bold mb-4">{selectedItem.price} บาท</p>
             {lastAward && (
@@ -121,19 +183,30 @@ export function RandomMenuPage() {
                 <p className="text-sm text-green-600 mt-1">ดูประวัติแต้มได้ที่หน้า "รางวัลและแต้ม"</p>
               </div>
             )}
+            {/* R53: โปรโมชันจริงที่ใช้กับเมนูนี้ได้ (จากแอดมิน · แสดงเมื่อมีจริง) */}
+            {pickedPromos.length > 0 && (
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 mb-4" data-testid="random-menu-promos">
+                <p className="text-sm font-bold text-amber-800 mb-1">🎟️ ใช้โปรโมชั่นกับเมนูนี้ได้</p>
+                {pickedPromos.map((promo) => (
+                  <p key={promo.id} className="text-sm text-amber-800">
+                    {promo.name} — <b>{promoDiscountLabel(promo)}</b>
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        <button 
-          onClick={spinWheel} 
-          disabled={isSpinning}
+        <button
+          onClick={spinWheel}
+          disabled={isSpinning || (!loadError && !selectedItem && eligible.length === 0)}
           className="btn btn-primary text-lg py-4 px-8 disabled:opacity-50"
         >
           {isSpinning ? '⏳ กำลังสุ่ม...' : '🎲 สุ่มเมนู!'}
         </button>
       </div>
 
-      {/* Go to menu — ไม่มีคูปองปลอม: ไปสั่งจริง ๆ เท่านั้น */}
+      {/* Go to menu — ไม่มีคูปองปลอม: ไปสั่งจริง ๆ เท่านั้น · R53 พาไปถึงหมวดของเมนูที่สุ่มได้ */}
       {selectedItem && (
         <button onClick={goOrder} className="btn btn-secondary w-full text-lg py-4 mb-6">
           🛒 ไปดูเมนูและสั่งเลย
@@ -146,7 +219,7 @@ export function RandomMenuPage() {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-3xl mb-2">1️⃣</div>
-            <div className="text-sm text-brand-muted">กดสุ่มเมน</div>
+            <div className="text-sm text-brand-muted">กดสุ่มเมนู</div>
           </div>
           <div>
             <div className="text-3xl mb-2">2️⃣</div>

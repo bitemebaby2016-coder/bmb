@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getPromotionsWithStatus, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
+import { getPromotionsWithStatus, attachPromotionScope, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
+// R53 (Owner 2026-11-18): แสดงข้อมูลจริงที่แอดมินตั้งให้ครบ — ภาพแบนเนอร์ (is_banner/banner_image),
+// ขอบเขตเมนูร่วมรายการ (applies_to/scope_product_ids), เพดานส่วนลด (max_discount_amount),
+// สิทธิ์คงเหลือ (usage_limit/usage_count) และสิทธิ์ซ้อน (stackable) — ไม่มีข้อความโกหก
+import { getProducts } from '@/lib/bmbAdminApi_products'
+import type { Product } from '@/types'
 
 // ============================================
 // Bite Me Baby — Promotions page (ZERO-FAKE closure 2026-10-18)
@@ -40,6 +45,7 @@ export function isPromoLiveNow(p: PromotionRow, nowMs: number = Date.now()): boo
   return true
 }
 
+// R53: export เพื่อหน้าโหวต/สุ่มใช้สูตรเดียวกัน (กัน label ส่วนลดต่างกันระหว่างหน้า)
 export function promoDiscountLabel(p: PromotionRow): string {
   const value = Number(p.discount_value) || 0
   const base = p.discount_type === 'percentage'
@@ -64,6 +70,9 @@ export function PromotionsPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const navigate = useNavigate()
 
+  // R53: ชื่อเมนูจริง (id → name) สำหรับแสดงขอบเขต "เฉพาะเมนู" จากแอดมิน
+  const [productNames, setProductNames] = useState<Record<string, string>>({})
+
   useEffect(() => {
     let alive = true
     setLoading(true)
@@ -72,8 +81,20 @@ export function PromotionsPage() {
       try {
         const { rows: data, ok } = await getPromotionsWithStatus()
         if (!alive) return
-        setRows(data)
+        // R53: ผูก scope เมนูร่วมรายการ (ตาราง promotion_products — ข้อมูลจริงจากแอดมิน)
+        const withScope = await attachPromotionScope(data)
+        if (!alive) return
+        setRows(withScope)
         setLoadFailed(!ok)
+        try {
+          const products = await getProducts()
+          if (!alive) return
+          const names: Record<string, string> = {}
+          for (const p of products as Product[]) names[p.id] = p.name
+          setProductNames(names)
+        } catch {
+          /* ชื่อเมนูโหลดไม่ได้ = แสดงจำนวนแทน (ไม่แสร้งชื่อ) */
+        }
       } catch {
         if (alive) setLoadFailed(true)
       } finally {
@@ -139,36 +160,67 @@ export function PromotionsPage() {
 
       {!loading && !loadFailed && promos.length > 0 && (
         <div className="space-y-4 mb-6">
-          {promos.map((promo) => (
-            <div key={promo.id} className="card flex items-center gap-4 min-h-[120px]">
-              <div className="w-16 h-16 bg-brand-bg rounded-xl flex items-center justify-center text-2xl">
-                {promo.discount_type === 'percentage' ? '🎉' : '🎁'}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-bold text-brand-accent line-clamp-1">{promo.name}</h3>
-                  <span className="badge badge-primary">โปรโมชั่น</span>
+          {promos.map((promo) => {
+            const scopeIds = promo.applies_to === 'specific_products' ? (promo.scope_product_ids ?? []) : []
+            const scopeLabel = scopeIds
+              .slice(0, 3)
+              .map((id) => productNames[id] ?? 'เมนูที่ร่วมรายการ')
+              .join(', ')
+            const remaining =
+              promo.usage_limit != null
+                ? Math.max(0, promo.usage_limit - (promo.usage_count ?? 0))
+                : null
+            const maxCap = Number(promo.max_discount_amount) || 0
+            return (
+              <div key={promo.id} className="card flex items-center gap-4 min-h-[120px]">
+                <div className="w-16 h-16 bg-brand-bg rounded-xl overflow-hidden flex items-center justify-center text-2xl shrink-0">
+                  {promo.banner_image ? (
+                    <img src={promo.banner_image} alt={promo.name} className="w-full h-full object-cover" />
+                  ) : (
+                    promo.discount_type === 'percentage' ? '🎉' : '🎁'
+                  )}
                 </div>
-                <p className="text-brand-primary font-bold text-lg">{promoDiscountLabel(promo)}</p>
-                {promo.description && <p className="text-sm text-brand-muted line-clamp-2">{promo.description}</p>}
-                {promoExpiryLabel(promo) && (
-                  <p className="text-xs text-brand-muted">{promoExpiryLabel(promo)}</p>
-                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold text-brand-accent line-clamp-1">{promo.name}</h3>
+                    <span className="badge badge-primary">โปรโมชั่น</span>
+                  </div>
+                  <p className="text-brand-primary font-bold text-lg">{promoDiscountLabel(promo)}</p>
+                  {promo.description && <p className="text-sm text-brand-muted line-clamp-2">{promo.description}</p>}
+                  {promoExpiryLabel(promo) && (
+                    <p className="text-xs text-brand-muted">{promoExpiryLabel(promo)}</p>
+                  )}
+                  {/* R53: ขอบเขตเมนูร่วมรายการ — ตามที่แอดมินตั้ง (promotion_products จริง) */}
+                  {promo.applies_to === 'specific_products' && (
+                    <p className="text-xs text-brand-muted line-clamp-1" data-testid="promo-scope">
+                      เฉพาะเมนู: {scopeLabel}
+                      {scopeIds.length > 3 ? ` +${scopeIds.length - 3} เมนู` : ''}
+                    </p>
+                  )}
+                  {/* R53: เพดานส่วนลด · สิทธิ์คงเหลือ · สิทธิ์ซ้อน — แสดงเมื่อแอดมินกำหนดค่านั้นจริง */}
+                  {(maxCap > 0 || remaining !== null || promo.stackable === true) && (
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                      {maxCap > 0 && <span className="badge">สูงสุด ฿{maxCap.toLocaleString('th-TH')}/ออเดอร์</span>}
+                      {remaining !== null && <span className="badge" data-testid="promo-remaining">เหลือ {remaining.toLocaleString('th-TH')} สิทธิ์</span>}
+                      {promo.stackable === true && <span className="badge">ใช้ร่วมกับข้อเสนออื่นได้</span>}
+                    </div>
+                  )}
+                </div>
+                <div className="text-right">
+                  {promo.code && (
+                    <div className="font-mono text-sm text-brand-accent bg-brand-bg px-3 py-1 rounded-lg">{promo.code}</div>
+                  )}
+                  <button
+                    onClick={() => handleUseCode(promo)}
+                    className="btn btn-outline text-xs mt-2"
+                    data-testid="promo-use-code"
+                  >
+                    {usedId === promo.id ? 'ใช้แล้ว ✓' : 'ใช้เลย'}
+                  </button>
+                </div>
               </div>
-              <div className="text-right">
-                {promo.code && (
-                  <div className="font-mono text-sm text-brand-accent bg-brand-bg px-3 py-1 rounded-lg">{promo.code}</div>
-                )}
-                <button
-                  onClick={() => handleUseCode(promo)}
-                  className="btn btn-outline text-xs mt-2"
-                  data-testid="promo-use-code"
-                >
-                  {usedId === promo.id ? 'ใช้แล้ว ✓' : 'ใช้เลย'}
-                </button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
