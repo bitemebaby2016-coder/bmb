@@ -111,10 +111,9 @@ export function headingChips(
  * L-4 (N-4 #4 · Owner 2026-10-26): รายการที่แท็บโหมดจะแสดงจริง — ใช้ทั้งตอนกรอง list
  * และตอนนับตัวเลขบนแท็บ (ป้ายต้องตรงกับที่เห็น เดิมนับคนละสูตรจึงเพี้ยน):
  * - ทั้งสองโหมด: ตัด archived + ค้นด้วย search (trim/case-insensitive) เหมือน list
- * - **Owner 2026-10-27 (พรีออเดอร์ = เมนูตาราง = อันเดียวกัน):** เมื่อมี scheduleMap
- *   (ProductScheduleMap จาก menu_schedule) ใช้ตารางเป็นตัวแบ่งแท็บทั้ง list/ตัวเลข —
- *   pre-order tab = เฉพาะเมนูปฏิทิน · same-day tab = เมนูสั่งทันทีที่เหลือ
- *   (ปิดจุด "บางหน้าบอก 2 บางหน้าบอก 20" — เดิมแท็บพรีออเดอร์นับทั้งแคตตาล็อก)
+ * - **R51 (Owner 2026-11-18 · แทน R77):** แท็บจองล่วงหน้า = ทุกเมนูขายได้ รวมที่ยังไม่ลงปฏิทิน
+ *   (การ์ดบอกสถานะเอง — พอลงวันใหม่ป้ายขึ้นอัตโนมัติ) · แท็บวันนี้ = เมนูที่ไม่มีป้ายปฏิทินเท่านั้น
+ *   (มีป้าย = จองเท่านั้น — ไม่โชว์ซ้ำสองแท็บ)
  * - ไม่ส่ง scheduleMap = ของเดิม (same-day: available_same_day ?? !is_preorder ·
  *   pre-order: ทั้งหมด) — เก็บไว้ให้ caller ที่ไม่มีตาราง (และ test เดิม)
  */
@@ -128,12 +127,9 @@ export function menuTabItems(
   return (products || []).filter((p) => {
     if (p.archived) return false
     if (q && !p.name.toLowerCase().includes(q)) return false
-    if (scheduleMap) {
-      const isCalendar = !!scheduleMap[p.id]
-      return tab === 'pre-order' ? isCalendar : !isCalendar
-    }
+    if (tab === 'same-day' && scheduleMap) return !scheduleMap[p.id] // มีป้ายปฏิทิน = จองเท่านั้น
     if (tab === 'same-day') return p.available_same_day ?? !p.is_preorder
-    return true
+    return true // R51: pre-order = ทุกเมนูขายได้ (รวมที่ยังไม่ลงปฏิทิน)
   })
 }
 

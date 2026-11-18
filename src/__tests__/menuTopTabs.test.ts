@@ -50,10 +50,11 @@ describe('menuTabItems — ป้ายตัวเลขบนแท็บ = �
     expect(menuTabItems(catalog, 'pre-order', 'zzz')).toEqual([])
   })
 
-  it('Owner 2026-10-27: มี scheduleMap = พรีออเดอร์กับเมนูตารางอันเดียวกัน — pre-order tab = เมนูปฏิทินเท่านั้น', () => {
-    // สองเมนูบนตาราง (ป้ายปฏิทิน) — ปิดจุด "บางหน้าบอก 2 บางหน้าบอก 20"
+  it('R51 (Owner 2026-11-18 · แทน R77): มี scheduleMap — pre-order tab = ทุกเมนูขายได้ รวมที่ยังไม่ลงปฏิทิน · same-day = ไม่มีป้ายเท่านั้น', () => {
+    // R77 เดิมกรองเฉพาะเมนูปฏิทิน → ไม่มีปฏิทิน = แท็บ (0) ว่าง — Owner สั่ง "ต่อให้ไม่มีลงปฏิทิน
+    // ก็ต้องแสดงทั้งหมด เมนูบอกสถานะเอง พอลงปฏิทินใหม่ป้ายวันขึ้นเอง"
     const map = { 'pre-only': '2026-10-28', 'same-only': '2026-10-28' }
-    expect(menuTabItems(catalog, 'pre-order', '', map).map((p) => p.id)).toEqual(['same-only', 'pre-only'])
+    expect(menuTabItems(catalog, 'pre-order', '', map).map((p) => p.id)).toEqual(['same-only', 'pre-only', 'dual', 'sold-out'])
     expect(menuTabItems(catalog, 'same-day', '', map).map((p) => p.id)).toEqual(['dual', 'sold-out'])
   })
 })
@@ -82,7 +83,18 @@ describe('L-4 source — /menu: chips ครบทุกหัวข้อ + ป
     expect(filterBlock).not.toBeNull()
     expect(filterBlock![0]).not.toContain("if (selectedCategory === 'all') {")
     expect(filterBlock![0]).toContain("if (menuTab === 'same-day' && isCalendar) return false")
-    expect(filterBlock![0]).toContain("if (menuTab === 'pre-order' && !isCalendar) return false")
+  })
+
+  it('R51: แท็บจองล่วงหน้าแสดงทั้งหมด — ไม่มี isCalendar filter + ยังไม่เลือกวัน = ทั้งหมด (ไม่ fallback วันแรก)', () => {
+    // R77 เดิมกรองเฉพาะเมนูปฏิทิน + fallback วันแรก → ไม่มีปฏิทิน = แท็บ (0) ว่าง
+    const filterBlock = menuPageSrc.match(/const filtered = products\.filter\(\(p\) => \{[\s\S]*?\n {2}\}\)/)
+    expect(filterBlock).not.toBeNull()
+    expect(filterBlock![0]).not.toContain("if (menuTab === 'pre-order' && !isCalendar) return false")
+    expect(filterBlock![0]).toContain("if (menuTab === 'pre-order' && activeDay && scheduleMap[p.id] !== activeDay) return false")
+    // activeDay = preOrderDay ตรง ๆ (ไม่มี fallback menuDays[0])
+    expect(menuPageSrc).toContain('const activeDay = preOrderDay')
+    // ชิป "ทุกวัน" เลิกกรองกลับมาดูรวมได้
+    expect(menuPageSrc).toContain('data-testid="preorder-day-all"')
   })
 
   it('FoodMenuCard รับ prop tab — ในแท็บจองล่วงหน้าซ่อนปุ่ม "สั่งเลยวันนี้" (โหมดถูกทั้งสองแท็บ)', () => {

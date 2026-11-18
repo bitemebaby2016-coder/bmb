@@ -144,16 +144,20 @@ export function MenuPage() {
   // R77: แท็บจองล่วงหน้า = เฉพาะเมนูปฏิทิน ของวันที่เลือก (ดูได้ทีละวันจาก 7 วันเมนูด้านบน)
   const menuDays = useMemo(() => [...new Set(Object.values(scheduleMap))].sort().slice(0, 7), [scheduleMap])
   const [preOrderDay, setPreOrderDay] = useState('')
-  const activeDay = preOrderDay && menuDays.includes(preOrderDay) ? preOrderDay : (menuDays[0] ?? '')
+  // R51 (Owner 2026-11-18): ยังไม่เลือกวัน = แสดงทั้งหมด (เดิม fallback วันแรกทำให้แท็บจองล่วงหน้า
+  // โชว์เฉพาะเมนูปฏิทินวันแรก — เมนูที่ยังไม่ลงปฏิทินหายหมด เห็นเป็น (0))
+  const activeDay = preOrderDay
 
   const filtered = products.filter((p) => {
     const isCalendar = !!scheduleMap[p.id] // Owner 2026-10-27: พรีออเดอร์ = เมนูตาราง (menu_schedule)
     const matchCat = selectedCategory === 'all' || String(p.category_id) === selectedCategory
     if (!matchCat) return false
-    // R50: กรองโหมดทุกมุมมอง — แท็บวันนี้ = เมนูสั่งทันทีเท่านั้น · แท็บจองล่วงหน้า = เมนูปฏิทินเท่านั้น
+    // R50: กรองโหมดทุกมุมมอง — แท็บวันนี้ = เมนูสั่งทันทีเท่านั้น (มีป้ายปฏิทิน = จองเท่านั้น)
     if (menuTab === 'same-day' && isCalendar) return false
-    if (menuTab === 'pre-order' && !isCalendar) return false
-    // R77: แท็บจองล่วงหน้า = เฉพาะเมนูของวันที่เลือก (ดูได้ทีละวันจาก 7 วันเมนูด้านบน)
+    // R51 (Owner 2026-11-18 · แทน R77): แท็บจองล่วงหน้าแสดงทั้งหมด — เมนูที่ยังไม่ลงปฏิทิน
+    // ก็เอามาแสดงได้ (การ์ดบอกสถานะเอง) พอแอดมินลงวัน/แก้เมนูใหม่ ป้ายวันขึ้นอัตโนมัติ
+    // R77 เดิม (กรองเฉพาะเมนูปฏิทิน + เฉพาะวันที่เลือก) ถูกแทน
+    // R51: เลือกวัน = กรองดูเฉพาะเมนูวันนั้น (ยังไม่เลือก = แสดงทั้งหมด — เมนูไม่มีป้ายก็โชว์)
     if (menuTab === 'pre-order' && activeDay && scheduleMap[p.id] !== activeDay) return false
     return !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
@@ -301,6 +305,15 @@ export function MenuPage() {
       {/* R77 (Owner: "ให้ขึ้น โชว์ 7 วันที่มีเมนูแล้ว"): แถบเลือกวันเมนู — วันถัดไปที่มีเมนูในปฏิทิน (สูงสุด 7 วัน) */}
       {menuTab === 'pre-order' && selectedCategory === 'all' && menuDays.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar mb-6" data-testid="preorder-day-strip">
+          {/* R51: ชิป "ทุกวัน" = เลิกกรองวัน (กลับมาดูรวมทุกเมนู รวมที่ยังไม่ลงปฏิทิน) */}
+          <button
+            type="button"
+            data-testid="preorder-day-all"
+            onClick={() => setPreOrderDay('')}
+            className={`category-chip px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${activeDay === '' ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}
+          >
+            🗓️ ทุกวัน
+          </button>
           {menuDays.map((d) => (
             <button
               key={d}
