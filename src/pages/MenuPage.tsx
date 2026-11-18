@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode } from '@/types'
 import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
-import { buildHeadingGroups, headingChips, menuTabItems } from '@/lib/catalogStructure'
+import { buildHeadingGroups, headingChips, menuTabItems, saleModeOfCategory } from '@/lib/catalogStructure'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { getVerifiedReviewsForProducts } from '@/lib/reviewApi'
 import { formatThaiDate } from '@/components/home/ScheduleDateBadge'
@@ -147,16 +147,21 @@ export function MenuPage() {
   // R51 (Owner 2026-11-18): ยังไม่เลือกวัน = แสดงทั้งหมด (เดิม fallback วันแรกทำให้แท็บจองล่วงหน้า
   // โชว์เฉพาะเมนูปฏิทินวันแรก — เมนูที่ยังไม่ลงปฏิทินหายหมด เห็นเป็น (0))
   const activeDay = preOrderDay
+  // R52 (Owner 2026-11-18 · "จองล่วงหน้ามันจะไม่โชว์เมนูที่ไม่ใช่จองล่วงหน้า"):
+  // ตัวแบ่งแท็บ = หมวดจองล่วงหน้า (saleModeOfCategory — หมวดที่แอดมินตั้งชื่อ) ไม่ใช่ป้ายปฏิทิน:
+  // แท็บจองล่วงหน้า = เมนูในหมวดจองล่วงหน้าทั้งหมด (รวมที่ยังไม่ลงปฏิทิน — การ์ดบอกสถานะเอง)
+  // · แท็บวันนี้ = เมนูหมวดอื่น — หมวดจองล่วงหน้าไม่ปนสองแท็บ
+  const preOrderCatIds = useMemo(
+    () => new Set(categories.filter((c) => saleModeOfCategory(c) === 'pre_order').map((c) => String(c.id))),
+    [categories],
+  )
 
   const filtered = products.filter((p) => {
-    const isCalendar = !!scheduleMap[p.id] // Owner 2026-10-27: พรีออเดอร์ = เมนูตาราง (menu_schedule)
+    const isPreOrderCat = preOrderCatIds.has(String(p.category_id))
     const matchCat = selectedCategory === 'all' || String(p.category_id) === selectedCategory
     if (!matchCat) return false
-    // R50: กรองโหมดทุกมุมมอง — แท็บวันนี้ = เมนูสั่งทันทีเท่านั้น (มีป้ายปฏิทิน = จองเท่านั้น)
-    if (menuTab === 'same-day' && isCalendar) return false
-    // R51 (Owner 2026-11-18 · แทน R77): แท็บจองล่วงหน้าแสดงทั้งหมด — เมนูที่ยังไม่ลงปฏิทิน
-    // ก็เอามาแสดงได้ (การ์ดบอกสถานะเอง) พอแอดมินลงวัน/แก้เมนูใหม่ ป้ายวันขึ้นอัตโนมัติ
-    // R77 เดิม (กรองเฉพาะเมนูปฏิทิน + เฉพาะวันที่เลือก) ถูกแทน
+    if (menuTab === 'same-day' && isPreOrderCat) return false
+    if (menuTab === 'pre-order' && !isPreOrderCat) return false
     // R51: เลือกวัน = กรองดูเฉพาะเมนูวันนั้น (ยังไม่เลือก = แสดงทั้งหมด — เมนูไม่มีป้ายก็โชว์)
     if (menuTab === 'pre-order' && activeDay && scheduleMap[p.id] !== activeDay) return false
     return !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -244,8 +249,8 @@ export function MenuPage() {
   // L-4: ป้ายตัวเลขบนแท็บ = จำนวนที่แท็บนั้น "แสดงจริง" (สูตรเดียวกับ list)
   // Owner 2026-10-27: นับด้วย menu_schedule เดียวกับ list — พรีออเดอร์ = เมนูตาราง
   // (ปิดจุด "บางหน้าบอก 2 บางหน้าบอก 20")
-  const sameDayCount = menuTabItems(products, 'same-day', searchQuery, scheduleMap).length
-  const preOrderCount = menuTabItems(products, 'pre-order', searchQuery, scheduleMap).length
+  const sameDayCount = menuTabItems(products, 'same-day', searchQuery, scheduleMap, categories).length
+  const preOrderCount = menuTabItems(products, 'pre-order', searchQuery, scheduleMap, categories).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 bg-brand-bg min-h-screen">
@@ -290,12 +295,12 @@ export function MenuPage() {
 
       {/* ✓ v3.1: Pre-order info banner */}
       {menuTab === 'pre-order' && (
-        <div className="mb-6 bg-blue-50 border-2 border-blue-200 p-4 rounded-xl">
+        <div className="preorder-banner mb-6 bg-blue-50 border-2 border-blue-200 p-4 rounded-xl">
           <div className="flex items-start gap-3">
             <span className="text-2xl">📅</span>
             <div>
-              <h3 className="font-bold text-blue-900 mb-1">จองล่วงหน้า (เมนูรอบพิเศษ)</h3>
-              <p className="text-sm text-blue-700">เมนูจากปฏิทินรอบพิเศษของแอดมิน — วันจัดส่งถูกกำหนดตามป้ายมุมเมนู (เลือกเฉพาะรอบจัดส่ง) ไม่มีพรีออเดอร์วันอิสระ</p>
+              <h3 className="preorder-banner-title font-bold text-blue-900 mb-1">จองล่วงหน้า (เมนูรอบพิเศษ)</h3>
+              <p className="preorder-banner-text text-sm text-blue-700">เมนูจากปฏิทินรอบพิเศษของแอดมิน — วันจัดส่งถูกกำหนดตามป้ายมุมเมนู (เลือกเฉพาะรอบจัดส่ง) ไม่มีพรีออเดอร์วันอิสระ</p>
               {/* R35 (Owner: "ในวงเล็บไม่ต้องแสดง") — ชิปรอบ (เที่ยง/เช้า/เย็น ซ้ำ ๆ ทุกวัน) ถูกถอดออกจาก banner */}
             </div>
           </div>

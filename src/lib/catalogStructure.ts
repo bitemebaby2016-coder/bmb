@@ -111,19 +111,32 @@ export function headingChips(
  * L-4 (N-4 #4 · Owner 2026-10-26): รายการที่แท็บโหมดจะแสดงจริง — ใช้ทั้งตอนกรอง list
  * และตอนนับตัวเลขบนแท็บ (ป้ายต้องตรงกับที่เห็น เดิมนับคนละสูตรจึงเพี้ยน):
  * - ทั้งสองโหมด: ตัด archived + ค้นด้วย search (trim/case-insensitive) เหมือน list
- * - **R51 (Owner 2026-11-18 · แทน R77):** แท็บจองล่วงหน้า = ทุกเมนูขายได้ รวมที่ยังไม่ลงปฏิทิน
- *   (การ์ดบอกสถานะเอง — พอลงวันใหม่ป้ายขึ้นอัตโนมัติ) · แท็บวันนี้ = เมนูที่ไม่มีป้ายปฏิทินเท่านั้น
- *   (มีป้าย = จองเท่านั้น — ไม่โชว์ซ้ำสองแท็บ)
- * - ไม่ส่ง scheduleMap = ของเดิม (same-day: available_same_day ?? !is_preorder ·
- *   pre-order: ทั้งหมด) — เก็บไว้ให้ caller ที่ไม่มีตาราง (และ test เดิม)
+ * - **R52 (Owner 2026-11-18 · "จองล่วงหน้าไม่โชว์เมนูที่ไม่ใช่จองล่วงหน้า"):** เมื่อส่ง
+ *   categories มา ตัวแบ่งแท็บ = หมวดจองล่วงหน้า (saleModeOfCategory) — แท็บจองล่วงหน้า =
+ *   เมนูในหมวดจองล่วงหน้าทั้งหมด (รวมที่ยังไม่ลงปฏิทิน) · แท็บวันนี้ = เมนูหมวดอื่น
+ * - ไม่ส่ง categories: R51 fallback — same-day = ไม่มีป้ายปฏิทิน (มี scheduleMap) หรือ
+ *   available_same_day ?? !is_preorder · pre-order = ทุกเมนูขายได้
  */
 export function menuTabItems(
   products: Product[],
   tab: 'same-day' | 'pre-order',
   search: string,
   scheduleMap?: Readonly<Record<string, string>>,
+  categories?: Array<Pick<ProductCategory, 'id' | 'name' | 'slug'>>,
 ): Product[] {
   const q = (search || '').trim().toLowerCase()
+  // R52: มี categories = ใช้หมวดจองล่วงหน้าเป็นตัวแบ่งแท็บ (กฎที่หน้าเมนูใช้จริง)
+  if (categories && categories.length > 0) {
+    const preCatIds = new Set(
+      categories.filter((c) => saleModeOfCategory(c) === 'pre_order').map((c) => String(c.id)),
+    )
+    return (products || []).filter((p) => {
+      if (p.archived) return false
+      if (q && !p.name.toLowerCase().includes(q)) return false
+      const isPreOrderCat = preCatIds.has(String(p.category_id))
+      return tab === 'pre-order' ? isPreOrderCat : !isPreOrderCat
+    })
+  }
   return (products || []).filter((p) => {
     if (p.archived) return false
     if (q && !p.name.toLowerCase().includes(q)) return false

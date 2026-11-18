@@ -61,9 +61,9 @@ describe('menuTabItems — ป้ายตัวเลขบนแท็บ = �
 
 describe('L-4 source — /menu: chips ครบทุกหัวข้อ + ป้ายแท็บถูกทั้งสองโหมด', () => {
 
-  it('MenuPage ใช้ menuTabItems นับทั้งสองแท็บ (ไม่ใช่สูตรคนละชนิดกับ list อีกต่อไป)', () => {
-    expect(menuPageSrc).toContain("menuTabItems(products, 'same-day', searchQuery, scheduleMap).length")
-    expect(menuPageSrc).toContain("menuTabItems(products, 'pre-order', searchQuery, scheduleMap).length")
+  it('MenuPage ใช้ menuTabItems นับทั้งสองแท็บ (ส่ง categories — R52 แบ่งแท็บด้วยหมวด)', () => {
+    expect(menuPageSrc).toContain("menuTabItems(products, 'same-day', searchQuery, scheduleMap, categories).length")
+    expect(menuPageSrc).toContain("menuTabItems(products, 'pre-order', searchQuery, scheduleMap, categories).length")
     // สูตรเดิมที่เพี้ยนต้องหายไป
     expect(menuPageSrc).not.toContain('products.filter(p => (p.available_same_day ?? !p.is_preorder) && p.is_available).length')
     expect(menuPageSrc).not.toContain('products.filter(p => !!scheduleMap[p.id]).length')
@@ -82,7 +82,8 @@ describe('L-4 source — /menu: chips ครบทุกหัวข้อ + ป
     const filterBlock = menuPageSrc.match(/const filtered = products\.filter\(\(p\) => \{[\s\S]*?\n {2}\}\)/)
     expect(filterBlock).not.toBeNull()
     expect(filterBlock![0]).not.toContain("if (selectedCategory === 'all') {")
-    expect(filterBlock![0]).toContain("if (menuTab === 'same-day' && isCalendar) return false")
+    // R52: ตัวแบ่งแท็บ = หมวดจองล่วงหน้า (isPreOrderCat) — แท็บวันนี้กรองหมวดจองล่วงหน้าทุกมุมมอง
+    expect(filterBlock![0]).toContain("if (menuTab === 'same-day' && isPreOrderCat) return false")
   })
 
   it('R51: แท็บจองล่วงหน้าแสดงทั้งหมด — ไม่มี isCalendar filter + ยังไม่เลือกวัน = ทั้งหมด (ไม่ fallback วันแรก)', () => {
@@ -95,6 +96,30 @@ describe('L-4 source — /menu: chips ครบทุกหัวข้อ + ป
     expect(menuPageSrc).toContain('const activeDay = preOrderDay')
     // ชิป "ทุกวัน" เลิกกรองกลับมาดูรวมได้
     expect(menuPageSrc).toContain('data-testid="preorder-day-all"')
+  })
+
+  it('R52 (Owner 2026-11-18): ตัวแบ่งแท็บ = หมวดจองล่วงหน้า — จองล่วงหน้าไม่โชว์เมนูที่ไม่ใช่จองล่วงหน้า', () => {
+    // เดิมแบ่งด้วยป้ายปฏิทิน → เมนูหมวดจองล่วงหน้าหลุดไปแท็บวันนี้ (รูป 1) และหมวด "ส่งวันนี้ /
+    // Same Day" ปนในแท็บจองล่วงหน้า (รูป 2) — R52 แบ่งด้วย saleModeOfCategory(หมวด)
+    expect(menuPageSrc).toContain('saleModeOfCategory(c) === \'pre_order\'')
+    expect(menuPageSrc).toContain('const isPreOrderCat = preOrderCatIds.has(String(p.category_id))')
+    expect(menuPageSrc).toContain("if (menuTab === 'same-day' && isPreOrderCat) return false")
+    expect(menuPageSrc).toContain("if (menuTab === 'pre-order' && !isPreOrderCat) return false")
+  })
+
+  it('R52: menuTabItems ส่ง categories = แบ่งแท็บด้วยหมวดจองล่วงหน้า (ตรงกับ list ทุกหน้า)', () => {
+    const cats: ProductCategory[] = [
+      { id: 'c-pre', name: 'จองล่วงหน้า / พรีออเดอร์', slug: 'preorder', icon: '', sort_order: 1, is_active: true, created_at: '' } as ProductCategory,
+      { id: 'c-day', name: 'ส่งวันนี้ / Same Day', slug: 'same-day', icon: '', sort_order: 2, is_active: true, created_at: '' } as ProductCategory,
+    ]
+    const items = [
+      prod('pre-cat', { category_id: 'c-pre' }),
+      prod('day-cat', { category_id: 'c-day' }),
+    ]
+    // แท็บจองล่วงหน้า = เฉพาะเมนูหมวดจองล่วงหน้า (รวมยังไม่ลงปฏิทิน)
+    expect(menuTabItems(items, 'pre-order', '', {}, cats).map((p) => p.id)).toEqual(['pre-cat'])
+    // แท็บวันนี้ = เฉพาะเมนูหมวดอื่น
+    expect(menuTabItems(items, 'same-day', '', {}, cats).map((p) => p.id)).toEqual(['day-cat'])
   })
 
   it('FoodMenuCard รับ prop tab — ในแท็บจองล่วงหน้าซ่อนปุ่ม "สั่งเลยวันนี้" (โหมดถูกทั้งสองแท็บ)', () => {

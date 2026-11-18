@@ -2715,6 +2715,14 @@ html[data-theme='dark'] .menu-tab:not(.text-white):hover, html[data-theme='graph
   background: rgba(255, 255, 255, 0.12);
   color: #F5F5F5;
 }
+/* R52 (Owner 2026-11-18): dark — แบนเนอร์แท็บจองล่วงหน้าพื้นขาว hardcode (bg-blue-50) ตัวอักษรจาง
+   อ่านไม่ออก → พื้นฟ้าโปร่งตามธีม + ตัวอักษรฟ้าสว่าง */
+html[data-theme='dark'] .preorder-banner, html[data-theme='graphite'] .preorder-banner {
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+html[data-theme='dark'] .preorder-banner-title, html[data-theme='graphite'] .preorder-banner-title { color: #93C5FD; }
+html[data-theme='dark'] .preorder-banner-text, html[data-theme='graphite'] .preorder-banner-text { color: #BFDBFE; }
 html[data-theme='dark'] .flad-cta, html[data-theme='graphite'] .flad-cta { color: #FF7F47; }
 /* gradient stops ที่ hardcode ขาว (header/hero ของแชท) ให้ตามธีม */
 html[data-theme='dark'] .to-white, html[data-theme='graphite'] .to-white { --tw-gradient-to: var(--color-brand-surface); }
