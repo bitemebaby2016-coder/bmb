@@ -163,7 +163,7 @@ export function speakableText(text: string): string {
 }
 
 // WS-2c: จำการตั้งค่าเปิด/ปิดเสียงตอบ (localStorage — aiMemory ไม่มี key นี้)
-const VOICE_REPLY_ENABLED_KEY = 'bmb_voice_reply_enabled'
+export const VOICE_REPLY_ENABLED_KEY = 'bmb_voice_reply_enabled'
 
 export function isVoiceReplyEnabled(): boolean {
   try {
@@ -220,7 +220,7 @@ export async function serverTranscribe(blob: Blob): Promise<string> {
 }
 
 /** TTS ผ่าน voice-tts EF (Edge-TTS หลัก / Botnoi รอง) — คืน blob เสียง mp3 */
-const SERVER_TTS_CHUNK = 180 // ต่ำกว่าขีดจำกัด Google TTS (~200) เผื่อ padding
+const SERVER_TTS_CHUNK = Number(import.meta.env.VITE_VOICE_TTS_CHUNK) || 180 // ต่ำกว่าขีดจำกัด Google TTS (~200) เผื่อ padding
 
 /**
  * V2 FIX (owner report: พูดขาดตอน): แบ่งข้อความยาวเป็นชิ้นตัดที่ "ขอบคำ" ด้วย
@@ -233,8 +233,14 @@ export function splitWordSafe(text: string, max: number): string[] {
   try {
     const seg = new Intl.Segmenter('th', { granularity: 'word' })
     segments = Array.from(seg.segment(text), (s) => s.segment)
-  } catch {
-    segments = [text] // ไม่มี Segmenter → ตรง ๆ (ไม่แย่กว่าเดิม)
+  } catch (e) {
+    console.warn('[splitWordSafe] Intl.Segmenter unavailable, falling back to simple chunking:', e)
+    // Fallback: simple character-based chunking for Thai (no word boundaries)
+    const chunks: string[] = []
+    for (let i = 0; i < text.length; i += max) {
+      chunks.push(text.slice(i, i + max))
+    }
+    return chunks
   }
   const chunks: string[] = []
   let buf = ''

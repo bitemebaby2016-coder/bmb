@@ -959,6 +959,17 @@ html[data-theme='dark'] .bg-black\/90, html[data-theme='graphite'] .bg-black\/90
 .review-album-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: -14px; background: #fff; padding: 10px 0 8px; margin-bottom: 8px; z-index: 1; }
 .review-album-close { border: 0; background: #fee2e2; color: #b91c1c; width: 32px; height: 32px; border-radius: 999px; font-size: 15px; line-height: 1; cursor: pointer; flex-shrink: 0; }
 .review-album-close:hover { background: #fecaca; }
+/* Dark mode overrides for review-album-close button */
+html[data-theme='dark'] .review-album-close,
+html[data-theme='graphite'] .review-album-close {
+  background: rgba(255, 255, 255, 0.16);
+  color: #F5F5F5;
+}
+html[data-theme='dark'] .review-album-close:hover,
+html[data-theme='graphite'] .review-album-close:hover {
+  background: rgba(239, 68, 68, 0.85);
+  color: #fff;
+}
 
 /* Horizontal Carousel — frameless floating arrows overlay the whole section + images */
 .hc { position: relative; }

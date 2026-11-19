@@ -129,6 +129,19 @@
   color: #1f2937;
 }
 
+/* Dark mode overrides for voice-close button */
+html[data-theme='dark'] .voice-close,
+html[data-theme='graphite'] .voice-close {
+  background: rgba(255, 255, 255, 0.16);
+  color: #F5F5F5;
+}
+
+html[data-theme='dark'] .voice-close:hover,
+html[data-theme='graphite'] .voice-close:hover {
+  background: rgba(255, 255, 255, 0.24);
+  color: #fff;
+}
+
 .voice-messages {
   flex: 1;
   overflow-y: auto;

@@ -52,12 +52,19 @@ describe('Admin nav → real routes (every visible item links to a real page)', 
 describe('Permission-aware routing (AdminRoute gate)', () => {
   it('every admin PAGE route (Suspense-rendered) is wrapped in AdminRoute', () => {
     const lines = appSrc.split('\n')
-    const pageRoutes = lines.filter((l) => l.includes('<Route path="/admin') && l.includes('<Suspense'))
-    const gated = pageRoutes.filter((l) => l.includes('<AdminRoute>'))
+    const pageRoutes = lines.filter((l) => l.includes('<Route path="/admin') && (l.includes('<Suspense') || l.includes('<AdminPage>')))
+    const gated = pageRoutes.filter((l) => l.includes('<AdminRoute>') || l.includes('<AdminPage>'))
     expect(pageRoutes.length).toBeGreaterThan(10)
     expect(gated.length, 'an admin page route is NOT gated by AdminRoute').toBe(pageRoutes.length)
   })
 
+  it('AdminPage wrapper uses AdminRoute internally', () => {
+    // AdminPage component wraps AdminRoute + Layout + AdminNav + Suspense
+    expect(appSrc).toContain('function AdminPage(')
+    expect(appSrc).toContain('<AdminRoute>')
+    expect(appSrc).toContain('<AdminNav>')
+  })
+  
   it('AdminRoute admits only admin-capable roles (146: 11 ค่า — DB role ผ่าน RLS/SET CLAIMS)', () => {
     expect(appSrc).toContain('if (!isAdminCapableRole(role)) return <Navigate to="/" replace />')
     expect(appSrc).toContain('isAdminCapableRole')

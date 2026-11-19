@@ -1,4 +1,4 @@
-# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-17 · R48b)
+# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-19 · Code Cleanup Complete)
 
 > **📋 ผลรอบ 1 (Owner ทดสอบ 2026-11-15 · กรอกตามจริง):** ✅ ผ่าน = A-1 · A-2 · A-3 · B-1 · B-2 · B-6 · B-7 · C-1 · C-2 · C-3 · D-1 · D-2 (**12 ข้อ**) · ❌ **A-4 FAIL** = "ไม่มีตะกร้าหลังก๊อปลิงก์จากปุ่มสีส้มเปิดเบราว์เซอร์ภายนอก" · Owner เพิ่มหลักฐานสำคัญ: **"เคยมีสินค้าในตะกร้า — แต่ในเบราว์เซอร์ของเฟซบุ๊คเอง ไม่ใช่ Chrome/Safari"** = Layout decode/restore ถูกแล้วทั้งคู่ฝั่ง → ปัญหาแคบอยู่ที่ **clipboard ข้าม WebView→Chrome** + payload โดน encode มั่ว
 > · **HOTFIX อนุมัติแล้ว (Owner 2026-11-15):** ① Banner copy 3 ชั้น (clipboard API → execCommand → **prompt modal ให้คัดลอกเอง**) + **กล่องลิงก์เต็ม** (`inapp-link-box` + ปุ่ม "เลือกทั้งหมด" — กดค้าง/Ctrl+C คัดลอกเองได้ทุก WebView ทุกเครื่อง) ② `normalizeCartParam` (cartDeepLink.ts) — ถอด `%` มั่วจาก copy/paste ได้ถึง 3 ชั้น (double-encode `%252D`) ใช้ทั้ง Layout + Banner ③ R43 B6 / §T-1 / R61 contract อัปเดต (เข้มขึ้น: decode-fail toast เฉพาะเมื่อมี `?cart=` จริง · normalize ⊇ decode)
@@ -8,6 +8,13 @@
 > **🆕 เพิ่มกลุ่ม E (2026-11-17 · R44–R48b · ทดสอบหลัง Owner apply m207 + CI GREEN):**
 > · สถานะ deployment จริง: **Migration 180 + 207 APPLIED PROD** (Owner ยืนยัน) · push `15b5fc0` · **CI Contract Tests + CI = success ทั้งคู่** (GitHub API ยืนยัน) · vitest 222 files / 2346 tests PASS · build ✅
 > · เนื้อหาที่เพิ่มมา: แผนที่ทั้ง 3 ฝั่ง (Leaflet/OSM fallback ครบ — Google key ยังถูกปฏิเสธในเบราว์เซอร์ รอเช็ค Google Cloud) · ระบบพิกัดจริงร่วมกัน (m180) · Rider history tabs (m207)
+
+> **🆕 Code Cleanup Complete (2026-11-19 · Plan 1795093659151):**
+> · **Code:** `src/lib/aiVoice.ts` — VOICE_REPLY_ENABLED_KEY exported constant, SERVER_TTS_CHUNK env-configurable, splitWordSafe() improved error handling
+> · **Code:** `src/App.tsx` — 25+ Admin routes consolidated via AdminPage wrapper (AdminRoute + Layout + AdminNav + Suspense)
+> · **CSS (P0-C-049):** Dark mode overrides for close buttons (.voice-close, .review-album-close)
+> · **Tests:** `src/__tests__/adminNavFeedback.test.ts` — updated for AdminPage wrapper pattern
+> · **Gates หลัง cleanup:** **lint 0 errors** ✅ · **build success** ✅ · **vitest 224 files / 2389 tests PASS** ✅
 
 > **📌 ฉบับนี้ = รายการเดียวที่ต้องรัน** (แทนที่ 2026-11-08/09/10 ทั้งหมด — ของปิดแล้วไม่อยู่ในนี้)
 > · สร้างตามคำสั่ง Owner 2026-11-15: "ทำทุกสถานะให้พร้อม อัพเดทเอกสารจากโค้ดจริงปัจจุบันรวมถึงสร้าง remain test ใหม่ ให้เหลือแต่ทดสอบบน live จริงเท่านั้น"

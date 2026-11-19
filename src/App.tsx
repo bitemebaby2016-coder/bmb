@@ -105,6 +105,19 @@ function LoadingSpinner() {
   )
 }
 
+// Admin route wrapper — consolidates AdminRoute + Layout + AdminNav + Suspense + LoadingSpinner
+function AdminPage({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <AdminRoute>
+        <Layout>
+          <AdminNav>{children}</AdminNav>
+        </Layout>
+      </AdminRoute>
+    </Suspense>
+  )
+}
+
 // F-02 FIX (Wave 1): ProtectedRoute รอ session restore (isInitializing) ก่อนตัดสิน
 // — reload ต้องไม่พาผู้ใช้ไป /login ขณะ Supabase กำลัง restore session
 // Launch-closure: ส่ง `from` เพื่อพาผู้ใช้กลับหน้าที่ตั้งใจหลัง login (case B/D)
@@ -304,49 +317,49 @@ export default function App() {
         <Route path="/rider" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav><RiderPwaPage /></Layout></Suspense>} />
         <Route path="/admin/control" element={<Navigate to="/admin" replace />} />
         
-        {/* Admin Routes — Lazy Loaded (AdminNav = persistent admin sidebar across every /admin page) */}
-        <Route path="/admin" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminDashboard /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/inventory" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><InventoryPage /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><OrdersHub /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><MenuHub /></AdminNav></Layout></AdminRoute></Suspense>} />
+{/* Admin Routes — Lazy Loaded (AdminNav = persistent admin sidebar across every /admin page) */}
+        <Route path="/admin" element={<AdminPage><AdminDashboard /></AdminPage>} />
+        <Route path="/admin/inventory" element={<AdminPage><InventoryPage /></AdminPage>} />
+        <Route path="/admin/orders" element={<AdminPage><OrdersHub /></AdminPage>} />
+        <Route path="/admin/products" element={<AdminPage><MenuHub /></AdminPage>} />
         <Route path="/admin/menu-schedule" element={<MenuScheduleRedirect />} />
         {/* Phase 4 (RC-6): /admin/pre-orders = redirect ไป AdminOrders + preset filter (bookmark เดิมไม่ตาย) */}
         <Route path="/admin/pre-orders" element={<Navigate to="/admin/orders?mode=PRE_ORDER" replace />} />
-        <Route path="/admin/kitchen" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminKitchen /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/recipes" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminRecipes /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/kitchen" element={<AdminPage><AdminKitchen /></AdminPage>} />
+        <Route path="/admin/recipes" element={<AdminPage><AdminRecipes /></AdminPage>} />
 
         <Route path="/admin/content-approvals" element={<Navigate to="/admin/marketing?tab=approval" replace />} />
-        <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/audit-log" element={<AdminPage><AuditLogPage /></AdminPage>} />
         <Route path="/admin/asset-audit" element={<Navigate to="/admin/media-portfolio?tab=audit" replace />} />
-<Route path="/admin/payment-exceptions" element={<Navigate to="/admin/orders?tab=payment" replace />} />
-        <Route path="/admin/marketing-promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMarketingPromotions /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/media-portfolio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMediaPortfolio /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/notifications" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminNotificationsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><DeliveryHub /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/payment-exceptions" element={<Navigate to="/admin/orders?tab=payment" replace />} />
+        <Route path="/admin/marketing-promotions" element={<AdminPage><AdminMarketingPromotions /></AdminPage>} />
+        <Route path="/admin/media-portfolio" element={<AdminPage><AdminMediaPortfolio /></AdminPage>} />
+        <Route path="/admin/notifications" element={<AdminPage><AdminNotificationsPage /></AdminPage>} />
+        <Route path="/admin/delivery" element={<AdminPage><DeliveryHub /></AdminPage>} />
         <Route path="/admin/route-optimization" element={<Navigate to="/admin/delivery?tab=routes" replace />} />
         <Route path="/admin/promotions" element={<Navigate to="/admin/marketing-promotions?tab=promotions" replace />} />
-        <Route path="/admin/marketing" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMarketing /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/marketing" element={<AdminPage><AdminMarketing /></AdminPage>} />
         <Route path="/admin/rounds" element={<Navigate to="/admin/delivery?tab=rounds" replace />} />
-        <Route path="/admin/customers" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminCustomers /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><SettingsHub /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/pos" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPos /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/reports" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminReports /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/customers" element={<AdminPage><AdminCustomers /></AdminPage>} />
+        <Route path="/admin/settings" element={<AdminPage><SettingsHub /></AdminPage>} />
+        <Route path="/admin/pos" element={<AdminPage><AdminPos /></AdminPage>} />
+        <Route path="/admin/reports" element={<AdminPage><AdminReports /></AdminPage>} />
         <Route path="/admin/print-settings" element={<Navigate to="/admin/settings?tab=print" replace />} />
         <Route path="/admin/media" element={<Navigate to="/admin/media-portfolio?tab=library" replace />} />
         <Route path="/admin/portfolio" element={<Navigate to="/admin/media-portfolio?tab=portfolio" replace />} />
-        <Route path="/admin/errors" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminErrorsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/errors" element={<AdminPage><AdminErrorsPage /></AdminPage>} />
         <Route path="/admin/mascot" element={<Navigate to="/admin/settings?tab=mascot" replace />} />
         
         {/* TEN-05: Brand Management */}
         <Route path="/admin/brands" element={<Navigate to="/admin/tenants?tab=brands" replace />} />
         
         {/* TEN-06: Tenant Management */}
-        <Route path="/admin/tenants" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><OrgHub /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/onboarding" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminOnboarding /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/billing" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminBilling /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/tenants" element={<AdminPage><OrgHub /></AdminPage>} />
+        <Route path="/admin/onboarding" element={<AdminPage><AdminOnboarding /></AdminPage>} />
+        <Route path="/admin/billing" element={<AdminPage><AdminBilling /></AdminPage>} />
         
         {/* R88/D6f: คิวอนุมัติรีวิว (Owner: "ให้แอดมินอนุมัติก่อนและลบได้ตอบได้") */}
-        <Route path="/admin/reviews" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminReviewsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/reviews" element={<AdminPage><AdminReviewsPage /></AdminPage>} />
         {/* AI-EXT: Admin AI Content Studio (redirect to Content tab) */}
         <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing?tab=studio" replace />} />
         {/* Catch all */}
