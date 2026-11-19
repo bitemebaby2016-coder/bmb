@@ -111,11 +111,11 @@ export function NotificationDropdown() {
       {/* Bell Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="relative w-10 h-10 rounded-full bg-brand-bg hover:bg-orange-100 transition-colors flex items-center justify-center"
+        className="relative w-10 h-10 rounded-full bg-brand-bg hover:bg-brand-warm transition-colors flex items-center justify-center"
       >
         <span className="text-xl">🔔</span>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center z-50">
+          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-brand-danger text-white text-xs font-bold flex items-center justify-center z-50">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -125,9 +125,9 @@ export function NotificationDropdown() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-12 w-80 max-h-96 overflow-y-auto bg-white rounded-xl shadow-2xl border z-50">
+          <div className="absolute right-0 top-12 w-80 max-h-96 overflow-y-auto bg-brand-surface rounded-xl shadow-2xl border border-brand-border z-50">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between gap-2 rounded-t-xl">
+            <div className="sticky top-0 bg-brand-surface border-b border-brand-border p-4 flex items-center justify-between gap-2 rounded-t-xl">
               <h3 className="font-bold text-brand-accent">การแจ้งเตือน ({unreadCount} อันอ่าน)</h3>
               <div className="flex items-center gap-2">
                 {/* R10 (Owner 2026-10-27): ปุ่มเปิด/ปิดเสียงแจ้งเตือน (จำค่าให้แอดมิน) */}
@@ -136,7 +136,7 @@ export function NotificationDropdown() {
                   title={soundOn ? 'ปิดเสียงแจ้งเตือน' : 'เปิดเสียงแจ้งเตือน'}
                   aria-pressed={soundOn}
                   data-testid="notif-sound-toggle"
-                  className={`text-xs px-2 py-1 rounded-full border transition-colors ${soundOn ? 'border-brand-primary text-brand-primary bg-brand-primary/10' : 'border-gray-300 text-brand-muted'}`}
+                  className={`text-xs px-2 py-1 rounded-full border transition-colors ${soundOn ? 'border-brand-primary text-brand-primary bg-brand-primary/10' : 'border-brand-border text-brand-muted'}`}
                 >
                   {soundOn ? '🔊 เสียง' : '🔇 เงียบ'}
                 </button>
@@ -147,7 +147,7 @@ export function NotificationDropdown() {
             </div>
 
             {/* Notifications List */}
-            <div className="divide-y">
+            <div className="divide-y divide-brand-border-light">
               {notifications.slice(0, 10).map((n) => (
                 <button
                   key={n.id}
@@ -166,7 +166,7 @@ export function NotificationDropdown() {
                     void markServerAsRead(n.id)
                   }}
                   className={`w-full text-left p-3 transition-colors ${
-                    n.is_read ? 'bg-white hover:bg-gray-50' : 'bg-orange-50 hover:bg-orange-100'
+                    n.is_read ? 'bg-brand-surface hover:bg-brand-bg' : 'bg-brand-primary/10 hover:bg-brand-primary/20'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -190,7 +190,7 @@ export function NotificationDropdown() {
             </div>
 
             {/* Footer — history lives in the Notification Center (/notifications) */}
-            <Link to="/notifications" onClick={() => setOpen(false)} className="block p-3 text-center text-sm text-brand-primary border-t hover:bg-brand-bg">
+            <Link to="/notifications" onClick={() => setOpen(false)} className="block p-3 text-center text-sm text-brand-primary border-t border-brand-border hover:bg-brand-bg">
               ดูการแจ้งเตือนทั้งหมด →
             </Link>
           </div>

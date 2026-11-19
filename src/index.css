@@ -189,6 +189,33 @@ p { color: var(--color-brand-text-secondary); }
 .badge-danger { background: #FEE2E2; color: var(--color-brand-danger); }
 .badge-info { background: #DBEAFE; color: var(--color-brand-info); }
 
+/* Dark mode overrides for badge classes */
+html[data-theme='dark'] .badge-primary, html[data-theme='graphite'] .badge-primary { background: rgba(255, 149, 0, 0.15); }
+html[data-theme='dark'] .badge-success, html[data-theme='graphite'] .badge-success { background: rgba(34, 197, 94, 0.15); }
+html[data-theme='dark'] .badge-warning, html[data-theme='graphite'] .badge-warning { background: rgba(234, 179, 8, 0.15); }
+html[data-theme='dark'] .badge-danger, html[data-theme='graphite'] .badge-danger { background: rgba(239, 68, 68, 0.15); }
+html[data-theme='dark'] .badge-info, html[data-theme='graphite'] .badge-info { background: rgba(59, 130, 246, 0.15); }
+
+/* Dark mode overrides for opacity utility classes (bg-white/X, bg-black/X) */
+html[data-theme='dark'] .bg-white\/10, html[data-theme='graphite'] .bg-white\/10 { background-color: rgba(255, 255, 255, 0.1); }
+html[data-theme='dark'] .bg-white\/20, html[data-theme='graphite'] .bg-white\/20 { background-color: rgba(255, 255, 255, 0.15); }
+html[data-theme='dark'] .bg-white\/30, html[data-theme='graphite'] .bg-white\/30 { background-color: rgba(255, 255, 255, 0.2); }
+html[data-theme='dark'] .bg-white\/40, html[data-theme='graphite'] .bg-white\/40 { background-color: rgba(255, 255, 255, 0.25); }
+html[data-theme='dark'] .bg-white\/50, html[data-theme='graphite'] .bg-white\/50 { background-color: rgba(255, 255, 255, 0.3); }
+html[data-theme='dark'] .bg-white\/60, html[data-theme='graphite'] .bg-white\/60 { background-color: rgba(255, 255, 255, 0.35); }
+html[data-theme='dark'] .bg-white\/70, html[data-theme='graphite'] .bg-white\/70 { background-color: rgba(255, 255, 255, 0.4); }
+html[data-theme='dark'] .bg-white\/80, html[data-theme='graphite'] .bg-white\/80 { background-color: rgba(255, 255, 255, 0.45); }
+html[data-theme='dark'] .bg-white\/90, html[data-theme='graphite'] .bg-white\/90 { background-color: rgba(255, 255, 255, 0.5); }
+html[data-theme='dark'] .bg-black\/10, html[data-theme='graphite'] .bg-black\/10 { background-color: rgba(0, 0, 0, 0.1); }
+html[data-theme='dark'] .bg-black\/20, html[data-theme='graphite'] .bg-black\/20 { background-color: rgba(0, 0, 0, 0.2); }
+html[data-theme='dark'] .bg-black\/30, html[data-theme='graphite'] .bg-black\/30 { background-color: rgba(0, 0, 0, 0.3); }
+html[data-theme='dark'] .bg-black\/40, html[data-theme='graphite'] .bg-black\/40 { background-color: rgba(0, 0, 0, 0.4); }
+html[data-theme='dark'] .bg-black\/50, html[data-theme='graphite'] .bg-black\/50 { background-color: rgba(0, 0, 0, 0.5); }
+html[data-theme='dark'] .bg-black\/60, html[data-theme='graphite'] .bg-black\/60 { background-color: rgba(0, 0, 0, 0.6); }
+html[data-theme='dark'] .bg-black\/70, html[data-theme='graphite'] .bg-black\/70 { background-color: rgba(0, 0, 0, 0.7); }
+html[data-theme='dark'] .bg-black\/80, html[data-theme='graphite'] .bg-black\/80 { background-color: rgba(0, 0, 0, 0.8); }
+html[data-theme='dark'] .bg-black\/90, html[data-theme='graphite'] .bg-black\/90 { background-color: rgba(0, 0, 0, 0.9); }
+
 .input {
   width: 100%;
   padding: 0.875rem 1.125rem;
@@ -2677,20 +2704,33 @@ html[data-theme='light'] {
 html[data-theme='dark'] body, html[data-theme='graphite'] body {
   background: linear-gradient(180deg, var(--color-brand-bg) 0%, var(--color-brand-bg-warm) 100%);
 }
-/* hardcode ที่กระจายอยู่ในคอมโพเนนต์ (bg-white / neutral-*) ให้ตามธีม */
+/* hardcode ที่กระจายอยู่ในคอมโพเนนต์ (bg-white / neutral-* / gray-*) ให้ตามธีม */
 html[data-theme='dark'] .bg-white, html[data-theme='graphite'] .bg-white { background-color: var(--color-brand-surface); }
 html[data-theme='dark'] .bg-neutral-50, html[data-theme='graphite'] .bg-neutral-50,
-html[data-theme='dark'] .bg-neutral-100, html[data-theme='graphite'] .bg-neutral-100 { background-color: var(--color-brand-bg); }
+html[data-theme='dark'] .bg-neutral-100, html[data-theme='graphite'] .bg-neutral-100,
+html[data-theme='dark'] .bg-gray-50, html[data-theme='graphite'] .bg-gray-50,
+html[data-theme='dark'] .bg-gray-100, html[data-theme='graphite'] .bg-gray-100,
+html[data-theme='dark'] .bg-gray-200, html[data-theme='graphite'] .bg-gray-200 { background-color: var(--color-brand-bg); }
 html[data-theme='dark'] .border-neutral-100, html[data-theme='graphite'] .border-neutral-100,
-html[data-theme='dark'] .border-neutral-200, html[data-theme='graphite'] .border-neutral-200 { border-color: var(--color-brand-border); }
+html[data-theme='dark'] .border-neutral-200, html[data-theme='graphite'] .border-neutral-200,
+html[data-theme='dark'] .border-gray-100, html[data-theme='graphite'] .border-gray-100,
+html[data-theme='dark'] .border-gray-200, html[data-theme='graphite'] .border-gray-200,
+html[data-theme='dark'] .border-gray-300, html[data-theme='graphite'] .border-gray-300 { border-color: var(--color-brand-border); }
 html[data-theme='dark'] .text-neutral-500, html[data-theme='graphite'] .text-neutral-500,
 html[data-theme='dark'] .text-neutral-600, html[data-theme='graphite'] .text-neutral-600,
 html[data-theme='dark'] .text-neutral-700, html[data-theme='graphite'] .text-neutral-700,
 html[data-theme='dark'] .text-neutral-800, html[data-theme='graphite'] .text-neutral-800,
 html[data-theme='dark'] .text-neutral-900, html[data-theme='graphite'] .text-neutral-900,
+html[data-theme='dark'] .text-gray-500, html[data-theme='graphite'] .text-gray-500,
+html[data-theme='dark'] .text-gray-600, html[data-theme='graphite'] .text-gray-600,
+html[data-theme='dark'] .text-gray-700, html[data-theme='graphite'] .text-gray-700,
+html[data-theme='dark'] .text-gray-800, html[data-theme='graphite'] .text-gray-800,
+html[data-theme='dark'] .text-gray-900, html[data-theme='graphite'] .text-gray-900,
 html[data-theme='dark'] .text-black, html[data-theme='graphite'] .text-black { color: var(--color-brand-text); }
 html[data-theme='dark'] .text-slate-300, html[data-theme='graphite'] .text-slate-300,
-html[data-theme='dark'] .text-slate-400, html[data-theme='graphite'] .text-slate-400 { color: var(--color-brand-text-secondary); }
+html[data-theme='dark'] .text-slate-400, html[data-theme='graphite'] .text-slate-400,
+html[data-theme='dark'] .text-gray-300, html[data-theme='graphite'] .text-gray-300,
+html[data-theme='dark'] .text-gray-400, html[data-theme='graphite'] .text-gray-400 { color: var(--color-brand-text-secondary); }
 /* a11y บังคับส้มเข้มบนพื้นสว่าง — Dark Glass ใช้ส้มอ่อนเพื่อให้อ่านออก */
 html[data-theme='dark'] a.text-brand-primary, html[data-theme='graphite'] a.text-brand-primary,
 html[data-theme='dark'] span.text-brand-primary, html[data-theme='graphite'] span.text-brand-primary,
@@ -2705,6 +2745,70 @@ html[data-theme='dark'] .category-chip:hover, html[data-theme='graphite'] .categ
 html[data-theme='dark'] .category-chip:active, html[data-theme='graphite'] .category-chip:active {
   background: rgba(255, 255, 255, 0.16);
 }
+/* Dark mode hover overrides for common gray/white hover states */
+html[data-theme='dark'] .hover\:bg-white:hover, html[data-theme='graphite'] .hover\:bg-white:hover,
+html[data-theme='dark'] .hover\:bg-gray-50:hover, html[data-theme='graphite'] .hover\:bg-gray-50:hover,
+html[data-theme='dark'] .hover\:bg-gray-100:hover, html[data-theme='graphite'] .hover\:bg-gray-100:hover,
+html[data-theme='dark'] .hover\:bg-gray-200:hover, html[data-theme='graphite'] .hover\:bg-gray-200:hover,
+html[data-theme='dark'] .hover\:bg-neutral-50:hover, html[data-theme='graphite'] .hover\:bg-neutral-50:hover,
+html[data-theme='dark'] .hover\:bg-neutral-100:hover, html[data-theme='graphite'] .hover\:bg-neutral-100:hover {
+  background-color: var(--color-brand-surface);
+}
+html[data-theme='dark'] .hover\:bg-gray-800:hover, html[data-theme='graphite'] .hover\:bg-gray-800:hover {
+  background-color: var(--color-brand-surface-warm);
+}
+
+/* Dark mode overrides for semantic color scales (green/red/yellow/blue/amber/orange -50/100/200) */
+html[data-theme='dark'] .bg-green-50, html[data-theme='graphite'] .bg-green-50,
+html[data-theme='dark'] .bg-green-100, html[data-theme='graphite'] .bg-green-100,
+html[data-theme='dark'] .bg-red-50, html[data-theme='graphite'] .bg-red-50,
+html[data-theme='dark'] .bg-red-100, html[data-theme='graphite'] .bg-red-100,
+html[data-theme='dark'] .bg-yellow-50, html[data-theme='graphite'] .bg-yellow-50,
+html[data-theme='dark'] .bg-yellow-100, html[data-theme='graphite'] .bg-yellow-100,
+html[data-theme='dark'] .bg-blue-50, html[data-theme='graphite'] .bg-blue-50,
+html[data-theme='dark'] .bg-blue-100, html[data-theme='graphite'] .bg-blue-100,
+html[data-theme='dark'] .bg-amber-50, html[data-theme='graphite'] .bg-amber-50,
+html[data-theme='dark'] .bg-amber-100, html[data-theme='graphite'] .bg-amber-100,
+html[data-theme='dark'] .bg-orange-50, html[data-theme='graphite'] .bg-orange-50,
+html[data-theme='dark'] .bg-orange-100, html[data-theme='graphite'] .bg-orange-100 { background-color: var(--color-brand-surface); }
+html[data-theme='dark'] .border-green-200, html[data-theme='graphite'] .border-green-200,
+html[data-theme='dark'] .border-green-300, html[data-theme='graphite'] .border-green-300,
+html[data-theme='dark'] .border-red-200, html[data-theme='graphite'] .border-red-200,
+html[data-theme='dark'] .border-red-300, html[data-theme='graphite'] .border-red-300,
+html[data-theme='dark'] .border-yellow-200, html[data-theme='graphite'] .border-yellow-200,
+html[data-theme='dark'] .border-yellow-300, html[data-theme='graphite'] .border-yellow-300,
+html[data-theme='dark'] .border-blue-200, html[data-theme='graphite'] .border-blue-200,
+html[data-theme='dark'] .border-blue-300, html[data-theme='graphite'] .border-blue-300,
+html[data-theme='dark'] .border-amber-200, html[data-theme='graphite'] .border-amber-200,
+html[data-theme='dark'] .border-amber-300, html[data-theme='graphite'] .border-amber-300,
+html[data-theme='dark'] .border-orange-200, html[data-theme='graphite'] .border-orange-200,
+html[data-theme='dark'] .border-orange-300, html[data-theme='graphite'] .border-orange-300 { border-color: var(--color-brand-border); }
+html[data-theme='dark'] .text-green-700, html[data-theme='graphite'] .text-green-700,
+html[data-theme='dark'] .text-green-800, html[data-theme='graphite'] .text-green-800,
+html[data-theme='dark'] .text-red-700, html[data-theme='graphite'] .text-red-700,
+html[data-theme='dark'] .text-red-800, html[data-theme='graphite'] .text-red-800,
+html[data-theme='dark'] .text-yellow-700, html[data-theme='graphite'] .text-yellow-700,
+html[data-theme='dark'] .text-yellow-800, html[data-theme='graphite'] .text-yellow-800,
+html[data-theme='dark'] .text-blue-700, html[data-theme='graphite'] .text-blue-700,
+html[data-theme='dark'] .text-blue-800, html[data-theme='graphite'] .text-blue-800,
+html[data-theme='dark'] .text-amber-700, html[data-theme='graphite'] .text-amber-700,
+html[data-theme='dark'] .text-amber-800, html[data-theme='graphite'] .text-amber-800,
+html[data-theme='dark'] .text-orange-700, html[data-theme='graphite'] .text-orange-700,
+html[data-theme='dark'] .text-orange-800, html[data-theme='graphite'] .text-orange-800 { color: var(--color-brand-text); }
+
+/* Dark mode overrides for slate color scale */
+html[data-theme='dark'] .bg-slate-50, html[data-theme='graphite'] .bg-slate-50,
+html[data-theme='dark'] .bg-slate-100, html[data-theme='graphite'] .bg-slate-100,
+html[data-theme='dark'] .bg-slate-200, html[data-theme='graphite'] .bg-slate-200 { background-color: var(--color-brand-bg); }
+html[data-theme='dark'] .border-slate-200, html[data-theme='graphite'] .border-slate-200,
+html[data-theme='dark'] .border-slate-300, html[data-theme='graphite'] .border-slate-300 { border-color: var(--color-brand-border); }
+html[data-theme='dark'] .text-slate-600, html[data-theme='graphite'] .text-slate-600,
+html[data-theme='dark'] .text-slate-700, html[data-theme='graphite'] .text-slate-700,
+html[data-theme='dark'] .text-slate-800, html[data-theme='graphite'] .text-slate-800,
+html[data-theme='dark'] .text-slate-900, html[data-theme='graphite'] .text-slate-900 { color: var(--color-brand-text); }
+html[data-theme='dark'] .text-slate-300, html[data-theme='graphite'] .text-slate-300,
+html[data-theme='dark'] .text-slate-400, html[data-theme='graphite'] .text-slate-400,
+html[data-theme='dark'] .text-slate-500, html[data-theme='graphite'] .text-slate-500 { color: var(--color-brand-text-secondary); }
 /* R50: แท็บใหญ่ (วันนี้ / จองล่วงหน้า) ในหน้าเมนู — inactive = ตัวอักษรดำบนพื้นเข้ม มองไม่เห็น
    (active มี .text-white จึงไม่โดน — pattern เดียวกับ .category-chip:not(.text-white)) */
 html[data-theme='dark'] .menu-tab:not(.text-white), html[data-theme='graphite'] .menu-tab:not(.text-white) {
