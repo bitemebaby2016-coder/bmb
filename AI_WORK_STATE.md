@@ -1,4 +1,49 @@
-## 🔒 SESSION CLOSE 2026-11-20 (รอบ 54 · R54 · มาสคอตลอยจริงไม่หลุดเฟรม + logout จริง + โหวต UX ตรงสาเหตุ + login เบอร์โทรเปิดใช้จริง: ①mascot: .animate-float คือ dead class (ไม่มีนิยามทั้ง repo — MascotBadge R52 ยกเว้นไว้ให้ลอยเองแต่ลอยไม่ได้) → นิยาม bind @keyframes float ที่มีอยู่ + ย้ายลอยจากปุ่ม (ชน hover:scale-105) ไปที่ div เนื้อหาใน + ถอดลอยออกจาก wrapper (animation ชน transform inline ตอนลาก = หลุดจากตำแหน่งที่ลาก) ②logout: Header.handleLogout เดิมไม่ await logout() แล้วยิง window.location ทันที → signOut ไม่เสร็จ session ค้าง login ไม่เปิดฟอร์มใหม่ → await จริง + พาไป /login เสมอ (finally) ทั้งเดสก์ท็อป/มือถือ ③โหวต (Owner รายงาน "ระบบโหวตขัดข้อง" จากภาพ live 11/20): probe ของจริง — preorder_vote_status 200 OK + cast ตอบ 401 ว่าง = m208 ติด prod ครบ REVOKE anon ทำงานถูก → สาเหตุจริง = ผู้ใช้ไม่ได้ล็อกอิน กัน EXECUTE ก่อนถึงฟังก์ชัน error.message ว่าง ไม่มี ERR_* ให้แมป เคยตก load_failed มั่ว → castPreorderVote เช็ค session ก่อนยิง RPC + map 401 ว่าง/JWT → signed_out ("กรุณาเข้าสู่ระบบก่อนโหวตเมนูค่ะ" — guard server คงอยู่) ④login เบอร์โทร (ของเก่า authStore.loginByPhone เปิดใช้จริง): แท็บ 3 ปุ่ม อีเมล/เบอร์โทร/ด่วน + ฟอร์ม เบอร์+รหัสผ่าน → loginByPhone → finishLogin — OAuth กูเกิ้ล/เฟซบุ๊ก/พาสคีย์ โค้ดฝั่ง client พร้อม (BLOCKED รอ Owner ตั้งค่า provider ใน Supabase Dashboard — LINE รอ Custom OIDC) · Gates 3/3 · lint ✅ 587 ไฟล์ · vitest 224 ไฟล์ / 2391 tests PASS (+3 R54) · build ✅) — **CODE_CLOSED + PUSHED + รอ Owner ทดสอบ live กลุ่ม F**
+## 🔒 SESSION CLOSE 2026-11-20 (รอบ 55 · R55 · Background Music file-based engine + Mascot badge fix + OAuth/Passkey ALL CONFIGURED:
+
+**Background Music (file-based engine ทดแทน WebAudio synth ทั้งหมด):**
+- `src/lib/backgroundMusic.ts` ใหม่ — lib ครบ: validate/compress/upload/delete/list + shuffle queue (`createShuffleQueue` ใช้หมดทุกเพลงก่อนวน)
+- `src/lib/ambientMusic.ts` rewrite — HTMLAudioElement engine (`createAudioFileEngine`) + shuffle queue + ducking 25% (DUCK_RAMP_SEC=0.25s, RESTORE_RAMP_SEC=0.6s) + volume persist `bmb-music-volume` + no autoplay
+- `src/pages/admin/BackgroundMusicSettingsPage.tsx` ใหม่ — Admin UI: bucket list + `<audio controls>` preview + file upload (accept="audio/*" + drag-drop) + URL import (fetch→compress→upload) + enable toggle (`business_settings.ambient_music.enabled`) + delete/copy URL
+- `src/components/admin/AdminHubs.tsx` — เพิ่ม tab `music` ใน SettingsHub
+- `supabase/migrations/103_background_music_bucket_policies.sql` — RLS: public read (anon SELECT) + admin write (authenticated + role='admin') + idempotent bucket create (ON CONFLICT DO NOTHING — CI-safe)
+- `compressAudioForMusic` จริง: WebM Opus 128kbps mono via AudioContext + MediaRecorder ≤2MB target (fallback original)
+
+**Mascot Badge Fix (F-1):**
+- `src/index.css:1173-1182` — `.section-float-mascot` ลบ `border-radius: 50%` + เปลี่ยน `floatLogo` → `float` (translateY only)
+- 7 จุด overflow fix: `HomePage.tsx:521,533,551` · `ReviewPage.tsx:191,226` · `MenuPage.tsx:342` · `CategorySections.tsx:178` · `PromotionStrip.tsx:20` · `VerifiedReviewsSection.tsx:80` — เพิ่ม `min-w-0` + `truncate`
+
+**OAuth/Passkey — ทั้ง 4 ช่องทางพร้อมใช้งานจริง (Owner ตั้งค่า Dashboard เสร็จแล้ว):**
+- **Google** (built-in) — Client ID/Secret ✅
+- **Facebook** (built-in) — App ID/Secret + Public ✅
+- **LINE** (Custom OIDC) — Channel ID/Secret + Attribute Mapping (sub/email/name/picture) ✅
+- **Passkey** (built-in) — RP ID + Origin ✅
+
+**Gates:** lint ✅ (591 ไฟล์ + brandNameGuard + languageSanity) · **vitest 226 files / 2422 tests PASS** (+42 รวม 13 backgroundMusic + 16 ambientMusic rewrite + 13 rXXBackgroundMusicAdmin) · build ✅ (tsc + vite + PWA) — **CODE_CLOSED + PUSHED + รอ Owner ทดสอบ live กลุ่ม F**
+
+> **คำสั่ง Owner:** "ทำหมดแล้ว ตั้งค่าCustom OIDC แล้วด้วย ตรวจสอบและอัพเดทสถานะจริง งานทั้งหมดเซสซั่นนี้เป็นภาษาไทย อัพเดทลงเอกสารปิดเซสซั่นไปรอทดสอบทั้งหมดใหม่ที่แชทหน้า"
+
+> **หลักฐาน probe จริง (Migration 103 CI-safe):**
+> 1. `INSERT INTO storage.buckets ... ON CONFLICT DO NOTHING` — bucket `background_music` สร้างเองถ้ายังไม่มี (ephemeral PG CI ผ่าน)
+> 2. RLS policies: public SELECT + admin INSERT/UPDATE/DELETE (role='admin' guard) — pattern เดียวกับ migration 011 (bmb-images)
+> 3. `compressAudioForMusic` ใน jsdom = fallback original (AudioContext/MediaRecorder unavailable) · บนเบราว์เซอร์จริง = WebM Opus 128kbps mono
+
+> **แก้ 19 ไฟล์ (+1255/−151):**
+> 1. `src/lib/backgroundMusic.ts` (ใหม่)
+> 2. `src/lib/ambientMusic.ts` (rewrite — ลบ synthetic WebAudio)
+> 3. `src/pages/admin/BackgroundMusicSettingsPage.tsx` (ใหม่)
+> 4. `src/components/admin/AdminHubs.tsx` (เพิ่ม tab music)
+> 5. `src/index.css` (mascot badge fix + overflow fixes)
+> 6. `src/pages/HomePage.tsx` / `ReviewPage.tsx` / `MenuPage.tsx` / `CategorySections.tsx` / `PromotionStrip.tsx` / `VerifiedReviewsSection.tsx` (min-w-0 + truncate)
+> 7. `supabase/migrations/103_background_music_bucket_policies.sql` (ใหม่ — CI-safe)
+> 8. `src/__tests__/backgroundMusic.test.ts` (ใหม่ 13 tests)
+> 9. `src/__tests__/ambientMusic.test.ts` (rewrite 16 tests)
+> 10. `src/__tests__/rXXBackgroundMusicAdmin.test.ts` (ใหม่ 13 source-contract tests)
+
+> **Gates:** `npm run lint` ✅ · `npm run test` ✅ (**226 files / 2422 tests PASS**) · `npm run build` ✅ (tsc + vite + PWA)
+
+> **Files Changed:** `src/lib/backgroundMusic.ts` · `src/lib/ambientMusic.ts` · `src/pages/admin/BackgroundMusicSettingsPage.tsx` · `src/components/admin/AdminHubs.tsx` · `src/index.css` · `src/pages/HomePage.tsx` · `src/pages/ReviewPage.tsx` · `src/pages/MenuPage.tsx` · `src/components/home/CategorySections.tsx` · `src/components/home/PromotionStrip.tsx` · `src/components/home/VerifiedReviewsSection.tsx` · `supabase/migrations/103_background_music_bucket_policies.sql` · `src/__tests__/backgroundMusic.test.ts` · `src/__tests__/ambientMusic.test.ts` · `src/__tests__/rXXBackgroundMusicAdmin.test.ts`
+
+> **รอ Owner ทดสอบ live (กลุ่ม F — ตารางใน BMB_REMAIN_TESTS_LIVE ใหม่):** F-1 mascot ลอยจริง/hover/ลากค้างตำแหน่ง · F-2 logout จริง · F-3 anon โหวต UX ตรง · F-4 โหวตจริง authenticated · F-5 login เบอร์โทร · F-6 OAuth ทั้ง 4 (Google/Facebook/LINE/Passkey) · F-7 เล่นเพลงพื้นหลัง (enable → toggle → shuffle → ducking เมื่อ Bite พูด) · carried: กลุ่ม E (A-4R/A-5/B-3/4/5) คงอยู่
 
 > **คำสั่ง Owner:** "จากสถานะล่าสุด ปรับปรุง hover ของมาสคอต มีหลายตัวเคลื่อนไหวแล้วหลุดเฟรม · ระบบล้อกอิน เพิ่มวิธีเข้าระบบด้วยเบอร์โทรด้วย(มีของเก่าเอามาใช้อยู่ที่แท๊บเข้าสู่ระบบด่วน) และตรวจสอบการล้อกอินทุกช่องทางว่าสมบูรณ์พร้อมจริงหรือไม่" + "ขอเพิ่ม 2 อาการ: ทุกผู้ใช้งานกดออกแล้วไม่ออกไปเข้าระบบใหม่จริง · ระบบโหวตขัดข้อง" + "OAuth/Passkey ต้องใช้ได้" + "migration 208+058 อนุมัติ ติดตั้งบน Supabase server ด้วย (คิดว่ามีทำแล้วนะ)"
 

@@ -4,6 +4,21 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-20 (R55 — Background Music file-based engine + Mascot badge fix + OAuth/Passkey ALL CONFIGURED · vitest 2422/2422 · CODE_CLOSED + PUSHED · รอ Owner ทดสอบ live กลุ่ม F):**
+- **Background Music (file-based engine ทดแทน WebAudio synth ทั้งหมด — bucket `background_music`):** 
+  - `lib/backgroundMusic.ts` ใหม่ — validate/compress/upload/delete/list + shuffle queue (`createShuffleQueue` ใช้หมดทุกเพลงก่อนวน) · `compressAudioForMusic` จริง: WebM Opus 128kbps mono via AudioContext + MediaRecorder ≤2MB target (fallback original)
+  - `lib/ambientMusic.ts` rewrite — HTMLAudioElement engine (`createAudioFileEngine`) + shuffle queue + ducking 25% (0.25s ramp) + restore 0.6s + volume persist `bmb-music-volume` + no autoplay
+  - `pages/admin/BackgroundMusicSettingsPage.tsx` ใหม่ — Admin UI: bucket list + `<audio controls>` preview + file upload (accept="audio/*" + drag-drop) + URL import (fetch→compress→upload) + enable toggle (`business_settings.ambient_music.enabled`) + delete/copy URL
+  - `components/admin/AdminHubs.tsx` — เพิ่ม tab `music` ใน SettingsHub
+  - `supabase/migrations/103_background_music_bucket_policies.sql` — RLS: public read (anon SELECT) + admin write (authenticated + role='admin') + idempotent bucket create (CI-safe)
+- **Mascot Badge Fix (F-1):** `index.css:1173-1182` `.section-float-mascot` ลบ `border-radius: 50%` + เปลี่ยน `floatLogo` → `float` (translateY only) · 7 จุด overflow fix (`HomePage`, `ReviewPage`, `MenuPage`, `CategorySections`, `PromotionStrip`, `VerifiedReviewsSection`) — `min-w-0` + `truncate`
+- **OAuth/Passkey — ทั้ง 4 ช่องทางพร้อมใช้งานจริง (Owner ตั้งค่า Dashboard เสร็จแล้ว):**
+  - **Google** (built-in) — Client ID/Secret ✅
+  - **Facebook** (built-in) — App ID/Secret + Public ✅
+  - **LINE** (Custom OIDC) — Channel ID/Secret + Attribute Mapping (sub/email/name/picture) ✅
+  - **Passkey** (built-in) — RP ID + Origin ✅
+- **Gates:** lint ✅ (591 ไฟล์ + brandNameGuard + languageSanity) · **vitest 226 files / 2422 tests PASS** (+42: 13 backgroundMusic + 16 ambientMusic rewrite + 13 rXXBackgroundMusicAdmin) · build ✅ (tsc + vite + PWA) — **CODE_CLOSED + PUSHED + รอ Owner ทดสอบ live กลุ่ม F**
+
 **🔒 LIVE STATE 2026-11-20 (R54 — มาสคอตลอยจริงไม่หลุดเฟรม + logout จริง + โหวต UX ตรงสาเหตุ + login เบอร์โทร · vitest 2391/2391 · CODE_CLOSED + PUSHED · รอ Owner ทดสอบ live กลุ่ม F):**
 - **มาสคอตลอย/หลุดเฟรม (Owner: "ปรับปรุง hover ของมาสคอต มีหลายตัวเคลื่อนไหวแล้วหลุดเฟรม"):** พบจากโค้ดจริง — `.animate-float` เป็น **dead class** (ไม่มีนิยามทั้ง repo ทั้ง theme token และ CSS class — MascotBadge R52 ยกเว้น `.animate-float` ไว้ให้ลอยเองแต่ลอยไม่ได้) → **แก้ 3 ชั้น:** ①นิยาม `.animate-float` bind `@keyframes float` ที่มีอยู่ (index.css) ②ลอยย้ายมาที่ div เนื้อหาใน BiteMascot — ปุ่มเหลือ `hover:scale-105/active:scale-95` ล้วน (transform เดียวต่อองค์ประกอบ — เดิมปุ่มมี animate-float ชน hover ทับกัน) ③wrapper ถอด animate-float (เดิม animation บนชั้นที่ลากด้วย transform inline = ชนกันแล้วมาสคอตหลุดจากตำแหน่งที่ลากไว้)
 - **Logout จริง (Owner: "ทุกผู้ใช้งานกดออกแล้วไม่ออกไปเข้าระบบใหม่จริง"):** เดิม `handleLogout()` เรียก `logout()` โดยไม่ await แล้ว `window.location` ทันที → `supabase.auth.signOut()` ยังไม่เสร็จก่อนหน้าโหลดใหม่ → session ค้าง กลับมา login เจอ session เดิมไม่เปิดฟอร์ม → **แก้:** `await logout()` จริง + `finally` พาไป `/login` เสมอ (ทั้งปุ่มเดสก์ท็อปและเมนูมือถือ)
