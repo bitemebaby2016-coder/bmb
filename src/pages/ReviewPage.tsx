@@ -188,8 +188,9 @@ export function ReviewPage() {
       <section className='mb-10' data-testid='review-real-section'>
         {/* R89 (Owner ~23:40 น.): สองหัวข้อรีวิวซ้ำ = หมวดเดียวกัน → ยุบเป็นหัวข้อเดียว
             · ใหม่สุดขึ้นก่อน (feed = created_at desc) · การ์ดรีวิวมีโลโก้+ดาว แบบการ์ด Grab/FB */}
-        <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2'>📸 รีวิวจริงจากลูกค้า
-            <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite การันตีรีวิวจริง" className="section-float-mascot" />
+        <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2 min-w-0'>
+          <span className='truncate'>📸 รีวิวจริงจากลูกค้า</span>
+          <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite การันตีรีวิวจริง" className="section-float-mascot shrink-0" />
         </h2>
         <p className='text-sm text-brand-muted mb-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ — ใหม่สุดแสดงก่อน · รีวิวใหม่ขึ้นเว็บหลังแอดมินอนุมัติ</p>
         {loading ? <p>Loading reviews...</p> : loadError ? (
@@ -223,8 +224,9 @@ export function ReviewPage() {
       {/* R89: เซคชันซ้ำ ("รีวิวจากลูกค้าที่สั่งซื้อจริง" + "📸 รีวิวจริงจากลูกค้า") ถูกยุบเข้าหัวข้อเดียว
           "📸 รีวิวจริงจากลูกค้า" ด้านบนแล้ว (Owner: "มันคือหมวดเดียวกัน") — รูปจริงอยู่ใน Admin Portfolio ด้านล่าง */}
       <section className='mb-10'>
-        <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-3'>Admin Portfolio
-            <MascotBadge pose="award" size="sm" alt="น้อง Bite ผลงาน" className="section-float-mascot" />
+        <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-3 min-w-0'>
+          <span className='truncate'>Admin Portfolio</span>
+          <MascotBadge pose="award" size="sm" alt="น้อง Bite ผลงาน" className="section-float-mascot shrink-0" />
         </h2>
         {portfolio.length > 0 ? (
           <div className='grid grid-cols-3 gap-3'>

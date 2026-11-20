@@ -74,10 +74,10 @@ export function VerifiedReviewsSection({ reviews, products }: VerifiedReviewsSec
   return (
     <section className="mb-10 scroll-mt-20" aria-labelledby="verified-reviews-heading">
       <div className="flex items-center justify-between mb-4">
-        <h2 id="verified-reviews-heading" className="text-xl font-display font-bold text-brand-accent flex items-center gap-2">
-          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">✓</span>
-          รีวิวจากลูกค้าที่สั่งซื้อจริง
-            <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite รีวิวสั่งซื้อจริง" className="section-float-mascot" />
+        <h2 id="verified-reviews-heading" className="text-xl font-display font-bold text-brand-accent flex items-center gap-2 min-w-0">
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold shrink-0">✓</span>
+          <span className="truncate">รีวิวจากลูกค้าที่สั่งซื้อจริง</span>
+            <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite รีวิวสั่งซื้อจริง" className="section-float-mascot shrink-0" />
         </h2>
       </div>
       

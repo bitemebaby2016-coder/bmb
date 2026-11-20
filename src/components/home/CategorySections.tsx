@@ -168,14 +168,14 @@ export function CategorySections({
         <div className="flex items-center justify-between mb-2">
           <h3
             id={headingId}
-            className={`${grouped ? 'text-lg' : 'text-xl'} font-display font-bold text-brand-accent flex items-center gap-2`}
+            className={`${grouped ? 'text-lg' : 'text-xl'} font-display font-bold text-brand-accent flex items-center gap-2 min-w-0`}
           >
-            <span>{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>
+            <span className="truncate">{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>
             <MascotBadge
               pose={pose}
               size="sm"
               alt={`น้อง Bite ประจำหมวด ${cat.name}`}
-              className="section-float-mascot"
+              className="section-float-mascot shrink-0"
             />
           </h3>
           <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>

@@ -15,9 +15,9 @@ export function PromotionStrip({ promotions }: { promotions: HomePromotion[] }) 
   return (
     <section className="mb-10 scroll-mt-20" aria-labelledby="home-promo-heading">
       <div className="flex items-center justify-between mb-2">
-        <h2 id="home-promo-heading" className="text-xl font-display font-bold text-brand-accent flex items-center gap-2">
-          🎟️ โปรโมชั่น
-            <MascotBadge pose="award" size="sm" alt="น้อง Bite โปรโมชั่น" className="section-float-mascot" />
+<h2 id="home-promo-heading" className="text-xl font-display font-bold text-brand-accent flex items-center gap-2 min-w-0">
+          <span className="truncate">🎟️ โปรโมชั่น</span>
+            <MascotBadge pose="award" size="sm" alt="น้อง Bite โปรโมชั่น" className="section-float-mascot shrink-0" />
         </h2>
         <Link to="/promotions" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
       </div>

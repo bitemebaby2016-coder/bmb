@@ -1174,9 +1174,8 @@ html[data-theme='graphite'] .review-album-close:hover {
   width: 34px;
   height: 34px;
   object-fit: contain;
-  border-radius: 50%;
   filter: drop-shadow(0 5px 9px rgba(146, 64, 14, 0.28));
-  animation: floatLogo 4.5s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite;
   pointer-events: none;
   flex-shrink: 0;
 }
