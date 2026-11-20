@@ -1,3 +1,38 @@
+## 🔒 SESSION CLOSE 2026-11-20 (รอบ 56 · R78+R79+R80 · โพสต์การตลาด 5 รูป + Studio picker แท็บหัวข้อเมนูครบทุกเมนู + Floating Ad Exact Clone + **m209 APPLIED PROD ✓ + ledger backfill 5 ตัว**) — **CODE_CLOSED + PUSHED + CI 2/2 GREEN × 3 commits · รอ Owner ทดสอบ live กลุ่ม G**
+
+> **คำสั่ง Owner (ต่อเนื่อง 4 คำสั่ง):** ①"แท็บวางแผนกับสร้างโพส เลือกรูปได้สูงสุด 5 รูป (เมนู+AIเจน) + อัปโหลดจากเครื่องย่อ ≤500KB ขึ้น bmb-images/uploads" ②"อ่าน ai entry point, working state, master rules ก่อนโค้ด ทำงานตามกฏ ทดสอบจริงจนผ่านถึงอนุญาติคอมมิทพุช" ③"ผ่าน CI จริง... Studio picker แสดงให้หมดทุกเมนูแยกแท็บตามหัวข้อ + เมนูใหม่อนาคต" ④"Floating Ad ต้องก๊อปปี้ซิ้งกับข้อมูลตรงกับที่สร้าง ทั้งโปรโมชั่นและเมนูตามที่แอดมินจิ้มเลือก" ⑤"อนุมัติแอพพลายมิเกรชั่นที่ขาดอยู๋รวม209 สู่โปรดักชั่น + อัพเดท ai work state, remain test, master status ปิดเซสซั่นรอทดสอบ live"
+
+**R78 — เลือกรูปประกอบโพสต์สูงสุด 5 รูป (ยกเลิก R44 gen-single ตามสั่งเจ้าของ):**
+- `MAX_POST_IMAGES=5` + helper `addImages()` (dedupe + cap + toast) · ยกเลิกตัวกรอง genOnes ใน handleCreatePost/handleSaveEditPost
+- `pickAiImage` = toggle เลือก/เลิก + album highlight (ขอบสี+✓+ปุ่ม "เลิก") · Planner จิ้มเมนู = append (ไม่ทับ)
+- `handleBrowseImage`: multi-file + ย่อ 1080px/≤500KB (`POST_IMAGE_MAX_SIDE/BYTES` ใหม่ใน bmbAdminApi_media) + อัป `bmb-images/uploads/mk-<ts>-<name>`
+- social-publish-worker: FB attached_media 4 → **5** (publishToFeed + handler)
+- เทสต์ r44 รีไรต์ 12 เคส + r63/r38/r34 อัปเดต
+
+**R79 — Studio picker แท็บหัวข้อเมนูจริง ครบทุกเมนู (ไม่มีเพดาน 20):**
+- load() ใช้ canonical `getProducts()` + `getCategories()` (TEN-06) · จัดแท็บด้วย `buildHeadingGroups` **ตัวเดียวกับ /shop และ /menu** — หัวข้อ/เมนูใหม่อนาคตเข้าอัตโนมัติ
+- แท็บ (icon+ชื่อ+จำนวน) → โชว์ครบทุกเมนูในหัวข้อ · 🚫 = ไม่มีรูป · ✓ = อยู่ในชุด · Planner picker คงเดิม R32 ผ่าน `sellableCatalog`
+- เทสต์ r44 +เคส R79 · stickerQueueR31/r34 assertion → `getProducts()`
+
+**R80 — Floating Ad Exact Clone (โคลนข้อมูลตรงจากที่แอดมินจิ้มเลือก):**
+- **m209:** `is_floating_ad` บน products + marketing_posts (additive + 2 partial indexes + comments)
+- `FloatingAdBanners.tsx` — ลบ prefix 📣🔥🎁 ทั้งหมด + ลบ fallback "ประกาศจากร้าน"/ราคา + ไม่ตัด description 140 · รับ promos จาก parent · badge เงียบ 3 ชนิด · mascot R61 คงเดิม
+- `HomePage.tsx` — 3 explicit sources: `floating_promotions` (is_banner) · `floating_products` (is_floating_ad) · `floating_posts` (is_floating_ad + published) + R64 interleaving cap 3
+- Admin UI: AdminProducts toggle+badge · AdminMarketing toggle (โพสต์ published) · ContentTab sources 3 แบบใหม่
+- เทสต์ r58/r61/r63/r38/r34/stickerQueue/r44 อัปเดตตรง architecture ใหม่
+
+**Gates:** lint ✅ · **vitest 226 files / 2431 tests PASS** (+9 จาก R78-R80) · build ✅ (tsc + vite + PWA) · **CI จริง 2/2 success ทั้ง 3 commits** (`71667e8` · `9d43386` · `4fc13a2` — ยืนยันผ่าน GitHub API ทั้ง CI + Contract Tests)
+
+**Migrations deploy จริงบน prod (Owner อนุมัติ · 2026-11-20 · ผ่าน Management API pattern เดิม):**
+- **พิสูจน์ก่อนยิง (READ-ONLY):** `e2e/prodCheckMigrations.cjs --remote` → missing = 186/205/206/207/208/209 · `e2e/_r80DeployProbe.cjs` (schema จริง: 186=bkk ✓ 205=2/2 ✓ 206=bucket ✓ 208=2/2 ✓ **207=apply แล้วจริง** — `_r80Probe207.cjs` เจอ my_deliveries v3 5-param has_sched=true (args ใช้ "timestamp with time zone" เต็ม ต่างจาก probe ระบุ timestamptz) · 209=0/0 = หายจริง)
+- **Apply:** 209 เท่านั้น (`e2e/_r80Apply209.cjs` — verify cols 2/2 + indexes 2/2 + ledger top 209)
+- **Record ledger backfill 5 ตัว (apply ค้างไม่ record ตามหลักฐาน schema):** 186/205/206/207/208 → **ledger รวม 6/6** (`e2e/_r80_verify_ledger.json` · prod history รวม = **208 รายการ** จาก 213 ไฟล์ — PROPOSED_* ไม่นับ)
+- **ห้ามลืม:** 207/208 เป็นของที่ apply ไปแล้วก่อนหน้า (Owner ยืนยัน 2026-11-17/19) — record เพื่อให้ `supabase db push` อนาคตไม่ซ้ำ/ไม่ค้าง parity
+
+**ค้างในเซสชันนี้ (ตามคำสั่งปิด):** รอ Owner ทดสอบ live **กลุ่ม G (7 ข้อ ใหม่)** + กลุ่ม F (7) + E (7) + A รอบ 2 (2) + B รอบ 2 (3) = **26 ข้อ** ใน `docs/BMB_REMAIN_TESTS_LIVE_2026-11-20.md`
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-20 (รอบ 55 · R55 · Background Music file-based engine + Mascot badge fix + OAuth/Passkey ALL CONFIGURED:
 
 **Background Music (file-based engine ทดแทน WebAudio synth ทั้งหมด):**

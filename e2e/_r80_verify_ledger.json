@@ -1,0 +1,32 @@
+{
+  "at": "2026-11-20T17:18:34.289Z",
+  "http": 201,
+  "rows": [
+    {
+      "version": "186",
+      "name": "186_promotion_date_bkk"
+    },
+    {
+      "version": "205",
+      "name": "205_social_order_actions"
+    },
+    {
+      "version": "206",
+      "name": "206_mascot_bucket_selfservice"
+    },
+    {
+      "version": "207",
+      "name": "207_rider_history_dates"
+    },
+    {
+      "version": "208",
+      "name": "208_preorder_vote_cast"
+    },
+    {
+      "version": "209",
+      "name": "209_add_floating_ad_flags"
+    }
+  ],
+  "count": 6,
+  "ok": true
+}

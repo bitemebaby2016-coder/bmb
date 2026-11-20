@@ -1,15 +1,46 @@
-# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-20 · R55 Complete · Code Cleanup Complete)
+# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-20 · R55 Complete + R78/R79/R80 Complete + m209 APPLIED PROD · Code Cleanup Complete)
 
 > **📋 สถานะ deployment จริง (ยืนยัน 2026-11-20):**
 > - **R55 pushed:** `e31312d` (Background Music + Mascot badge fix + OAuth/Passkey ALL CONFIGURED)
+> - **R78/R79/R80 pushed:** `71667e8` + `9d43386` + `4fc13a2` (โพสต์การตลาด 5 รูป · Studio picker แท็บหัวข้อ · Floating Ad Exact Clone) — **CI 2/2 success ทั้ง 3 commit** (ยืนยันผ่าน GitHub API)
 > - **Migration 103** CI-safe (idempotent bucket create + RLS)
-> - **vitest 226 files / 2422 tests PASS** · lint ✅ · build ✅ (tsc + vite + PWA)
+> - **Migration 209 APPLIED PROD ✓ (2026-11-20 · Owner อนุมัติ "อนุมัติแอพพลายมิเกรชั่นที่ขาดอยู๋รวม209")** — `is_floating_ad` บน products + marketing_posts (verify cols 2/2 + indexes 2/2 · evidence `e2e/_r80_apply209_result.json`) · **+ record ledger ค้าง 5 ตัว (186/205/206/207/208)** — พิสูจน์แล้วว่า apply อยู่แล้วจาก schema จริง แต่ไม่เคย record (probe `e2e/_r80_deploy_probe.json` + `_r80_probe_207.json` · ledger หลัง = `e2e/_r80_verify_ledger.json` ครบ 6/6 · history prod รวม = 208 รายการ)
+> - **vitest 226 files / 2431 tests PASS** · lint ✅ · build ✅ (tsc + vite + PWA)
 > - **OAuth/Passkey ทั้ง 4 ช่องทาง Owner ตั้งค่า Dashboard เสร็จแล้ว** (Google/Facebook built-in · LINE Custom OIDC · Passkey built-in)
 > - Cloudflare Pages auto-deploy จาก push (รอ 2-3 นาที)
 
 > **📌 ฉบับนี้ = รายการเดียวที่ต้องรัน** (แทนที่ 2026-11-15 ทั้งหมด — ของปิดแล้วไม่อยู่ในนี้)
 > · สร้างตามคำสั่ง Owner 2026-11-20: "ทำทุกสถานะให้พร้อม อัพเดทเอกสารจากโค้ดจริงปัจจุบันรวมถึงสร้าง remain test ใหม่ ให้เหลือแต่ทดสอบบน live จริงเท่านั้น"
 > · **กติกาเดิมทุกข้อ:** ใช้ `https://biteme-baby.com` · **hard reload (Ctrl+Shift+R) 1 ครั้ง** ก่อนเริ่ม · บันทึก `ข้อ ID · เวลา · อุปกรณ์ · PASS/FAIL · evidence (ภาพ/copy ข้อความ verbatim)` · **FAIL = จด defect ใหม่ลง AI_WORK_STATE + two-try** · **SKIPPED ≠ PASS · ห้ามตัดข้อทิ้ง** · **ห้ามใช้ข้อมูลลูกค้าจริง** · ออเดอร์ทดสอบ = cancel ทำลายเมื่อจบ
+
+---
+
+## 🆕 กลุ่ม G — R78/R79/R80 (2026-11-20 · โพสต์การตลาด 5 รูป + Studio picker แท็บหัวข้อ + Floating Ad Exact Clone · รอ Owner live test)
+
+> เงื่อนไขก่อนเริ่ม: m209 APPLIED PROD ✓ · push `4fc13a2` รอ Cloudflare deploy 2-3 นาที · hard reload (Ctrl+Shift+R) 1 ครั้ง · ล็อกอินแอดมิน
+> Gates โค้ด: lint ✅ · vitest 226 ไฟล์ / 2431 tests PASS (+9 จาก R78-R80) · build ✅ · CI 2/2 success (commit `71667e8`, `9d43386`, `4fc13a2`)
+
+| ข้อ | รีเทสต์อะไร | วิธีทำ | เกณฑ์ผ่าน |
+|---|---|---|---|
+| **G-1** | โพสต์การตลาดแนบได้ 5 รูป (R78) | /admin/marketing → แท็บสร้างโพสต์ → เลือกรูปจากอัลบั้ม AI 5 รูป (ปุ่ม "ใช้") → กดรูปที่ 6 | ตัวนับ "แนบรูปแล้ว 5/5 รูป" · กดรูปที่ 6 = toast "เลือกได้สูงสุด 5 รูป" + ปุ่ม disable · กด "เลิก" รูปที่เลือกแล้ว = หลุดจากชุด (toggle) · อัลบั้มไฮไลต์รูปที่เลือก (ขอบสี + ✓) |
+| **G-2** | อัปโหลดหลายไฟล์จากเครื่อง ≤500KB (R78) | แท็บสร้างโพสต์ → "เลือกไฟล์สูงสุบมุจากเครื่อง" → เลือก 3-5 ไฟล์รูปใหญ่พร้อมกัน | อัปโหลดสำเร็จ + toast "ย่ออัตโนมัติ (ยาวสุด 1080px / ≤500KB)" · รูปเข้าชุด (ตัวนับเพิ่ม) · ไฟล์เกิน 5 = toast แจ้งข้าม · เช็ค Supabase → bucket `bmb-images` → `uploads/mk-<timestamp>-...` (ไฟล์ webp ≤500KB) |
+| **G-3** | Studio picker แท็บตามหัวข้อครบทุกเมนู (R79) | แท็บสร้างโพสต์ → การ์ด "🍽️ เลือกจากเมนูทั้งหมด (แท็บตามหัวข้อ)" → กดสลับทุกแท็บ | แท็บ = หัวข้อเมนูจริง (ชื่อ + icon + จำนวน) **ตรงกับหน้า /shop** · แต่ละแท็บโชว์ **ครบทุกเมนูในหัวข้อ (ไม่มี "แสดง 20 รายการแรก")** · 🚫 = เมนูไม่มีรูป (กดไม่ได้) · ✓ = อยู่ในชุดแล้ว (disabled) · เมนูใหม่ที่เพิ่มในอนาคตเข้าแท็บเอง |
+| **G-4** | Planner จิ้มเมนู = append รูป (R78) | แท็บวางแผน → จิ้มเมนู 2-3 ตัวติดกัน → กลับมาแท็บสร้างโพสต์ | หัวข้อ/เนื้อหาเติมตามเมนูสุดท้าย · รูปเมนู **เพิ่มเข้าชุดทีละรูป (ไม่ทับของเดิม)** จนครบ 5 · ลบเตือน "มีภาพเจน = ใช้ภาพเจนรูปเดียว" (R44 ยกเลิก — ภาพเจน+เมนู+อัปโหลดผสมกันได้) |
+| **G-5** | Floating Ad ตั้งจากแอดมิน = โคลนข้อมูลตรง (R80 — เมนู) | /admin/products → แก้เมนู 1 ตัว → เปิด toggle "📌 Floating Ad" → บันทึก → hard reload /shop | การ์ดโฆษณาลอยโชว์ **เมนูที่เลือกพอดี** (badge "🍽️ เมนูแนะนำ") · title = ชื่อเมนู **ตรงๆ ไม่มี 🔥 นำหน้า** · description = คำอธิบายเมนู **เต็ม ไม่ตัด** · รูป = รูปเมนูจริง · ปุ่มบัตรในการ์ดมี badge "📌 Floating Ad" |
+| **G-6** | Floating Ad ตั้งจากโพสต์ (R80 — โพสต์) | โพสต์การตลาดที่ published แล้ว 1 ใบ → /admin/marketing คิวอนุมัติ (แถว linked) → เปิด toggle "📌 Floating Ad" → hard reload /shop | การ์ดโฆษณาลอยโชว์ **โพสต์นั้นพอดี** (badge "📝 โพสต์") · title = หัวข้อโพสต์ **ตรงๆ ไม่มี 📣 นำหน้า ไม่มี "ประกาศจากร้าน"** · description = เนื้อหาโพสต์ **เต็ม** · รูป = รูปแรกของโพสต์ · ปิด toggle = การ์ดหาย |
+| **G-7** | Floating Ad โปรโมชั่น (เดิม) ไม่พัง + สลับ 3 แหล่ง (R80) | ตั้ง is_banner=true ให้โปร 1 ตัว (มีรูป+มาสคอต) + เมนู 1 ตัว + โพสต์ 1 ใบ → ดู /shop | โชว์สูงสุด 3 การ์ด สลับชนิด โปร→เมนู→โพสต์ (R64) · การ์ดโปร = badge "🎁 โปรโมชั่น" + รูป banner + มาสคอต banner_mascot (R61 คงเดิม) · โค้ดคูปองแสดง + ปุ่ม "ดูดีลเลย" ไป /menu?coupon= · /admin/settings ช่อง floating_ad_enabled ปิด = ทุกการ์ดหาย · checkbox sources (3 แบบใหม่) บันทึกได้ |
+
+**ตารางบันทึกผลกลุ่ม G** (กรอกเมื่อทดสอบ):
+
+| ข้อ | เวลา | อุปกรณ์ | PASS/FAIL | evidence |
+|---|---|---|---|---|
+| G-1 | | | | |
+| G-2 | | | | |
+| G-3 | | | | |
+| G-4 | | | | |
+| G-5 | | | | |
+| G-6 | | | | |
+| G-7 | | | | |
 
 ---
 
@@ -93,15 +124,16 @@
 
 ---
 
-## 📋 สรุปรายการที่เหลือ (2026-11-20)
+## 📋 สรุปรายการที่เหลือ (2026-11-20 หลัง R78/R79/R80 + m209 APPLIED)
 
 | กลุ่ม | จำนวนข้อ | สถานะ |
 |------|----------|-------|
-| **F (R55 ใหม่)** | 7 | 🆕 พร้อมทดสอบ |
+| **G (R78/R79/R80 ใหม่)** | 7 | 🆕 พร้อมทดสอบ |
+| **F (R55)** | 7 | 🔄 carried over |
 | **E (R44–R48b)** | 7 | 🔄 carried over |
 | **A รอบ 2** | 2 | 🔄 carried over |
 | **B รอบ 2** | 3 | 🔄 carried over |
-| **รวม** | **19 ข้อ** | |
+| **รวม** | **26 ข้อ** | |
 
 ---
 

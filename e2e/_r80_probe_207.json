@@ -1,0 +1,18 @@
+{
+  "at": "2026-11-20T17:16:52.846Z",
+  "http": 201,
+  "body": [
+    {
+      "sig": [
+        {
+          "args": "p_driver_phone text",
+          "has_sched": false
+        },
+        {
+          "args": "p_driver_phone text, p_assigned_from timestamp with time zone, p_assigned_to timestamp with time zone, p_scheduled_from date, p_scheduled_to date",
+          "has_sched": true
+        }
+      ]
+    }
+  ]
+}

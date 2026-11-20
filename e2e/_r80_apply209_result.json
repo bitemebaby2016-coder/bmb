@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-20T17:17:59.123Z",
+  "file": "supabase/migrations/209_add_floating_ad_flags.sql",
+  "project": "ivkdfognyiwjcmrhcnwz",
+  "owner_approved": "2026-11-20 apply missing migrations incl. 209",
+  "precheck": {
+    "colsBefore": "[]",
+    "fnsSanity": "[{\"n\":6}]"
+  },
+  "apply": {
+    "raw": "[]"
+  },
+  "verify": {
+    "colsAfter": "[{\"table_name\":\"marketing_posts\",\"column_name\":\"is_floating_ad\",\"column_default\":\"false\",\"is_nullable\":\"NO\"},{\"table_name\":\"products\",\"column_name\":\"is_floating_ad\",\"column_default\":\"false\",\"is_nullable\":\"NO\"}]",
+    "indexes": "[{\"indexname\":\"idx_marketing_posts_is_floating_ad\",\"indexdef\":\"CREATE INDEX idx_marketing_posts_is_floating_ad ON public.marketing_posts USING btree (is_floating_ad) WHERE ((is_floating_ad = true) AND (status = 'published'::text))\"},{\"indexname\":\"idx_products_is_floating_ad\",\"indexdef\":\"CREATE INDEX idx_products_is_floating_ad ON public.products USING btree (is_floating_ad) WHERE ((is_floating_ad = true) AND (is_available = true) AND (archived = false))\"}]",
+    "comment": "[{\"products_commented\":false}]"
+  },
+  "record": {
+    "ins209": "[]",
+    "insBackfill": "[]",
+    "reload": "[]",
+    "ledgerTopAfter": "[{\"version\":\"209\",\"name\":\"209_add_floating_ad_flags\"},{\"version\":\"208\",\"name\":\"208_preorder_vote_cast\"},{\"version\":\"207\",\"name\":\"207_rider_history_dates\"},{\"version\":\"206\",\"name\":\"206_mascot_bucket_selfservice\"},{\"version\":\"205\",\"name\":\"205_social_order_actions\"},{\"version\":\"204\",\"name\":null},{\"version\":\"203\",\"name\":null},{\"version\":\"202\",\"name\":\"202_add_approval_id_to_promotions.sql\"}]"
+  }
+}
