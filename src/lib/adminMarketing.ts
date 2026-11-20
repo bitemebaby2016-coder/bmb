@@ -29,6 +29,8 @@ export interface MarketingPostRow {
   publish_attempts: number
   created_at: string
   published_at: string | null
+  /** R80 (Owner 2026-11-20): true = แอดมินต้องการให้โพสต์นี้แสดงเป็น Floating Ad บนหน้าแรก (โคลนข้อมูลตรง ไม่ได้จาก marketing_feed_posts auto-select) */
+  is_floating_ad?: boolean
 }
 
 export interface MarketingRules {

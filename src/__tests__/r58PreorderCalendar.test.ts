@@ -53,16 +53,18 @@ describe('R58 ① — การ์ดประกาศ: ภาพเจนก�
     expect(mascotCornerForPosition(Number.NaN)).toBe(0)
   })
 
-  it('source: announcements ผูก image_urls ของโพสเอง + media สลับอัลบั้ม/โฆษณาลอย + composed = มุมสลับ', () => {
-    expect(fladSrc).toContain('image: pickMarketingAiImage(p.image_urls)')
-    // ลำดับ media: ภาพโปรโมชั่น (promo.image) → อัลบั้ม promo/festival (ไม่ใช่เมนู)
-    expect(fladSrc).toContain('const mediaSrc = promo.image || (albumImgs.length > 0')
+  it('R80: FloatingAdBanners รับ promos มาจาก parent (HomePage) ที่ query แล้วครบ 3 source ใหม่', () => {
+    // R80: ไม่มี pickMarketingAiImage เรียกใน component แล้ว — รับ promo.image ตรงจาก parent
+    expect(fladSrc).not.toContain('pickMarketingAiImage(p.image_urls)')
+    // รับ promo.image ตรง (Exact Clone) + fallback albumImgs
+    expect(fladSrc).toContain('const mediaSrc = promo.image')
+    // albumImgs ยังโหลด ai-generated/promo + festival สำหรับ fallback
     expect(fladSrc).toContain("'ai-generated/promo'")
     expect(fladSrc).toContain("'ai-generated/festival'")
     // มาสคอตตัวเล็กมุมรูป = คนละตัว/คนละมุมตามลำดับโพส
-    expect(fladSrc).toContain('const mascotSrc = mascotForPosition(pos)')
+    expect(fladSrc).toContain('mascotForPosition(pos)')
     expect(fladSrc).toContain('flad-mascot-composed flad-mascot-pos-')
-    expect(fladSrc).toContain('const positionOf = new Map(merged.map((p, i) => [p.id, i]))')
+    // positionOf logic ย้ายไป HomePage.tsx (R80) — ไม่ได้อยู่ใน FloatingAdBanners แล้ว
     // CSS: ยุบเล็ก (46%) + คลาส 4 มุม
     expect(cssSrc).toContain('height: 46%;')
     expect(cssSrc).toContain('.flad-media img.flad-mascot-pos-0')

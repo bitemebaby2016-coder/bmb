@@ -70,3 +70,54 @@
 ### ผลตรวจ (เหมือน CI เป๊ะ)
 - `npm test` (vitest run เต็มชุด): **226 ไฟล์ / 2,431 เทสต์ ผ่านทั้งหมด**
 - `npm run lint` ✅ · `npm run build` ✅
+
+---
+
+## เพิ่มเติม R80 (เจ้าของ 2026-11-20): Floating Ad โคลนข้อมูลตรงจากที่แอดมินเลือก (Exact Clone)
+
+### โจทย์
+เดิม Floating Ad มีแหล่งข้อมูล 4 แบบ:
+- `promotions` (is_banner=true) ✅ ถูกต้อง
+- `announcements` (marketing_feed_posts) ❌ เพิ่ม prefix 📣 + fallback + ตัดคำอธิบาย
+- `approved_banners` ❌ ไม่มีจริง
+- `recommended_menu` (popular items auto-select) ❌ เพิ่ม prefix 🔥 + fallback ราคา + **ไม่ได้มาจากที่แอดมินจิ้มเลือก**
+
+### แก้: ทำให้ Floating Ad "โคลน" ข้อมูลตรงจากที่แอดมินเลือก
+
+#### 1. Migration (209_add_floating_ad_flags.sql)
+- `products.is_floating_ad` BOOLEAN DEFAULT FALSE — flag เมนูที่แอดมินอยากให้ขึ้นโฆษณาลอย
+- `marketing_posts.is_floating_ad` BOOLEAN DEFAULT FALSE — flag โพสต์ที่แอดมินอยากให้ขึ้นโฆษณาลอย
+- Index สำหรับ query floating ad products/posts
+
+#### 2. FloatingAdBanners.tsx — Exact Clone (R80)
+- รับ `promos` มาจาก parent (HomePage) ที่ query แล้วครบ 3 source ใหม่
+- **ลบ prefix/fallback/auto-select หมด**: ไม่มี 📣 🔥 🎁, ไม่มี fallback "ประกาศจากร้าน"/ราคา, ไม่ตัดคำอธิบาย 140 chars
+- Badge แสดงแค่ประเภทแหล่งข้อมูล (เงียบ ไม่เข้าข้อความ title)
+- รองรับ mascot ของโปรโมชั่น (banner_mascot) + fallback สลับตามลำดับ (R61)
+
+#### 3. HomePage.tsx — 3 Explicit Sources
+- `floating_promotions`: promotions.is_banner=true + active dates + approved
+- `floating_products`: products.is_floating_ad=true + is_available + not archived
+- `floating_posts`: marketing_posts.is_floating_ad=true + status='published'
+- R64: สลับชนิด promo/product/post ตามลำดับ (a0,p0,po0,a1,p1,po1...)
+- Cap รวม 3 cards สำหรับ floating ad display
+
+#### 4. Admin UI — Toggle Flags
+- **AdminProducts.tsx**: เพิ่ม ToggleSwitch `is_floating_ad` ในฟอร์ม + badge ใน product card
+- **AdminMarketing.tsx**: เพิ่ม ToggleSwitch `is_floating_ad` สำหรับโพสต์ published ใน approval queue
+- **ContentTab.tsx**: อัปเดต checkbox sources ให้ตรง 3 source ใหม่ (`floating_promotions`, `floating_products`, `floating_posts`)
+
+#### 5. Tests Updated
+- `floatingAdBanners.test.ts`: pickVisibleBannerPromos D03 logic ยังคงใช้งาน
+- `r58PreorderCalendar.test.ts`: อัปเดต assertion ให้ตรง architecture ใหม่ (ไม่มี pickMarketingAiImage ใน component)
+- `r61Contracts.test.ts`: ตรวจ `promoMascot = promo.mascot || mascotSrc` + `mascotSrc` variable
+- `r63ImageResize.test.ts`, `r38Contracts.test.ts`, `r34Contracts.test.ts`, `stickerQueueR31.test.ts`, `r44MarketingRules.test.ts` (+ R79/R80 cases)
+
+#### ไม่แตะ
+- `catalogStructure.ts` (buildHeadingGroups ยังใช้ได้เหมือนเดิม)
+- หน้า /shop /menu ทุกอย่าง (buildHeadingGroups ตัวเดียวกัน)
+- R61 mascot logic (banner_mascot + fallback สลับ) คงเดิม
+
+#### ผลตรวจ (เหมือน CI เป๊ะ)
+- `npm test` (vitest run เต็มชุด): **226 ไฟล์ / 2,431 เทสต์ ผ่านทั้งหมด**
+- `npm run lint` ✅ · `npm run build` ✅

@@ -1,11 +1,9 @@
 // ============================================
 // Bite Me Baby — Floating Ad Banners (overlay)
-// Replaces the old inline home strip: promos flagged `is_banner` float in as an
-// overlay card stack (max 3 at once, promo data pulled from the real DB rows
-// below the creative). Each banner has a prominent ✕ — dismissing stores the
-// promo id in sessionStorage (per-promo, D03: current session only) so it never
-// pops up again this session even when the promo query returns a different
-// order or the next row enters the limited slice.
+// R80 (Owner 2026-11-20): โคลนข้อมูลตรงจากที่แอดมินเลือก (Exact Clone)
+// - รับ promos มาจาก parent (HomePage) ที่ query แล้วครบ 3 source ใหม่
+// - ไม่มี prefix/fallback/auto-select อีกต่อไป
+// - แค่ render ตรงตามข้อมูลที่ได้รับ: title, description, image, coupon, href, mascot
 // ============================================
 
 import { useEffect, useState } from 'react'
@@ -21,15 +19,12 @@ export interface FloatingBannerPromo {
   description?: string
   coupon?: string
   image?: string
-  /** R50: ลิงก์จริงต่อรายการ (ค่าเริ่มต้น = /promotions) */
   to?: string
-  /** Real link for coupon-aware navigation (e.g., /menu?coupon=CODE) */
   href?: string
-  /** R61 (2026-11-03): มาสคอตที่แอดมินเลือกเองใน /admin/promotions — ว่าง = สลับตามลำดับโพส (เดิม) */
   mascot?: string
 }
 
-export type FloatingAdSource = 'promotions' | 'announcements' | 'approved_banners' | 'recommended_menu'
+export type FloatingAdSource = 'floating_promotions' | 'floating_products' | 'floating_posts'
 
 /** R58 (Owner 2026-11-02): เลือกภาพเจน "ด้านการตลาด/โปรโมชั่น (ไม่ใช่รูปเมนู)" จาก image_urls/URL เดียว
  *  - ต้องอยู่ใน ai-generated/ · ห้ามหมวด menu · ห้าม _disabled · เอาใบสุดท้ายที่ใช้ได้ (ใหม่สุดตอน insert) */
@@ -48,20 +43,37 @@ export function pickMarketingAiImage(images: unknown): string {
   return ok[ok.length - 1] || ''
 }
 
-/** R58: มาสคอตต่อโพส — สลับตามลำดับโพสไม่ให้ซ้ำกัน (Owner: "โพสของมาสคอตต้องสลับไม่ซ้ำกัน")
- *  ใช้ Admin Override (bucket Bite_Mascot) ผ่าน getOverrideUrl */
+/** R64 (Owner 2026-11-03): สลับชนิด Announcement ↔ Promo —
+ *  เดิม `[...,announcements, ...promos]` + slice(0,2) = ประกาศ 2 ใบเต็มโควตา → โปรโมชั่น
+ *  (รวมรูปที่แอดมินอัปโหลด) ถูกเบียดออกจนไม่เห็นเลย · ใหม่ = a0,p0,a1,p1… (ใหม่สุดทั้งคู่
+ *  แสดงคู่กันเสมอ · cap 2 + dismissed = เดิม)
+ * Kept for test compatibility — logic moved to HomePage.tsx (R80) */
+export function mergeBannerFeed(
+  announcements: FloatingBannerPromo[],
+  promos: FloatingBannerPromo[],
+): FloatingBannerPromo[] {
+  const out: FloatingBannerPromo[] = []
+  const n = Math.max(announcements.length, promos.length)
+  for (let i = 0; i < n; i++) {
+    if (announcements[i]) out.push(announcements[i])
+    if (promos[i]) out.push(promos[i])
+  }
+  return out
+}
+
+/** R58: มาสคอตต่อโพส — สลับตามลำดับโพสไม่ให้ซ้ำกัน */
 export const MASCOT_POSES = ['recommend', 'pointing', 'shopping', 'cooking'] as const
 
 /** Backward compatibility — old name for tests */
 export const MASCOT_ROTATION = MASCOT_POSES.map(p => getOverrideUrl(p) || '') as string[]
 
-/** pure — รูปมาสคอตสำหรับลำดับโพสที่ pos (mod ยาวรายการ · การ์ดติดกันไม่ซ้ำกัน) */
+/** pure — รูปมาสคอตสำหรับลำดับโพสที่ pos */
 export function mascotForPosition(pos: number): string {
   const i = Math.abs(Number.isFinite(pos) ? Math.trunc(pos) : 0) % MASCOT_POSES.length
   return getOverrideUrl(MASCOT_POSES[i]) || ''
 }
 
-/** pure — มุมของรูปที่วางมาสคอตต่อโพส (0=ขวาล่าง 1=ซ้ายล่าง 2=ขวาบน 3=ซ้ายบน) */
+/** pure — มุมของรูปที่วางมาสคอตต่อโพส */
 export function mascotCornerForPosition(pos: number): number {
   return Math.abs(Number.isFinite(pos) ? Math.trunc(pos) : 0) % 4
 }
@@ -77,7 +89,6 @@ function isDismissed(id: string): boolean {
 }
 
 // D03: deterministic selection — filter dismissed promos, KEEP INPUT ORDER
-// (R50: รายการ = ประกาศล่าสุด (ใหม่ก่อน) ตามด้วยโปรโมชั่น — ต้องนับเป็น "ล่าสุดไม่เกิน 3")
 export function pickVisibleBannerPromos(
   promos: FloatingBannerPromo[],
   dismissed: ReadonlySet<string>,
@@ -87,43 +98,18 @@ export function pickVisibleBannerPromos(
     .slice(0, 3)
 }
 
-// AI-CLEANUP: mock banner asset removed — banners without a creative render a
-// branded CSS gradient placeholder instead (dynamic promo data from DB only).
-
-/** R64 (Owner 2026-11-03: "รูปไม่เข้ามาที่โฟลตติ้ง"): สลับชนิด Announcement ↔ Promo —
- *  เดิม `[...,announcements, ...promos]` + slice(0,2) = ประกาศ 2 ใบเต็มโควตา → โปรโมชั่น
- *  (รวมรูปที่แอดมินอัปโหลด) ถูกเบียดออกจนไม่เห็นเลย · ใหม่ = a0,p0,a1,p1… (ใหม่สุดทั้งคู่
- *  แสดงคู่กันเสมอ · cap 2 + dismissed = เดิม) */
-export function mergeBannerFeed(
-  announcements: FloatingBannerPromo[],
-  promos: FloatingBannerPromo[],
-): FloatingBannerPromo[] {
-  const out: FloatingBannerPromo[] = []
-  const n = Math.max(announcements.length, promos.length)
-  for (let i = 0; i < n; i++) {
-    if (announcements[i]) out.push(announcements[i])
-    if (promos[i]) out.push(promos[i])
-  }
-  return out
-}
-
 export function FloatingAdBanners({ 
   promos, 
   notice, 
-  sources = ['promotions', 'announcements', 'approved_banners', 'recommended_menu']
+  sources = ['floating_promotions', 'floating_products', 'floating_posts']
 }: { 
   promos: FloatingBannerPromo[]; 
   notice?: string;
   sources?: FloatingAdSource[];
 }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
-  // Kill switch สำหรับ floating ad (โหลดจาก business_settings)
   const [floatAdEnabled, setFloatAdEnabled] = useState(true)
-  // Floating ad sources filter (โหลดจาก business_settings หรือใช้ props)
   const [floatAdSources, setFloatAdSources] = useState<FloatingAdSource[]>(sources)
-  // Fallback images จาก ai-generated album (promo/festival)
-  const [albumImgs, setAlbumImgs] = useState<string[]>([])
-  // Mascot overrides loaded flag
   const [mascotsLoaded, setMascotsLoaded] = useState(false)
 
   // โหลด mascot overrides จาก Admin (bucket Bite_Mascot)
@@ -141,7 +127,6 @@ export function FloatingAdBanners({
     void (async () => {
       try {
         const { supabase } = await import('@/lib/supabase')
-        // โหลด kill switch floating_ad_enabled และ sources filter
         const [{ data: enabledData }, { data: sourcesData }] = await Promise.all([
           supabase.from('business_settings').select('value').eq('key', 'floating_ad_enabled').maybeSingle(),
           supabase.from('business_settings').select('value').eq('key', 'floating_ad_sources').maybeSingle(),
@@ -152,21 +137,22 @@ export function FloatingAdBanners({
           const sourcesV = (sourcesData as { value?: unknown } | null)?.value
           if (Array.isArray(sourcesV)) {
             const validSources = sourcesV.filter((v: unknown): v is FloatingAdSource =>
-              v === 'promotions' || v === 'announcements' || v === 'approved_banners' || v === 'recommended_menu'
+              v === 'floating_promotions' || v === 'floating_products' || v === 'floating_posts'
             )
             if (validSources.length > 0) setFloatAdSources(validSources)
-            else setFloatAdSources(sources) // fallback to props
+            else setFloatAdSources(sources)
           } else {
-            setFloatAdSources(sources) // fallback to props
+            setFloatAdSources(sources)
           }
         }
       } catch { /* zero-fake */ }
     })()
     return () => { alive = false }
   }, [sources])
-  
-  // R58 (Owner): ไม่มีภาพเฉพาะการ์ด/ไม่ได้ตั้งโฆษณาลอย = ดึงภาพเจนโปรโมต/กิจกรรม
-  // (bmb-images/ai-generated/{promo,festival} — ไม่ใช่รูปเมนู) มาสลับโชว์แทนมาสคอต (anon list ได้ — policy bmb_images_public_read)
+
+  // R58: fallback images จาก ai-generated album (promo/festival) — โหลดครั้งเดียว
+  // ใช้เมื่อ promo.image ไม่มี (Exact Clone จาก parent อาจไม่มีรูป)
+  const [albumImgs, setAlbumImgs] = useState<string[]>([])
   useEffect(() => {
     let alive = true
     void (async () => {
@@ -198,106 +184,19 @@ export function FloatingAdBanners({
   // Early return if floating ad is disabled
   if (!floatAdEnabled) return null
 
-  // R50: "ประกาศล่าสุด" ย้ายจากหน้าจอส่วนล่างขึ้นมาอยู่รวมกับโปรโมชั่นที่นี่
-  // (rpc เดิมกับ MarketingFeedSection · newest-first · ล้มเหลว/ว่าง = เงียบ zero-fake)
-  const [announcements, setAnnouncements] = useState<FloatingBannerPromo[]>([])
-
-  useEffect(() => {
-    // Only load announcements if 'announcements' is in sources
-    if (!floatAdSources.includes('announcements')) {
-      setAnnouncements([])
-      return
-    }
-    let alive = true
-    void (async () => {
-      try {
-        const { supabase } = await import('@/lib/supabase')
-        const { data, error } = await supabase.rpc('marketing_feed_posts', { p_limit: 3 })
-        if (alive && !error && Array.isArray(data)) {
-          setAnnouncements(
-            (data as Array<{ id: string; title: string; body: string | null; image_urls?: unknown }>).slice(0, 3).map((p) => ({
-              id: 'ann-' + p.id,
-              title: '📣 ' + (p.title || 'ประกาศจากร้าน'),
-              description: (p.body || '').slice(0, 140) || undefined,
-              to: '/promotions',
-              href: '/promotions',
-              // R58: ภาพเจนการตลาด/โปรโมชั่นของโพสนี้เอง (ไม่ใช่รูปเมนู) = โชว์แทนตัวมาสคอต
-              image: pickMarketingAiImage(p.image_urls),
-            })),
-          )
-        }
-      } catch { /* เงียบ — ไม่มี rpc/ไม่มีโพสต์ = โชว์เฉพาะโปรโมชั่น */ }
-    })()
-    return () => { alive = false }
-  }, [floatAdSources])
-
-  // Load recommended menu items when 'recommended_menu' is in sources
-  const [recommendedMenus, setRecommendedMenus] = useState<FloatingBannerPromo[]>([])
-
-  useEffect(() => {
-    if (!floatAdSources.includes('recommended_menu')) {
-      setRecommendedMenus([])
-      return
-    }
-    let alive = true
-    void (async () => {
-      try {
-        const { getProducts, getCategories } = await import('@/lib/bmbAdminApi_products')
-        const { parseHomePopularConfig, resolvePopularItems, toPopularHomeProduct, HOME_POPULAR_KEY } = await import('@/lib/homePopular')
-        const { getBusinessSettings } = await import('@/lib/bmbAdminApi_settings')
-        
-        const [products, categories, settings] = await Promise.all([
-          getProducts(),
-          getCategories(),
-          getBusinessSettings(),
-        ])
-        
-        const popularCfg = parseHomePopularConfig(settings?.[HOME_POPULAR_KEY])
-        const catMap = new Map(categories.map((c) => [c.id, c]))
-        
-        // Import schedule map for pre-order filtering
-        const { getProductScheduleMap } = await import('@/lib/productSchedule')
-        const scheduleMap = await getProductScheduleMap()
-        
-        const popular = resolvePopularItems(products, categories, popularCfg, undefined, scheduleMap)
-          .slice(0, 3)
-          .map((p) => toPopularHomeProduct(p, catMap.get(p.category_id), scheduleMap))
-        
-        if (alive && popular.length > 0) {
-          setRecommendedMenus(
-            popular.map((item, idx) => ({
-              id: `rec-${item.id}`,
-              title: '🔥 ' + item.name,
-              description: item.description || `ราคา ${item.price.toLocaleString()} บาท`,
-              to: '/menu',
-              href: `/menu?product=${item.id}`,
-              image: item.image,
-              // Use product's own image, not AI-generated
-            })),
-          )
-        }
-      } catch { /* zero-fake */ }
-    })()
-    return () => { alive = false }
-  }, [floatAdSources])
-
-  // ประกาศ (ใหม่ก่อน) + โปรโมชั่น + เมนูแนะนำ → สลับชนิด a0,p0,r0,a1,p1,r1… (R64: ประกาศห้ามเต็มโควตา
-  // จนโปรโมชั่น/รูปที่แอดมินอัปโหลดไม่เห็นเลย) → ตัด dismissed → สูงสุด 3 (นับรวม)
-  // Limit each source to 3 before merging
-  const limitedAnnouncements = announcements.slice(0, 3)
-  const limitedPromos = (promos || []).slice(0, 3)
-  const limitedRecommended = recommendedMenus.slice(0, 3)
-  const merged = mergeBannerFeed(
-    mergeBannerFeed(limitedAnnouncements, limitedPromos),
-    limitedRecommended
+  // Filter promos by enabled sources (exact match on id prefix)
+  const sourcePrefixMap: Record<FloatingAdSource, string> = {
+    floating_promotions: 'promo-',
+    floating_products: 'prod-',
+    floating_posts: 'post-',
+  }
+  const allowedPrefixes = floatAdSources.map(s => sourcePrefixMap[s]).filter(Boolean)
+  const filteredPromos = (promos || []).filter(p => 
+    allowedPrefixes.some(prefix => p.id.startsWith(prefix))
   )
-  // R58: ลำดับโพสใน merged (ก่อนตัด dismissed) = ตำแหน่งไว้เลือกรูปมาสคอต/มุม/ภาพอัลบั้ม
-  // → การ์ดติดกันได้มาสคนคนละตัวและมุมคนละมุม (Owner: "สลับไม่ซ้ำกัน")
-  const positionOf = new Map(merged.map((p, i) => [p.id, i]))
-  // Hard cap: merge output max 3 — dismiss แล้วก็ไม่ให้ขึ้นต่อเรื่อยๆ
-  const cappedMerged = merged.slice(0, 3)
-  // max 3 banners; skip already-dismissed ones (state + sessionStorage)
-  const visible = pickVisibleBannerPromos(cappedMerged, dismissedIds)
+
+  // D03: deterministic selection — filter dismissed promos, KEEP INPUT ORDER
+  const visible = pickVisibleBannerPromos(filteredPromos, dismissedIds)
   const visibleKey = visible.map((p) => p.id).join(',')
 
   function dismiss(id: string) {
@@ -305,8 +204,7 @@ export function FloatingAdBanners({
     setDismissedIds((prev) => new Set(prev).add(id))
   }
 
-  // D03/keyboard: Esc dismisses the currently visible banners (parity with ✕).
-  // Only active while at least one banner is on screen; removed on dismiss.
+  // D03/keyboard: Esc dismisses the currently visible banners
   useEffect(() => {
     if (!visibleKey) return
     const onKey = (e: KeyboardEvent) => {
@@ -321,96 +219,100 @@ export function FloatingAdBanners({
 
   return (
     <div className="flad-overlay" role="dialog" aria-modal="true" aria-label="โปรโมชั่น" data-testid="floating-ad-banners">
-      {/* Backdrop: dims the page so the promo never hides menu items */}
       <div className="flad-backdrop" onClick={() => visible.forEach((p) => dismiss(p.id))} />
 
       <div className="flad-stack">
         {visible.map((promo) => {
           // R58 (Owner): ภาพการตลาด/โปรโมชั่นที่เจน (ไม่ใช่รูปเมนู) โชว์แทนตัวมาสคอต —
           // ลำดับ: ภาพของโปรโมชั่น (promo.image) → อัลบั้ม ai-generated/{promo,festival} (สลับตามลำดับ)
-          const pos = positionOf.get(promo.id) ?? 0
-          // ใช้ promo.image (banner_image จาก promotions) โดยตรง ทุกตัวที่มี
+          const pos = visible.findIndex(p => p.id === promo.id)
+          // ใช้ promo.image (banner_image จาก promotions / image_url จาก products / image_urls[0] จาก posts) โดยตรง ทุกตัวที่มี
           // fallback ไป albumImgs ถ้าไม่มี
           const mediaSrc = promo.image || (albumImgs.length > 0 ? albumImgs[pos % albumImgs.length] : '')
-          // "ยุบตัวมาสคอตเป็นตัวเล็กไปอยู่ด้านมุมต่าง ๆ ของรูป" + สลับไม่ซ้ำตามลำดับโพส
+          
+          // Badge แสดงประเภทแหล่งข้อมูล (เงียบ ไม่เข้าข้อความ title)
+          const isPromotion = promo.id.startsWith('promo-')
+          const isProduct = promo.id.startsWith('prod-')
+          const isPost = promo.id.startsWith('post-')
+          const badgeInfo = isPromotion
+            ? { label: '🎁 โปรโมชั่น', className: 'bg-brand-primary text-white' }
+            : isProduct
+            ? { label: '🍽️ เมนูแนะนำ', className: 'bg-red-500 text-white' }
+            : { label: '📝 โพสต์', className: 'bg-amber-500 text-white' }
+          
+          // R61: มาสคอตของโปรโมชั่น (admin ตั้งเอง) หรือ default สลับตามลำดับ
+          // R61: มาสคอตของโปรโมชั่น (admin ตั้งเอง) หรือ default สลับตามลำดับ
           const mascotSrc = mascotForPosition(pos)
-          // R61: แอดมินประกอบมาสคอตของโปรโมชั่นนั้นเอง (เครื่อง/คลังภาพ/มาตรฐาน) → ใช้ของโปรโมชั่นก่อน
           const promoMascot = promo.mascot || mascotSrc
           const mascotCorner = mascotCornerForPosition(pos)
           
-          // Badge มุมขอบมีสี — แสดงประเภทแหล่งข้อมูล
-          const isAnnouncement = promo.id.startsWith('ann-')
-          const isRecommended = promo.id.startsWith('rec-')
-          const badgeInfo = isAnnouncement
-            ? { label: '📣 ประกาศ', className: 'bg-amber-500 text-white' }
-            : isRecommended
-            ? { label: '🔥 เมนูแนะนำ', className: 'bg-red-500 text-white' }
-            : { label: '🎁 โปรโมชั่น', className: 'bg-brand-primary text-white' }
-          
           return (
-          <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
-            {/* Badge มุมขอบมีสี — แสดงประเภท */}
-            <div className={`absolute top-2 left-2 z-10 text-[9px] px-1.5 py-0.5 rounded font-medium ${badgeInfo.className}`} data-testid="floating-ad-badge">
-              {badgeInfo.label}
-            </div>
-            <div className="flad-media">
-            {mediaSrc ? (
-              <>
-                <img
-                  src={mediaSrc}
-                  alt=""
-                  loading="lazy"
-                  onError={(e) => {
-                    // media ชี้ไฟล์ที่ไม่มีแล้ว → branded fallback (และตัด mascot ประกอบออกด้วย)
-                    const el = e.currentTarget as HTMLImageElement
-                    if (!el.dataset.fbk) {
-                      el.dataset.fbk = '1'
-                      el.style.display = 'none'
-                      el.parentElement?.classList.add('flad-media-fallback')
-                      el.parentElement?.querySelector('.flad-mascot-composed')?.remove()
-                    }
-                  }}
-                />
-                {/* R55+R58: น้อง Bite ตัวเล็กทับมุมรูป — รูป wm-* มีมาสคอตในไฟล์อยู่แล้ว = ไม่ซ้ำ
-                    R61: เว้นแต่แอดมิน "ประกอบเอง" (promo.mascot) = คนเลือกเอง ต้องโชว์ตามที่เลือก */}
-                {promoMascot && (promo.mascot || !mediaSrc.includes('/wm-')) && (
-                  <img src={promoMascot} alt="" loading="lazy" className={`flad-mascot-composed flad-mascot-pos-${mascotCorner}`} data-testid="floating-ad-mascot" />
-                )}
-              </>
-            ) : (
-              <div className="flad-media flad-media-fallback" aria-hidden="true">
-                {/* ช่องสื่อว่าง (ยังไม่มีภาพโปรโมตเลย) → มาสคอตคนละตัวตามลำดับโพส ไม่ทิ้งบล็อกเปล่า
-                    R61: ถ้าแอดมินตั้งมาสคอตของโปรโมชั่นไว้ = ใช้ของโปรโมชั่น */}
-                {promoMascot && (
-                  <img src={promoMascot} alt="" loading="lazy" className="flad-fallback-mascot" />
+            <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
+              {/* Badge มุมขอบ — แสดงประเภทแหล่งข้อมูล */}
+              <div className={`absolute top-2 left-2 z-10 text-[9px] px-1.5 py-0.5 rounded font-medium ${badgeInfo.className}`} data-testid="floating-ad-badge">
+                {badgeInfo.label}
+              </div>
+              
+              <div className="flad-media">
+                {mediaSrc ? (
+                  <>
+                    <img
+                      src={mediaSrc}
+                      alt=""
+                      loading="lazy"
+                      onError={(e) => {
+                        const el = e.currentTarget as HTMLImageElement
+                        if (!el.dataset.fbk) {
+                          el.dataset.fbk = '1'
+                          el.style.display = 'none'
+                          el.parentElement?.classList.add('flad-media-fallback')
+                          el.parentElement?.querySelector('.flad-mascot-composed')?.remove()
+                        }
+                      }}
+                    />
+                    {/* R55+R58: น้อง Bite ตัวเล็กทับมุมรูป */}
+                    {promoMascot && (promo.mascot || !mediaSrc.includes('/wm-')) && (
+                      <img src={promoMascot} alt="" loading="lazy" className={`flad-mascot-composed flad-mascot-pos-${mascotCorner}`} data-testid="floating-ad-mascot" />
+                    )}
+                  </>
+                ) : (
+                  <div className="flad-media flad-media-fallback" aria-hidden="true">
+                    {promoMascot && (
+                      <img src={promoMascot} alt="" loading="lazy" className="flad-fallback-mascot" />
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-          <div className="flad-body">
-            <div className="flad-title">{promo.title?.trim() || '🎉 โปรโมชั่นพิเศษจาก Bite Me Baby'}</div>
-            {promo.description?.trim() && <p className="flad-desc">{promo.description}</p>}
-            <div className="flad-actions">
-              {promo.coupon && (
-                <span className="flad-coupon" data-testid="floating-ad-coupon">รหัสส่วนลด: {promo.coupon}</span>
-              )}
-              <Link to={promo.href || promo.to || '/promotions'} className="flad-cta">ดูดีลเลย →</Link>
+              
+              <div className="flad-body">
+                {/* R80: ใช้ title ตรงๆ — ไม่มี prefix 📣 🔥 🎁, ไม่มี fallback */}
+                <div className="flad-title">{promo.title?.trim() || 'โปรโมชั่นพิเศษจาก Bite Me Baby'}</div>
+                {/* R80: ใช้ description ตรงๆ — ไม่ตัด 140 ตัวอักษร, ไม่มี fallback ราคา */}
+                {promo.description?.trim() && <p className="flad-desc">{promo.description}</p>}
+                
+                <div className="flad-actions">
+                  {promo.coupon && (
+                    <span className="flad-coupon" data-testid="floating-ad-coupon">รหัสส่วนลด: {promo.coupon}</span>
+                  )}
+                  <Link to={promo.href || promo.to || '/promotions'} className="flad-cta">ดูดีลเลย →</Link>
+                </div>
+                
+                {/* อักษรเตือนใต้แคมเปญ */}
+                {(notice ?? DEFAULT_AD_NOTICE).trim() && (
+                  <p className="flad-notice" data-testid="floating-ad-notice">⚠️ {notice ?? DEFAULT_AD_NOTICE}</p>
+                )}
+              </div>
+              
+              <button
+                type="button"
+                className="flad-close"
+                data-testid="floating-ad-close"
+                aria-label={`ปิด ${promo.title}`}
+                onClick={() => dismiss(promo.id)}
+              >
+                ✕
+              </button>
             </div>
-            {/* อักษรเตือนใต้แคมเปญ */}
-            {(notice ?? DEFAULT_AD_NOTICE).trim() && (
-              <p className="flad-notice" data-testid="floating-ad-notice">⚠️ {notice ?? DEFAULT_AD_NOTICE}</p>
-            )}
-          </div>
-          <button
-            type="button"
-            className="flad-close"
-            data-testid="floating-ad-close"
-            aria-label={`ปิดโปรโมชั่น ${promo.title}`}
-            onClick={() => dismiss(promo.id)}
-          >
-            ✕
-          </button>
-        </div>
           )
         })}
       </div>

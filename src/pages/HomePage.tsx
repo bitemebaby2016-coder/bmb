@@ -95,8 +95,11 @@ export function HomePage() {
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
   const [masterOpen, setMasterOpen] = useState<boolean | null>(null)
   const [floatingAdEnabled, setFloatingAdEnabled] = useState<boolean>(true)
-  const [floatingAdSources, setFloatingAdSources] = useState<('promotions' | 'announcements' | 'approved_banners' | 'recommended_menu')[]>(['promotions', 'announcements', 'approved_banners', 'recommended_menu'])
+  const [floatingAdSources, setFloatingAdSources] = useState<('floating_promotions' | 'floating_products' | 'floating_posts')[]>(['floating_promotions', 'floating_products', 'floating_posts'])
   const [approvedFloatAdImages, setApprovedFloatAdImages] = useState<Set<string>>(new Set())
+  // R80: Floating Ad explicit sources data
+  const [floatingProducts, setFloatingProducts] = useState<Product[]>([])
+  const [floatingPosts, setFloatingPosts] = useState<any[]>([])
   // R21 Phase 3: โหลดล้มเหลว ≠ ร้านไม่มีเมนู + key สำหรับกด "ลองใหม่"
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -109,7 +112,7 @@ export function HomePage() {
         const { getProducts, getCategories } = await import('@/lib/bmbAdminApi_products')
         const { getDeliveryRoundsAdmin } = await import('@/lib/bmbAdminApi_rounds')
         const { getPromotionsAdmin } = await import('@/lib/bmbAdminApi_promotions')
-        const [rows, cats, rounds, promos] = await Promise.all([
+const [rows, cats, rounds, promos] = await Promise.all([
           getProducts(),
           getCategories(),
           getDeliveryRoundsAdmin(),
@@ -118,8 +121,33 @@ export function HomePage() {
         setProducts(rows)
         setCategories(cats)
         setRounds(rounds)
-        publishDeliveryRounds(rounds) // มาสคอตทุกหน้าใช้สถานะเปิด/ปิดเดียวกับแถบร้าน
+        publishDeliveryRounds(rounds)
         setPromoRows(promos)
+        // R80: Floating Ad explicit sources — โคลนข้อมูลตรงจากที่แอดมินเลือก
+        // 2) floating_products: products.is_floating_ad=true + is_available + not archived
+        // 3) floating_posts: marketing_posts.is_floating_ad=true + status='published'
+        void (async () => {
+          try {
+            const { supabase } = await import('@/lib/supabase')
+            // floating_products: is_floating_ad + is_available + not archived
+            const { data: floatProducts } = await supabase
+              .from('products')
+              .select('*')
+              .eq('is_floating_ad', true)
+              .eq('is_available', true)
+              .eq('archived', false)
+              .order('sort_order', { ascending: true })
+            if (floatProducts) setFloatingProducts(floatProducts)
+            // floating_posts: is_floating_ad + status='published'
+            const { data: floatPosts } = await supabase
+              .from('marketing_posts')
+              .select('id,title,body,image_urls,approval_id')
+              .eq('is_floating_ad', true)
+              .eq('status', 'published')
+              .order('created_at', { ascending: false })
+            if (floatPosts) setFloatingPosts(floatPosts)
+          } catch { /* zero-fake — ไม่ขวางหน้า */ }
+        })()
         // ค่าตั้งเว็บ (เมนูยอดนิยม/ข้อความ) — โหลดแบบไม่ขวางการวาดหน้า (fire-and-forget)
         // ถ้าอ่านไม่สำเร็จ/ค้าง หน้ายังแสดงได้ตามค่า default เสมอ
         void (async () => {
@@ -144,8 +172,8 @@ export function HomePage() {
             // Load floating ad sources filter
             const sources = settings?.floating_ad_sources
             if (Array.isArray(sources)) {
-              const validSources = sources.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' | 'recommended_menu' =>
-                v === 'promotions' || v === 'announcements' || v === 'approved_banners' || v === 'recommended_menu'
+              const validSources = sources.filter((v: unknown): v is 'floating_promotions' | 'floating_products' | 'floating_posts' =>
+                v === 'floating_promotions' || v === 'floating_products' || v === 'floating_posts'
               )
               if (validSources.length > 0) setFloatingAdSources(validSources)
             }
@@ -219,8 +247,13 @@ export function HomePage() {
   // ต้องเคารพช่วงวันที่แบบเดียวกับ dropdown คูปอง (เดิมไม่เช็ก = คูปองหมดอายุยังถูกโฆษณา
   // แต่กดใช้ที่เช็คเอาท์ไม่ได้) — เพิ่มโปรภายหลัง = ขึ้นอัตโนมัติทั้งการ์ดและคูปอง
   const todayKey = bangkokDateKey()
-  const showPromotions = floatingAdSources.includes('promotions')
-  const bannerPromos: FloatingBannerPromo[] = showPromotions ? (promoRows || [])
+  // R80: Floating Ad explicit sources — โคลนข้อมูลตรงจากที่แอดมินเลือก (Exact Clone)
+  const showPromotions = floatingAdSources.includes('floating_promotions')
+  const showProducts = floatingAdSources.includes('floating_products')
+  const showPosts = floatingAdSources.includes('floating_posts')
+  
+  // 1) floating_promotions: promotions.is_banner=true + active dates + approved
+  const promoBanners: FloatingBannerPromo[] = showPromotions ? (promoRows || [])
     .filter((r) => r.is_banner === true && r.is_active !== false)
     .filter((r) => {
       const s = String(r.start_date || '').slice(0, 10)
@@ -229,12 +262,8 @@ export function HomePage() {
       if (e && todayKey > e) return false
       return true
     })
-    // Only include banners with approved content_approvals
     .filter((r) => {
-      // If banner has an approval_id, check if it's approved
       if (r.approval_id) {
-        // We'd need to check the approval status - for now, filter by image_url in approved set
-        // Since approval_id check would require additional query, we use image_url matching
         if (r.banner_image && !approvedFloatAdImages.has(r.banner_image)) {
           return false
         }
@@ -242,18 +271,51 @@ export function HomePage() {
       return true
     })
     .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
-    .slice(0, 3) // Limit to 3 most recent banners for floating ad
+    .slice(0, 3)
     .map((r) => ({
-      id: String(r.id),
+      id: `promo-${String(r.id)}`,
       title: String(r.name || 'Promotion'),
       description: String(r.description || ''),
       coupon: r.code,
       image: r.banner_image,
-      // Real link: point to /menu with coupon code so discount applies
       href: r.code ? `/menu?coupon=${encodeURIComponent(r.code)}` : '/menu',
-      // R61: มาสคอตที่แอดมินประกอบเองใน /admin/promotions (ว่าง = FloatingAdBanners สลับตามลำดับโพส)
       mascot: r.banner_mascot || undefined,
     })) : []
+
+  // 2) floating_products: products.is_floating_ad=true + is_available + not archived
+  const productBanners: FloatingBannerPromo[] = showProducts ? floatingProducts
+    .slice(0, 3)
+    .map((p) => ({
+      id: `prod-${String(p.id)}`,
+      title: String(p.name || 'Menu'),
+      description: String(p.description || ''),
+      image: p.image_url,
+      href: `/menu?product=${encodeURIComponent(p.id)}`,
+      mascot: undefined,
+    })) : []
+
+  // 3) floating_posts: marketing_posts.is_floating_ad=true + status='published'
+  const postBanners: FloatingBannerPromo[] = showPosts ? floatingPosts
+    .slice(0, 3)
+    .map((p) => ({
+      id: `post-${String(p.id)}`,
+      title: String(p.title || 'Post'),
+      description: String(p.body || ''),
+      image: Array.isArray(p.image_urls) && p.image_urls.length > 0 ? p.image_urls[0] : undefined,
+      href: `/promotions`,
+      mascot: undefined,
+    })) : []
+
+  // R64: สลับชนิด — promo, product, post ตามลำดับ (a0,p0,po0,a1,p1,po1...)
+  const maxLen = Math.max(promoBanners.length, productBanners.length, postBanners.length)
+  const bannerPromos: FloatingBannerPromo[] = []
+  for (let i = 0; i < maxLen; i++) {
+    if (promoBanners[i]) bannerPromos.push(promoBanners[i])
+    if (productBanners[i]) bannerPromos.push(productBanners[i])
+    if (postBanners[i]) bannerPromos.push(postBanners[i])
+  }
+  // Cap total at 3 for floating ad display
+  const mergedBannerPromos = bannerPromos.slice(0, 3)
   const storeStatus = getStoreStatusFromRounds(rounds, new Date(), {
     shopHoursMs: hoursToMs(shopHours),
     operatingHours,
@@ -510,7 +572,7 @@ export function HomePage() {
 
       {/* 2c. Floating ad banners — max 3 overlay cards, dismissible per promo (sessionStorage, D03) */}
       {masterOpen !== false && floatingAdEnabled && (
-        <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} sources={floatingAdSources} />
+        <FloatingAdBanners promos={mergedBannerPromos} notice={siteCopy.adNotice} sources={floatingAdSources} />
       )}
 
       {/* 2d. เดิม = แบนเนอร์ CTA พรีออเดอร์ลอยเหนือหน้า — Owner (2026-10-25): ย้ายไปแสดง

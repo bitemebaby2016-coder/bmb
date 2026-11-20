@@ -74,7 +74,7 @@ export function ContentTab({ load }: ContentTabProps) {
 
   const [floatingAdImage, setFloatingAdImage] = useState('')
   const [floatingAdEnabled, setFloatingAdEnabled] = useState(true)
-  const [floatingAdSources, setFloatingAdSources] = useState<('promotions' | 'announcements' | 'approved_banners' | 'recommended_menu')[]>(['promotions', 'announcements', 'approved_banners', 'recommended_menu'])
+  const [floatingAdSources, setFloatingAdSources] = useState<('floating_promotions' | 'floating_products' | 'floating_posts')[]>(['floating_promotions', 'floating_products', 'floating_posts'])
 
   const [contentType, setContentType] = useState<'post' | 'promotion' | 'banner' | 'announcement'>('post')
   const [postTitle, setPostTitle] = useState('')
@@ -293,8 +293,8 @@ export function ContentTab({ load }: ContentTabProps) {
           if (row.key === 'floating_ad_image' && typeof row.value === 'string') setFloatingAdImage(row.value)
           if (row.key === 'floating_ad_enabled' && typeof row.value === 'boolean') setFloatingAdEnabled(row.value)
 if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
-            const sources = row.value.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' | 'recommended_menu' =>
-              v === 'promotions' || v === 'announcements' || v === 'approved_banners' || v === 'recommended_menu'
+            const sources = row.value.filter((v: unknown): v is 'floating_promotions' | 'floating_products' | 'floating_posts' =>
+              v === 'floating_promotions' || v === 'floating_products' || v === 'floating_posts'
             )
             if (sources.length > 0) setFloatingAdSources(sources)
           }
@@ -1020,10 +1020,9 @@ if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
             <div className="font-semibold text-brand-accent text-xs mb-2">📋 แหล่งข้อมูลโฟลตติ้ง (เลือกได้หลายอย่าง)</div>
             <div className="grid grid-cols-3 gap-2 text-xs">
               {[
-                { key: 'promotions' as const, label: '🎁 โปรโมชั่น (is_banner=true)', desc: 'จากตาราง promotions ที่ตั้ง is_banner=true' },
-                { key: 'announcements' as const, label: '📣 ประกาศ/โพสต์', desc: 'จาก marketing_feed_posts (RPC)' },
-                { key: 'approved_banners' as const, label: '✅ แบนเนอร์อนุมัติแล้ว', desc: 'จาก content_approvals ที่ผ่าน CNT-01 + set_as_floating_ad' },
-                { key: 'recommended_menu' as const, label: '🔥 เมนูแนะนำ', desc: 'จาก popular items ที่แอดมินตั้งค่า (homePopularConfig) · ใช้รูปเมนูจริง' }
+                { key: 'floating_promotions' as const, label: '🎁 โปรโมชั่น (is_banner=true)', desc: 'จากตาราง promotions ที่ตั้ง is_banner=true' },
+                { key: 'floating_products' as const, label: '🍽️ เมนูแนะนำ (is_floating_ad=true)', desc: 'จากตาราง products ที่ตั้ง is_floating_ad=true' },
+                { key: 'floating_posts' as const, label: '📝 โพสต์ (is_floating_ad=true)', desc: 'จาก marketing_posts ที่ published + is_floating_ad=true' },
               ].map(({ key, label, desc }) => (
                 <label key={key} className="flex items-start gap-2 p-2 rounded-lg border hover:bg-brand-primary/5 transition-colors cursor-pointer">
                   <input

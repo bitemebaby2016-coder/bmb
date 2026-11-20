@@ -44,6 +44,8 @@ export interface Product {
   unit_cost?: number;             // generated = cogs + packaging_cost + other_unit_cost
   branch_id?: string;             // TEN-07: which branch this product belongs to (global = null)
   created_at: string;
+  /** R80 (Owner 2026-11-20): true = แอดมินต้องการให้เมนูนี้แสดงเป็น Floating Ad บนหน้าแรก (โคลนข้อมูลตรง ไม่ได้จาก popular auto-select) */
+  is_floating_ad?: boolean;
 }
 
 export interface ProductCategory {

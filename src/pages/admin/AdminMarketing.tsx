@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
+import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
 import {
   listMarketingPosts, createMarketingPost, scheduleMarketingPost,
   deleteMarketingPost, updateMarketingPostDraft, updateContentApprovalDraft,
@@ -1118,11 +1119,31 @@ export function AdminMarketing() {
                         )}
                       </>
                     )}
-                    {/* หลังอนุมัติให้ตั้งเวลาได้ทันที ไม่ต้องสลับแท็บ */}
-                    {linked?.status === 'approved' && !linked.scheduled_for && (
-                      <button className="btn btn-success text-xs" onClick={() => { setTab('schedule'); setWhenByPost(prev => ({ ...prev, [linked.id]: '' })); flashTo(`mk-row-${linked.id}`) }}>⏰ ตั้งเวลาเลย</button>
-                    )}
-                  </div>
+{/* หลังอนุมัติให้ตั้งเวลาได้ทันที ไม่ต้องสลับแท็บ */}
+                      {linked?.status === 'approved' && !linked.scheduled_for && (
+                        <button className="btn btn-success text-xs" onClick={() => { setTab('schedule'); setWhenByPost(prev => ({ ...prev, [linked.id]: '' })); flashTo(`mk-row-${linked.id}`) }}>⏰ ตั้งเวลาเลย</button>
+                      )}
+                      {/* R80: Floating Ad flag สำหรับโพสต์ที่ published แล้ว */}
+                      {linked?.status === 'published' && (
+                        <ToggleSwitch
+                          checked={linked.is_floating_ad ?? false}
+                          onChange={async (v) => {
+                            try {
+                              const { supabase } = await import('@/lib/supabase')
+                              const { error } = await supabase
+                                .from('marketing_posts')
+                                .update({ is_floating_ad: v })
+                                .eq('id', linked.id)
+                              if (error) throw error
+                              showToast(v ? 'ตั้งค่า Floating Ad แล้ว' : 'ยกเลิก Floating Ad แล้ว', 'success')
+                              await load()
+                            } catch { showToast('บันทึกไม่สำเร็จ', 'error') }
+                          }}
+                          label="📌 Floating Ad"
+                          testId={`mk-floating-ad-${linked.id}`}
+                        />
+                      )}
+                    </div>
                 </div>
               </div>
             )

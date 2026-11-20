@@ -36,6 +36,7 @@ export function AdminProducts() {
     is_available: true,
     is_featured: false,
     is_preorder: false,
+    is_floating_ad: false,  // R80: flag สำหรับ Floating Ad (โคลนข้อมูลตรง)
     prep_minutes: 10
   })
   const [addons, setAddons] = useState<AddonDraft[]>([])
@@ -170,9 +171,9 @@ export function AdminProducts() {
 
   function handleEditProduct(product: Product) {
     setEditingProduct(product)
-    setFormData({
+setFormData({
       name: product.name,
-      description: product.description,
+      description: product.description || '',
       price: product.price,
       cogs: product.cogs ?? 0,
       packaging_cost: product.packaging_cost ?? 0,
@@ -182,6 +183,7 @@ export function AdminProducts() {
       is_available: product.is_available,
       is_featured: product.is_featured,
       is_preorder: product.is_preorder ?? false,
+      is_floating_ad: product.is_floating_ad ?? false,  // R80
       prep_minutes: product.prep_minutes
     })
     setAddons(toAddonDrafts(product.addons))
@@ -343,6 +345,7 @@ async function handleDeleteProduct(id: string) {
       is_available: true,
       is_featured: false,
       is_preorder: false,
+      is_floating_ad: false,  // R80
       prep_minutes: 10
     })
     setEditingProduct(null)
@@ -533,6 +536,14 @@ async function handleDeleteProduct(id: string) {
                 testId="product-featured-toggle"
               />
 
+              {/* R80: Floating Ad flag — โคลนข้อมูลเมนูนี้ขึ้นหน้าแรง */}
+              <ToggleSwitch
+                checked={formData.is_floating_ad}
+                onChange={(v) => setFormData({ ...formData, is_floating_ad: v })}
+                label="📌 Floating Ad"
+                testId="product-floating-ad-toggle"
+              />
+
               {/* Owner report 2026-10-01: แอดมินไม่รู้เมนูไปอยู่หมวดไหน — เพิ่มช่องเลือกโหมดขายชัดเจน */}
               <label className="flex items-center gap-2">
                 <span className="text-sm font-medium text-brand-accent">🛒 วิธีขาย:</span>
@@ -714,6 +725,9 @@ async function handleDeleteProduct(id: string) {
               <span className={`badge ${product.is_available ? 'badge-success' : 'badge-danger'}`}>
                 {product.is_available ? '✅ เปิดขาย' : '❌ ปิดขาย'}
               </span>
+              {product.is_floating_ad && (
+                <span className="badge badge-primary text-xs" data-testid="admin-product-floating-ad">📌 Floating Ad</span>
+              )}
               <span className="badge badge-info text-xs">
                 {product.is_preorder ? '📅 จองล่วงหน้า' : '🛒 ส่งวันนี้'}
               </span>
