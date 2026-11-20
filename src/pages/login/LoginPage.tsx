@@ -45,12 +45,16 @@ export function LoginPage() {
     null
   const returnTo = rawReturnTo && rawReturnTo !== '/' ? rawReturnTo : null
   const login = useAuthStore((s) => s.login)
+  const loginByPhone = useAuthStore((s) => s.loginByPhone)
   const loginByLocation = useAuthStore((s) => s.loginByLocation)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isInitializing = useAuthStore((s) => s.isInitializing)
-  const [mode, setMode] = useState<'email' | 'quick'>('email')
+  // R54 (Owner 2026-11-20): เพิ่ม 'phone' = เบอร์โทร + รหัสผ่าน (ของเก่า authStore.loginByPhone)
+  const [mode, setMode] = useState<'email' | 'quick' | 'phone'>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  // เบอร์สำหรับแท็บเบอร์โทร/รหัสผ่าน (แยกจาก qPhone ของเข้าสู่ระบบด่วน)
+  const [pPhone, setPPhone] = useState('')
   const [qName, setQName] = useState('')
   const [qPhone, setQPhone] = useState('')
   const [qAddress, setQAddress] = useState('')
@@ -152,6 +156,29 @@ export function LoginPage() {
       await finishLogin(email)
     } catch (err) {
       console.error('Login error:', err)
+      setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // R54 — เข้าสู่ระบบด้วยเบอร์โทร + รหัสผ่าน (authStore.loginByPhone — ของเก่าที่เปิดใช้จริง)
+  // หมายเหตุ: loginByPhone ไม่ตั้ง lastLoginError → แสดงข้อความสงวนของหน้าเอง (ครอบ wrong password
+  // /ยังไม่มีบัญชี-ยังไม่เคยตั้งรหัสผ่าน)
+  async function handlePhoneLogin(e: React.FormEvent) {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+    try {
+      const ok = await loginByPhone(pPhone.trim(), password)
+      if (!ok) {
+        setError('เบอร์โทรศัพท์หรือรหัสผ่านไม่ถูกต้อง — หรือเบอร์นี้ยังไม่มีรหัสผ่าน (สมัครผ่านเข้าสู่ระบบด่วน)')
+        setIsLoading(false)
+        return
+      }
+      await finishLogin('phone:' + pPhone.trim())
+    } catch (err) {
+      console.error('Phone login error:', err)
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
     } finally {
       setIsLoading(false)
@@ -311,20 +338,27 @@ return (
 
         {/* Mode switch: email login OR quick login (name + phone + location) */}
         <div className="card bg-brand-surface">
-          <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-brand-surface mb-4">
+          <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-brand-surface mb-4">
             <button
               type="button"
               onClick={() => { setMode('email'); setError('') }}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg ${mode === 'email' ? 'bg-brand-primary text-white' : 'bg-white/60 text-brand-accent'}`}
             >
-              📧 อีเมล / รหัสผ่าน
+              📧 อีเมล
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('phone'); setError('') }}
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg ${mode === 'phone' ? 'bg-brand-primary text-white' : 'bg-white/60 text-brand-accent'}`}
+            >
+              📱 เบอร์โทร
             </button>
             <button
               type="button"
               onClick={() => { setMode('quick'); setError('') }}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg ${mode === 'quick' ? 'bg-brand-primary text-white' : 'bg-white/60 text-brand-accent'}`}
             >
-              ⚡ เข้าสู่ระบบด่วน
+              ⚡ ด่วน
             </button>
           </div>
 
@@ -422,6 +456,42 @@ return (
                 </div>
               </div>
 
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`btn btn-primary w-full ${isLoading ? 'btn-disabled' : ''}`}
+              >
+                {isLoading ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่ระบบ'}
+              </button>
+            </form>
+          ) : mode === 'phone' ? (
+            <form onSubmit={handlePhoneLogin} className="space-y-4">
+              <div className="rounded-lg bg-brand-bg border border-brand-border p-3 text-xs text-brand-muted">
+                เข้าสู่ระบบด้วยเบอร์โทร + รหัสผ่าน — สำหรับเบอร์ที่เคยตั้งรหัสผ่านไว้ในระบบ
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-brand-accent mb-2">เบอร์โทรศัพท์</label>
+                <input
+                  type="tel"
+                  value={pPhone}
+                  onChange={(e) => setPPhone(e.target.value)}
+                  className="input"
+                  placeholder="เช่น 0812345678"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-brand-accent mb-2">รหัสผ่าน</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
               <button
                 type="submit"
                 disabled={isLoading}

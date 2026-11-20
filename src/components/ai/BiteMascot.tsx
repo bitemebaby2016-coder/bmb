@@ -312,7 +312,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
           ? { left: pos.x, top: pos.y }
           : { bottom: cartCount > 0 ? 152 : 84 }}
       >
-        <div className="relative w-16">
+        <div className="relative w-16 animate-float">
           {/* Owner 2026-10-17: bubble ต้องไม่ทับฟอร์มหน้า checkout และปิดได้ด้วยการแตะ
               (เดิมลอยค้าง animate-bounce บัง input/ปุ่มบนมือถือ)
               R44 (Owner 2026-11-01): bubble/upsell = anchor absolute ด้านบน "เบนเข้าหาจอกลาง"
@@ -347,7 +347,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
             onPointerUp={onBtnPointerUp}
             onClick={handleTap}
             aria-label="คุยกับน้อง Bite (ลากเพื่อย้ายตำแหน่ง)"
-            className="pointer-events-auto touch-none flex h-16 w-16 items-center justify-center rounded-full shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden cursor-grab active:cursor-grabbing bg-transparent"
+            className="pointer-events-auto touch-none flex h-16 w-16 items-center justify-center rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform overflow-hidden cursor-grab active:cursor-grabbing bg-transparent"
             data-testid="bite-mascot"
           >
             {mascotUrl ? (

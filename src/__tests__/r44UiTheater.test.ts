@@ -29,7 +29,8 @@ describe('R44 — Theater: ลิงก์จริง + ปุ่มตาม�
 
 describe('R44 — มุมขวา: ไม่มีปุ่มทับซ้อนกัน', () => {
   it('BiteMascot: container = ความกว้างปุ่ม (w-16) + bubble/upsell anchor absolute bottom-full right-0 (เบนเข้าจอกลาง — ห้ามล้นขอบขวา)', () => {
-    expect(mascotSrc).toContain('className="relative w-16"')
+    // R54: float อยู่ที่ container (relative w-16 animate-float) — ปุ่มเหลือ hover scale ล้วน
+    expect(mascotSrc).toContain('className="relative w-16 animate-float"')
     expect(mascotSrc).toContain('absolute bottom-full right-0')
     expect(mascotSrc).toContain('data-testid="bite-bubble-stack"')
     expect(mascotSrc).toContain('max-w-[min(220px,calc(100vw-56px))]')

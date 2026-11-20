@@ -125,7 +125,10 @@ export const MascotWrapper = forwardRef<HTMLDivElement, MascotWrapperProps>(
     <div
       ref={(el) => { wrapperRef.current = el; if (ref && typeof ref === 'object') ref.current = el; else if (typeof ref === 'function') ref(el); }}
       aria-hidden={ariaHidden}
-      className={['fixed pointer-events-none select-none', positionClass, 'animate-float', 'filter drop-shadow-[0_15px_12px_rgba(0,0,0,0.18)]', className].filter(Boolean).join(' ')}
+      // R54: wrapper = ชั้นวางตำแหน่ง (drag กำหนด transform inline) ห้ามมี float animation
+      // บนชั้นนี้ — animation ชนกับ transform inline แล้วมาสคอตหลุดจากตำแหน่งที่ลากไว้
+      // (ลอย = .animate-float บน div เนื้อหาใน BiteMascot)
+      className={['fixed pointer-events-none select-none', positionClass, 'filter drop-shadow-[0_15px_12px_rgba(0,0,0,0.18)]', className].filter(Boolean).join(' ')}
       style={style}
     >
       {children}

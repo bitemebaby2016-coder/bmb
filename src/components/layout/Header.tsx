@@ -38,9 +38,16 @@ const riderIdentity = useRiderIdentity()
     setMobileMenuOpen(false)
   }, [location.pathname])
 
-  function handleLogout() {
-    logout()
-    window.location.href = '/'
+  // R54 (Owner 2026-11-20 "กดออกแล้วไม่ออกไปเข้าระบบใหม่จริง"): เดิม logout() ไม่ถูก await
+  // → supabase.auth.signOut() ยังไม่เสร็จก่อน window.location ยิง → session ค้างทั้ง
+  // localStorage/server กลับมา login เจอ session เดิม = ไม่เปิดฟอร์มให้เข้าใหม่
+  // await ให้เสร็จจริง (A4: logout clear store แม้ signOut throw) แล้วพาไป /login เสมอ
+  async function handleLogout() {
+    try {
+      await logout()
+    } finally {
+      window.location.href = '/login'
+    }
   }
 
   function closeMobileMenu() {
@@ -214,7 +221,7 @@ const riderIdentity = useRiderIdentity()
                       👤 บัญชีผู้ใช้
                     </Link>
                     <button
-                      onClick={() => { handleLogout(); closeMobileMenu(); }}
+                      onClick={() => { closeMobileMenu(); void handleLogout() }}
                       className="flex items-center w-full px-3 py-3 rounded-xl font-medium text-brand-danger hover:bg-brand-danger-light transition-colors text-left"
                     >
                       🚪 ออกจากระบบ

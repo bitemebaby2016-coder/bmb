@@ -107,12 +107,22 @@ export async function fetchVoteStatus(): Promise<VoteStatus | null> {
 /** โหวตจริง — ข้อผิดพลาดแปลเป็น reason ไทย (หน้าห้ามสัญญาแต้มล่วงหน้า) */
 export async function castPreorderVote(productId: string): Promise<VoteAttempt> {
   try {
+    // R54 (Owner 2026-11-20 "ระบบโหวตขัดข้อง"): ผู้ใช้ไม่ได้ล็อกอิน → PostgREST กันที่
+    // สิทธิ์ EXECUTE (REVOKE anon ตาม m208) ก่อนถึงตัวฟังก์ชัน → 401 body ว่าง →
+    // error.message เป็นค่าว่าง ไม่มี ERR_* ให้แมป → เคยตก load_failed ("ระบบโหวตขัดข้อง")
+    // ทั้งที่สาเหตุจริงคือยังไม่ล็อกอิน → เช็ค session ก่อนยิง RPC (guard ฝั่ง server คงอยู่)
+    const { data: sessionData } = await supabase.auth.getSession()
+    if (!sessionData?.session) return { ok: false, reason: 'signed_out' }
     const { data, error } = await supabase.rpc('preorder_vote_cast', {
       p_product_id: productId,
     })
     if (error) {
       const msg = String(error.message ?? '')
       if (msg.includes('ERR_NOT_AUTHENTICATED')) return { ok: false, reason: 'signed_out' }
+      // JWT หมดอายุ/เสีย (401 ว่าง) = server ไม่รับรองตัวตน → signed_out (ล็อกอินใหม่แก้)
+      if (!msg.trim() || /jwt|permission denied|not authorized/i.test(msg)) {
+        return { ok: false, reason: 'signed_out' }
+      }
       if (msg.includes('ERR_VOTE_DISABLED')) return { ok: false, reason: 'disabled' }
       if (msg.includes('ERR_VOTE_LIMIT')) return { ok: false, reason: 'limit' }
       if (msg.includes('ERR_VOTE_ALREADY')) return { ok: false, reason: 'already' }

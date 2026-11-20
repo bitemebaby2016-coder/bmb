@@ -5,8 +5,8 @@
 // ============================================
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const m = vi.hoisted(() => ({ rpc: vi.fn() }))
-vi.mock('@/lib/supabase', () => ({ supabase: { rpc: m.rpc } }))
+const m = vi.hoisted(() => ({ rpc: vi.fn(), getSession: vi.fn() }))
+vi.mock('@/lib/supabase', () => ({ supabase: { rpc: m.rpc, auth: { getSession: m.getSession } } }))
 
 import {
   fetchVoteStatus,
@@ -25,6 +25,8 @@ const okStatus = () => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // R54: castPreorderVote เช็ค session ก่อนยิง RPC — default = มี session (เทส cast ปกติ)
+  m.getSession.mockResolvedValue({ data: { session: {} } })
 })
 
 describe('fetchVoteStatus — validate เข้ม (ห้ามเดาค่า)', () => {
@@ -82,6 +84,20 @@ describe('castPreorderVote — ERR_* → reason ครบทุกตัว (ser
       const r = await castPreorderVote('p-a')
       expect(r).toEqual({ ok: false, reason })
     }
+  })
+
+  it('R54: ไม่มี session → signed_out ทันที (ไม่ยิง RPC — anon โดน REVOKE ก่อนถึงฟังก์ชัน)', async () => {
+    m.getSession.mockResolvedValue({ data: { session: null } })
+    const r = await castPreorderVote('p-a')
+    expect(r).toEqual({ ok: false, reason: 'signed_out' })
+    expect(m.rpc).not.toHaveBeenCalled()
+  })
+
+  it('R54: 401 body ว่าง / JWT เสีย → signed_out (ไม่ตก load_failed มั่ว)', async () => {
+    m.rpc.mockResolvedValue({ data: null, error: { message: '' } })
+    expect(await castPreorderVote('p-a')).toEqual({ ok: false, reason: 'signed_out' })
+    m.rpc.mockResolvedValue({ data: null, error: { message: 'JWT expired' } })
+    expect(await castPreorderVote('p-a')).toEqual({ ok: false, reason: 'signed_out' })
   })
 
   it('error ไม่รู้จัก / รูปผิด / throw → load_failed', async () => {

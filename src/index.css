@@ -263,6 +263,13 @@ html[data-theme='dark'] .bg-black\/90, html[data-theme='graphite'] .bg-black\/90
   50% { transform: translateY(-10px); }
 }
 
+/* R54 (Owner 2026-11-20): .animate-float เคยเป็น dead class (ไม่มีนิยาม) —
+   มาสคอตเลยไม่ลอย ทั้งที่ MascotBadge (mascotIdle) ยกเว้น animate-float ไว้ให้ลอยเอง
+   bind กับ @keyframes float ที่มีอยู่ — reduced-motion ปิดที่ .animate-float ด้านล่างแล้ว */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
