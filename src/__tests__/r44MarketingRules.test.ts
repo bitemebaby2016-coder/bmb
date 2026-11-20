@@ -1,6 +1,7 @@
 // ============================================
-// Bite Me Baby — R44 marketing rules (Owner 2026-11-01)
-//   ① ภาพเจน = รูปเดียวตอนสร้างโพสต์ (ห้ามขึ้นต้นแบบ+เจนคู่กัน)
+// Bite Me Baby — R44 marketing rules (Owner 2026-11-01, updated 2026-11-20)
+//   เดิม: ภาพเจน = รูปเดียวตอนสร้างโพสต์ (ห้ามขึ้นต้นแบบ+เจนคู่กัน)
+//   ใหม่ (เจ้าของสั่ง 2026-11-20): ยกเลิก R44 — เลือกผสมเมนู+ภาพเจน+อัปโหลดได้สูงสุด 5 รูปต่อโพสต์
 //   ② footer บังคับทุกโพส: สั่งใต้โพส · Messenger · เว็บ · ปิดการขายทุกช่องทางใส่ตะกร้า
 // ============================================
 
@@ -8,30 +9,50 @@ import { describe, it, expect } from 'vitest'
 import marketingSrc from '../pages/admin/AdminMarketing.tsx?raw'
 import publishSrc from '../../supabase/functions/social-publish-worker/index.ts?raw'
 
-describe('R44 — ภาพเจนใช้รูปเดียวตอนสร้างโพสต์', () => {
-  it('AdminMarketing: isGenImage + submit กรองใช้ภาพเจนรูปสุดท้ายรูปเดียว', () => {
-    expect(marketingSrc).toContain("const isGenImage = (u: string) => u.includes('/ai-generated/')")
-    expect(marketingSrc).toContain('const genOnes = images.filter(isGenImage)')
-    expect(marketingSrc).toContain('const postImages = genOnes.length > 0 ? [genOnes[genOnes.length - 1]] : images')
-    expect(marketingSrc).toContain('image_urls: postImages')
+describe('R44 — เลือกรูปผสมได้สูงสุด 5 รูป (ยกเลิกกติกา gen-single ตามสั่งเจ้าของ 2026-11-20)', () => {
+  it('AdminMarketing: มีค่าคงที่ MAX_POST_IMAGES = 5 และ helper addImages', () => {
+    expect(marketingSrc).toContain('export const MAX_POST_IMAGES = 5')
+    expect(marketingSrc).toContain('function addImages(')
   })
-  it('R55 "ห้ามเลือกใช้แทนอัตโนมัติ" — ไม่ append เข้าชุด + ตรวจคุณภาพ + ปุ่ม ใช้/ปิด/ลบ ที่อัลบั้ม', () => {
-    // R55 (Owner 2026-11-02): "ภาพที่เจนมาพอไปอยู่ในเมนูแล้วเบี้ยวเละเทะ ขนาดไม่ตรง
-    //   ห้ามเลือกมาใช้แทนโดยอัตโนมัติ" → เจนแล้วอยู่ที่อัลบั้มเท่านั้น (ไม่ต่อชุดภาพอัตโนมัติ)
-    expect(marketingSrc).not.toContain('setImages((prev) => [...prev, wmUrl])')
-    expect(marketingSrc).toContain('checkGenQuality(wmUrl, genKind)')
-    expect(marketingSrc).toContain('data-testid="mk-gen-qa-warn"')
-    // ปุ่มต่อรูป: ใช้ (pickAiImage) · ปิด/เปิด (toggleAiImage = ย้ายไฟล์จริง) · ลบ (deleteAiImage)
-    expect(marketingSrc).toContain('data-testid={`mk-ai-pick-${a.name}`}')
-    expect(marketingSrc).toContain('data-testid={`mk-ai-toggle-${a.name}`}')
-    expect(marketingSrc).toContain('data-testid={`mk-ai-del-${a.name}`}')
-    expect(marketingSrc).toContain('data-testid={`mk-img-del-${images.indexOf(u)}`}')
-    expect(marketingSrc).toContain('handleRemoveImage')
-    expect(marketingSrc).toContain(".from('bmb-images').remove([path])")
+  it('AdminMarketing: pickAiImage = toggle เลือก/เลิกเลือก (ไม่ใช่ setImages([url]) ทับชุด)', () => {
     expect(marketingSrc).toContain('function pickAiImage(url: string)')
-    expect(marketingSrc).toContain('setImages([url])')
-    expect(marketingSrc).toContain('data-testid="mk-images-gen-only"')
-    expect(marketingSrc).toContain('จะไม่ถูกแนบคู่กัน')
+    expect(marketingSrc).not.toContain('setImages([url])')
+    expect(marketingSrc).toContain('if (prev.includes(url))')
+    expect(marketingSrc).toContain('if (prev.length >= MAX_POST_IMAGES)')
+  })
+  it('AdminMarketing: ไม่มีตัวกรอง gen-single (R44 ถูกยกเลิก) — ส่ง images ทั้งชุด', () => {
+    expect(marketingSrc).not.toContain('const genOnes = images.filter(isGenImage)')
+    expect(marketingSrc).not.toContain('const postImages = genOnes.length > 0 ? [genOnes[genOnes.length - 1]] : images')
+    expect(marketingSrc).toContain('const postImages = images.slice(0, MAX_POST_IMAGES)')
+  })
+  it('AdminMarketing: ไม่มีแถบเตือน mk-images-gen-only และข้อความ "จะไม่ถูกแนบคู่กัน"', () => {
+    expect(marketingSrc).not.toContain('mk-images-gen-only')
+    expect(marketingSrc).not.toContain('จะไม่ถูกแนบคู่กัน')
+  })
+  it('AdminMarketing: อัลบั้ม AI โชว์สถานะ selected (ขอบสีแบรนด์ + ✓ + ปุ่ม "เลิก")', () => {
+    expect(marketingSrc).toContain('const isSelected = images.includes(a.url)')
+    expect(marketingSrc).toContain("isSelected ? 'border-2 border-brand-primary'")
+    expect(marketingSrc).toContain('isSelected && (')
+    expect(marketingSrc).toContain('isSelected ? \'เลิก\' : \'ใช้\'')
+  })
+  it('AdminMarketing: Planner จิ้มเมนู = append เข้าชุด (addImages) ไม่ทับชุดเดิม', () => {
+    expect(marketingSrc).toContain('if (p.image_url) {')
+    expect(marketingSrc).toContain('addImages([p.image_url!])')
+  })
+  it('AdminMarketing: Studio มีการ์ด "เลือกจากเมนูทั้งหมด" append เข้าชุดภาพโพสต์', () => {
+    expect(marketingSrc).toContain('mk-studio-menu-picker')
+    expect(marketingSrc).toContain('mk-studio-pick-')
+    expect(marketingSrc).toContain('addImages([p.image_url!])')
+  })
+  it('AdminMarketing: handleBrowseImage รับ multiple files + ย่อ 1080px/500KB + อัปขึ้น uploads/', () => {
+    expect(marketingSrc).toContain('multiple')
+    expect(marketingSrc).toContain('POST_IMAGE_MAX_SIDE')
+    expect(marketingSrc).toContain('POST_IMAGE_MAX_BYTES')
+    expect(marketingSrc).toContain('uploads/mk-')
+  })
+  it('AdminMarketing: ตัวนับภาพ "N/5" ในชุดภาพและ PostForm', () => {
+    expect(marketingSrc).toContain('แนบรูปแล้ว {images.length}/{MAX_POST_IMAGES} รูป')
+    expect(marketingSrc).toContain('แนบรูปแล้ว {props.images.length}/{MAX_POST_IMAGES} รูป')
   })
 })
 
@@ -50,5 +71,12 @@ describe('R44 — footer บังคับคู่โพสทุกครั�
   })
   it('publishToFeed ต้องรับข้อความผ่าน withPostCta เสมอ', () => {
     expect(publishSrc).toContain('withPostCta(`${row.title}')
+  })
+  it('social-publish-worker: รองรับ attached_media สูงสุด 5 รูป (เพิ่มจาก 4 ตามสั่งเจ้าของ)', () => {
+    expect(publishSrc).toContain('imageUrls.slice(0, 5)')
+    // publishToFeed ใช้ slice(0, 5) สองจุด: ในฟังก์ชันและใน handler
+    const matches = publishSrc.match(/slice\(0, 5\)/g)
+    expect(matches).not.toBeNull()
+    expect(matches!.length).toBeGreaterThanOrEqual(2)
   })
 })

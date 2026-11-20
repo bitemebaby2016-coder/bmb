@@ -20,7 +20,7 @@ import { listContentApprovals, reviewContent, type ContentApprovalRow } from '@/
 import { autoScheduleApprovedPosts } from '@/lib/marketingAutoSchedule'
 import { flashTo } from '@/lib/uiFlash'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
-import { compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE } from '@/lib/bmbAdminApi_media'
+import { compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE, POST_IMAGE_MAX_SIDE, POST_IMAGE_MAX_BYTES } from '@/lib/bmbAdminApi_media'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 
 type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'schedule' | 'rules' | 'analytics'
@@ -77,6 +77,9 @@ export function autoMascotForKind(kind: string): string {
   return 'recommend'
 }
 
+// ==== Multi-image selection (max 5) ====
+export const MAX_POST_IMAGES = 5
+
 export function AdminMarketing() {
   const [tab, setTab] = useState<Tab>(() => {
     // C5/Q3: deep-link ?tab= จาก redirect ของหน้าเดิม (bookmark ไม่ตาย)
@@ -115,6 +118,23 @@ export function AdminMarketing() {
     try { localStorage.setItem('bmb:wm-mascot', v) } catch { /* quota */ }
     showToast('จำมาสคอตลายน้ำไว้ใช้กับทุกรูปที่เจนจากนี้แล้ว', 'success')
   }
+
+  // ==== Multi-image selection (max 5) ====
+  function addImages(newUrls: string[]) {
+    setImages((prev) => {
+      const merged = [...prev]
+      for (const u of newUrls) {
+        if (merged.length >= MAX_POST_IMAGES) break
+        if (!merged.includes(u)) merged.push(u)
+      }
+      if (merged.length !== prev.length + newUrls.filter(u => !prev.includes(u)).length) {
+        const added = merged.length - prev.length
+        if (added < newUrls.length) showToast(`เลือกได้สูงสุด ${MAX_POST_IMAGES} รูป (เพิ่ม ${added} รูป)`, 'warning')
+      }
+      return merged
+    })
+  }
+
   const [genBusy, setGenBusy] = useState(false)
   // R40 (Owner: "ให้มีตัวแสดงสถานะ + พรีวิวรูปที่สร้าง + รู้ว่าสร้างเสร็จหรือยัง ไปอยู่อัลบั้มเดียวกันแยกโฟลเดอร์")
   // R55: + qa (ตรวจขนาด/สัดส่วน — "เบี้ยว/ขนาดไม่ตรง" ต้องเห็นก่อนกดใช้ · ห้ามใช้แทนอัตโนมัติ)
@@ -214,10 +234,8 @@ export function AdminMarketing() {
   async function handleCreatePost() {
     if (!title.trim()) { showToast('ใส่หัวข้อโพสต์ก่อน', 'error'); return }
     setSaving(true)
-    // R44 (Owner 2026-11-01): มีภาพเจนในชุด → ใช้ภาพเจนรูปเดียว (รูปสุดท้ายที่เจน/เลือก)
-    // ห้ามขึ้นทั้งต้นแบบและภาพเจนคู่กันบนโพสต์ · ไม่มีภาพเจน = ใช้ตามที่เลือกไว้ (รูปเมนู/browse)
-    const genOnes = images.filter(isGenImage)
-    const postImages = genOnes.length > 0 ? [genOnes[genOnes.length - 1]] : images
+    // ใช้ภาพที่เลือกทั้งหมด (สูงสุด 5 รูป) — ยกเลิก R44 ตามสั่งเจ้าของ 2026-11-20
+    const postImages = images.slice(0, MAX_POST_IMAGES)
     const r = await createMarketingPost({ title: title.trim(), body: bodyText, content_type: contentType, image_urls: postImages })
     setSaving(false)
     if (r.ok) {
@@ -302,9 +320,8 @@ export function AdminMarketing() {
     if (!editingPostId) return
     if (!title.trim()) { showToast('ใส่หัวข้อโพสต์ก่อน', 'error'); return }
     setSaving(true)
-    // R44: กติกาภาพเจนเดียวกับการสร้างใหม่ (รูปเจนล่าสุดอย่างเดียว)
-    const genOnes = images.filter(isGenImage)
-    const postImages = genOnes.length > 0 ? [genOnes[genOnes.length - 1]] : images
+    // ใช้ภาพที่เลือกทั้งหมด (สูงสุด 5 รูป) — ยกเลิก R44 ตามสั่งเจ้าของ 2026-11-20
+    const postImages = images.slice(0, MAX_POST_IMAGES)
     const post = posts.find((x) => x.id === editingPostId)
     const r = await updateMarketingPostDraft(editingPostId, { title: title.trim(), body: bodyText, image_urls: postImages })
     // คิวอนุมัติที่ผูกอยู่ต้องโชว์เนื้อหาใหม่ด้วย (กันคิวโชว์ของเก่า → อนุมัติของผิด)
@@ -408,34 +425,44 @@ export function AdminMarketing() {
     }
   }
 
-  /** R38: browse ไฟล์รูปจากเครื่อง (เช่น รูปเมนู) → อัปโหลดขึ้น bmb-images → ได้ public URL
-   *  แนบเข้าชุด images เดียวกับภาพ AI (image-gen) และภาพแคตตาลอก (Planner) — ใช้ร่วมทุกผิวหน้าการตลาด */
+  /** R38: browse ไฟล์รูปจากเครื่อง (หลายไฟล์พร้อมกัน) → ย่อ 1080px/≤500KB → อัปโหลดขึ้น bmb-images/uploads/ → แนบเข้าชุด images */
   async function handleBrowseImage(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
+    const files = Array.from(e.target.files ?? [])
     e.target.value = '' // เปลี่ยนไฟล์เดิมซ้ำได้
-    if (!file) return
-    if (!file.type.startsWith('image/')) { showToast('เลือกไฟล์รูปภาพเท่านั้น (jpg/png/webp)', 'error'); return }
-    if (file.size > 10 * 1024 * 1024) { showToast('ไฟล์ต้องไม่เกิน 10MB', 'error'); return }
+    if (files.length === 0) return
+    const validFiles = files.filter((f) => {
+      if (!f.type.startsWith('image/')) { showToast(`ข้าม ${f.name}: เลือกไฟล์รูปภาพเท่านั้น (jpg/png/webp)`, 'error'); return false }
+      if (f.size > 10 * 1024 * 1024) { showToast(`ข้าม ${f.name}: ไฟล์ต้องไม่เกิน 10MB`, 'error'); return false }
+      return true
+    })
+    if (validFiles.length === 0) return
     setBrowseBusy(true)
     try {
-      // IMG-1: ย่ออัตโนมัติก่อนขึ้นคลัง (เหมือนรูปเมนู — 1024px/q0.82 · เล็กพอ = คืนเดิม)
-      // R92 (Owner 2026-11-09): รูปที่เอามาใช้ = บังคับ 300×300 + ≤100KB อัตโนมัติ (เว็บ + supabase)
-      const sized = await compressToWebLimits(file)
-      const safe = (sized.name || 'image.png').replace(/[^\w.-]+/g, '_').slice(-60)
-      const path = `marketing/browse-${Date.now()}-${safe}`
-      const { error } = await supabase.storage.from('bmb-images').upload(path, sized, { contentType: sized.type, upsert: false })
-      if (error) throw error
-      const { data } = supabase.storage.from('bmb-images').getPublicUrl(path)
-      const url = data?.publicUrl
-      if (!url) throw new Error('no public url')
-      setImages((prev) => [...prev, url])
-      showToast(
-        sized !== file
-          ? `แนบรูปจากไฟล์ + ลดขนาดอัตโนมัติ (กว้างสุด ${PRODUCT_IMAGE_MAX_SIDE}px) เข้าชุดภาพของโพสต์แล้ว`
-          : 'แนบรูปจากไฟล์เข้าชุดภาพของโพสต์แล้ว — ใช้ร่วมกับภาพ AI/แคตตาลอกได้เลย',
-        'success',
-      )
-      flashTo('mk-images-strip')
+      let uploaded = 0
+      for (const file of validFiles) {
+        if (images.length >= MAX_POST_IMAGES) {
+          showToast(`เลือกได้สูงสุด ${MAX_POST_IMAGES} รูป (ข้ามไฟล์ที่เหลือ)`, 'warning')
+          break
+        }
+        // ย่อ 1080px / ≤500KB สำหรับโพสต์การตลาด (เจ้าของสั่ง 2026-11-20)
+        const sized = await compressToWebLimits(file, POST_IMAGE_MAX_SIDE, POST_IMAGE_MAX_BYTES)
+        const safe = (sized.name || 'image.png').replace(/[^\w.-]+/g, '_').slice(-60)
+        const path = `uploads/mk-${Date.now()}-${safe}`
+        const { error } = await supabase.storage.from('bmb-images').upload(path, sized, { contentType: sized.type, upsert: false })
+        if (error) throw error
+        const { data } = supabase.storage.from('bmb-images').getPublicUrl(path)
+        const url = data?.publicUrl
+        if (!url) throw new Error('no public url')
+        addImages([url])
+        uploaded++
+      }
+      if (uploaded > 0) {
+        showToast(
+          `อัปโหลด ${uploaded} ไฟล์ + ย่ออัตโนมัติ (ยาวสุด ${POST_IMAGE_MAX_SIDE}px / ≤${POST_IMAGE_MAX_BYTES / 1024}KB) เข้าชุดภาพของโพสต์แล้ว`,
+          'success',
+        )
+        flashTo('mk-images-strip')
+      }
     } catch (err) {
       showToast('อัปโหลดรูปไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 120), 'error')
     } finally {
@@ -518,11 +545,20 @@ export function AdminMarketing() {
     }
   }
 
-  /** R40: จิ้มภาพในอัลบั้ม ai-generated = เลือกใช้ทันที · R44: "เลือกใช้" = เลือกรูปนี้เป็นรูปโพสต์ (รูปเดียว — แทนรูปเดิม) */
+  /** จิ้มภาพในอัลบั้ม ai-generated = toggle เลือก/เลิกเลือกเข้าไปในชุด (สูงสุด 5 รูป) */
   function pickAiImage(url: string) {
-    setImages([url])
+    setImages((prev) => {
+      if (prev.includes(url)) {
+        return prev.filter((u) => u !== url)
+      }
+      if (prev.length >= MAX_POST_IMAGES) {
+        showToast(`เลือกได้สูงสุด ${MAX_POST_IMAGES} รูป`, 'warning')
+        return prev
+      }
+      return [...prev, url]
+    })
     flashTo('mk-images-strip')
-    showToast('เลือกภาพนี้เป็นรูปโพสต์แล้ว (แทนรูปเดิม — โพสต์ใช้ทีละรูป)', 'success')
+    showToast('เพิ่ม/ลบรูปในชุดแล้ว', 'success')
   }
 
   /** R47 (Owner: "มีปุ่มให้ลบภาพที่เจนแล้วลบจริงด้วย") — เอาออกจากชุดภาพ + ลบไฟล์จริงบนคลัง bmb-images
@@ -746,9 +782,11 @@ export function AdminMarketing() {
                         setTitle(`แนะนำ ${p.name}`)
                         setBodyText(`วันนี้ขอแนะนำ ${p.name}${p.price != null ? ` ฿${Number(p.price).toFixed(0)}` : ''}`)
                         setGenSubject(p.name)
-                        // R47: รูปเมนูจริง = ต้นแบบไดคัทสำหรับเจนภาพเมนู/โปรโมต (ยังเจนต่อได้ ไม่ใช่ห้าม)
-                        setImages(p.image_url ? [p.image_url] : [])
-                        if (p.image_url) showToast('แนบรูปเมนูจริงเป็นต้นแบบให้แล้ว — เจนภาพเมนู/โปรโมตด้วยรูปนี้ประกอบได้เลย', 'success')
+                        // รูปเมนูจริง = ต้นแบบไดคัทสำหรับเจนภาพเมนู/โปรโมต + แนบเข้าชุดภาพโพสต์ (เพิ่มเข้าไป ไม่ทับ)
+                        if (p.image_url) {
+                          addImages([p.image_url])
+                          showToast('แนบรูปเมนูจริงเป็นต้นแบบ + เพิ่มเข้าชุดภาพโพสต์แล้ว', 'success')
+                        }
                         setTab('studio')
                       }}
                     >
@@ -805,12 +843,42 @@ export function AdminMarketing() {
                 ref={browseRef}
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 data-testid="mk-browse-input"
                 onChange={(e) => void handleBrowseImage(e)}
               />
-            </div>
-            <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> — แนบไว้แล้วใช้เป็น<b>ต้นแบบไดคัท</b>ตอนเจนภาพเมนูได้ · <b>เจนได้แม้ไม่มีภาพตัวอย่าง</b> (ระบบใช้รายละเอียดหัวข้อ/เนื้อหาโพสต์เป็นโจทย์) · ภาพที่เจน<b>ไม่ถูกแนบ/เลือกใช้อัตโนมัติ</b> — กด "ใช้" เองจากอัลบั้ม · ทุกภาพถูก<b>ประกบลายน้ำแบรนด์</b> (โลโก้จริง + มาสคอต) อัตโนมัติ</p>
+              </div>
+              {/* ใช้เมนูทั้งหมดในแท็บ Studio — append รูปเข้าชุดภาพโพสต์ (ไม่แตะ title/body) */}
+              {catalog.length > 0 && images.length < MAX_POST_IMAGES && (
+                <div className="card mt-3" data-testid="mk-studio-menu-picker">
+                  <h3 className="font-bold text-brand-accent mb-2 text-sm">🍽️ เลือกจากเมนูทั้งหมด (append เข้าชุดภาพโพสต์)</h3>
+                  <div className="flex flex-wrap gap-1">
+                    {catalog
+                      .filter((p) => p.image_url && !images.includes(p.image_url))
+                      .slice(0, 20)
+                      .map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className="btn btn-outline text-xs px-2 py-1"
+                          onClick={() => { if (p.image_url) addImages([p.image_url!]) }}
+                          disabled={images.length >= MAX_POST_IMAGES}
+                          data-testid={`mk-studio-pick-${p.id}`}
+                          title={`เพิ่มรูป "${p.name}" เข้าชุดภาพโพสต์`}
+                        >
+                          <img src={p.image_url!} alt={p.name} className="w-8 h-8 object-cover rounded mr-1 inline-block" />
+                          {p.name.slice(0, 12)}
+                        </button>
+                      ))}
+                  </div>
+                  {catalog.filter((p) => p.image_url && !images.includes(p.image_url)).length > 20 && (
+                    <p className="text-xs text-brand-muted mt-1">แสดง 20 รายการแรก · เหลืออีก {catalog.filter((p) => p.image_url && !images.includes(p.image_url)).length - 20} รายการ</p>
+                  )}
+                  <p className="text-xs text-brand-muted mt-1">กดเพื่อเพิ่มรูปเข้าชุดภาพโพสต์ (ไม่เปลี่ยนหัวข้อ/เนื้อหา) · ครบ {MAX_POST_IMAGES} รูปจะไม่ให้เพิ่มต่อ</p>
+                </div>
+              )}
+              <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> — แนบไว้แล้วใช้เป็น<b>ต้นแบบไดคัท</b>ตอนเจนภาพเมนูได้ · <b>เจนได้แม้ไม่มีภาพตัวอย่าง</b> (ระบบใช้รายละเอียดหัวข้อ/เนื้อหาโพสต์เป็นโจทย์) · ภาพที่เจน<b>ไม่ถูกแนบ/เลือกใช้อัตโนมัติ</b> — กด "ใช้" เองจากอัลบั้ม · ทุกภาพถูก<b>ประกบลายน้ำแบรนด์</b> (โลโก้จริง + มาสคอต) อัตโนมัติ</p>
             {/* R40: ตัวแสดงสถานะการเจน + พรีวิวผลลัพธ์ (Owner: "สร้างแล้วภาพไปไหน สร้างเสร็จหรือเปล่า") */}
             {genStatus.phase !== 'idle' && (
               <div
@@ -841,6 +909,7 @@ export function AdminMarketing() {
             )}
             {images.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3" data-testid="mk-images-strip">
+                <p className="w-full text-xs text-brand-muted font-medium">แนบรูปแล้ว {images.length}/{MAX_POST_IMAGES} รูป</p>
                 {images.map((u) => (
                   <span key={u} className="relative inline-block">
                     <img src={u} alt="generated" className="w-24 h-24 object-cover rounded-lg border border-brand-border" />
@@ -854,11 +923,6 @@ export function AdminMarketing() {
                     >✕</button>
                   </span>
                 ))}
-                {images.some(isGenImage) && images.length > 1 && (
-                  <p className="w-full text-xs text-brand-accent" data-testid="mk-images-gen-only">
-                    มีภาพเจนในชุด — ตอนสร้างโพสต์จะใช้ภาพเจน 1 รูปเท่านั้น (รูปต้นแบบ/รูปอื่นจะไม่ถูกแนบคู่กัน)
-                  </p>
-                )}
               </div>
             )}
             {/* R40: อัลบั้มภาพ AI · R55: แยกตามหมวด (tabs) + ปุ่มต่อรูป = ใช้ / ปิด-เปิด / ลบ */}
@@ -888,47 +952,60 @@ export function AdminMarketing() {
                 <p className="text-xs text-brand-muted">ยังไม่มีภาพในหมวดนี้ — สร้างภาพสำเร็จจะขึ้นทันทีในหมวดที่เลือกเจน</p>
               ) : (
                 <div className="flex flex-wrap gap-2" data-testid="mk-ai-album-grid">
-                  {visibleAiAlbum.map((a) => (
-                    <div
-                      key={a.path}
-                      className={`relative w-24 rounded-lg border overflow-hidden ${a.disabled ? 'opacity-50 border-brand-border' : 'border-brand-border'}`}
-                      data-testid={`mk-ai-item-${a.name}`}
-                    >
-                      <img src={a.url} alt={a.name} className="w-full h-20 object-cover" />
-                      <div className="flex text-[9px] leading-none">
-                        <button
-                          type="button"
-                          className="flex-1 bg-brand-primary text-white py-1"
-                          onClick={() => pickAiImage(a.url)}
-                          data-testid={`mk-ai-pick-${a.name}`}
-                          title="ใช้รูปนี้เป็นภาพโพสต์"
-                        >ใช้</button>
-                        <button
-                          type="button"
-                          className="flex-1 bg-amber-500 text-white py-1"
-                          onClick={() => void toggleAiImage(a)}
-                          data-testid={`mk-ai-toggle-${a.name}`}
-                          title={a.disabled ? 'เปิดใช้งานรูปนี้อีกครั้ง' : 'ปิดรูปนี้ — ไม่ให้ระบบนำไปใช้'}
-                        >{a.disabled ? 'เปิด' : 'ปิด'}</button>
-                        <button
-                          type="button"
-                          className="flex-1 bg-red-500 text-white py-1"
-                          onClick={() => void deleteAiImage(a)}
-                          data-testid={`mk-ai-del-${a.name}`}
-                          title="ลบรูปนี้ออกจากอัลบั้ม (ลบไฟล์จริง)"
-                        >ลบ</button>
+                  {visibleAiAlbum.map((a) => {
+                    const isSelected = images.includes(a.url)
+                    return (
+                      <div
+                        key={a.path}
+                        className={`relative w-24 rounded-lg border overflow-hidden ${a.disabled ? 'opacity-50 border-brand-border' : isSelected ? 'border-2 border-brand-primary' : 'border-brand-border'}`}
+                        data-testid={`mk-ai-item-${a.name}`}
+                      >
+                        <div className="relative">
+                          <img src={a.url} alt={a.name} className="w-full h-20 object-cover" />
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
+                              <span className="text-white text-xl font-bold">✓</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex text-[9px] leading-none">
+                          <button
+                            type="button"
+                            className={`flex-1 py-1 ${isSelected ? 'bg-green-600' : 'bg-brand-primary'} text-white`}
+                            onClick={() => pickAiImage(a.url)}
+                            data-testid={`mk-ai-pick-${a.name}`}
+                            title={isSelected ? 'เลิกเลือกรูปนี้' : 'เลือกรูปนี้เข้าชุดภาพโพสต์'}
+                            disabled={a.disabled || (!isSelected && images.length >= MAX_POST_IMAGES)}
+                          >
+                            {isSelected ? 'เลิก' : 'ใช้'}
+                          </button>
+                          <button
+                            type="button"
+                            className="flex-1 bg-amber-500 text-white py-1"
+                            onClick={() => void toggleAiImage(a)}
+                            data-testid={`mk-ai-toggle-${a.name}`}
+                            title={a.disabled ? 'เปิดใช้งานรูปนี้อีกครั้ง' : 'ปิดรูปนี้ — ไม่ให้ระบบนำไปใช้'}
+                          >{a.disabled ? 'เปิด' : 'ปิด'}</button>
+                          <button
+                            type="button"
+                            className="flex-1 bg-red-500 text-white py-1"
+                            onClick={() => void deleteAiImage(a)}
+                            data-testid={`mk-ai-del-${a.name}`}
+                            title="ลบรูปนี้ออกจากอัลบั้ม (ลบไฟล์จริง)"
+                          >ลบ</button>
+                        </div>
+                        {(a.kind === 'promo' || a.kind === 'festival') && !a.disabled && (
+                          <button
+                            type="button"
+                            className={`w-full text-[9px] py-1 ${floatingAdImage === a.url ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`}
+                            onClick={() => void toggleFloatingAd(a.url)}
+                            data-testid={`mk-ai-floatad-${a.name}`}
+                            title="ใช้รูปนี้เป็นโฆษณาลอย (แทนมาสคอต) — กดอีกครั้งเพื่อเลิกใช้"
+                          >{floatingAdImage === a.url ? '✓ เป็นโฆษณาลอย' : '📌 ตั้งเป็นโฆษณาลอย'}</button>
+                        )}
                       </div>
-                      {(a.kind === 'promo' || a.kind === 'festival') && !a.disabled && (
-                        <button
-                          type="button"
-                          className={`w-full text-[9px] py-1 ${floatingAdImage === a.url ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`}
-                          onClick={() => void toggleFloatingAd(a.url)}
-                          data-testid={`mk-ai-floatad-${a.name}`}
-                          title="ใช้รูปนี้เป็นโฆษณาลอย (แทนมาสคอต) — กดอีกครั้งเพื่อเลิกใช้"
-                        >{floatingAdImage === a.url ? '✓ เป็นโฆษณาลอย' : '📌 ตั้งเป็นโฆษณาลอย'}</button>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -1163,7 +1240,7 @@ function PostForm(props: {
           <option value="announcement">ประกาศ</option>
         </select>
       </label>
-      {props.images.length > 0 && <p className="text-xs text-brand-muted">แนบรูปแล้ว {props.images.length} รูป</p>}
+      {props.images.length > 0 && <p className="text-xs text-brand-muted font-medium">แนบรูปแล้ว {props.images.length}/{MAX_POST_IMAGES} รูป</p>}
       <button className="btn btn-primary" disabled={props.saving} onClick={props.onSubmit} data-testid="mk-create-post">
         {props.submitLabel ?? (props.saving ? '⏳…' : '📨 สร้างโพสต์ (รอคนอนุมัติ)')}
       </button>

@@ -74,11 +74,13 @@ describe('R38 · AI Studio: browse ไฟล์รูปเมนู → ชุ�
     // IMG-1 (Owner 2026-11-03 — requirement เปลี่ยน: ทุกภาพที่ระบบเอามาใช้ = ลดขนาดอัตโนมัติ):
     // เดิม assert `.upload(path, file` (raw) → ตอนนี้บังคับย่อ ก่อน upload (เข้มขึ้น ไม่ใช่อ่อนลง)
     // R92 (Owner 2026-11-09): บังคับ 300×300 + ≤100KB → compressToWebLimits (แทน downscaleImageFile เดิม)
-    expect(marketingSrc).toContain('const sized = await compressToWebLimits(file)')
+    // โพสต์การตลาด (เจ้าของสั่ง 2026-11-20): ยาวสุด 1080px / ≤500KB
+    expect(marketingSrc).toContain('const sized = await compressToWebLimits(file, POST_IMAGE_MAX_SIDE, POST_IMAGE_MAX_BYTES)')
     expect(marketingSrc).toContain("storage.from('bmb-images').upload(path, sized")
-    expect(marketingSrc).toContain('setImages((prev) => [...prev, url])')
+    expect(marketingSrc).toContain('addImages([')
     expect(marketingSrc).toContain('type="file"')
     expect(marketingSrc).toContain('accept="image/*"')
+    expect(marketingSrc).toContain('multiple') // รับหลายไฟล์พร้อมกัน
   })
 })
 

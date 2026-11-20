@@ -73,7 +73,7 @@ async function publishToFeed(pageId: string, message: string, imageUrls: string[
   const form = new URLSearchParams()
   form.set('message', message)
   const photos: string[] = []
-  for (const url of imageUrls.slice(0, 4)) {
+  for (const url of imageUrls.slice(0, 5)) {
     const upForm = new URLSearchParams()
     upForm.set('url', url)
     upForm.set('published', 'false')
@@ -299,9 +299,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   const approvalId = (body.approvalId || '').trim()
   if (!approvalId) return json({ error: 'ERR_INVALID_APPROVAL' }, 400)
-  // optional real menu/product images (https only, max 4) — Owner 2026-10-16
+  // optional real menu/product images (https only, max 5) — Owner 2026-11-20
   const imageUrls = Array.isArray(body.imageUrls)
-    ? body.imageUrls.filter((u): u is string => typeof u === 'string' && /^https:\/\//.test(u)).slice(0, 4)
+    ? body.imageUrls.filter((u): u is string => typeof u === 'string' && /^https:\/\//.test(u)).slice(0, 5)
     : []
 
   const result = await publishDraft(approvalId, imageUrls)

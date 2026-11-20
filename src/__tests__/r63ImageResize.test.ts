@@ -34,9 +34,9 @@ describe('R63 IMG-1 · ทุก path ที่ภาพเข้าระบบ
     expect(paymentSrc).not.toMatch(/uploadPaymentSlip\([\s\S]{0,700}?\.upload\(path, file,/)
   })
 
-  it('AdminMarketing browse = ย่อก่อนขึ้น marketing/ (R92 = 300×300/100KB) · AdminOnboarding logo = ย่อก่อนขึ้น brands/', () => {
-    expect(marketingSrc).toContain('const sized = await compressToWebLimits(file)')
-    expect(marketingSrc).toMatch(/marketing\/browse-\$\{Date\.now\(\)\}-\$\{safe\}[\s\S]{0,200}?\.upload\(path, sized/)
+  it('AdminMarketing browse = ย่อก่อนขึ้น uploads/ (โพสต์การตลาด 1080px/≤500KB) · AdminOnboarding logo = ย่อก่อนขึ้น brands/', () => {
+    expect(marketingSrc).toContain('const sized = await compressToWebLimits(file, POST_IMAGE_MAX_SIDE, POST_IMAGE_MAX_BYTES)')
+    expect(marketingSrc).toMatch(/uploads\/mk-\$\{Date\.now\(\)\}-\$\{safe\}[\s\S]{0,200}?\.upload\(path, sized/)
     expect(onboardingSrc).toContain('const sized = await downscaleImageFile(logoFile)')
     expect(onboardingSrc).toMatch(/\.upload\(path, sized/)
   })

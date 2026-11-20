@@ -272,6 +272,10 @@ export const DISPLAY_QUALITY = 0.80
 export const WEB_USE_MAX_SIDE = DISPLAY_MAX_SIDE
 export const WEB_USE_MAX_BYTES = DISPLAY_MAX_BYTES // 100KB (ช่วง 50–100KB ที่ Owner อนุญาต)
 
+/** โพสต์การตลาด (AdminMarketing): ยาวสุด 1080px, ไฟล์ ≤500KB — เจ้าของสั่ง 2026-11-20 */
+export const POST_IMAGE_MAX_SIDE = 1080
+export const POST_IMAGE_MAX_BYTES = 500 * 1024
+
 export async function compressToWebLimits(
   file: File,
   maxSide: number = DISPLAY_MAX_SIDE,

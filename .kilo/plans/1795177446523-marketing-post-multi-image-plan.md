@@ -1,0 +1,52 @@
+# แผน: เลือกรูปประกอบโพสต์ได้สูงสุด 5 รูป — AdminMarketing (Planner + Studio)
+
+วันที่: 2026-11-20 · โจทย์เจ้าของ: แท็บ "วางแผน & เลือกเมนู" และ "สร้างโพสต์" เลือกรูปประกอบโพสต์ได้สูงสุด 5 รูป จาก (1) รูปเมนูในเว็บ (2) รูปที่ AI เจน (3) อัปโหลดจากเครื่อง (ย่อเหลือ ≤500KB ขึ้นเก็บ Supabase `bmb-images/uploads/` อัตโนมัติ — พาธสร้างไว้แล้ว)
+
+## การตัดสินใจที่ยืนยันกับเจ้าของแล้ว (ในแชท)
+1. **ยกเลิกกติกา R44** ("มีภาพเจน = ใช้ภาพเจนรูปเดียว") → เลือกผสมเมนู + ภาพเจน + อัปโหลด รวมกันสูงสุด 5 รูปต่อโพสต์
+2. **สเปครูปอัปโหลด**: ยาวสุด 1080px, ไฟล์ ≤500KB (บีบ webp ลด quality อัตโนมัติจนถึงเพดาน)
+
+## สถานะเดิมที่ต้องเปลี่ยน (หลักฐานในโค้ด)
+- `AdminMarketing.tsx:217-220` กรองภาพเจนเหลือรูปเดียวก่อนสร้าง/แก้โพสต์ (R44)
+- `AdminMarketing.tsx:522-526` `pickAiImage` = `setImages([url])` แทนที่ชุดทั้งหมด
+- `AdminMarketing.tsx:413-444` `handleBrowseImage` = ทีละ 1 ไฟล์, บีบ 400px/100KB, อัปขึ้น `marketing/browse-*`
+- `AdminMarketing.tsx:745-752` Planner จิ้มเมนู = `setImages(p.image_url ? [p.image_url] : [])` (ทับชุดเดิม) — ไม่มี picker เมนูในแท็บ Studio
+- `social-publish-worker/index.ts:76` + `:304` FB ฝังภาพสูงสุด 4 รูป (`slice(0, 4)`)
+- เทสต์คุมซอร์สโค้ด: `r44MarketingRules.test.ts`, `r63ImageResize.test.ts:37-39`, `r38Contracts.test.ts:69-82`
+
+## งานตามลำดับ
+
+### 1) `src/lib/bmbAdminApi_media.ts`
+- เพิ่ม `export const POST_IMAGE_MAX_SIDE = 1080` และ `POST_IMAGE_MAX_BYTES = 500 * 1024` (ใช้กับรูปอัปโหลด/รูปโพสต์การตลาด)
+- ไม่แก้ `compressToWebLimits` (รับ `maxSide`/`maxBytes` พารามิเตอร์อยู่แล้ว — เรียกพร้อมค่าใหม่ได้เลย)
+
+### 2) `src/pages/admin/AdminMarketing.tsx` — ชุดภาพสูงสุด 5 รูป
+- เพิ่ม `export const MAX_POST_IMAGES = 5` + helper `addImages(urls: string[])`: dedupe (URL ซ้ำไม่ยัด) + cap 5 + toast เตือน "เลือกได้สูงสุด 5 รูป" เมื่อเต็ม
+- **ลบตัวกรอง R44** ใน `handleCreatePost` และ `handleSaveEditPost` (ตัด `genOnes`/`postImages` — ส่ง `images` ทั้งชุด) · ลบแถบเตือน `mk-images-gen-only` และข้อความ "จะไม่ถูกแนบคู่กัน"
+- **`pickAiImage`** → toggle: มีในชุด = เอาออก, ไม่มี = `addImages([url])` · อัลบั้ม AI ไฮไลต์รูปที่ถูกเลือก (ขอบสีแบรนด์ + ✓) · ปุ่ม "ใช้" กลายเป็น "ใช้/เลิก"
+- **Planner**: จิ้มเมนู (best sellers + catalog) คงเติม title/body/subject เหมือนเดิม แต่เปลี่ยนจาก "ทับชุด" เป็น `addImages([p.image_url])` (append จนครบ 5)
+- **Studio**: เพิ่มการ์ด "🍽️ เลือกจากเมนูทั้งหมด" (ใช้ `catalog` ที่โหลดไว้แล้วใน state) — ปุ่มรูปเมนูเล็ก ๆ กด = append รูปเข้าชุดเท่านั้น (ไม่แตะ title/body, ไม่เด้งแท็บ)
+- **`handleBrowseImage`**: เปิด `multiple` ที่ input file + วนทุกไฟล์ (กรอง `image/*`, ข้ามไฟล์เกิน 10MB) → บีบ `compressToWebLimits(file, POST_IMAGE_MAX_SIDE, POST_IMAGE_MAX_BYTES)` → อัปโหลดไป `uploads/mk-${Date.now()}-${safe}` (เปลี่ยนจาก `marketing/`) → `addImages([url])` จนครบ 5 (ไฟล์ที่เหลือ = toast แจ้ง) · คง testid เดิม `mk-browse-image`/`mk-browse-input`
+- **ตัวนับ/สถานะ**: `PostForm` โชว์ "แนบรูปแล้ว N/5 รูป" · ปุ่มอัปโหลดและปุ่มเลือก disable เมื่อครบ 5 · หมายเหตุชัดเจนว่าการสร้าง/แก้โพสต์ใช้ทุกรูปที่เลือก
+- การเจนภาพ (reference = รูปล่าสุดในชุด) คงพฤติกรรมเดิม
+
+### 3) `supabase/functions/social-publish-worker/index.ts`
+- `publishToFeed`: `imageUrls.slice(0, 4)` → `slice(0, 5)` + แก้คอมเมนต์ "max 4" → "max 5"
+- handler: filter แล้ว `slice(0, 4)` → `slice(0, 5)`
+- (`automation-worker` ส่ง `image_urls` ทั้งชุดอยู่แล้ว — ไม่แตะ · Facebook รองรับ attached_media สูงสุด 10 รูป = 5 ปลอดภัย)
+
+### 4) เทสต์ + ตรวจผ่าน
+- `r44MarketingRules.test.ts` — เขียนเคสใหม่แทน gen-single: ยืนยัน `MAX_POST_IMAGES = 5`, ไม่มีตัวกรอง `genOnes`, toggle เลือก/เลิกในอัลบั้ม, ไม่มีข้อความ "จะไม่ถูกแนบคู่กัน"
+- `r63ImageResize.test.ts` — แก้ regex พาธ `marketing/browse-…` → `uploads/mk-…` + assert บีบด้วย `POST_IMAGE_MAX_SIDE/POST_IMAGE_MAX_BYTES`
+- `r38Contracts.test.ts` — แก้ assert `compressToWebLimits(file)` และ `setImages((prev) => [...prev, url])` ให้ตรง helper ใหม่ (คง testid เดิมทั้งหมด)
+- รัน: `npm run test` · `npm run lint` · `npm run build`
+
+## ขอบเขตที่ไม่แตะ (out of scope)
+- `ContentTab.tsx` (หน้า Content เดิมยังใช้กติกา R44 ของตัวเอง — ไม่ใช่หน้า Control Center)
+- หน้าแรก (`MarketingFeedSection`, `FloatingAdBanners`) โชว์รูปแรกรูปเดียว — คงเดิม
+- Storage policy/RLS ของ `bmb-images/uploads/` — Media Library ใช้พาธนี้อยู่แล้ว (uploadMediaAsset) จึงอัปได้
+- ไม่มี migration/ข้อมูลเก่าต้องย้าย (โพสต์เก่าเคยถูก R44 บีบเหลือรูปเดียวอยู่แล้ว)
+
+## ตรวจสอบหลังทำ (validation)
+- vitest: ชุด r44/r63/r38 + marketing ที่เกี่ยวผ่านทั้งหมด
+- มือเปล่าบนหน้า /admin/marketing: เลือกรูปครบ 5 แล้วกดเพิ่ม → toast เตือน, ปุ่ม disable · อัปโหลดหลายไฟล์พร้อมกัน → ไฟล์เกินคิวแจ้งทักทาย · เช็ค `marketing_posts.image_urls` มีครบ 5 URL จาก `bmb-images/uploads/` และไฟล์ ≤500KB · กด "ใช้" รูปเจนซ้ำ = toggle ออกจากชุด
