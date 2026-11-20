@@ -86,7 +86,8 @@ describe('R31/R32 — wiring (source contracts)', () => {
     const ai = (await import('@/pages/admin/AdminAiStudio?raw')).default as string
     const imgGen = (await import('../../supabase/functions/image-gen/index?raw')).default as string
     expect(mk).toContain('mk-product-picker')
-    expect(mk).toContain("supabase.from('products')")
+    // R79: picker อ่าน products ผ่าน getProducts() (canonical TEN-06 — ตารางเดิม ผ่าน lib เดียวกับหน้าร้าน)
+    expect(mk).toContain('getProducts()')
     expect(mk).toContain('พรีออเดอร์ + เซมเดย์')
     expect(mk).toContain('context?: Response')
     expect(ai).toContain('pricesAreReal(polished, realPrices)')

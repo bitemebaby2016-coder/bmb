@@ -50,3 +50,23 @@
 ## ตรวจสอบหลังทำ (validation)
 - vitest: ชุด r44/r63/r38 + marketing ที่เกี่ยวผ่านทั้งหมด
 - มือเปล่าบนหน้า /admin/marketing: เลือกรูปครบ 5 แล้วกดเพิ่ม → toast เตือน, ปุ่ม disable · อัปโหลดหลายไฟล์พร้อมกัน → ไฟล์เกินคิวแจ้งทักทาย · เช็ค `marketing_posts.image_urls` มีครบ 5 URL จาก `bmb-images/uploads/` และไฟล์ ≤500KB · กด "ใช้" รูปเจนซ้ำ = toggle ออกจากชุด
+
+---
+
+## เพิ่มเติม R79 (เจ้าของ 2026-11-20 — หลัง CI เขียว): Studio menu picker แบบแท็บหัวข้อ ครบทุกเมนู
+**โจทย์:** เดิม picker ในแท็บสร้างโพสต์โชว์ 20 รายการแรก + บรรทัด "แสดง 20 รายการแรก · เหลืออีก N" → ให้แสดง **ให้หมดทุกเมนู** จัดเป็น **แท็บตามหัวข้อเมนูจริง** (หัวข้อที่มีอยู่ + เมนูที่มี + เมนูใหม่ที่แอดมินเพิ่มอนาคต)
+
+### สิ่งที่ทำ
+- `AdminMarketing.tsx`:
+  - `load()` เปลี่ยนมาใช้ canonical: `getProducts()` (Product เต็ม — มี category_id/archived/sort_order) + `getCategories()` (TEN-06 เดียวกับหน้าร้าน) แทน raw query เดิม (กรอง is_available ที่ lib ไม่ใช่ query)
+  - `buildHeadingGroups(catalog, menuCategories)` — ตัวจัดกลุ่ม **ตัวเดียวกับ /shop และ /menu** ("เชื่อเป็นแบบเดียวกัน") เรียง displayRank ก่อน sort_order อัตโนมัติ · หัวข้อใหม่/เมนูใหม่ในอนาคตเข้าอัตโนมัติ (data-driven)
+  - Studio picker: แท็บหัวข้อ (ชื่อ + icon + จำนวน) → โชว์ **ครบทุกเมนูในหัวข้อนั้น ไม่มีเพดาน** · เมนูไม่มีรูป = โชว์แต่กดไม่ได้ (🚫 + tooltip) · อยู่ในชุดแล้ว = ✓ disabled · แท็บหาย (ปิดหมวด) = กลับหัวข้อแรก
+  - Planner picker (`mk-product-picker`): คงพฤติกรรมเดิม R32 (เฉพาะเมนูที่เปิดขาย) ผ่าน `sellableCatalog` — ย้ายตัวกรองจาก query มาที่ memo
+- เทสต์: `r44MarketingRules.test.ts` (+เคส R79: tabs/buildHeadingGroups/ไม่มีเพดาน 20) · `r34Contracts.test.ts` + `stickerQueueR31.test.ts` อัปเดต assertion จาก raw query string → `getProducts()` (เจตนาเดิมคงไว้)
+
+### ไม่แตะ
+- `catalogStructure.ts` (buildHeadingGroups signature เดิม — เรียกผ่าน generics ที่มีอยู่) · ลำดับหัวข้อ (CATEGORY_DISPLAY_ORDER) · หน้า /shop /menu ทุกอย่าง
+
+### ผลตรวจ (เหมือน CI เป๊ะ)
+- `npm test` (vitest run เต็มชุด): **226 ไฟล์ / 2,431 เทสต์ ผ่านทั้งหมด**
+- `npm run lint` ✅ · `npm run build` ✅

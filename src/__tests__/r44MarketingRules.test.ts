@@ -44,6 +44,18 @@ describe('R44 — เลือกรูปผสมได้สูงสุด 5
     expect(marketingSrc).toContain('mk-studio-pick-')
     expect(marketingSrc).toContain('addImages([p.image_url!])')
   })
+  it('R79 (เจ้าของ 2026-11-20): Studio picker = แท็บหัวข้อเมนูจริง (buildHeadingGroups) · ครบทุกเมนู ไม่มีเพดาน 20', () => {
+    // ตัวจัดกลุ่มเดียวกับ /shop และ /menu — หัวข้อใหม่/เมนูใหม่ที่แอดมินเพิ่มอนาคตเข้าอัตโนมัติ
+    expect(marketingSrc).toContain('buildHeadingGroups(catalog, menuCategories)')
+    expect(marketingSrc).toContain('mk-studio-menu-tabs')
+    expect(marketingSrc).toContain('mk-studio-tab-${g.category.id}')
+    expect(marketingSrc).toContain('getProducts()')
+    expect(marketingSrc).toContain('getCategories()')
+    // ไม่มีเพดาน 20 รายการ (ข้อความเดิมถูกลบ) · เมนูไม่มีรูป = โชว์แต่กดไม่ได้ (🚫)
+    expect(marketingSrc).not.toContain('แสดง 20 รายการแรก')
+    expect(marketingSrc).not.toContain('.slice(0, 20)')
+    expect(marketingSrc).toContain('ยังไม่มีรูปในระบบ')
+  })
   it('AdminMarketing: handleBrowseImage รับ multiple files + ย่อ 1080px/500KB + อัปขึ้น uploads/', () => {
     expect(marketingSrc).toContain('multiple')
     expect(marketingSrc).toContain('POST_IMAGE_MAX_SIDE')

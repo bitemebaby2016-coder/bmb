@@ -7,7 +7,7 @@
 //   ตั้งเวลาเผยแพร่ — marketing_schedule_post (server บังคับ approval) · ตั้งค่ากติกา — marketing_rules
 //   รายงาน — ผลเผยแพร่จริง (provider post id, error, attempts)
 // อนุมัติ != ตั้งเวลา != เผยแพร่ — แยกกันชัดเจนทุกชั้น
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
@@ -22,6 +22,9 @@ import { flashTo } from '@/lib/uiFlash'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 import { compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE, POST_IMAGE_MAX_SIDE, POST_IMAGE_MAX_BYTES } from '@/lib/bmbAdminApi_media'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
+import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
+import { buildHeadingGroups } from '@/lib/catalogStructure'
+import type { Product, ProductCategory } from '@/types'
 
 type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'schedule' | 'rules' | 'analytics'
 const TABS: Array<{ id: Tab; label: string }> = [
@@ -91,7 +94,11 @@ export function AdminMarketing() {
   const [rules, setRules] = useState<MarketingRules | null>(null)
   const [sellers, setSellers] = useState<Array<{ product_id: string; product_name: string; units: number }>>([])
   // R32 (Owner): Picker เมนู "ทั้งหมด" ใน Planner — แอดมินจิ้มเลือกได้ทั้งพรีออเดอร์และเซมเดย์
-  const [catalog, setCatalog] = useState<Array<{ id: string; name: string; price: number | null; is_preorder?: boolean; available_preorder?: boolean; available_same_day?: boolean; image_url?: string | null }>>([])
+  // R79 (เจ้าของ 2026-11-20): Product เต็ม (getProducts) + หัวข้อเมนู (getCategories) — จัดแท็บตามหัวข้อจริง
+  const [catalog, setCatalog] = useState<Product[]>([])
+  const [menuCategories, setMenuCategories] = useState<ProductCategory[]>([])
+  // R79: แท็บหัวข้อที่เปิดอยู่ใน Studio menu picker (id ของหมวด — '' = หัวข้อแรก)
+  const [pickerTab, setPickerTab] = useState<string>('')
   const [loading, setLoading] = useState(true)
 
   const [title, setTitle] = useState('')
@@ -213,13 +220,16 @@ export function AdminMarketing() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [p, a, r, s, cat] = await Promise.all([
+    const [p, a, r, s, cat, cats] = await Promise.all([
       listMarketingPosts(), listContentApprovals(), getMarketingRules(), bestSellerProducts(),
-      // R32: เมนูทั้งหมดของร้าน (สินค้าที่แอดมินตั้งจริง — พรีออเดอร์ + เซมเดย์) ใช้ใน picker
-      supabase.from('products').select('id,name,price,is_preorder,available_preorder,available_same_day,is_available,image_url').eq('is_available', true).order('sort_order'),
+      // R32/R79: เมนูทั้งหมดของร้าน (Product เต็ม — พรีออเดอร์ + เซมเดย์ + หัวข้อจริงจาก category_id)
+      getProducts(),
+      // R79: หัวข้อเมนู (หมวดหมู่) — ตัวจัดกลุ่มเดียวกับ /shop และ /menu (buildHeadingGroups)
+      getCategories(),
     ])
     setPosts(p); setApprovals(a); setSellers(s)
-    setCatalog((cat.data ?? []) as Array<{ id: string; name: string; price: number | null; is_preorder?: boolean; available_preorder?: boolean; available_same_day?: boolean; image_url?: string | null }>)
+    setCatalog(cat)
+    setMenuCategories(cats)
     if (r) {
       setRules(r)
       setRuleFreq(r.frequency_per_week)
@@ -230,6 +240,15 @@ export function AdminMarketing() {
     setLoading(false)
   }, [])
   useEffect(() => { void load() }, [load])
+
+  // R79 (เจ้าของ 2026-11-20): แท็บหัวข้อเมนูใน Studio picker — จัดกลุ่มด้วย buildHeadingGroups
+  // ตัวเดียวกับ /shop และ /menu (เชื่อเป็นแบบเดียวกัน) · เมนูใหม่ที่แอดมินเพิ่มอนาคต = เข้าอัตโนมัติ
+  const headingGroups = useMemo(() => buildHeadingGroups(catalog, menuCategories), [catalog, menuCategories])
+  // แท็บที่เปิดอยู่ — id หายไป (หมวดถูกปิด/จัดเก็บ) = กลับไปหัวข้อแรกเสมอ
+  const activeGroupId = headingGroups.some((g) => g.category.id === pickerTab) ? pickerTab : (headingGroups[0]?.category.id ?? '')
+  const activeGroup = headingGroups.find((g) => g.category.id === activeGroupId)
+  // Planner picker ยังโชว์เฉพาะเมนูที่เปิดขาย (พฤติกรรมเดิม R32 — เดิมกรองที่ query)
+  const sellableCatalog = useMemo(() => catalog.filter((p) => p.is_available && !p.archived), [catalog])
 
   async function handleCreatePost() {
     if (!title.trim()) { showToast('ใส่หัวข้อโพสต์ก่อน', 'error'); return }
@@ -767,11 +786,11 @@ export function AdminMarketing() {
           {/* R32 (Owner): จิ้มเลือกจากเมนูทั้งหมด (พรีออเดอร์ + เซมเดย์) — ไม่ใช่แค่สินค้าขายดี */}
           <div className="card" data-testid="mk-product-picker">
             <h2 className="font-bold text-brand-accent mb-2">🍽️ เลือกจากเมนูทั้งหมด (พรีออเดอร์ + เซมเดย์)</h2>
-            {catalog.length === 0 ? (
+            {sellableCatalog.length === 0 ? (
               <p className="text-sm text-brand-muted">ยังไม่มีสินค้าที่เปิดขาย — เพิ่มในหน้าสินค้าก่อน</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {catalog.map((p) => {
+                {sellableCatalog.map((p) => {
                   const preorder = p.is_preorder && !(p.available_same_day ?? false)
                   return (
                     <button
@@ -849,33 +868,48 @@ export function AdminMarketing() {
                 onChange={(e) => void handleBrowseImage(e)}
               />
               </div>
-              {/* ใช้เมนูทั้งหมดในแท็บ Studio — append รูปเข้าชุดภาพโพสต์ (ไม่แตะ title/body) */}
-              {catalog.length > 0 && images.length < MAX_POST_IMAGES && (
+              {/* R79 (เจ้าของ 2026-11-20): เลือกจากเมนูทั้งหมด — แท็บตามหัวข้อเมนูจริง (buildHeadingGroups
+                  ตัวเดียวกับ /shop และ /menu) · ครบทุกเมนูในหัวข้อ ไม่มีเพดาน 20 · เมนูใหม่อนาคตเข้าอัตโนมัติ */}
+              {headingGroups.length > 0 && images.length < MAX_POST_IMAGES && (
                 <div className="card mt-3" data-testid="mk-studio-menu-picker">
-                  <h3 className="font-bold text-brand-accent mb-2 text-sm">🍽️ เลือกจากเมนูทั้งหมด (append เข้าชุดภาพโพสต์)</h3>
-                  <div className="flex flex-wrap gap-1">
-                    {catalog
-                      .filter((p) => p.image_url && !images.includes(p.image_url))
-                      .slice(0, 20)
-                      .map((p) => (
+                  <h3 className="font-bold text-brand-accent mb-2 text-sm">🍽️ เลือกจากเมนูทั้งหมด (แท็บตามหัวข้อ — append เข้าชุดภาพโพสต์)</h3>
+                  <div className="flex flex-wrap gap-1 mb-2" data-testid="mk-studio-menu-tabs">
+                    {headingGroups.map((g) => (
+                      <button
+                        key={g.category.id}
+                        type="button"
+                        className={`btn text-xs px-2 py-1 ${g.category.id === activeGroupId ? 'btn-primary' : 'btn-outline'}`}
+                        onClick={() => setPickerTab(g.category.id)}
+                        data-testid={`mk-studio-tab-${g.category.id}`}
+                      >
+                        {g.category.icon ? `${g.category.icon} ` : ''}{g.category.name} ({g.products.length})
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-1" data-testid="mk-studio-menu-items">
+                    {(activeGroup?.products ?? []).map((p) => {
+                      const inSet = !!p.image_url && images.includes(p.image_url)
+                      const noImage = !p.image_url
+                      const full = !inSet && images.length >= MAX_POST_IMAGES
+                      return (
                         <button
                           key={p.id}
                           type="button"
-                          className="btn btn-outline text-xs px-2 py-1"
+                          className={`btn text-xs px-2 py-1 ${inSet ? 'btn-primary' : 'btn-outline'}`}
                           onClick={() => { if (p.image_url) addImages([p.image_url!]) }}
-                          disabled={images.length >= MAX_POST_IMAGES}
+                          disabled={noImage || inSet || full}
                           data-testid={`mk-studio-pick-${p.id}`}
-                          title={`เพิ่มรูป "${p.name}" เข้าชุดภาพโพสต์`}
+                          title={noImage ? `"${p.name}" ยังไม่มีรูปในระบบ` : inSet ? `"${p.name}" อยู่ในชุดแล้ว` : `เพิ่มรูป "${p.name}" เข้าชุดภาพโพสต์`}
                         >
-                          <img src={p.image_url!} alt={p.name} className="w-8 h-8 object-cover rounded mr-1 inline-block" />
-                          {p.name.slice(0, 12)}
+                          {p.image_url
+                            ? <img src={p.image_url} alt={p.name} className="w-8 h-8 object-cover rounded mr-1 inline-block" />
+                            : <span className="mr-1 opacity-50">🚫</span>}
+                          {inSet ? '✓ ' : ''}{p.name.slice(0, 12)}
                         </button>
-                      ))}
+                      )
+                    })}
                   </div>
-                  {catalog.filter((p) => p.image_url && !images.includes(p.image_url)).length > 20 && (
-                    <p className="text-xs text-brand-muted mt-1">แสดง 20 รายการแรก · เหลืออีก {catalog.filter((p) => p.image_url && !images.includes(p.image_url)).length - 20} รายการ</p>
-                  )}
-                  <p className="text-xs text-brand-muted mt-1">กดเพื่อเพิ่มรูปเข้าชุดภาพโพสต์ (ไม่เปลี่ยนหัวข้อ/เนื้อหา) · ครบ {MAX_POST_IMAGES} รูปจะไม่ให้เพิ่มต่อ</p>
+                  <p className="text-xs text-brand-muted mt-1">กดเพื่อเพิ่มรูปเข้าชุดภาพโพสต์ (ไม่เปลี่ยนหัวข้อ/เนื้อหา) · 🚫 = เมนูยังไม่มีรูป · ✓ = อยู่ในชุดแล้ว · ครบ {MAX_POST_IMAGES} รูปจะไม่ให้เพิ่มต่อ</p>
                 </div>
               )}
               <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> — แนบไว้แล้วใช้เป็น<b>ต้นแบบไดคัท</b>ตอนเจนภาพเมนูได้ · <b>เจนได้แม้ไม่มีภาพตัวอย่าง</b> (ระบบใช้รายละเอียดหัวข้อ/เนื้อหาโพสต์เป็นโจทย์) · ภาพที่เจน<b>ไม่ถูกแนบ/เลือกใช้อัตโนมัติ</b> — กด "ใช้" เองจากอัลบั้ม · ทุกภาพถูก<b>ประกบลายน้ำแบรนด์</b> (โลโก้จริง + มาสคอต) อัตโนมัติ</p>
