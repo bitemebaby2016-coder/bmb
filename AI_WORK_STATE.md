@@ -1,3 +1,19 @@
+## 🔒 SESSION CLOSE 2026-11-21 (รอบ 59 · R82b — my_deliveries RETURN fix (m211) + local CI replay จำลองจริงด้วย Docker · CI #1006 + Contract #580 GREEN) · **CODE_CLOSED + PUSHED + รอ OWNER APPLY M211 ขึ้น PROD**
+
+**R82b — จุดจบของบั๊กไรเดอร์ (พิสูจน์ด้วยการจำลอง CI จริงบนเครื่อง — ไม่เดาอีกต่อไป):**
+- **ต้นทางที่ CI แดง #578/#579:** step 210 ใน yml ไม่มี `set +e` → GitHub รัน step ด้วย `bash -e` → psql rc≠0 ตายก่อนพิมพ์ output → log เหลือแค่ "exit code 3" ไม่มี error (แก้: เพิ่ม set +e + annotation ระบุ line ตามแพทเทิร์น step อื่น)
+- **จำลอง CI จริงบนเครื่อง (docker postgres:16 + prelude + migrations loop + widen hours ตาม yml เป๊ะ, จำกัด --memory 512m):** ได้ error จริงทันที — **m210 RETURN ใช้ `to_jsonb((SELECT * FROM public.drivers ...))` = "subquery must return only one column" — my_deliveries 5-arg พังทุกครั้งใต้ JWT ไรเดอร์ (prod-breaking ตอนนี้!)** — verify ของ 210 จับไม่ได้เพราะตายที่ ERR_NOT_AUTHENTICATED ก่อนถึง RETURN
+- **แก้ด้วย migration 211** (`211_rider_my_deliveries_return_fix.sql`): CREATE OR REPLACE 5-arg — `RETURN jsonb_build_object('ok', true, 'driver', to_jsonb(v_drv), ...)` (row variable) · body อื่นเหมือน 210 (offline gate + delivery_round_id JOIN + ห้าม DEFAULT) · **VERIFY-A รันจริงถึง RETURN**: เลือก driver ที่ user_id + ไม่ offline → set_config('request.jwt.claims') → ต้องได้ ok=true + driver.id (prod: read-only ของไรเดอร์จริง · DB สด: SKIP ปลอดภัย) · VERIFY-B/C: signature + JOIN + to_jsonb(v_drv) + ไม่มี subquery เดิม + ambiguity 0-arg/1-arg
+- **พิสูจน์รอบสด:** migrations 001-211 apply ผ่านหมด (0 ล้ม) + Contract 210 **G1-G6 PASS rc=0** + VERIFY-A พิสูจน์แยกด้วย fixture จริง (`ok=true, driver.id=drv-verify-a`) รวมแก้ `set_config('role','')` → `RESET ROLE` (เกือบ rollback ทั้ง migration บน prod)
+- **Gates:** lint ✅ · vitest **226 files / 2445 tests RC=0 · 0 unhandled** · build RC=0 · **CI #1006 ✅ + Contract Tests #580 ✅ (จริงบน GitHub)**
+
+**⚠️ สิ่งที่ Owner ต้องทำก่อนทดสอบ live:**
+1. **APPLY M211 ขึ้น PROD (ด่วน)** — prod ตอนนี้ my_deliveries 5-arg พังที่ RETURN ทุกครั้ง (ไรเดอร์ไม่เห็นงานจริง!) — ผ่าน SQL Editor (ไฟล์เดียว, additive, idempotent) → ledger record 211
+2. แล้วทดสอบ live: แอดมินมอบหมาย → ไรเดอร์เห็นงาน ≤25 วิ ทั้งเว็บ/PWA · ประกาศงาน → ไรเดอร์ทุกคนเห็น · offline rider กดรับ → เห็นเหตุผลไทย
+3. Docker บนเครื่อง: ผมล้าง container/network ของงานแล้ว (bmb-pg210/bmbnet210 ถูกลบ) — Supabase stack (selfprint-v3-react) + bmb_pg140 ยังรันอยู่ ไม่ใช่ของ session นี้ ปิด Docker Desktop ได้ถ้าไม่ใช้
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-21 (รอบ 58 · R82 — Rider System Completeness Fix: my_deliveries JOIN fix + offline gate + arrived completeness + Thai reasons) · **CODE_CLOSED + BUILD+LINT+TSC+VITEST ALL PASS + PUSHED + M210 APPLIED PROD ✓**
 
 **R82 — ระบบไรเดอร์สมบูรณ์จริง (แก้บั๊กหลัก R48/m207 + เพิ่มกติกาใหม่):**
