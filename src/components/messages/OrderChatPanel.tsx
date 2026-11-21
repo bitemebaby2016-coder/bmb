@@ -40,9 +40,14 @@ export function OrderChatPanel({ orderNumber, role }: Props) {
   const listRef = useRef<HTMLDivElement | null>(null)
   // id ที่เห็นแล้ว (โหลดรอบแรก = ไม่นับเป็น "ข้อความใหม่")
   const seenRef = useRef<Set<string> | null>(null)
+  // R82: กัน setState หลัง unmount — promise ของ poll ค้างข้าม teardown แล้วยิง setState
+  // = unhandled rejection (vitest ชี้ ReferenceError: window is not defined) · prod ไม่กระทบ
+  const aliveRef = useRef(true)
+  useEffect(() => () => { aliveRef.current = false }, [])
 
   async function load(silent = false) {
     const r = await listOrderMessages(orderNumber)
+    if (!aliveRef.current) return
     if (!r.ok) {
       if (!silent) setErr(r.error || 'โหลดข้อความไม่สำเร็จ')
       return
@@ -93,6 +98,7 @@ export function OrderChatPanel({ orderNumber, role }: Props) {
     if (guard) { setErr(guard); return }
     setBusy(true)
     const r = await sendOrderMessage(orderNumber, draft, role)
+    if (!aliveRef.current) return
     setBusy(false)
     if (!r.ok) { setErr(r.error || 'ส่งข้อความไม่สำเร็จ'); return }
     setDraft('')
