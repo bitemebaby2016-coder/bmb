@@ -4,15 +4,16 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**🔒 LIVE STATE 2026-11-21 (รอบ 57 — R81 · Floating Ad Dedicated Tab แยกต่างหาก · build+lint+tsc+ทดสอบจริงผ่านหมด · ก่อนคอมมิท):**
+**🔒 LIVE STATE 2026-11-21 (รอบ 57 — R81 · Floating Ad Tab ใน AdminMarketing (Control Center) · build+lint+tsc+ทดสอบจริงผ่านหมด):**
 
-- **R81 Floating Ad Dedicated Tab (Owner รายงาน "งงกับระบบเลือกรูป ... ทับซ้อนข้อมูลมั่ว"):** แยกแท็บจัดการโฆษณาลอยออกจาก ContentTab ให้แอดมินควบคุมได้ละเอียด:
+- **R81 Floating Ad Tab (Owner รายงาน "งงกับระบบเลือกรูป ... ทับซ้อนข้อมูลมั่ว"):** เพิ่มแท็บจัดการโฆษณาลอยใน **หน้าหลักที่แอดมินใช้งานจริง** (AdminMarketing.tsx → `/admin/marketing`):
   - Types + JSONB config + fallback migration (floating_ad_enabled/sources/image → floating_ad_config)
   - `src/components/admin/FloatingAdTab.tsx` (ใหม่): Overview (enabled/maxCount/sources maxItems/bg) + Card Management (reorder/toggle/override/remove) + Available Pool + Preview iframe
-  - `src/pages/admin/AdminMarketingPromotions.tsx` — เพิ่ม tab `floating_ad` label "🫘 Floating Ad"
+  - `src/pages/admin/AdminMarketing.tsx` — **เพิ่ม tab `floating_ad` label "🫘 Floating Ad" ใน Control Center (หน้าหลัก `/admin/marketing`)**
   - `src/components/home/FloatingAdBanners.tsx` — badge `text-[9px]` → `text-xs` + ข้อความไทย 3 ชนิด + config prop
   - `src/pages/HomePage.tsx` — อ่าน `floating_ad_config` สร้าง promos + sourceType
   - `src/components/admin/ContentTab.tsx` — ลบ floating ad UI เก่า (state/toggle/sources/guide/switch)
+  - **แก้ผิดจากครั้งก่อน:** ครั้งแรกเพิ่มไปที่ AdminMarketingPromotions.tsx (หน้าที่ไม่ได้ในเมนูหลัก) — ตอนนี้ย้ายมาที่ AdminMarketing.tsx แล้ว (commit b31234c)
 
 - **Gates:** lint ✅ · tsc ✅ · build ✅ (tsc + vite + PWA) · floatingAdBanners.test.ts ✅ (7 tests PASS) · **รอ Owner ทดสอบ live กลุ่ม G 7 ข้อ + gate ใหม่ (floating ad)**
 

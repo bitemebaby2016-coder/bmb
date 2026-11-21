@@ -1,13 +1,14 @@
-## 🔒 SESSION CLOSE 2026-11-21 (รอบ 57 · R81 — Floating Ad Dedicated Tab แยกต่างหาก · build+lint+tsc+ทดสอบจริงผ่านหมด · ก่อนคอมมิท):
+## 🔒 SESSION CLOSE 2026-11-21 (รอบ 57 · R81 — Floating Ad Tab ใน AdminMarketing (Control Center) · build+lint+tsc+ทดสอบจริงผ่านหมด):
 
-R81 — Floating Ad Dedicated Tab (แก้ปัญหาผู้ใช้ "งงกับระบบเลือกรูป จำนวน ข้อความ โชว์ไม่คงที่ 1/3/4 อัน ไม่รู้อันไหนโฆษณา กิจกรรม เมนูแนะนำ ทับซ้อนข้อมูลมั่ว"): แยกแท็บจัดการโฆษณาลอยออกจาก ContentTab ให้แอดมินควบคุมได้ละเอียด:
+R81 — Floating Ad Tab (แก้ปัญหาผู้ใช้ "งงกับระบบเลือกรูป จำนวน ข้อความ โชว์ไม่คงที่ 1/3/4 อัน ไม่รู้อันไหนโฆษณา กิจกรรม เมนูแนะนำ ทับซ้อนข้อมูลมั่ว"): เพิ่มแท็บจัดการโฆษณาลอยใน **หน้าหลักที่แอดมินใช้งานจริง** (AdminMarketing.tsx → `/admin/marketing`):
 - types/index.ts — เพิ่ม FloatingAdSourceType, FloatingAdSourceConfig, FloatingAdItem, FloatingAdConfig
 - lib/bmbAdminApi_settings.ts — เพิ่ม getFloatingAdConfig()/setFloatingAdConfig() (JSONB floating_ad_config) + fallback แปลงค่าเก่า (floating_ad_enabled, floating_ad_sources, floating_ad_image) อัตโนมัติ
 - components/admin/FloatingAdTab.tsx (ใหม่) — UI 3 ส่วน: Overview (เปิด/ปิด · maxCount 1-5 · เลือกแหล่ง 3 แบบ + maxItems ต่อแหล่ง · backgroundImage) + Card Management (ตารางการ์ด reorder ↑/↓ · toggle เปิด/ปิด · แก้ title/description/image override ต่อการ์ด · นำออก) + Available Pool (เลือกเพิ่มจากโปรโมชั่น/กิจกรรม/เมนู) + Preview iframe แสดงผลก่อนเซฟ
-- pages/admin/AdminMarketingPromotions.tsx — เพิ่มแท็บ floating_ad label "🫘 Floating Ad"
+- pages/admin/AdminMarketing.tsx — **เพิ่มแท็บ floating_ad label "🫘 Floating Ad" ใน Control Center (หน้าหลักที่ใช้งานจริง)**
 - components/home/FloatingAdBanners.tsx — badge ขยาย text-[9px] → text-xs (12px) ข้อความไทยชัด "โปรโมชั่น/กิจกรรม/เมนูแนะนำ" รองรับ config prop
 - pages/HomePage.tsx — โหลด floating_ad_config แทน floatingAdSources สร้าง promos ตาม config (items override เรียงลำดับ · interleave fallback cap maxCount) ส่ง sourceType ให้ badge
 - components/admin/ContentTab.tsx — ลบ state/UI floatingAdEnabled/floatingAdSources/floatingAdImage/toggleFloatingAd + guide/switch/sources section + badge/ปุ่มตั้งเป็นโฆษณาลอยใน AI Album grid
+- **แก้ผิดจากครั้งก่อน:** ครั้งแรกเพิ่มไปที่ AdminMarketingPromotions.tsx (หน้าที่ไม่ได้ในเมนูหลัก) — ตอนนี้ย้ายมาที่ AdminMarketing.tsx แล้ว (commit b31234c)
 
 Gates: lint ✅ · tsc ✅ · build ✅ (tsc + vite + PWA) · floatingAdBanners.test.ts ✅ (7 tests PASS)
 
