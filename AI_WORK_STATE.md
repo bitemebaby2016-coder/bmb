@@ -9,7 +9,13 @@
 - **Gates:** lint ✅ · tsc ✅ · vitest 228 files / 2439 tests PASS (+8) · build ✅ (tsc + vite + PWA) · contract-tests (CI ephemeral PG) ready
 
 **✅ M210 APPLIED PROD (Owner อนุมัติ 2026-11-21 · ผ่าน Management API pattern m209) · LEDGER RECORDED**
-**รอ Owner:** ทดสอบ live: แอดมินมอบหมาย → ไรเดอร์เห็นงาน ≤25 วิ ทั้งเว็บ/PWA · ประกาศงาน → ไรเดอร์ทุกคนเห็น · offline rider กดรับ → เห็นเหตุผลไทย
+
+**🔧 R82a HOTFIX (2026-11-21 · CI run #578 แดงเฉพาะ Contract 210 — migration apply ผ่านทุก step):**
+- ราก: ไฟล์ contract เขียนเองผิด 6 จุด (ไม่ใช่ migration) — ①helper ฝัง SQL ใน JWT claims (auth.uid() cast 22P02) ②RAISE NOTICE นอก DO block ③เรียก `admin_cancel_order` ที่ไม่มีจริง (ตัวจริง `cancel_order` m195) ④G3 cancel assignment ทั้งที่ไม่มี ⑤G4 `assign_driver` พาสถานะ busy ก่อน gate ⑥G2 นับ assignment ตรง ๆ แต่งาน G1 ค้างใน tx เดียวกัน
+- แก้: รีไรต์ contract 210 ตามแพทเทิร์น contract 163 เป๊ะ (UUID literal · force offline หลัง assign ด้วย superuser · `cancel_order` จริง · dispatch ตรงโดยไม่ cancel · นับ `>= 1` · G6 พิสูจน์เฉพาะไม่ 42725)
+- แถมแก้ราก unhandled rejection ×2 (`OrderChatPanel.tsx` setState หลัง jsdom teardown ทำ vitest exit ไม่ 0) ด้วย `aliveRef` guard หลัง await ทุกจุด — **หลักฐาน: vitest 226 files / 2445 tests PASS · 0 unhandled errors · exit 0 จริง (log เก็บใน run 19:26)**
+
+**รอ Owner:** ดู CI รอบถัดไปเขียว (Contract 210) → ทดสอบ live: แอดมินมอบหมาย → ไรเดอร์เห็นงาน ≤25 วิ ทั้งเว็บ/PWA · ประกาศงาน → ไรเดอร์ทุกคนเห็น · offline rider กดรับ → เห็นเหตุผลไทย
 
 ---
 
