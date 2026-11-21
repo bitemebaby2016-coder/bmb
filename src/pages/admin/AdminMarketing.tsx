@@ -20,14 +20,15 @@ import {
 import { listContentApprovals, reviewContent, type ContentApprovalRow } from '@/lib/contentApproval'
 import { autoScheduleApprovedPosts } from '@/lib/marketingAutoSchedule'
 import { flashTo } from '@/lib/uiFlash'
-import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
+import { getBusinessSettings, setBusinessSetting, getFloatingAdConfig, setFloatingAdConfig } from '@/lib/bmbAdminApi_settings'
+import { FloatingAdTab } from '@/components/admin/FloatingAdTab'
 import { compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE, POST_IMAGE_MAX_SIDE, POST_IMAGE_MAX_BYTES } from '@/lib/bmbAdminApi_media'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
 import { buildHeadingGroups } from '@/lib/catalogStructure'
 import type { Product, ProductCategory } from '@/types'
 
-type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'schedule' | 'rules' | 'analytics'
+type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'schedule' | 'rules' | 'analytics' | 'floating_ad'
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'overview', label: '📊 ภาพรวม' },
   { id: 'planner', label: '💡 วางแผน & เลือกเมนู' },
@@ -36,6 +37,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'schedule', label: '⏰ ตั้งเวลาเผยแพร่' },
   { id: 'rules', label: '⚙️ ตั้งค่ากติกา' },
   { id: 'analytics', label: '📈 รายงานผล' },
+  { id: 'floating_ad', label: '🫘 Floating Ad' },
 ]
 
 const STATUS_CLS: Record<string, string> = {
@@ -1263,6 +1265,10 @@ export function AdminMarketing() {
             </table>
           </div>
         </div>
+      )}
+
+      {tab === 'floating_ad' && (
+        <FloatingAdTab load={load} />
       )}
     </div>
   )

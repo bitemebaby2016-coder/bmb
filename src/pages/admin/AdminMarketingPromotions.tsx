@@ -15,9 +15,8 @@ import { BannersTab as BannersTabComponent } from '@/components/admin/BannersTab
 import { SettingsTab } from '@/components/admin/SettingsTab'
 import { ApprovalHistoryTab } from '@/components/admin/ApprovalHistoryTab'
 import { ContentTab } from '@/components/admin/ContentTab'
-import { FloatingAdTab } from '@/components/admin/FloatingAdTab'
 
-type Tab = 'overview' | 'promotions' | 'banners' | 'planner' | 'social' | 'settings' | 'approvals' | 'content' | 'floating_ad'
+type Tab = 'overview' | 'promotions' | 'banners' | 'planner' | 'social' | 'settings' | 'approvals' | 'content'
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'overview', label: '📈 ภาพรวม' },
@@ -28,7 +27,6 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'social', label: '📱 โซเชียล/ตารางโพสต์' },
   { id: 'approvals', label: '🛡️ อนุมัติ/ประวัติ' },
   { id: 'settings', label: '⚙️ กติกา/ตั้งค่า' },
-  { id: 'floating_ad', label: '🫘 Floating Ad' },
 ]
 
 export function AdminMarketingPromotions() {
@@ -125,8 +123,6 @@ export function AdminMarketingPromotions() {
       {tab === 'approvals' && <ApprovalHistoryTab load={load} />}
 
       {tab === 'content' && <ContentTab load={load} />}
-
-      {tab === 'floating_ad' && <FloatingAdTab load={load} />}
     </div>
   )
 }
