@@ -1,4 +1,4 @@
-## 🔒 SESSION CLOSE 2026-11-21 (รอบ 59 · R82b — my_deliveries RETURN fix (m211) + local CI replay จำลองจริงด้วย Docker · CI #1006 + Contract #580 GREEN) · **CODE_CLOSED + PUSHED + รอ OWNER APPLY M211 ขึ้น PROD**
+## 🔒 SESSION CLOSE 2026-11-21 (รอบ 59 · R82b — my_deliveries RETURN fix (m211) + local CI replay จำลองจริงด้วย Docker · CI #1006 + Contract #580 GREEN) · **CODE_CLOSED + PUSHED + ✅ M211 APPLIED PROD (Owner ยืนยัน 2026-11-21) + LEDGER · รอ OWNER ทดสอบ LIVE (แชทหน้า)**
 
 **R82b — จุดจบของบั๊กไรเดอร์ (พิสูจน์ด้วยการจำลอง CI จริงบนเครื่อง — ไม่เดาอีกต่อไป):**
 - **ต้นทางที่ CI แดง #578/#579:** step 210 ใน yml ไม่มี `set +e` → GitHub รัน step ด้วย `bash -e` → psql rc≠0 ตายก่อนพิมพ์ output → log เหลือแค่ "exit code 3" ไม่มี error (แก้: เพิ่ม set +e + annotation ระบุ line ตามแพทเทิร์น step อื่น)
