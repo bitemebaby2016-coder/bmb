@@ -540,11 +540,13 @@ jobs:
 
       - name: Contract 210 (Rider my_deliveries v3 JOIN fix + offline gate + arrived completeness)
         run: |
+          set +e   # ตามแพทเทิร์น step อื่น: GitHub รัน step ด้วย bash -e — ถ้าไม่ปิด, psql rc≠0 จะตายก่อนพิมพ์ output (run #578/#579: "exit code 3" กลืน error)
           out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_210_rider_my_deliveries.sql 2>&1); rc=$?
           printf '%s\n' "$out"
           if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
             msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
-            echo "::error file=e2e/contracts_210_rider_my_deliveries.sql::$msg"
+            echo "::error file=e2e/contracts_210_rider_my_deliveries.sql,line=${ln:-1}::$msg"
             exit 1
           fi
 
