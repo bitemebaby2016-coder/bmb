@@ -1,4 +1,4 @@
-## 🔒 SESSION CLOSE 2026-11-21 (รอบ 58 · R82 — Rider System Completeness Fix: my_deliveries JOIN fix + offline gate + arrived completeness + Thai reasons) · **CODE_CLOSED + BUILD+LINT+TSC+VITEST ALL PASS**
+## 🔒 SESSION CLOSE 2026-11-21 (รอบ 58 · R82 — Rider System Completeness Fix: my_deliveries JOIN fix + offline gate + arrived completeness + Thai reasons) · **CODE_CLOSED + BUILD+LINT+TSC+VITEST ALL PASS + PUSHED + M210 APPLIED PROD ✓**
 
 **R82 — ระบบไรเดอร์สมบูรณ์จริง (แก้บั๊กหลัก R48/m207 + เพิ่มกติกาใหม่):**
 - **P0-1: my_deliveries v3 JOIN fix (m210)** — แก้ `o.round_id` → `o.delivery_round_id` ทั้ง assignments + offers (m207 bug: column ไม่มีจริง ทำให้ 42703 ทุกครั้ง) · เพิ่ม RUNTIME VERIFICATION จริงใน migration (seed fixture + execute 5-arg) · เพิ่ม SQL contract `e2e/contracts_210_rider_my_deliveries.sql` ใน CI (G1-G6 ครอบ: 5-arg execute, filter, offers, offline gate, arrived auto-close, ambiguity) · รันจริงจับ 42703 ที่ pg_get_functiondef จับไม่ได้
@@ -8,7 +8,8 @@
 - **Test updates** — r48RiderHistoryTabs.test.ts: แก้ assertion JOIN ผิด (o.round_id → o.delivery_round_id) + เพิ่มเคส offline gate + arrived + runtime verify · riderHistory.test.ts: เพิ่มเคส active-job-always-visible + NULL scheduled_date fallback · riderFullCycle.test.ts: เพิ่ม offline gate tests (accept/claim → ERR_DRIVER_OFFLINE kind=state) + assignDriver .ok check · supabaseMock: my_deliveries เพิ่ม scheduled_date + offline gate + 5-arg filters · assignDriver mock คืน DriverActionResult
 - **Gates:** lint ✅ · tsc ✅ · vitest 228 files / 2439 tests PASS (+8) · build ✅ (tsc + vite + PWA) · contract-tests (CI ephemeral PG) ready
 
-**รอ Owner:** apply m210 ขึ้น prod ตามแพทเทิร์น m209 (prodCheck READ-ONLY → apply → verify รันจริง: SELECT my_deliveries 5-arg ผ่าน 42703) → record ledger → Owner ทดสอบ live: แอดมินมอบหมาย → ไรเดอร์เห็นงาน ≤25 วิ ทั้งเว็บ/PWA · ประกาศงาน → ไรเดอร์ทุกคนเห็น · offline rider กดรับ → เห็นเหตุผลไทย
+**✅ M210 APPLIED PROD (Owner อนุมัติ 2026-11-21 · ผ่าน Management API pattern m209) · LEDGER RECORDED**
+**รอ Owner:** ทดสอบ live: แอดมินมอบหมาย → ไรเดอร์เห็นงาน ≤25 วิ ทั้งเว็บ/PWA · ประกาศงาน → ไรเดอร์ทุกคนเห็น · offline rider กดรับ → เห็นเหตุผลไทย
 
 ---
 
