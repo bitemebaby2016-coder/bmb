@@ -30,7 +30,7 @@ export interface MyDeliveryItem {
 export interface MyDeliveryAssignment {
   order_number: string
   /** 'offered' = งานประกาศที่ยังไม่มีใครจอง (E1) — สถานะอื่น = งานของฉัน */
-  assignment_status: 'offered' | 'assigned' | 'accepted' | 'picked_up' | 'in_transit' | 'delivered' | 'declined' | 'cancelled'
+  assignment_status: 'offered' | 'assigned' | 'accepted' | 'picked_up' | 'in_transit' | 'arrived' | 'delivered' | 'declined' | 'cancelled'
   assigned_at: string
   accepted_at: string | null
   /** R48: วันส่งจริง (จาก delivery_rounds.scheduled_date) — ใช้สำหรับแท็บย้อนหลัง */
@@ -70,7 +70,7 @@ export function classifyDriverError(raw: unknown): { error: string; kind: Driver
   if (/ERR_NOT_AUTHENTICATED|ERR_FORBIDDEN|ERR_NOT_A_DRIVER|JWT|401|403/i.test(s)) {
     return { error: msg, kind: 'permission' }
   }
-  if (/ERR_ASSIGNMENT|ERR_ALREADY_DELIVERED|ERR_POD|ERR_DELIVERY_SYNC_BLOCKED|ERR_GEOFENCE|ERR_INVALID|ERR_ORDER_|ERR_OFFER/i.test(s)) {
+  if (/ERR_ASSIGNMENT|ERR_ALREADY_DELIVERED|ERR_POD|ERR_DELIVERY_SYNC_BLOCKED|ERR_GEOFENCE|ERR_INVALID|ERR_ORDER_|ERR_OFFER|ERR_DRIVER_OFFLINE/i.test(s)) {
     return { error: msg, kind: 'state' }
   }
   return { error: msg, kind: 'unknown' }
@@ -404,9 +404,10 @@ export async function getPodSignedUrl(path: string, expiresSec = 3600): Promise<
 }
 
 /** Admin: assign an order to a driver (dispatch board). */
-export async function assignDriver(orderNumber: string, driverId: string): Promise<boolean> {
+export async function assignDriver(orderNumber: string, driverId: string): Promise<DriverActionResult> {
   const { error } = await supabase.rpc('assign_driver', { p_order_number: orderNumber, p_driver_id: driverId })
-  return !error
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
 }
 
 // ============================================
@@ -536,6 +537,7 @@ const DRIVER_ERROR_TH: Record<string, string> = {
   ERR_ASSIGNMENT_NOT_ACCEPTABLE: 'งานนี้เปลี่ยนสถานะแล้ว รับ/ปฏิเสธไม่ได้ — รีเฟรชรายการงาน',
   ERR_ASSIGNMENT_CLOSED: 'งานนี้ปิดแล้ว (ส่งมอบ/ปฏิเสธ/ยกเลิก) แก้ไขไม่ได้',
   ERR_OFFER_NOT_AVAILABLE: 'งานนี้ถูกคนอื่นรับไปแล้ว หรือแอดมินยกเลิกประกาศ — รีเฟรชรายการงาน',
+  ERR_DRIVER_OFFLINE: 'ไรเดอร์อยู่ในสถานะออฟไลน์ (พักงาน) — ต้องเปิดสถานะพร้อมรับงานก่อนจึงจะรับงานได้',
   ERR_SUBSCRIPTION_INVALID: 'ข้อมูลสมัครแจ้งเตือนไม่ถูกต้อง — ลองใหม่อีกครั้ง',
   ERR_NO_CUSTOMER_PROFILE: 'บัญชีนี้ยังไม่มีโปรไฟล์ในระบบ — ติดต่อแอดมิน',
 }

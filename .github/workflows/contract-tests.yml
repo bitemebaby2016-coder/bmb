@@ -538,6 +538,16 @@ jobs:
             exit 1
           fi
 
+      - name: Contract 210 (Rider my_deliveries v3 JOIN fix + offline gate + arrived completeness)
+        run: |
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_210_rider_my_deliveries.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_210_rider_my_deliveries.sql::$msg"
+            exit 1
+          fi
+
 # ---------------------------------------------------------------------------
 # B-2 — legacy contract 7 ตัว (017_018/019/020/021/022/029/033) = CLOSED (W-2 · 2026-10-26)
 # ประวัติ: ความพยายาม 1 (commit 3a2c9f7) = ล้มเหลวทั้ง 7 (Contract Tests #147) ·

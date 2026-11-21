@@ -28,6 +28,7 @@ import {
   assignDriver,
   claimDispatchOffer,
   dispatchOrder,
+  driverAcceptAssignment,
   driverAttachPod,
   driverDeclineOffer,
   driverUpdateDeliveryStatus,
@@ -140,7 +141,7 @@ describe('R1.4 · decline/cancel/assign-ชนะ/GPS (135 §4-7 + 136)', () => 
     const drvId = await seedLinkedDriver('Direct Rider', '0900000115')
     await seedOrder({ order_number: 'R-DIR', status: 'ready_for_dispatch' })
     await dispatchOrder('R-DIR')
-    expect(await assignDriver('R-DIR', drvId)).toBe(true) // เลือกไรเดอร์ก่อน → ชนะ offer
+    expect((await assignDriver('R-DIR', drvId)).ok).toBe(true) // เลือกไรเดอร์ก่อน → ชนะ offer
     const r = await claimDispatchOffer('R-DIR')
     expect(r.ok).toBe(false)
     if (!r.ok) expect(r.kind).toBe('state') // ERR_OFFER_NOT_AVAILABLE → state
@@ -164,5 +165,45 @@ describe('R1.4 · decline/cancel/assign-ชนะ/GPS (135 §4-7 + 136)', () => 
     const noAuth = await driverUpdateLocation({ latitude: 1, longitude: 1 }, 'R-GPS')
     expect(noAuth.ok).toBe(false)
     if (!noAuth.ok) expect(noAuth.kind).toBe('permission') // ERR_NOT_A_DRIVER → permission
+  })
+})
+
+describe('R1.4 · offline gate (210) — ไรเดอร์ออฟไลน์ รับ/claim ไม่ได้', () => {
+  it('offline rider: driver_accept_assignment → ERR_DRIVER_OFFLINE (kind=state)', async () => {
+    // Create offline rider (no user_id linked, status='offline')
+    const drvId = (await upsertDriver('Offline Rider', '0900000117', 'bike')).driver_id
+    // Don't link user — stays offline
+    await seedOrder({ order_number: 'R-OFF1', status: 'ready_for_dispatch' })
+    await assignDriver('R-OFF1', drvId as string)
+
+    // Switch context to the offline rider (no user_id linked → offline)
+    ;(supabase as any).__setMockUser('offline-test-user')
+    // Seed a driver row for this mock user with offline status
+    ;(supabase as any).__tables.drivers.push({ id: 'drv-offline-test', user_id: 'offline-test-user', status: 'offline' })
+
+    // Try to accept — should fail with ERR_DRIVER_OFFLINE
+    const r = await driverAcceptAssignment('R-OFF1')
+    expect(r.ok).toBe(false)
+    if (!r.ok) {
+      expect(r.kind).toBe('state') // offline is a state issue
+      expect(r.error).toContain('ออฟไลน์')
+    }
+  })
+
+  it('offline rider: claim_dispatch_offer → ERR_DRIVER_OFFLINE (kind=state)', async () => {
+    // Create offline rider
+    const drvId = (await upsertDriver('Offline Rider 2', '0900000118', 'bike')).driver_id
+    await seedOrder({ order_number: 'R-OFF2', status: 'ready_for_dispatch' })
+    await dispatchOrder('R-OFF2')
+
+    ;(supabase as any).__setMockUser('offline-test-user-2')
+    ;(supabase as any).__tables.drivers.push({ id: 'drv-offline-test-2', user_id: 'offline-test-user-2', status: 'offline' })
+
+    const r = await claimDispatchOffer('R-OFF2')
+    expect(r.ok).toBe(false)
+    if (!r.ok) {
+      expect(r.kind).toBe('state')
+      expect(r.error).toContain('ออฟไลน์')
+    }
   })
 })

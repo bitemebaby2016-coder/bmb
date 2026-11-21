@@ -191,14 +191,27 @@ export function DeliveryManagement() {
   async function handleAssign(orderNumber: string) {
     const driverId = pending[orderNumber]
     if (!driverId) { showToast('เลือกไรเดอร์ก่อน', 'error'); return }
+
+    // Warning when assigning to non-available rider (offline/busy)
+    const selectedDriver = drivers.find(d => d.id === driverId)
+    if (selectedDriver && selectedDriver.status !== 'available') {
+      const statusLabel = selectedDriver.status === 'offline' ? 'ออฟไลน์ (พักงาน)' : 'ไม่ว่าง (กำลังส่ง)'
+      const confirmMsg = `⚠️ ไรเดอร์ "${selectedDriver.driver_name}" สถานะ: ${statusLabel}\n` +
+        `แอดมินมอบหมายได้ (override) แต่ไรเดอร์จะกดรับงานไม่ได้จนกว่าจะเปิดสถานะพร้อมรับงาน\n` +
+        `ต้องการมอบหมายต่อหรือไม่?`
+      if (!window.confirm(confirmMsg)) return
+    }
+
     setActing(orderNumber)
     try {
-      const ok = await assignDriver(orderNumber, driverId)
-      if (ok) {
+      const result = await assignDriver(orderNumber, driverId)
+      if (result.ok) {
         showToast('✅ มอบหมายสำเร็จ: ' + orderNumber, 'success')
         setPending((p) => { const n = { ...p }; delete n[orderNumber]; return n })
         await load()
-      } else showToast('มอบหมายไม่สำเร็จ — ตรวจสอบสถานะออเดอร์และไรเดอร์แล้วลองใหม่', 'error')
+      } else {
+        showToast('มอบหมายไม่สำเร็จ: ' + driverErrorText(result.error), 'error')
+      }
     } finally { setActing(null) }
   }
 

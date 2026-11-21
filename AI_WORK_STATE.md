@@ -1,3 +1,17 @@
+## 🔒 SESSION CLOSE 2026-11-21 (รอบ 58 · R82 — Rider System Completeness Fix: my_deliveries JOIN fix + offline gate + arrived completeness + Thai reasons) · **CODE_CLOSED + BUILD+LINT+TSC+VITEST ALL PASS**
+
+**R82 — ระบบไรเดอร์สมบูรณ์จริง (แก้บั๊กหลัก R48/m207 + เพิ่มกติกาใหม่):**
+- **P0-1: my_deliveries v3 JOIN fix (m210)** — แก้ `o.round_id` → `o.delivery_round_id` ทั้ง assignments + offers (m207 bug: column ไม่มีจริง ทำให้ 42703 ทุกครั้ง) · เพิ่ม RUNTIME VERIFICATION จริงใน migration (seed fixture + execute 5-arg) · เพิ่ม SQL contract `e2e/contracts_210_rider_my_deliveries.sql` ใน CI (G1-G6 ครอบ: 5-arg execute, filter, offers, offline gate, arrived auto-close, ambiguity) · รันจริงจับ 42703 ที่ pg_get_functiondef จับไม่ได้
+- **P0-2: riderHistory filterAssignments** — งาน active (assigned/accepted/picked_up/in_transit/arrived) เห็นในแท็บวันนี้เสมอ ไม่ขึ้นกับ scheduled_date · scheduled_date NULL fallback ไป assigned_at สำหรับงานประวัติ · getMonthKey ใช้ getFilterDate fallback
+- **P1-3: Offline gate + Thai reasons** — driver_accept_assignment + claim_dispatch_offer (รวม fallback m189) + driver_decline_assignment + admin_cancel_assignment + assign_driver reassign: `IF v_drv.status = 'offline' THEN RAISE ERR_DRIVER_OFFLINE` · DRIVER_ERROR_TH เพิ่ม `'ไรเดอร์อยู่ในสถานะออฟไลน์ (พักงาน) — ต้องเปิดสถานะพร้อมรับงานก่อนจึงจะรับงานได้'` · assignDriver คืน DriverActionResult (ไม่ทิ้ง error) · DeliveryManagement handleAssign โชว์เหตุผลไทยจริง + confirm warning เมื่อมอบหมายไรเดอร์ไม่ available (override ได้ แต่แจ้งให้รู้)
+- **P1-4: Arrived completeness** — close_assignments_on_order_terminal + busy-lists ทุกฟังก์ชัน (decline/cancel/assign reassign) เพิ่ม 'arrived' (m197 guard ครบแล้ว) → ป้องกันงานผีเมื่อ cancel order ตอน arrived
+- **Test updates** — r48RiderHistoryTabs.test.ts: แก้ assertion JOIN ผิด (o.round_id → o.delivery_round_id) + เพิ่มเคส offline gate + arrived + runtime verify · riderHistory.test.ts: เพิ่มเคส active-job-always-visible + NULL scheduled_date fallback · riderFullCycle.test.ts: เพิ่ม offline gate tests (accept/claim → ERR_DRIVER_OFFLINE kind=state) + assignDriver .ok check · supabaseMock: my_deliveries เพิ่ม scheduled_date + offline gate + 5-arg filters · assignDriver mock คืน DriverActionResult
+- **Gates:** lint ✅ · tsc ✅ · vitest 228 files / 2439 tests PASS (+8) · build ✅ (tsc + vite + PWA) · contract-tests (CI ephemeral PG) ready
+
+**รอ Owner:** apply m210 ขึ้น prod ตามแพทเทิร์น m209 (prodCheck READ-ONLY → apply → verify รันจริง: SELECT my_deliveries 5-arg ผ่าน 42703) → record ledger → Owner ทดสอบ live: แอดมินมอบหมาย → ไรเดอร์เห็นงาน ≤25 วิ ทั้งเว็บ/PWA · ประกาศงาน → ไรเดอร์ทุกคนเห็น · offline rider กดรับ → เห็นเหตุผลไทย
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-21 (รอบ 57 · R81 — Floating Ad Tab ใน AdminMarketing (Control Center) · build+lint+tsc+ทดสอบจริงผ่านหมด):
 
 R81 — Floating Ad Tab (แก้ปัญหาผู้ใช้ "งงกับระบบเลือกรูป จำนวน ข้อความ โชว์ไม่คงที่ 1/3/4 อัน ไม่รู้อันไหนโฆษณา กิจกรรม เมนูแนะนำ ทับซ้อนข้อมูลมั่ว"): เพิ่มแท็บจัดการโฆษณาลอยใน **หน้าหลักที่แอดมินใช้งานจริง** (AdminMarketing.tsx → `/admin/marketing`):
@@ -18,7 +32,7 @@ Gates: lint ✅ · tsc ✅ · build ✅ (tsc + vite + PWA) · floatingAdBanners.
 
 ## 🔒 SESSION CLOSE 2026-11-20 (รอบ 56 · R78+R79+R80 · โพสต์การตลาด 5 รูป + Studio picker แท็บหัวข้อเมนูครบทุกเมนู + Floating Ad Exact Clone + **m209 APPLIED PROD ✓ + ledger backfill 5 ตัว**) — **CODE_CLOSED + PUSHED + CI 2/2 GREEN × 3 commits · รอ Owner ทดสอบ live กลุ่ม G**
 
-> **คำสั่ง Owner (ต่อเนื่อง 4 คำสั่ง):** ①"แท็บวางแผนกับสร้างโพส เลือกรูปได้สูงสุด 5 รูป (เมนู+AIเจน) + อัปโหลดจากเครื่องย่อ ≤500KB ขึ้น bmb-images/uploads" ②"อ่าน ai entry point, working state, master rules ก่อนโค้ด ทำงานตามกฏ ทดสอบจริงจนผ่านถึงอนุญาติคอมมิทพุช" ③"ผ่าน CI จริง... Studio picker แสดงให้หมดทุกเมนูแยกแท็บตามหัวข้อ + เมนูใหม่อนาคต" ④"Floating Ad ต้องก๊อปปี้ซิ้งกับข้อมูลตรงกับที่สร้าง ทั้งโปรโมชั่นและเมนูตามที่แอดมินจิ้มเลือก" ⑤"อนุมัติแอพพลายมิเกรชั่นที่ขาดอยู๋รวม209 สู่โปรดักชั่น + อัพเดท ai work state, remain test, master status ปิดเซสซั่นรอทดสอบ live"
+> **คำสั่ง Owner (ต่อเนื่อง 4 คำสั่ง):** ①"แท็บวางแผนกับสร้างโพสต์ เลือกรูปได้สูงสุด 5 รูป (เมนู+AIเจน) + อัปโหลดจากเครื่องย่อ ≤500KB ขึ้น bmb-images/uploads" ②"อ่าน ai entry point, working state, master rules ก่อนโค้ด ทำงานตามกฏ ทดสอบจริงจนผ่านถึงอนุญาติคอมมิทพุช" ③"ผ่าน CI จริง... Studio picker แสดงให้หมดทุกเมนูแยกแท็บตามหัวข้อ + เมนูใหม่อนาคต" ④"Floating Ad ต้องก๊อปปี้ซิ้งกับข้อมูลตรงกับที่สร้าง ทั้งโปรโมชั่นและเมนูตามที่แอดมินจิ้มเลือก" ⑤"อนุมัติแอพพลายมิเกรชั่นที่ขาดอยู๋รวม209 สู่โปรดักชั่น + อัพเดท ai work state, remain test, master status ปิดเซสซั่นรอทดสอบ live"
 
 **R78 — เลือกรูปประกอบโพสต์สูงสุด 5 รูป (ยกเลิก R44 gen-single ตามสั่งเจ้าของ):**
 - `MAX_POST_IMAGES=5` + helper `addImages()` (dedupe + cap + toast) · ยกเลิกตัวกรอง genOnes ใน handleCreatePost/handleSaveEditPost

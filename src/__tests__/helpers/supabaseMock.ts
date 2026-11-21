@@ -57,7 +57,7 @@ export const seed: Record<string, MockRow[]> = {
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v))
 const NOT_FOUND = { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' }
 // Mock session user — used for JWT-bound driver identity in the 3B-2D RPCs (041).
-const MOCK_USER = 'auth-test-user'
+let MOCK_USER = 'auth-test-user'
 
 export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: boolean }) {
   const tables: Record<string, MockRow[]> = clone(seed)
@@ -781,6 +781,10 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
       const p = params ?? {}
       const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
       if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      // 210: offline gate
+      if (drv.status === 'offline') {
+        return { data: null, error: { code: 'ERR_DRIVER_OFFLINE', message: 'ERR_DRIVER_OFFLINE' } }
+      }
       const asg = (tables['delivery_assignments'] || []).find((a: any) => a.order_number === p.p_order_number && a.driver_id === drv.id && a.status === 'assigned')
       if (!asg) return { data: null, error: { code: 'ERR_ASSIGNMENT_NOT_ACCEPTABLE', message: 'ERR_ASSIGNMENT_NOT_ACCEPTABLE' } }
       asg.status = 'accepted'
@@ -835,18 +839,42 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
     if (name === 'my_deliveries') {
       const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
       if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+
+      // 210: offline gate — ไรเดอร์ offline ห้ามเข้าถึงงาน
+      if (drv.status === 'offline') {
+        return { data: null, error: { code: 'ERR_DRIVER_OFFLINE', message: 'ERR_DRIVER_OFFLINE' } }
+      }
+
+      const rpcParams = params ?? {}
+      const pAssignedFrom = rpcParams.p_assigned_from ? new Date(rpcParams.p_assigned_from) : null
+      const pAssignedTo = rpcParams.p_assigned_to ? new Date(rpcParams.p_assigned_to) : null
+      const pScheduledFrom = rpcParams.p_scheduled_from ? new Date(rpcParams.p_scheduled_from) : null
+      const pScheduledTo = rpcParams.p_scheduled_to ? new Date(rpcParams.p_scheduled_to) : null
+
       const rows = (tables['delivery_assignments'] || [])
         .filter((a: any) => a.driver_id === drv.id && a.status !== 'cancelled')
+        .filter((a: any) => {
+          if (pAssignedFrom && new Date(a.assigned_at) < pAssignedFrom) return false
+          if (pAssignedTo && new Date(a.assigned_at) > pAssignedTo) return false
+          const o = (tables['orders'] || []).find((x: any) => x.order_number === a.order_number)
+          const sched = o?.delivery_round_id ? (tables['delivery_rounds'] || []).find((r: any) => r.id === o.delivery_round_id)?.scheduled_date : null
+          if (pScheduledFrom && sched && new Date(sched) < pScheduledFrom) return false
+          if (pScheduledTo && sched && new Date(sched) > pScheduledTo) return false
+          return true
+        })
         .map((a: any) => {
           const o = (tables['orders'] || []).find((x: any) => x.order_number === a.order_number)
+          const round = o?.delivery_round_id ? (tables['delivery_rounds'] || []).find((r: any) => r.id === o.delivery_round_id) : null
           return {
             order_number: a.order_number, assignment_status: a.status, assigned_at: a.assigned_at, accepted_at: a.accepted_at,
             dropoff_detail: o?.delivery_address ?? '', dropoff_latitude: o?.dropoff_latitude ?? null, dropoff_longitude: o?.dropoff_longitude ?? null,
             order_status: o?.status ?? null, total_amount: o?.total_amount ?? null, payment_status: o?.payment_status ?? null, payment_method: o?.payment_method ?? null,
+            scheduled_date: round?.scheduled_date ?? null,
             items: (tables['order_items'] || []).filter((i: any) => i.order_id === o?.id).map((i: any) => ({ product_name: i.product_name, quantity: i.quantity })),
           }
         })
         .sort((a: any, b: any) => String(b.assigned_at).localeCompare(String(a.assigned_at)))
+
       // 135 §6: offers[] = งานประกาศที่ยังว่างและฉันยังไม่กด "ไม่รับ"
       const offers = (tables['dispatch_offers'] || [])
         .filter((of: any) => {
@@ -856,12 +884,21 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
           return !(tables['dispatch_offer_declines'] || [])
             .some((d2: any) => d2.offer_id === of.id && d2.driver_id === drv.id)
         })
+        .filter((of: any) => {
+          const o = (tables['orders'] || []).find((x: any) => x.order_number === of.order_number)
+          const round = o?.delivery_round_id ? (tables['delivery_rounds'] || []).find((r: any) => r.id === o.delivery_round_id) : null
+          if (pScheduledFrom && round?.scheduled_date && new Date(round.scheduled_date) < pScheduledFrom) return false
+          if (pScheduledTo && round?.scheduled_date && new Date(round.scheduled_date) > pScheduledTo) return false
+          return true
+        })
         .map((of: any) => {
           const o = (tables['orders'] || []).find((x: any) => x.order_number === of.order_number)
+          const round = o?.delivery_round_id ? (tables['delivery_rounds'] || []).find((r: any) => r.id === o.delivery_round_id) : null
           return {
             order_number: of.order_number, assignment_status: 'offered', assigned_at: of.created_at, accepted_at: null,
             dropoff_detail: o?.delivery_address ?? '', dropoff_latitude: o?.dropoff_latitude ?? null, dropoff_longitude: o?.dropoff_longitude ?? null,
             order_status: o?.status ?? null, total_amount: o?.total_amount ?? null, payment_status: o?.payment_status ?? null, payment_method: o?.payment_method ?? null,
+            scheduled_date: round?.scheduled_date ?? null,
             items: (tables['order_items'] || []).filter((i: any) => i.order_id === o?.id).map((i: any) => ({ product_name: i.product_name, quantity: i.quantity })),
           }
         })
@@ -953,6 +990,10 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
       const p = params ?? {}
       const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
       if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      // 210: offline gate
+      if (drv.status === 'offline') {
+        return { data: null, error: { code: 'ERR_DRIVER_OFFLINE', message: 'ERR_DRIVER_OFFLINE' } }
+      }
       const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
       if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
       if (!['ready_for_dispatch', 'dispatched', 'confirmed', 'preparing'].includes(String(order.status))) {
@@ -1567,6 +1608,7 @@ if (name === 'customer_intelligence') {
     },
     __setInvokeHandler: setInvokeHandler,
     __setNoAdmin: setNoAdmin,
+    __setMockUser: (userId: string) => { MOCK_USER = userId },
     __tables: tables,
     __reset() {
       orderSubmissions.clear()

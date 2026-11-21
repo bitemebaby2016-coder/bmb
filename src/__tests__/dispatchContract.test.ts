@@ -54,16 +54,16 @@ describe('3B-2D · assign_driver contract (admin authority, 020)', () => {
   it('ready_for_dispatch → assign valid driver succeeds (canonical RPC)', async () => {
     await seedOrder({ order_number: 'D-OK' })
     await upsertDriver('QA Rider', '0900000001', 'bike')
-    const ok = await assignDriver('D-OK', (await adminListDrivers()).drivers[0].id)
-    expect(ok).toBe(true)
+    const result = await assignDriver('D-OK', (await adminListDrivers()).drivers[0].id)
+    expect(result.ok).toBe(true)
     const asg = (supabase as any).__tables.delivery_assignments as any[]
     expect(asg).toHaveLength(1)
     expect(asg[0]).toMatchObject({ order_number: 'D-OK', status: 'assigned' })
   })
   it('invalid driver → denied (ERR_DRIVER_NOT_FOUND)', async () => {
     await seedOrder({ order_number: 'D-BADDRV' })
-    const ok = await assignDriver('D-BADDRV', 'drv-does-not-exist')
-    expect(ok).toBe(false)
+    const result = await assignDriver('D-BADDRV', 'drv-does-not-exist')
+    expect(result.ok).toBe(false)
   })
   it('confirmed/preparing (จ่ายแล้ว/ครัวทำ) → assign ได้ทันที — คิวมอบหมายห้ามบัง D-03', async () => {
     // 020:610: assign_driver รับ confirmed/preparing/ready_for_dispatch/dispatched
@@ -72,7 +72,8 @@ describe('3B-2D · assign_driver contract (admin authority, 020)', () => {
       await seedOrder({ order_number: `D-${st.toUpperCase()}`, status: st })
       await upsertDriver('Queue Rider', '0900000021', 'bike')
       const drvId = (await adminListDrivers()).drivers.find((d) => d.driver_name === 'Queue Rider')!.id
-      expect(await assignDriver(`D-${st.toUpperCase()}`, drvId), `assign ต้องผ่านสำหรับ status=${st}`).toBe(true)
+      const result = await assignDriver(`D-${st.toUpperCase()}`, drvId)
+      expect(result.ok, `assign ต้องผ่านสำหรับ status=${st}`).toBe(true)
       const asg = (supabase as any).__tables.delivery_assignments as any[]
       expect(asg.find((a) => a.order_number === `D-${st.toUpperCase()}`)?.status).toBe('assigned')
     }
@@ -81,8 +82,8 @@ describe('3B-2D · assign_driver contract (admin authority, 020)', () => {
     ;(supabase as any).__setNoAdmin?.(true)
     await seedOrder({ order_number: 'D-NOAUTH' })
     await upsertDriver('QA Rider', '0900000001', 'bike')
-    const ok = await assignDriver('D-NOAUTH', (await adminListDrivers()).drivers[0]?.id || 'drv-x')
-    expect(ok).toBe(false)
+    const result = await assignDriver('D-NOAUTH', (await adminListDrivers()).drivers[0]?.id || 'drv-x')
+    expect(result.ok).toBe(false)
     ;(supabase as any).__setNoAdmin?.(false)
   })
   it('duplicate assignment → deterministic (single row per order; reassign resets)', async () => {
@@ -90,8 +91,8 @@ describe('3B-2D · assign_driver contract (admin authority, 020)', () => {
     await upsertDriver('Rider A', '0900000001', 'bike')
     await upsertDriver('Rider B', '0900000002', 'bike')
     const ids = (await adminListDrivers()).drivers.map((d) => d.id)
-    expect(await assignDriver('D-DUP', ids[0])).toBe(true)
-    expect(await assignDriver('D-DUP', ids[1])).toBe(true)
+    expect((await assignDriver('D-DUP', ids[0])).ok).toBe(true)
+    expect((await assignDriver('D-DUP', ids[1])).ok).toBe(true)
     const asg = (supabase as any).__tables.delivery_assignments as any[]
     expect(asg).toHaveLength(1)
     expect(asg[0].driver_id).toBe(ids[1])
@@ -103,12 +104,12 @@ describe('3B-2D · assign_driver contract (admin authority, 020)', () => {
     await seedOrder({ order_number: 'D-DLV', status: 'delivered' })
     await upsertDriver('QA Rider', '0900000001', 'bike')
     const drvId = (await adminListDrivers()).drivers[0].id
-    expect(await assignDriver('D-CXL', drvId)).toBe(false)
-    expect(await assignDriver('D-DLV', drvId)).toBe(false)
+    expect((await assignDriver('D-CXL', drvId)).ok).toBe(false)
+    expect((await assignDriver('D-DLV', drvId)).ok).toBe(false)
   })
   it('missing order → denied (ERR_ORDER_NOT_FOUND)', async () => {
     await upsertDriver('QA Rider', '0900000001', 'bike')
-    expect(await assignDriver('D-NOPE', (await adminListDrivers()).drivers[0].id)).toBe(false)
+    expect((await assignDriver('D-NOPE', (await adminListDrivers()).drivers[0].id)).ok).toBe(false)
   })
 })
 

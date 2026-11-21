@@ -25,20 +25,24 @@ function toBangkokDate(ts: string | null | undefined): Date | null {
   return new Date(d.getTime() + 7 * 60 * 60 * 1000)
 }
 
-/** ดึง key เดือน 'YYYY-MM' จาก assignment ตาม anchor */
-function getMonthKey(a: MyDeliveryAssignment, anchor: DateAnchor): string | null {
-  const ts = anchor === 'scheduled' ? a.scheduled_date : a.assigned_at
-  const d = toBangkokDate(ts)
-  if (!d) return null
-  const yyyy = d.getUTCFullYear()
-  const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
-  return `${yyyy}-${mm}`
+/** สถานะงานที่ถือว่า "active" (กำลังดำเนินอยู่) — ควรเห็นในแท็บวันนี้เสมอ ไม่ว่าจะมี scheduled_date หรือไม่ */
+const ACTIVE_STATUSES: MyDeliveryAssignment['assignment_status'][] = ['assigned', 'accepted', 'picked_up', 'in_transit', 'arrived']
+
+/** สถานะงานที่ถือว่า "ประวัติ" (จบสิ้นสุดแล้ว) — กรองตามวันตาม anchor */
+const HISTORY_STATUSES: MyDeliveryAssignment['assignment_status'][] = ['delivered', 'declined', 'cancelled']
+
+/** ดึงวันที่ที่ใช้กรองตาม anchor — fallback assigned_at เมื่อ scheduled_date เป็น NULL */
+function getFilterDate(a: MyDeliveryAssignment, anchor: DateAnchor): string | null {
+  if (anchor === 'scheduled') {
+    return a.scheduled_date ?? a.assigned_at ?? null
+  }
+  return a.assigned_at ?? null
 }
 
 /** เช็คว่า assignment อยู่ใน "วันนี้" ตาม anchor */
 function isToday(a: MyDeliveryAssignment, anchor: DateAnchor, today: Date): boolean {
-  const ts = anchor === 'scheduled' ? a.scheduled_date : a.assigned_at
-  const d = toBangkokDate(a[anchor === 'scheduled' ? 'scheduled_date' : 'assigned_at'])
+  const ts = getFilterDate(a, anchor)
+  const d = toBangkokDate(ts)
   if (!d) return false
   return d.getUTCFullYear() === today.getUTCFullYear() &&
          d.getUTCMonth() === today.getUTCMonth() &&
@@ -47,13 +51,29 @@ function isToday(a: MyDeliveryAssignment, anchor: DateAnchor, today: Date): bool
 
 /** เช็คว่า assignment อยู่ในเดือนที่กำหนด (key = 'YYYY-MM') */
 function isInMonth(a: MyDeliveryAssignment, anchor: DateAnchor, monthKey: string): boolean {
-  return getMonthKey(a, anchor) === monthKey
+  const ts = getFilterDate(a, anchor)
+  const d = toBangkokDate(ts)
+  if (!d) return false
+  const yyyy = d.getUTCFullYear()
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+  return `${yyyy}-${mm}` === monthKey
+}
+
+/** ดึง key เดือน 'YYYY-MM' จาก assignment ตาม anchor — fallback assigned_at เมื่อ scheduled_date เป็น NULL */
+function getMonthKey(a: MyDeliveryAssignment, anchor: DateAnchor): string | null {
+  const ts = getFilterDate(a, anchor)
+  const d = toBangkokDate(ts)
+  if (!d) return null
+  const yyyy = d.getUTCFullYear()
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+  return `${yyyy}-${mm}`
 }
 
 /**
  * กรอง assignments ตาม mode + anchor
- * - today: งานที่ scheduled_date/assigned_at = วันนี้ (Asia/Bangkok)
- * - month: งานที่อยู่ใน monthKey (YYYY-MM) ที่เลือก
+ * - today: งาน active (assigned/accepted/picked_up/in_transit/arrived) เห็นเสมอ
+ *          งานประวัติ (delivered/declined/cancelled) กรองตามวัน
+ * - month: งานที่อยู่ใน monthKey (YYYY-MM) ที่เลือก (ใช้ getFilterDate fallback)
  */
 export function filterAssignments(
   assignments: MyDeliveryAssignment[],
@@ -68,10 +88,19 @@ export function filterAssignments(
   const today = new Date(Date.UTC(bangkokNow.getUTCFullYear(), bangkokNow.getUTCMonth(), bangkokNow.getUTCDate()))
 
   return assignments.filter((a) => {
+    const isActive = ACTIVE_STATUSES.includes(a.assignment_status as MyDeliveryAssignment['assignment_status'])
+    const isHistory = HISTORY_STATUSES.includes(a.assignment_status as MyDeliveryAssignment['assignment_status'])
+
     if (mode === 'today') {
-      return isToday(a, anchor, today)
+      // งาน active เห็นในแท็บวันนี้เสมอ (ไม่ว่าจะมี scheduled_date หรือไม่)
+      if (isActive) return true
+      // งานประวัติกรองตามวัน
+      if (isHistory) return isToday(a, anchor, today)
+      // สถานะอื่น (ไม่ควรเกิด) - fallback ให้เห็น
+      return true
     }
     if (mode === 'month' && monthKey) {
+      // เดือน: ใช้ getFilterDate fallback สำหรับทุกสถานะ
       return isInMonth(a, anchor, monthKey)
     }
     return true // fallback: show all
