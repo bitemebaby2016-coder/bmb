@@ -15,7 +15,6 @@ import { getProducts } from '@/lib/bmbAdminApi_products'
 import { type Product } from '@/types'
 import { flashTo } from '@/lib/uiFlash'
 import { PostForm, PostFormImperativeHandle } from './PostForm'
-import { ToggleSwitch } from './ToggleSwitch'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 
 // R44: URL ภาพที่ AI สร้าง (bmb-images/ai-generated/) — กติกา "มีภาพเจน = ใช้ภาพเจนรูปเดียว"
@@ -71,10 +70,6 @@ export function ContentTab({ load }: ContentTabProps) {
   const [aiAlbum, setAiAlbum] = useState<AiAlbumItem[]>([])
   const [aiAlbumTab, setAiAlbumTab] = useState<'all' | 'menu' | 'promo' | 'festival' | 'disabled' | 'legacy'>('all')
   const [albumLoading, setAlbumLoading] = useState(false)
-
-  const [floatingAdImage, setFloatingAdImage] = useState('')
-  const [floatingAdEnabled, setFloatingAdEnabled] = useState(true)
-  const [floatingAdSources, setFloatingAdSources] = useState<('floating_promotions' | 'floating_products' | 'floating_posts')[]>(['floating_promotions', 'floating_products', 'floating_posts'])
 
   const [contentType, setContentType] = useState<'post' | 'promotion' | 'banner' | 'announcement'>('post')
   const [postTitle, setPostTitle] = useState('')
@@ -283,25 +278,6 @@ export function ContentTab({ load }: ContentTabProps) {
   }, [])
 
   useEffect(() => { void loadAiAlbum() }, [loadAiAlbum])
-
-  // Load floating ad settings
-  useEffect(() => {
-    void (async () => {
-      try {
-        const { data } = await supabase.from('business_settings').select('key,value').in('key', ['floating_ad_image', 'floating_ad_enabled', 'floating_ad_sources'])
-        for (const row of data || []) {
-          if (row.key === 'floating_ad_image' && typeof row.value === 'string') setFloatingAdImage(row.value)
-          if (row.key === 'floating_ad_enabled' && typeof row.value === 'boolean') setFloatingAdEnabled(row.value)
-if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
-            const sources = row.value.filter((v: unknown): v is 'floating_promotions' | 'floating_products' | 'floating_posts' =>
-              v === 'floating_promotions' || v === 'floating_products' || v === 'floating_posts'
-            )
-            if (sources.length > 0) setFloatingAdSources(sources)
-          }
-        }
-      } catch { /* เงียบ */ }
-    })()
-  }, [])
 
   const visibleAiAlbum = aiAlbum.filter((a) =>
     aiAlbumTab === 'all' ? !a.disabled :
@@ -633,20 +609,6 @@ if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
     { key: 'bite_award', label: '🏆 น้อง Bite ฉลองรางวัล' },
   ]
 
-  // ===== Floating Ad =====
-  async function toggleFloatingAd(url: string) {
-    try {
-      const next = floatingAdImage === url ? '' : url
-      const ok = await setBusinessSetting('floating_ad_image', next)
-      if (!ok) throw new Error('save failed')
-      setFloatingAdImage(next)
-      showToast(next ? 'ตั้งภาพนี้เป็นโฆษณาลอย (Floating Ad) แล้ว — จะโชว์พร้อมน้อง Bite ประกอบบนรูปที่หน้าแรก' : 'เลิกใช้ภาพนี้เป็นโฆษณาลอยแล้ว (กลับเป็นมาสคอตตามเดิม)', 'success')
-      flashTo('mk-ai-album')
-    } catch (err) {
-      showToast('บันทึกโฆษณาลอยไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 100), 'error')
-    }
-  }
-
   // ===== Unified Submit =====
   async function handleSubmitAll() {
     if (contentType === 'post' || contentType === 'announcement') {
@@ -743,8 +705,7 @@ if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
     )
     setBannerSaving(false)
     if (approvalId) {
-      // Floating ad is now configured via sources filter (promotions/announcements/approved_banners/recommended_menu)
-      // Admin controls which sources appear in floating ad via ContentTab floatingAdSources
+      // Floating ad is now configured in dedicated "Floating Ad" tab in AdminMarketingPromotions
       showToast('สร้างแบนเนอร์แล้ว — ส่งเข้าคิวตรวจเนื้อหา (CNT-01)', 'success')
       setBannerForm({ title: '', body: '', banner_image: '', banner_mascot: '' })
       await load()
@@ -985,70 +946,6 @@ if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
 
         {/* AI Album */}
         <div className="mt-4" data-testid="mk-ai-album">
-          {/* แนะนำวิธีตั้งค่าโฆษณาลอย (Floating Ad) — แยก 2 ส่วน */}
-          <div className="mb-3 p-3 rounded-lg bg-brand-surface border border-brand-border text-xs" data-testid="mk-floatad-guide">
-            <div className="font-semibold text-brand-accent mb-1">💡 วิธีตั้งค่าโฆษณาลอย (Floating Ad)</div>
-            <div className="space-y-1 text-brand-muted">
-              <div>① <b>เปิด/ปิดโฆษณาลอยทั้งหมด</b> → ไปที่ <a href="/admin/settings" className="underline hover:text-brand-primary" target="_blank" rel="noopener">หน้าตั้งค่าแอดมิน (AdminSettings)</a> → Card "โฆษณาลอย (Floating Ad)" <b>หรือใช้สวิทซ์ด้านล่างนี้</b></div>
-              <div>② <b>เลือกภาพเป็นโฆษณาลอย</b> → อยู่ที่นี่ (อัลบั้ม AI) → เลือกหมวด <b>โปรโมต</b> หรือ <b>เทศกาล</b> → กด <b>📌 ตั้งเป็นโฆษณาลอย</b></div>
-              <div>③ ภาพต้อง <b>ผ่านการอนุมัติ (CNT-01)</b> ก่อน จึงจะแสดงจริงบนหน้าแรก</div>
-            </div>
-          </div>
-
-          {/* Kill Switch สำหรับ Floating Ad — ตรงนี้เลย ไม่ต้องไปหน้าอื่น */}
-          <div className="mb-3 p-3 rounded-lg bg-brand-surface border border-brand-border" data-testid="mk-floatad-switch-inline">
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-xs">
-                <div className="font-semibold text-brand-accent">🔧 โฆษณาลอย (Floating Ad) — Kill Switch</div>
-                <div className="text-brand-muted">ปิด = ซ่อนโฆษณาลอยทั้งหมดจากหน้าแรก · เปิด = แสดงตามที่ตั้งค่าไว้</div>
-              </div>
-              <ToggleSwitch
-                checked={floatingAdEnabled}
-                onChange={async (v) => {
-                  const ok = await setBusinessSetting('floating_ad_enabled', v)
-                  if (ok) setFloatingAdEnabled(v)
-                  else showToast('บันทึกไม่สำเร็จ', 'error')
-                }}
-                label={floatingAdEnabled ? 'เปิด' : 'ปิด'}
-                testId="floating-ad-toggle-inline"
-              />
-            </div>
-          </div>
-
-          {/* Floating Ad Sources Filter — เลือกแหล่งข้อมูลที่จะโชว์เป็นโฟลตติ้ง */}
-          <div className="mb-3 p-3 rounded-lg bg-brand-surface border border-brand-border" data-testid="mk-floatad-sources">
-            <div className="font-semibold text-brand-accent text-xs mb-2">📋 แหล่งข้อมูลโฟลตติ้ง (เลือกได้หลายอย่าง)</div>
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              {[
-                { key: 'floating_promotions' as const, label: '🎁 โปรโมชั่น (is_banner=true)', desc: 'จากตาราง promotions ที่ตั้ง is_banner=true' },
-                { key: 'floating_products' as const, label: '🍽️ เมนูแนะนำ (is_floating_ad=true)', desc: 'จากตาราง products ที่ตั้ง is_floating_ad=true' },
-                { key: 'floating_posts' as const, label: '📝 โพสต์ (is_floating_ad=true)', desc: 'จาก marketing_posts ที่ published + is_floating_ad=true' },
-              ].map(({ key, label, desc }) => (
-                <label key={key} className="flex items-start gap-2 p-2 rounded-lg border hover:bg-brand-primary/5 transition-colors cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={floatingAdSources.includes(key)}
-                    onChange={(e) => {
-                      const next = floatingAdSources.includes(key)
-                        ? floatingAdSources.filter((s) => s !== key)
-                        : [...floatingAdSources, key]
-                      setFloatingAdSources(next)
-                      void (async () => {
-                        const ok = await setBusinessSetting('floating_ad_sources', next)
-                        if (!ok) showToast('บันทึกไม่สำเร็จ', 'error')
-                      })()
-                    }}
-                    className="mt-1 w-4 h-4 accent-brand-primary"
-                  />
-                  <div>
-                    <div className="font-medium text-brand-text">{label}</div>
-                    <div className="text-[9px] text-brand-muted">{desc}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
           <p className="text-xs font-semibold text-brand-accent mb-2">🗂️ อัลบั้มภาพที่ AI สร้าง (<code>{`bmb-images/ai-generated/<หมวด>/`}</code>) — เลือกหมวด แล้วกดปุ่มบนรูปได้เอง</p>
           <div className="flex flex-wrap gap-1 mb-2" data-testid="mk-ai-album-tabs">
             {(['all', 'menu', 'promo', 'festival', 'disabled', 'legacy'] as Array<'all' | 'menu' | 'promo' | 'festival' | 'disabled' | 'legacy'>).map((k) => {
@@ -1067,17 +964,6 @@ if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
                     <button type="button" className="flex-1 bg-amber-500 text-white py-1" onClick={() => void toggleAiImage(a)} data-testid={`mk-ai-toggle-${a.name}`} title={a.disabled ? 'เปิดใช้งานรูปนี้อีกครั้ง' : 'ปิดรูปนี้ — ไม่ให้ระบบนำไปใช้'}>{a.disabled ? 'เปิด' : 'ปิด'}</button>
                     <button type="button" className="flex-1 bg-red-500 text-white py-1" onClick={() => void deleteAiImage(a)} data-testid={`mk-ai-del-${a.name}`} title="ลบรูปนี้ออกจากอัลบั้ม (ลบไฟล์จริง)">ลบ</button>
                   </div>
-                  {/* Badge แสดงว่าเป็นโฆษณาลอยปัจจุบัน */}
-                  {floatingAdImage === a.url && (
-                    <div className="absolute top-1 left-1 z-10 bg-purple-600 text-white text-[8px] px-1.5 py-0.5 rounded font-medium" data-testid={`mk-ai-floatad-badge-${a.name}`}>
-                      📌 โฆษณาลอยปัจจุบัน
-                    </div>
-                  )}
-
-                  {/* ปุ่มตั้งเป็นโฆษณาลอย — แสดงสำหรับ promo/festival ที่ไม่ disabled */}
-                  {(a.kind === 'promo' || a.kind === 'festival') && !a.disabled && (
-                    <button type="button" className={`w-full text-[9px] py-1 ${floatingAdImage === a.url ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`} onClick={() => void toggleFloatingAd(a.url)} data-testid={`mk-ai-floatad-${a.name}`} title="ใช้รูปนี้เป็นโฆษณาลอย (แทนมาสคอต) — กดอีกครั้งเพื่อเลิกใช้">{floatingAdImage === a.url ? '✓ เป็นโฆษณาลอย' : '📌 ตั้งเป็นโฆษณาลอย'}</button>
-                  )}
                 </div>
               ))}
             </div>

@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DEFAULT_SITE_COPY } from '@/lib/homePopular'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
+import type { FloatingAdConfig, FloatingAdSourceType } from '@/types'
 
 const DEFAULT_AD_NOTICE = DEFAULT_SITE_COPY.adNotice
 
@@ -22,6 +23,8 @@ export interface FloatingBannerPromo {
   to?: string
   href?: string
   mascot?: string
+  /** ประเภทแหล่งข้อมูล: promotion | post | product */
+  sourceType?: FloatingAdSourceType
 }
 
 export type FloatingAdSource = 'floating_promotions' | 'floating_products' | 'floating_posts'
@@ -101,15 +104,14 @@ export function pickVisibleBannerPromos(
 export function FloatingAdBanners({ 
   promos, 
   notice, 
-  sources = ['floating_promotions', 'floating_products', 'floating_posts']
+  config,
 }: { 
   promos: FloatingBannerPromo[]; 
   notice?: string;
-  sources?: FloatingAdSource[];
+  config?: FloatingAdConfig;
 }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
   const [floatAdEnabled, setFloatAdEnabled] = useState(true)
-  const [floatAdSources, setFloatAdSources] = useState<FloatingAdSource[]>(sources)
   const [mascotsLoaded, setMascotsLoaded] = useState(false)
 
   // โหลด mascot overrides จาก Admin (bucket Bite_Mascot)
@@ -127,28 +129,23 @@ export function FloatingAdBanners({
     void (async () => {
       try {
         const { supabase } = await import('@/lib/supabase')
-        const [{ data: enabledData }, { data: sourcesData }] = await Promise.all([
+        const [{ data: enabledData }, { data: configData }] = await Promise.all([
           supabase.from('business_settings').select('value').eq('key', 'floating_ad_enabled').maybeSingle(),
-          supabase.from('business_settings').select('value').eq('key', 'floating_ad_sources').maybeSingle(),
+          supabase.from('business_settings').select('value').eq('key', 'floating_ad_config').maybeSingle(),
         ])
         if (alive) {
           const enabledV = (enabledData as { value?: unknown } | null)?.value
           if (typeof enabledV === 'boolean') setFloatAdEnabled(enabledV)
-          const sourcesV = (sourcesData as { value?: unknown } | null)?.value
-          if (Array.isArray(sourcesV)) {
-            const validSources = sourcesV.filter((v: unknown): v is FloatingAdSource =>
-              v === 'floating_promotions' || v === 'floating_products' || v === 'floating_posts'
-            )
-            if (validSources.length > 0) setFloatAdSources(validSources)
-            else setFloatAdSources(sources)
-          } else {
-            setFloatAdSources(sources)
+          else {
+            // Fallback to config if available
+            const cfg = (configData as { value?: FloatingAdConfig } | null)?.value
+            if (cfg?.enabled !== undefined) setFloatAdEnabled(cfg.enabled)
           }
         }
       } catch { /* zero-fake */ }
     })()
     return () => { alive = false }
-  }, [sources])
+  }, [])
 
   // R58: fallback images จาก ai-generated album (promo/festival) — โหลดครั้งเดียว
   // ใช้เมื่อ promo.image ไม่มี (Exact Clone จาก parent อาจไม่มีรูป)
@@ -180,20 +177,26 @@ export function FloatingAdBanners({
     })()
     return () => { alive = false }
   }, [])
-  
+   
   // Early return if floating ad is disabled
   if (!floatAdEnabled) return null
 
-  // Filter promos by enabled sources (exact match on id prefix)
-  const sourcePrefixMap: Record<FloatingAdSource, string> = {
-    floating_promotions: 'promo-',
-    floating_products: 'prod-',
-    floating_posts: 'post-',
+  // Filter promos by config sources (if config provided)
+  let filteredPromos = promos
+  if (config) {
+    const enabledSources = Object.entries(config.sources)
+      .filter(([, v]) => v.enabled)
+      .map(([k]) => k)
+    const sourcePrefixMap: Record<string, string> = {
+      promotions: 'promo-',
+      products: 'prod-',
+      posts: 'post-',
+    }
+    const allowedPrefixes = enabledSources.map(s => sourcePrefixMap[s]).filter(Boolean)
+    filteredPromos = (promos || []).filter(p => 
+      allowedPrefixes.some(prefix => p.id.startsWith(prefix))
+    )
   }
-  const allowedPrefixes = floatAdSources.map(s => sourcePrefixMap[s]).filter(Boolean)
-  const filteredPromos = (promos || []).filter(p => 
-    allowedPrefixes.some(prefix => p.id.startsWith(prefix))
-  )
 
   // D03: deterministic selection — filter dismissed promos, KEEP INPUT ORDER
   const visible = pickVisibleBannerPromos(filteredPromos, dismissedIds)
@@ -217,30 +220,32 @@ export function FloatingAdBanners({
 
   if (visible.length === 0) return null
 
+  // Badge text mapping (Thai, clear)
+  const badgeLabels: Record<FloatingAdSourceType, string> = {
+    promotion: 'โปรโมชั่น',
+    post: 'กิจกรรม',
+    product: 'เมนูแนะนำ',
+  }
+  const badgeColors: Record<FloatingAdSourceType, string> = {
+    promotion: 'bg-brand-primary text-white',
+    product: 'bg-red-500 text-white',
+    post: 'bg-amber-500 text-white',
+  }
+
   return (
     <div className="flad-overlay" role="dialog" aria-modal="true" aria-label="โปรโมชั่น" data-testid="floating-ad-banners">
       <div className="flad-backdrop" onClick={() => visible.forEach((p) => dismiss(p.id))} />
 
       <div className="flad-stack">
         {visible.map((promo) => {
-          // R58 (Owner): ภาพการตลาด/โปรโมชั่นที่เจน (ไม่ใช่รูปเมนู) โชว์แทนตัวมาสคอต —
-          // ลำดับ: ภาพของโปรโมชั่น (promo.image) → อัลบั้ม ai-generated/{promo,festival} (สลับตามลำดับ)
           const pos = visible.findIndex(p => p.id === promo.id)
-          // ใช้ promo.image (banner_image จาก promotions / image_url จาก products / image_urls[0] จาก posts) โดยตรง ทุกตัวที่มี
-          // fallback ไป albumImgs ถ้าไม่มี
           const mediaSrc = promo.image || (albumImgs.length > 0 ? albumImgs[pos % albumImgs.length] : '')
           
-          // Badge แสดงประเภทแหล่งข้อมูล (เงียบ ไม่เข้าข้อความ title)
-          const isPromotion = promo.id.startsWith('promo-')
-          const isProduct = promo.id.startsWith('prod-')
-          const isPost = promo.id.startsWith('post-')
-          const badgeInfo = isPromotion
-            ? { label: '🎁 โปรโมชั่น', className: 'bg-brand-primary text-white' }
-            : isProduct
-            ? { label: '🍽️ เมนูแนะนำ', className: 'bg-red-500 text-white' }
-            : { label: '📝 โพสต์', className: 'bg-amber-500 text-white' }
+          // Badge แสดงประเภทแหล่งข้อมูล — ใช้ sourceType จาก promo หรือ fallback จาก id prefix
+          const sourceType = promo.sourceType ?? (promo.id.startsWith('promo-') ? 'promotion' : promo.id.startsWith('prod-') ? 'product' : 'post')
+          const badgeLabel = badgeLabels[sourceType]
+          const badgeColor = badgeColors[sourceType]
           
-          // R61: มาสคอตของโปรโมชั่น (admin ตั้งเอง) หรือ default สลับตามลำดับ
           // R61: มาสคอตของโปรโมชั่น (admin ตั้งเอง) หรือ default สลับตามลำดับ
           const mascotSrc = mascotForPosition(pos)
           const promoMascot = promo.mascot || mascotSrc
@@ -248,9 +253,9 @@ export function FloatingAdBanners({
           
           return (
             <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
-              {/* Badge มุมขอบ — แสดงประเภทแหล่งข้อมูล */}
-              <div className={`absolute top-2 left-2 z-10 text-[9px] px-1.5 py-0.5 rounded font-medium ${badgeInfo.className}`} data-testid="floating-ad-badge">
-                {badgeInfo.label}
+              {/* Badge มุมขอบ — แสดงประเภทแหล่งข้อมูล (ขนาดใหญ่ขึ้น text-xs) */}
+              <div className={`absolute top-2 left-2 z-10 text-xs px-2 py-0.5 rounded font-medium ${badgeColor}`} data-testid="floating-ad-badge">
+                {badgeLabel}
               </div>
               
               <div className="flad-media">

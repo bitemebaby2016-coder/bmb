@@ -26,7 +26,8 @@ import {
 import { publishDeliveryRounds } from '@/lib/storeStatus'
 import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
 import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
-import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
+import { getBusinessSettings, getFloatingAdConfig } from '@/lib/bmbAdminApi_settings'
+import type { FloatingAdConfig } from '@/types'
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
@@ -94,8 +95,16 @@ export function HomePage() {
   const [shopHours, setShopHours] = useState<{ open: string; close: string } | null>(null)
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
   const [masterOpen, setMasterOpen] = useState<boolean | null>(null)
-  const [floatingAdEnabled, setFloatingAdEnabled] = useState<boolean>(true)
-  const [floatingAdSources, setFloatingAdSources] = useState<('floating_promotions' | 'floating_products' | 'floating_posts')[]>(['floating_promotions', 'floating_products', 'floating_posts'])
+  // Floating Ad config (new: uses FloatingAdConfig from admin tab)
+  const [floatingAdConfig, setFloatingAdConfig] = useState<FloatingAdConfig>({
+    enabled: true,
+    maxCount: 3,
+    sources: {
+      promotions: { enabled: true, maxItems: 3 },
+      posts: { enabled: true, maxItems: 3 },
+      products: { enabled: true, maxItems: 3 },
+    },
+  })
   const [approvedFloatAdImages, setApprovedFloatAdImages] = useState<Set<string>>(new Set())
   // R80: Floating Ad explicit sources data
   const [floatingProducts, setFloatingProducts] = useState<Product[]>([])
@@ -168,15 +177,10 @@ const [rows, cats, rounds, promos] = await Promise.all([
             }
             setOperatingHours((settings?.operating_hours ?? null) as Record<string, boolean> | null)
             setMasterOpen(parseStoreMasterOpen(settings?.store_master_open))
-            setFloatingAdEnabled(settings?.floating_ad_enabled !== false)
-            // Load floating ad sources filter
-            const sources = settings?.floating_ad_sources
-            if (Array.isArray(sources)) {
-              const validSources = sources.filter((v: unknown): v is 'floating_promotions' | 'floating_products' | 'floating_posts' =>
-                v === 'floating_promotions' || v === 'floating_products' || v === 'floating_posts'
-              )
-              if (validSources.length > 0) setFloatingAdSources(validSources)
-            }
+            // Load Floating Ad config (new: from admin FloatingAdTab)
+            const { getFloatingAdConfig } = await import('@/lib/bmbAdminApi_settings')
+            const floatAdCfg = await getFloatingAdConfig()
+            setFloatingAdConfig(floatAdCfg)
             // Fetch approved floating ad images from content_approvals
             void (async () => {
               try {
@@ -247,11 +251,16 @@ const [rows, cats, rounds, promos] = await Promise.all([
   // ต้องเคารพช่วงวันที่แบบเดียวกับ dropdown คูปอง (เดิมไม่เช็ก = คูปองหมดอายุยังถูกโฆษณา
   // แต่กดใช้ที่เช็คเอาท์ไม่ได้) — เพิ่มโปรภายหลัง = ขึ้นอัตโนมัติทั้งการ์ดและคูปอง
   const todayKey = bangkokDateKey()
-  // R80: Floating Ad explicit sources — โคลนข้อมูลตรงจากที่แอดมินเลือก (Exact Clone)
-  const showPromotions = floatingAdSources.includes('floating_promotions')
-  const showProducts = floatingAdSources.includes('floating_products')
-  const showPosts = floatingAdSources.includes('floating_posts')
+  // Floating Ad config (new: from admin FloatingAdTab)
+  const { enabled: floatAdEnabled, maxCount, sources, items: configItems } = floatingAdConfig
+  const showPromotions = sources.promotions.enabled
+  const showProducts = sources.products.enabled
+  const showPosts = sources.posts.enabled
+  const promoMaxItems = sources.promotions.maxItems
+  const productMaxItems = sources.products.maxItems
+  const postMaxItems = sources.posts.maxItems
   
+  // Build base promos from each source
   // 1) floating_promotions: promotions.is_banner=true + active dates + approved
   const promoBanners: FloatingBannerPromo[] = showPromotions ? (promoRows || [])
     .filter((r) => r.is_banner === true && r.is_active !== false)
@@ -271,7 +280,7 @@ const [rows, cats, rounds, promos] = await Promise.all([
       return true
     })
     .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
-    .slice(0, 3)
+    .slice(0, promoMaxItems)
     .map((r) => ({
       id: `promo-${String(r.id)}`,
       title: String(r.name || 'Promotion'),
@@ -280,11 +289,12 @@ const [rows, cats, rounds, promos] = await Promise.all([
       image: r.banner_image,
       href: r.code ? `/menu?coupon=${encodeURIComponent(r.code)}` : '/menu',
       mascot: r.banner_mascot || undefined,
+      sourceType: 'promotion' as const,
     })) : []
 
   // 2) floating_products: products.is_floating_ad=true + is_available + not archived
   const productBanners: FloatingBannerPromo[] = showProducts ? floatingProducts
-    .slice(0, 3)
+    .slice(0, productMaxItems)
     .map((p) => ({
       id: `prod-${String(p.id)}`,
       title: String(p.name || 'Menu'),
@@ -292,11 +302,12 @@ const [rows, cats, rounds, promos] = await Promise.all([
       image: p.image_url,
       href: `/menu?product=${encodeURIComponent(p.id)}`,
       mascot: undefined,
+      sourceType: 'product' as const,
     })) : []
 
   // 3) floating_posts: marketing_posts.is_floating_ad=true + status='published'
   const postBanners: FloatingBannerPromo[] = showPosts ? floatingPosts
-    .slice(0, 3)
+    .slice(0, postMaxItems)
     .map((p) => ({
       id: `post-${String(p.id)}`,
       title: String(p.title || 'Post'),
@@ -304,18 +315,46 @@ const [rows, cats, rounds, promos] = await Promise.all([
       image: Array.isArray(p.image_urls) && p.image_urls.length > 0 ? p.image_urls[0] : undefined,
       href: `/promotions`,
       mascot: undefined,
+      sourceType: 'post' as const,
     })) : []
 
-  // R64: สลับชนิด — promo, product, post ตามลำดับ (a0,p0,po0,a1,p1,po1...)
-  const maxLen = Math.max(promoBanners.length, productBanners.length, postBanners.length)
-  const bannerPromos: FloatingBannerPromo[] = []
-  for (let i = 0; i < maxLen; i++) {
-    if (promoBanners[i]) bannerPromos.push(promoBanners[i])
-    if (productBanners[i]) bannerPromos.push(productBanners[i])
-    if (postBanners[i]) bannerPromos.push(postBanners[i])
+  // Merge promos: if configItems exist, use them (with overrides); else interleave sources
+  let mergedBannerPromos: FloatingBannerPromo[] = []
+  if (configItems && configItems.length > 0) {
+    // Use explicit items from config (with overrides)
+    const sourceItems: Record<string, FloatingBannerPromo> = {}
+    for (const item of [...promoBanners, ...productBanners, ...postBanners]) {
+      sourceItems[item.id] = item
+    }
+    mergedBannerPromos = configItems
+      .filter((item) => item.enabled)
+      .sort((a, b) => a.order - b.order)
+      .map((item) => {
+        const base = sourceItems[`${item.type === 'promotion' ? 'promo' : item.type === 'product' ? 'prod' : 'post'}-${item.id}`]
+        return {
+          id: `${item.type === 'promotion' ? 'promo' : item.type === 'product' ? 'prod' : 'post'}-${item.id}`,
+          title: item.title ?? base?.title ?? 'Untitled',
+          description: item.description ?? base?.description ?? '',
+          image: item.image ?? base?.image ?? undefined,
+          href: base?.href ?? '/menu',
+          mascot: base?.mascot ?? undefined,
+          coupon: base?.coupon ?? undefined,
+          sourceType: item.type,
+        }
+      })
+      .slice(0, maxCount)
+  } else {
+    // R64: สลับชนิด — promo, product, post ตามลำดับ
+    const maxLen = Math.max(promoBanners.length, productBanners.length, postBanners.length)
+    const bannerPromos: FloatingBannerPromo[] = []
+    for (let i = 0; i < maxLen; i++) {
+      if (promoBanners[i]) bannerPromos.push(promoBanners[i])
+      if (productBanners[i]) bannerPromos.push(productBanners[i])
+      if (postBanners[i]) bannerPromos.push(postBanners[i])
+    }
+    // Cap total at maxCount for floating ad display
+    mergedBannerPromos = bannerPromos.slice(0, maxCount)
   }
-  // Cap total at 3 for floating ad display
-  const mergedBannerPromos = bannerPromos.slice(0, 3)
   const storeStatus = getStoreStatusFromRounds(rounds, new Date(), {
     shopHoursMs: hoursToMs(shopHours),
     operatingHours,
@@ -571,8 +610,8 @@ const [rows, cats, rounds, promos] = await Promise.all([
       </section>
 
       {/* 2c. Floating ad banners — max 3 overlay cards, dismissible per promo (sessionStorage, D03) */}
-      {masterOpen !== false && floatingAdEnabled && (
-        <FloatingAdBanners promos={mergedBannerPromos} notice={siteCopy.adNotice} sources={floatingAdSources} />
+      {masterOpen !== false && floatingAdConfig.enabled && mergedBannerPromos.length > 0 && (
+        <FloatingAdBanners promos={mergedBannerPromos} notice={siteCopy.adNotice} config={floatingAdConfig} />
       )}
 
       {/* 2d. เดิม = แบนเนอร์ CTA พรีออเดอร์ลอยเหนือหน้า — Owner (2026-10-25): ย้ายไปแสดง

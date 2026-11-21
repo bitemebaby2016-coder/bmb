@@ -1017,3 +1017,33 @@ export interface HomepageConfig {
   home_hero_text?: string
 }
 
+/** Floating Ad configuration (admin-configurable overlay cards on /shop) */
+export type FloatingAdSourceType = 'promotion' | 'post' | 'product'
+
+export interface FloatingAdSourceConfig {
+  enabled: boolean
+  maxItems: number
+}
+
+export interface FloatingAdItem {
+  id: string
+  type: FloatingAdSourceType
+  title?: string
+  description?: string
+  image?: string
+  order: number
+  enabled: boolean
+}
+
+export interface FloatingAdConfig {
+  enabled: boolean
+  maxCount: number
+  backgroundImage?: string
+  sources: {
+    promotions: FloatingAdSourceConfig
+    posts: FloatingAdSourceConfig
+    products: FloatingAdSourceConfig
+  }
+  items?: FloatingAdItem[]
+}
+

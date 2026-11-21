@@ -4,6 +4,18 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-21 (รอบ 57 — R81 · Floating Ad Dedicated Tab แยกต่างหาก · build+lint+tsc+ทดสอบจริงผ่านหมด · ก่อนคอมมิท):**
+
+- **R81 Floating Ad Dedicated Tab (Owner รายงาน "งงกับระบบเลือกรูป ... ทับซ้อนข้อมูลมั่ว"):** แยกแท็บจัดการโฆษณาลอยออกจาก ContentTab ให้แอดมินควบคุมได้ละเอียด:
+  - Types + JSONB config + fallback migration (floating_ad_enabled/sources/image → floating_ad_config)
+  - `src/components/admin/FloatingAdTab.tsx` (ใหม่): Overview (enabled/maxCount/sources maxItems/bg) + Card Management (reorder/toggle/override/remove) + Available Pool + Preview iframe
+  - `src/pages/admin/AdminMarketingPromotions.tsx` — เพิ่ม tab `floating_ad` label "🫘 Floating Ad"
+  - `src/components/home/FloatingAdBanners.tsx` — badge `text-[9px]` → `text-xs` + ข้อความไทย 3 ชนิด + config prop
+  - `src/pages/HomePage.tsx` — อ่าน `floating_ad_config` สร้าง promos + sourceType
+  - `src/components/admin/ContentTab.tsx` — ลบ floating ad UI เก่า (state/toggle/sources/guide/switch)
+
+- **Gates:** lint ✅ · tsc ✅ · build ✅ (tsc + vite + PWA) · floatingAdBanners.test.ts ✅ (7 tests PASS) · **รอ Owner ทดสอบ live กลุ่ม G 7 ข้อ + gate ใหม่ (floating ad)**
+
 **🔒 LIVE STATE 2026-11-20 (รอบ 56 — R78+R79+R80 · โพสต์การตลาด 5 รูป + Studio picker แท็บหัวข้อ + Floating Ad Exact Clone · **m209 APPLIED PROD ✓ + ledger backfill 186/205/206/207/208** · vitest 2431/2431 · CI 2/2 success × 3 commits · CODE_CLOSED + PUSHED · รอ Owner ทดสอบ live กลุ่ม G):**
 - **R78 โพสต์การตลาด 5 รูป (ยกเลิก R44 gen-single ตามสั่ง):** แนบผสมได้ เมนู+ภาพเจน+อัปโหลด สูงสุด 5 รูป (ตัวนับ N/5 · toggle เลือก/เลิก · dedupe) · อัปโหลด multi-file ย่ออัตโนมัติ 1080px/≤500KB ขึ้น `bmb-images/uploads/mk-*` · FB worker attached_media 4→5 · ตาม commit `71667e8`
 - **R79 Studio picker แท็บหัวข้อเมนูครบทุกเมนู:** จัดแท็บด้วย `buildHeadingGroups` ตัวเดียวกับ /shop และ /menu (icon+ชื่อ+จำนวน) · ไม่มีเพดาน 20 · 🚫 เมนูไม่มีรูป · ✓ อยู่ในชุด · ข้อมูลจาก `getProducts()`+`getCategories()` (canonical TEN-06) — เมนู/หัวข้อใหม่อนาคตเข้าอัตโนมัติ · ตาม commit `9d43386`
