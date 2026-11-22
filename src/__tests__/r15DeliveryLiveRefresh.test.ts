@@ -1,7 +1,8 @@
 // ============================================
 // Bite Me Baby — R15 tests (Owner 2026-10-28):
 //   1) auto-close ฝั่ง server = ทำงานจริงแล้ว (probe evidence) — ที่ "ไม่ปิด" = หน้าค้าง
-//      → DeliveryManagement ต้อง refresh เอง (poll + visibilitychange) + ?focus= เลื่อนแถว
+//      → DeliveryManagement ต้อง refresh เอง (poll + visibilitychange) + ?focus= ไฮไลต์เท่านั้น
+//        (Owner 2026-11-22: ลบ auto-scroll + refetch loop — จอคงอยู่ตรงที่ผู้ใช้เลื่อนไว้)
 //   2) แอดมินกด "🔥 สร้าง Batch" (เริ่มผลิต) → เด้งไปหน้าจัดส่ง/มอบหมายงาน
 // ============================================
 import { describe, it, expect } from 'vitest'
@@ -40,12 +41,16 @@ describe('R15 — ปิดวงจรอัตโนมัติ: server ท�
     expect(deliverySrc).toContain('if (!silent) setLoading(false)')
   })
 
-  it('?focus= จากแจ้งเตือน = refetch เสมอ + scrollIntoView แถว (data-focus-row ทั้ง 2 ตาราง)', () => {
+  it('?focus= จากแจ้งเตือน = ไฮไลต์แถวอย่างเดียว ห้ามเลื่อนจอเอง/ห้าม refetch loop (Owner 2026-11-22)', () => {
+    // ไฮไลต์ ring คงไว้ (บอกว่ามาจากลิงก์ไหน) — คิว dispatch = ring / ตาราง en-route = bg tint
     expect(deliverySrc).toContain('data-focus-row=')
-    expect(deliverySrc).toContain('scrollIntoView({ block: \'center\'')
-    expect(deliverySrc).toContain('scrolledFocusRef')
+    expect(deliverySrc).toContain("focusOrder === o.order_number ? 'ring-2 ring-brand-primary' : ''")
+    expect(deliverySrc).toContain("focusOrder === o.order_number ? 'bg-brand-primary/10' : ''")
     // แถวทั้งคิว dispatch และตาราง en-route ต้องมี data-focus-row
     expect(deliverySrc.match(/data-focus-row=/g)?.length).toBeGreaterThanOrEqual(2)
+    // regression guard (CI แดง #1014): effect scroll+refetch ที่วนลูปกับ poll 20 วิ ห้ามกลับมา
+    expect(deliverySrc).not.toContain('scrollIntoView')
+    expect(deliverySrc).not.toContain('scrolledFocusRef')
   })
 })
 
