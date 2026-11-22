@@ -40,6 +40,33 @@
 
 ---
 
+## 🔒 SESSION CLOSE 2026-11-22 (รอบ 61 · BMB-ADMIN-FOCUS-LOOP-2026-11-22 — ลบ auto-scroll + refetch loop ที่ ?focus= ใน Admin Delivery) · **CODE_CLOSED + BUILD+LINT+TSC+VITEST ALL PASS + PUSHED**
+
+**BMB-ADMIN-FOCUS-LOOP-2026-11-22 — แก้หน้า Admin Delivery เด้งจอ + โหลดข้อมูลซ้ำไม่รู้จบทุกครั้งที่ poll 20 วิ เมื่อมี `?focus=ORDERNO` ใน URL:**
+
+**ปัญหา (Root Cause):**
+- `DeliveryManagement.tsx:154-168` — `useEffect` มี deps `[focusOrder, load, orders]` ทำให้ทุกครั้งที่ `load()` เสร็จ → `setOrders(new array)` → `orders` เปลี่ยน reference → effect รันใหม่ → `void load(true)` → `setOrders` ใหม่ → **วนลูปโหลด + scrollIntoView ไม่รู้จบ**
+- `scrolledFocusRef` เขียนอย่างเดียว อ่านไม่เคย → guarding "ครั้งเดียวต่อ focus" ใช้ไม่ได้จริง
+- ผลคือ หน้าเด้งกลับไปที่แถว focus (`ring-2 ring-brand-primary`) ทุกครั้งที่โหลดเสร็จ แม้ผู้กำลังเลื่อนไปดูงานอื่นอยู่
+
+**แก้ไข:**
+- **ลบ effect scroll ทิ้งทั้งหมด** (บรรทัด 154-168) รวม `scrolledFocusRef` ให้หมด
+- **เก็บ visual ring highlight** ไว้ที่บรรทัด 534/674 (`focusOrder === o.order_number ? 'ring-2 ring-brand-primary' : ''`) เพื่อบอกว่ามาจากลิงก์ไหน — แต่ไม่เลื่อนจออัตโนมัติ
+- ลิงก์จาก `AdminOrders.tsx:739` และ `AdminKitchen.tsx:130` (`/admin/delivery?focus=${order.order_number}`) ยังทำงานปกติ แค่ landing page ไม่เด้งจอ + ไม่โหลดข้อมูลซ้ำอัตโนมัติ
+
+**Gates (Evidence-based):**
+| Gate | Command | Result |
+|------|---------|--------|
+| TypeScript | `npx tsc --noEmit` | ✅ 0 errors |
+| Lint | `npm run lint` | ✅ brandNameGuard / languageSanity OK |
+| Build | `npm run build` | ✅ PASS, 387 modules transformed |
+| Unit Tests | `npm run test` | ✅ 226 files / 2445 tests PASS |
+
+**Commit:**
+- `2582787` fix: ลบ auto-scroll + refetch loop ที่ ?focus= ใน Admin Delivery (BMB-ADMIN-FOCUS-LOOP-2026-11-22)
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-21 (รอบ 59 · R82b — my_deliveries RETURN fix (m211) + local CI replay จำลองจริงด้วย Docker · CI #1006 + Contract #580 GREEN) · **CODE_CLOSED + PUSHED + ✅ M211 APPLIED PROD (Owner ยืนยัน 2026-11-21) + LEDGER · รอ OWNER ทดสอบ LIVE (แชทหน้า)**
 
 **R82b — จุดจบของบั๊กไรเดอร์ (พิสูจน์ด้วยการจำลอง CI จริงบนเครื่อง — ไม่เดาอีกต่อไป):**
