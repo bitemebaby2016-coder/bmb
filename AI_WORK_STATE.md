@@ -1,3 +1,33 @@
+## 🔒 SESSION CLOSE 2026-11-22 (รอบ 62 · BMB-ADMIN-FOCUS-LOOP-FOLLOWUP — แก้ CI #1014 แดง: source-contract test ยึดพฤติกรรมเก่า + Node 20 warning) · **CODE_CLOSED + LOCAL GATES PASS + CI #1015 ✅ + CONTRACT #589 ✅ + ANNOTATIONS ว่าง + PUSHED**
+
+**ต้นตอ (พิสูจน์จาก annotations CI #1014 จริง):**
+- `src/__tests__/r15DeliveryLiveRefresh.test.ts:45` — source-contract test `"?focus= = refetch เสมอ + scrollIntoView"` ยึดพฤติกรรมเก่าที่ Owner สั่งลบ (รอบ 61) → `AssertionError: expected source to contain 'scrollIntoView({ block: 'center''` → Unit tests step ล้ม → Typecheck+Build skip
+- **บทเรียน (ผิดกฎ evidence-based):** รอบ 61 รายงาน "vitest PASS" โดยที่ run โดน shell timeout ตัดที่ 120 วิก่อนจบ — ไม่เคยเห็น summary จริง → ต้องรันเต็มรอบ (185.19s) + อ่าน `Test Files 226 passed / Tests 2445 passed` ก่อนอ้าง PASS เสมอ
+- Warning Node 20 deprecation: `actions/checkout@v4` + `actions/setup-node@v4` (ไม่ใช่สาเหตุ failure)
+
+**แก้ไข:**
+- **Test contract ใหม่** (`r15DeliveryLiveRefresh.test.ts:43-52`): `?focus=` = ไฮไลต์อย่างเดียว — ยืนยัน `data-focus-row >= 2` + ring (คิว dispatch) + bg tint (ตาราง en-route) ครบ + **regression guard**: `not.toContain('scrollIntoView')` + `not.toContain('scrolledFocusRef')` (ห้ามวงลูปกลับมา)
+- **ci.yml**: `actions/checkout@v4→v5` + `actions/setup-node@v4→v5` (node-version 24 คงเดิม) — แก้ warning
+
+**Gates (หลักฐานเต็มรอบ):**
+| Gate | Command | Result |
+|------|---------|--------|
+| TypeScript | `npx tsc --noEmit` | ✅ TSC_OK (0 errors) |
+| Lint | `npm run lint` | ✅ brandNameGuard / languageSanity OK |
+| Unit Tests | `npm run test` (เต็ม 185.19s) | ✅ 226 files / 2445 tests passed, 0 failed |
+| Build | `npm run build` | ✅ ✓ built in 5.01s (PWA) |
+| CI | GitHub #1015 | ✅ success — ทุก step (Lint/Unit tests/Typecheck+Build) |
+| Contract | GitHub #589 | ✅ success |
+| Annotations | check-runs #1015 | ✅ ว่างเปล่า (error 0 / warning 0) |
+
+**Commits:**
+- `a447779` test: ปรับ R15 ?focus= contract = ไฮไลต์อย่างเดียว ห้าม scroll/refetch loop (แก้ CI #1014 แดง)
+- `00a0857` ci: actions/checkout + setup-node v4→v5 (แก้ Node 20 deprecation warning)
+
+**ค้างรอ Owner:** เหมือนรอบ 60/61 — ทดสอบ live 3 สิ่งหลัก (rider ปิดงาน, customer track+POD, admin close cycle) + ยืนยันหน้า Admin Delivery `?focus=` ไม่เด้งจอแล้ว
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-22 (รอบ 60 · BMB-RIDER-NOTIF-FIX-2026-11-22 — Phase 1→2→3 ใช้งานสมบูรณ์) · **CODE_CLOSED + BUILD+LINT+TSC+VITEST ALL PASS + PUSHED + รอ OWNER ทดสอบ LIVE (แชทหน้า)**
 
 **BMB-RIDER-NOTIF-FIX-2026-11-22 — แก้ไข 2 ปัญหาหลักครบทุก 3 User (Admin, Rider, Customer):**
