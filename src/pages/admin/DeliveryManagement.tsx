@@ -151,22 +151,6 @@ export function DeliveryManagement() {
     }
   }, [load])
 
-  // R15: แจ้งเตือน ?focus= → โหลดข้อมูลใหม่เสมอ + เลื่อนแถวมารับสายกลางจอ (ครั้งเดียวต่อ focus)
-  const scrolledFocusRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (!focusOrder) return
-    void load(true)
-    const t = window.setTimeout(() => {
-      const el = document.querySelector(`[data-focus-row="${focusOrder}"]`)
-      if (el) {
-        el.scrollIntoView({ block: 'center', behavior: 'smooth' })
-        scrolledFocusRef.current = focusOrder
-      }
-      // แถวยังไม่มา (โหลดไม่เสร็จ) = ไม่ทำเครื่องหมาย → orders เปลี่ยนเมื่อไหร่ retry เอง
-    }, 250)
-    return () => window.clearTimeout(t)
-  }, [focusOrder, load, orders])
-
   // โหลดรูปสถานที่จัดส่งของลูกค้าในคิว (READ-ONLY) — customers RLS เปิดให้ is_admin
   useEffect(() => {
     const refs = Array.from(new Set(orders.map((o) => o.customer_ref).filter(Boolean))) as string[]
