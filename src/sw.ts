@@ -69,9 +69,9 @@ function readPayload(event: PushEvent): PushPayload {
 self.addEventListener('push', (event: PushEvent) => {
   const payload = readPayload(event)
   const title = payload.title || 'Bite Me Baby'
-  // `renotify` is part of the Push/Notification spec but is not in lib.dom's
-  // NotificationOptions yet — cast so the browser still honours it.
-  const options: NotificationOptions & { renotify?: boolean } = {
+  // `renotify`, `vibrate`, `requireInteraction` are part of the Push/Notification spec
+  // but not in lib.dom's NotificationOptions yet — cast so the browser still honours them.
+  const options: NotificationOptions & { renotify?: boolean; vibrate?: number[]; requireInteraction?: boolean } = {
     body: payload.body || '',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
@@ -81,6 +81,9 @@ self.addEventListener('push', (event: PushEvent) => {
     renotify: true,
     data: { url: payload.url || '/notifications', notificationId: payload.notificationId },
     lang: 'th',
+    // Phase 2.3: PWA compliance — vibration pattern + requireInteraction for persistent notifications
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
   }
   event.waitUntil(self.registration.showNotification(title, options))
 })

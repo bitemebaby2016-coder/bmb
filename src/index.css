@@ -241,6 +241,9 @@ html[data-theme='dark'] .bg-black\/90, html[data-theme='graphite'] .bg-black\/90
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  /* Phase 2.2: safe-area inset for iOS notch / Android cutout */
+  padding-right: env(safe-area-inset-right, 0);
+  padding-top: env(safe-area-inset-top, 0);
 }
 
 .toast {
@@ -250,6 +253,7 @@ html[data-theme='dark'] .bg-black\/90, html[data-theme='graphite'] .bg-black\/90
   box-shadow: var(--shadow-xl);
   animation: slideIn 0.3s ease;
   max-width: 400px;
+  max-width: calc(100vw - 2rem); /* Phase 2.1: responsive - never overflow viewport */
   border: 1px solid var(--color-brand-border-light);
 }
 
