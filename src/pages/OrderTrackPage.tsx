@@ -31,10 +31,9 @@ import { useAuthStore } from '@/store/authStore'
 const RIDER_VISIBLE_STATUSES = new Set(['dispatched', 'in_transit', 'arrived'])
 const RIDER_POLL_MS = 12000
 
-// M1 (2026-10-22): progress steps ย้ายไป components/customer/OrderTimeline.tsx
-// — timeline ตัวเดียวขับจาก lib/orderVocabulary (A5: label ไม่ซ้ำอีกแล้ว)
-
-const REFRESH_MS = 20000 // READ-ONLY polling cadence (never mutates status)
+// Phase 3.1: dynamic polling - 5s when rider is active, 20s otherwise
+const REFRESH_MS_ACTIVE = 5000
+const REFRESH_MS_IDLE = 20000
 
 export function OrderTrackPage() {
   const { orderNumber } = useParams()
@@ -124,11 +123,14 @@ export function OrderTrackPage() {
     }
   }, [orderNumber, viaRpc])
 
+  // Phase 3.1: dynamic polling interval based on rider visibility
+  const refreshMs = riderVisible ? REFRESH_MS_ACTIVE : REFRESH_MS_IDLE
+
   useEffect(() => {
     void load()
-    const t = setInterval(() => void load(), REFRESH_MS)
+    const t = setInterval(() => void load(), refreshMs)
     return () => clearInterval(t)
-  }, [load])
+  }, [load, refreshMs])
 
   async function handleCancel() {
     if (!orderNumber || cancelling) return
@@ -371,6 +373,31 @@ export function OrderTrackPage() {
         )}
         {order.payment_status === 'refund' && (
           <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl mb-4 text-sm text-blue-800">คืนเงินสำเร็จแล้ว</div>
+        )}
+
+        {/* Phase 3.1: POD photo + timestamp when delivered */}
+        {status === 'delivered' && (order as any).proof_of_delivery_path && (
+          <div className="bg-green-50 border border-green-200 p-4 rounded-xl mb-4" data-testid="track-pod">
+            <h4 className="font-bold text-brand-accent mb-3">📸 หลักฐานการส่งมอบ (POD)</h4>
+            <div className="space-y-3">
+              <div>
+                <img
+                  src={(order as any).proof_of_delivery_path}
+                  alt="หลักฐานการส่งมอบ"
+                  className="w-full max-w-xs h-auto object-cover rounded-xl border border-green-200 shadow-md"
+                />
+              </div>
+              {(order as any).pod_captured_at && (
+                <div className="text-sm text-slate-700">
+                  <span className="font-semibold text-brand-accent">🕐 เวลาที่ส่งมอบ: </span>
+                  {new Date((order as any).pod_captured_at).toLocaleString('th-TH', {
+                    dateStyle: 'full',
+                    timeStyle: 'short',
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {canCancel && (

@@ -2191,6 +2191,17 @@ a.text-brand-primary, span.text-brand-primary, p.text-brand-primary, div.text-br
 nav.no-print > div > a { min-width: 44px; min-height: 44px; justify-content: center; }
 nav.no-print > div { gap: 12px; }
 
+/* Phase 3.3: Global minimum touch target 48x48px for all interactive elements (mobile-first) */
+button, .btn, [role="button"] {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Allow inline buttons to be smaller when in a flex row with other items */
+.flex button:not(:only-child), .btn-group button {
+  min-width: auto;
+}
+
 /* Global focus ring - keyboard navigation (both themes) */
 button:focus-visible,
 a:focus-visible,
