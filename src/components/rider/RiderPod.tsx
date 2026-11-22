@@ -3,11 +3,11 @@
 // Mandatory: Photo + GPS coordinates on delivery completion.
 // ============================================
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 
 export interface PodCaptureResult {
-  photoDataUrl: string
+  photoFile: File
   latitude: number
   longitude: number
   capturedAt: string
@@ -49,11 +49,22 @@ function waitForVideoFrame(video: HTMLVideoElement, timeoutMs = 4000): Promise<v
 export function RiderPod({ orderId, orderNumber, onCaptured, onCancel }: RiderPodProps) {
   const [capturing, setCapturing] = useState(false)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [gpsLoading, setGpsLoading] = useState(false)
   const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null)
   const [gpsError, setGpsError] = useState<string | null>(null)
   const [captureError, setCaptureError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const objectUrlRef = useRef<string | null>(null)
+
+  // Cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current)
+      }
+    }
+  }, [])
 
   const handleCameraCapture = useCallback(async () => {
     setCapturing(true)
@@ -75,9 +86,24 @@ export function RiderPod({ orderId, orderNumber, onCaptured, onCancel }: RiderPo
       if (canvas.width < 2 || canvas.height < 2) throw new Error('ERR_POD_CAMERA_NO_FRAME')
       canvas.getContext('2d')!.drawImage(video, 0, 0)
       ;(stream as MediaStream).getTracks().forEach(t => t.stop())
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-      if (!dataUrl.startsWith('data:image/jpeg')) throw new Error('ERR_POD_CAMERA_NO_FRAME')
-      setPhotoUrl(dataUrl)
+      
+      // Phase 1.2: ใช้ toBlob แทน toDataURL — ลด memory จาก base64 ~20MB เหลือ object URL ~1MB
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/jpeg', 0.8)
+      })
+      if (!blob) throw new Error('ERR_POD_CAMERA_NO_FRAME')
+      
+      // สร้าง File จาก Blob เพื่อส่งต่อให้ uploadPodPhoto
+      const file = new File([blob], `pod-${Date.now()}.jpg`, { type: 'image/jpeg' })
+      setPhotoFile(file)
+      
+      // สร้าง Object URL สำหรับ preview (เล็กกว่า base64 มาก)
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current)
+      }
+      const objectUrl = URL.createObjectURL(file)
+      objectUrlRef.current = objectUrl
+      setPhotoUrl(objectUrl)
     } catch {
       // fallback ไปช่องเลือกรูป (ถ่าย/decode ไม่ได้ในเบราว์เซอร์นี้)
       setCaptureError('กล้องเบราว์เซอร์นี้ใช้ไม่ได้ — ใช้ปุ่ม "เลือกรูป" แทน (แนะนำ JPEG/PNG)')
@@ -88,24 +114,27 @@ export function RiderPod({ orderId, orderNumber, onCaptured, onCancel }: RiderPo
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return
     setCaptureError(null)
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = String(reader.result ?? '')
-      if (!result.startsWith('data:image/')) {
-        setCaptureError('ไฟล์นี้ไม่ใช่รูปภาพที่เบราว์เซอร์เปิดได้ — ถ่ายใหม่เป็น JPEG/PNG')
-        return
-      }
-      setPhotoUrl(result)
+    if (!file.type.startsWith('image/') || file.size > 15 * 1024 * 1024) {
+      setCaptureError('ไฟล์ต้องเป็นรูปภาพไม่เกิน 15MB')
+      return
     }
-    reader.onerror = () => setCaptureError('อ่านไฟล์รูปไม่สำเร็จ — เลือกใหม่อีกครั้ง')
-    reader.readAsDataURL(file)
+    setPhotoFile(file)
+    
+    // สร้าง Object URL สำหรับ preview
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current)
+    }
+    const objectUrl = URL.createObjectURL(file)
+    objectUrlRef.current = objectUrl
+    setPhotoUrl(objectUrl)
+    
     e.target.value = '' // เลือกไฟล์เดิมซ้ำได้
   }, [])
 
   const handleConfirm = useCallback(() => {
-    if (!photoUrl || !gps) return
-    onCaptured({ photoDataUrl: photoUrl, latitude: gps.lat, longitude: gps.lng, capturedAt: new Date().toISOString() })
-  }, [photoUrl, gps, onCaptured])
+    if (!photoFile || !gps) return
+    onCaptured({ photoFile, latitude: gps.lat, longitude: gps.lng, capturedAt: new Date().toISOString() })
+  }, [photoFile, gps, onCaptured])
 
   return (
     <GlassCard className="p-6 max-w-md mx-auto">

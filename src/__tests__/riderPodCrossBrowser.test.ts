@@ -6,7 +6,8 @@
 //      iOS/Safari ได้ canvas 0×0 = รูปว่าง
 //   2. GPS ปลอม 0,0 ตอนดึงไม่ได้
 //   3. compressPodImage ไม่จัดการ EXIF orientation
-// ชุดนี้กัน regression ของจุดซ่อมทั้งสาม
+//   4. Phase 1.2: toDataURL (base64) ใช้หน่วยความจำมาก → เปลี่ยนเป็น toBlob + URL.createObjectURL
+// ชุดนี้กัน regression ของจุดซ่อมทั้งสี่
 // ============================================
 
 import { describe, it, expect } from 'vitest'
@@ -21,7 +22,9 @@ describe('R-08 — cross-browser POD guards', () => {
     expect(riderPodSrc).toContain('video.muted = true')
     // กัน canvas 0×0 / dataURL ว่าง
     expect(riderPodSrc).toContain('ERR_POD_CAMERA_NO_FRAME')
-    expect(riderPodSrc).toContain("dataUrl.startsWith('data:image/jpeg')")
+    // Phase 1.2: ใช้ toBlob แทน toDataURL — ลด memory
+    expect(riderPodSrc).toContain('canvas.toBlob')
+    expect(riderPodSrc).toContain('URL.createObjectURL')
   })
 
   it('RiderPod: ไม่ปลอม GPS 0,0 — ดึงไม่ได้ต้อง null + แจ้งผู้ใช้', () => {

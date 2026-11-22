@@ -15,7 +15,7 @@
 // PHASE 2: RiderMiniMap — จุดปักปลายทาง/ตำแหน่ง GPS/ครัว แยกชนิดชัดเจน
 // ============================================
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, Component, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { haversineDistanceKm } from '@/lib/deliveryRouter'
@@ -37,6 +37,33 @@ import {
   type MyDeliveryAssignment,
   type DriverActionKind,
 } from '@/lib/driverService'
+
+// ============================================
+// Error Boundary for Rider PWA — catches render errors in delivery flow
+// ============================================
+interface ErrorBoundaryState {
+  hasError: boolean
+  error: Error | null
+}
+
+class DeliveryErrorBoundary extends Component<{ children: ReactNode; fallback: ReactNode }, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false, error: null }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[DeliveryErrorBoundary] Render error caught:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback
+    }
+    return this.props.children
+  }
+}
 import { buildHistoryData, filterAssignments, getAvailableMonths, formatMonthLabel, type HistoryMode, type DateAnchor } from '@/lib/riderHistory'
 import { fetchAddressPhotoPath, getAddressPhotoUrl } from '@/lib/addressPhoto'
 import { planMultiStopRoute, googleMapsDirUrl, openMapsUrl, googleNavigationUrl, openNavigationUrl, webNavigationFallbackUrl, toPlanStops } from '@/lib/deliveryPlan'
@@ -165,6 +192,15 @@ export function RiderPwaPage() {
           playBeep(soundOn)
           window.setTimeout(() => mountedRef.current && setNewJobPulse(null), 15_000)
         }
+        // Phase 1.3: sync activeOrder — ถ้า server ไม่มี order นั้นแล้ว ให้ clear activeOrder
+        if (activeOrder) {
+          const stillExists = r.assignments.some((a) => a.order_number === activeOrder.order_number)
+            || (r.offers ?? []).some((o) => o.order_number === activeOrder.order_number)
+          if (!stillExists) {
+            console.log(`[refresh] activeOrder ${activeOrder.order_number} ไม่มีใน server แล้ว — clear activeOrder`)
+            setActiveOrder(null)
+          }
+        }
       } else {
         setLoadError(r.kind === 'permission' ? `${r.error} — เข้าสู่ระบบใหม่` : r.error)
       }
@@ -172,7 +208,7 @@ export function RiderPwaPage() {
       inflightRef.current = false
       if (mountedRef.current && !opts.silent) setLoading(false)
     }
-  }, [soundOn])
+  }, [soundOn, activeOrder])
 
   // ---------- A1: polling — เฉพาะตอน login แล้ว, หยุดทันทีที่ logout/unmount ----------
   useEffect(() => {
@@ -344,18 +380,27 @@ export function RiderPwaPage() {
 
   async function completeDelivery(orderNumber: string, photo: File, coords: { latitude: number; longitude: number }) {
     if (!driver || deliverBusy) return
+    const startTime = Date.now()
+    console.log(`[completeDelivery] เริ่มต้น order=${orderNumber} driver=${driver.id} step=upload`)
     setDeliverBusy(true)
     setActionError(null)
     lastPhotoRef.current = { order: orderNumber, file: photo, coords }
     try {
       setDeliverStep('upload')
       const up = await uploadPodPhoto(photo, driver.id, orderNumber)
+      const upPath = up.ok ? up.path : 'none'
+      const upKind = up.ok ? 'none' : up.kind
+      console.log(`[completeDelivery] uploadPodPhoto result order=${orderNumber} ok=${up.ok} path=${upPath} kind=${upKind} duration=${Date.now() - startTime}ms`)
       if (!up.ok) { showActionError(orderNumber, up); return }
       setDeliverStep('attach')
       const att = await driverAttachPod(orderNumber, up.path, coords)
+      const attKind = att.ok ? 'none' : att.kind
+      console.log(`[completeDelivery] driverAttachPod result order=${orderNumber} ok=${att.ok} kind=${attKind} duration=${Date.now() - startTime}ms`)
       if (!att.ok) { showActionError(orderNumber, att); return }
       setDeliverStep('finalize')
       const del = await driverUpdateDeliveryStatus(orderNumber, 'delivered', coords)
+      const delKind = del.ok ? 'none' : del.kind
+      console.log(`[completeDelivery] driverUpdateDeliveryStatus result order=${orderNumber} ok=${del.ok} kind=${delKind} duration=${Date.now() - startTime}ms`)
       if (!del.ok) { showActionError(orderNumber, del); return }
       setNotice(`🏠 ส่งมอบ ${orderNumber} สำเร็จ (บันทึกรูป POD แล้ว) — จบงานแล้ว กลับหน้าหลัก`)
       setActiveOrder(null)
@@ -363,13 +408,21 @@ export function RiderPwaPage() {
       // R13 (Owner 2026-10-28): จบลูป = ออกไปหน้าจอหลักอัตโนมัติ (เลื่อนกลับบนสุด)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       void refresh({ silent: true })
+      console.log(`[completeDelivery] สำเร็จทั้งหมด order=${orderNumber} totalDuration=${Date.now() - startTime}ms`)
     } catch (e) {
       // R10 (Owner 2026-10-27): เดิมไม่มี catch — error ระหว่าง upload/attach/ปิดงาน
       // หายเงียบ (unhandled rejection) = อาการ "กดยืนยันแล้วไม่มีอะไรเกิดขึ้น สถานะค้าง"
-      showActionError(orderNumber, { ok: false, ...classifyDriverError(e) })
+      const err = classifyDriverError(e)
+      console.error(`[completeDelivery] ERROR order=${orderNumber} error=${err.error} kind=${err.kind} duration=${Date.now() - startTime}ms`, e)
+      showActionError(orderNumber, { ok: false, ...err })
     } finally {
+      // R14 (Phase 1.4): บังคับ reset state ทุกกรณี (success + error) — กัน UI ค้าง busy
       setDeliverBusy(false)
       setDeliverStep(null)
+      // หาก error และไม่ได้สำเร็จ ให้เคลียร์ activeOrder ด้วย เพื่อให้ผู้ใช้กลับไปเลือกงานใหม่ได้
+      if (lastPhotoRef.current?.order === orderNumber) {
+        setActiveOrder(null)
+      }
     }
   }
 
@@ -688,14 +741,23 @@ export function RiderPwaPage() {
                       <img src={addrPhotoUrl} alt="รูปที่อยู่ลูกค้า" className="rounded-xl border max-h-48 object-cover" />
                     </div>
                   )}
-                  <PodDeliveryPanel
-                    dropOff={{ latitude: Number(activeOrder.dropoff_latitude), longitude: Number(activeOrder.dropoff_longitude) }}
-                    busy={deliverBusy}
-                    busyLabel={deliverStep === 'upload' ? '📤 กำลังอัปโหลดรูป POD…' : deliverStep === 'attach' ? '🔗 กำลังบันทึกหลักฐาน…' : deliverStep === 'finalize' ? '✅ กำลังปิดงาน…' : '⏳ กำลังบันทึก…'}
-                    onCoordsChange={setRiderGps}
-                    onArrived={(coords) => void checkinArrival(activeOrder.order_number, coords)}
-                    onDelivered={(photo, coords) => void completeDelivery(activeOrder.order_number, photo, coords)}
-                  />
+                  <DeliveryErrorBoundary
+                    fallback={
+                      <div className="p-4 rounded-xl border-2 border-red-300 bg-red-50 text-sm text-red-700">
+                        ⚠️ เกิดข้อผิดพลาดในการแสดงหน้ายืนยันส่ง — กรุณากด "กลับไปที่รายการ" แล้วลองใหม่
+                        <button className="btn btn-outline text-xs ml-2" onClick={() => setActiveOrder(null)}>← กลับไปที่รายการ</button>
+                      </div>
+                    }
+                  >
+                    <PodDeliveryPanel
+                      dropOff={{ latitude: Number(activeOrder.dropoff_latitude), longitude: Number(activeOrder.dropoff_longitude) }}
+                      busy={deliverBusy}
+                      busyLabel={deliverStep === 'upload' ? '📤 กำลังอัปโหลดรูป POD…' : deliverStep === 'attach' ? '🔗 กำลังบันทึกหลักฐาน…' : deliverStep === 'finalize' ? '✅ กำลังปิดงาน…' : '⏳ กำลังบันทึก…'}
+                      onCoordsChange={setRiderGps}
+                      onArrived={(coords) => void checkinArrival(activeOrder.order_number, coords)}
+                      onDelivered={(photo, coords) => void completeDelivery(activeOrder.order_number, photo, coords)}
+                    />
+                  </DeliveryErrorBoundary>
                 </>
               ) : (
                 <p className="text-xs text-amber-600">ออเดอร์นี้ไม่มีพิกัดปลายทาง — ยืนยันส่งไม่ได้ (แจ้งแอดมิน)</p>

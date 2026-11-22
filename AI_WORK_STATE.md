@@ -88,4 +88,92 @@ Gates: lint ✅ · tsc ✅ · build ✅ (tsc + vite + PWA) · floatingAdBanners.
 
 ---
 
+## 🔒 SECTION 17: CURRENT PROJECT STATE — BITE ME BABY (2026-11-22)
+
+PROJECT
+    Name: Bite Me Baby (Cloud Kitchen Platform)
+    Repository: https://github.com/bitemebaby2016-coder/bmb.git
+    Branch: main
+    Last verified production/documentation checkpoint: ed1ac58 (2026-09-22 WAVE 3) + R82b M211 (2026-11-21)
+    Latest known production migration state: 211/211 (001–211)
+    Deployment target: Cloudflare Pages + Custom Domain **https://biteme-baby.com** (NOT bitemebaby-5f7.pages.dev — old reference removed)
+    Stack: React + TypeScript + Vite 8.2.2 + Tailwind CSS + Zustand + Supabase + Node v24.18.0 (Windows)
+
+CURRENT VERIFIED STATE (as of 2026-11-21 R82b close)
+    - Production migration history: 211/211 applied (M211 rider my_deliveries RETURN fix verified prod)
+    - Production ACL gate: PASS (WAVE 3 verified 34/34, subsequent migrations additive)
+    - CI #1006 + Contract Tests #580: GREEN (GitHub Actions verified)
+    - vitest: 226 files / 2445 tests PASS · 0 unhandled rejections
+    - lint + tsc + build: ALL PASS
+    - Working tree: CLEAN (last commit R82b hotfix pushed)
+    - Local == Remote migration state: YES (211/211 via Management API pattern)
+
+KNOWN ISSUES TO FIX (Owner instruction 2026-11-22)
+    1. **Rider job completion failure (Order 826)**: After check-location + photo upload → black screen, job stuck in_transit, rider not freed, photo button disappears (only order# + chat remain), customer device doesn't show delivered status
+    2. **Notification/Toast layout broken**: "เบี้ยวไปทางซ้ายมาก" banner skewed off-screen left, falls off viewport — must fix mobile-first all devices + PWA compliant
+
+CURRENT OWNER INSTRUCTION (2026-11-22)
+    - Fix both issues completely in next session
+    - Must cover all 3 users: Admin, Rider, Customer
+    - Explain plan in Thai in chat before implementation
+    - Follow AI Workstate rules: max 2 attempts, evidence-based, no false PASS
+
+NEXT TASK ID: BMB-RIDER-NOTIF-FIX-2026-11-22
+PHASE: 1/3 (Debug & Root Cause)
+STATUS: NOT_STARTED
+
+---
+
+## 📋 IMPLEMENTATION PLAN: BMB-RIDER-NOTIF-FIX-2026-11-22
+
+### ปัญหา 1: ไรเดอร์ปิดงานไม่สำเร็จ (Order 826 Black Screen + Stuck State)
+**Root Cause Hypotheses** (จากการอ่านโค้ด `RiderPwaPage.tsx`, `RiderPod.tsx`, `driverService.ts`):
+1. **Memory crash จาก base64 data-URL รูปใหญ่** — `RiderPod.tsx:78` `canvas.toDataURL('image/jpeg', 0.8)` รูป 12MP ≈ 20MB base64 → React render ค้าง/จอดำ
+2. **`refresh()` ไม่ sync `activeOrder`** — `RiderPwaPage:148` 更新 `assignments`/`offers` แต่ไม่ touch `activeOrder` → หลัง reload state ไม่ตรง server
+3. **Race condition / unhandled rejection** — `completeDelivery` throw → `catch` เรียก `showActionError` แต่ `deliverBusy` ยัง `true` → UI ค้าง
+4. **Server gate fail silently** — `driverAttachPod` หรือ `driverUpdateDeliveryStatus('delivered')` ล้มเหลว (network/permission) แต่ retry ไม่ชัดเจน
+
+**Fix Plan (Phase 1 → 2 → 3):**
+| Phase | Action | Files | Verification |
+|-------|--------|-------|--------------|
+| 1.1 | เพิ่ม Error Boundary + structured logging รอบ `completeDelivery` (try/catch + `console.error` + `showActionError` ครบ kind) | `RiderPwaPage.tsx:345-374` | จับ error จริง ไม่จอดำเงียบ |
+| 1.2 | แทนที่ `toDataURL` (base64) ด้วย `canvas.toBlob` + `URL.createObjectURL` → preview ใช้ object URL (<< 1MB) | `RiderPod.tsx:78`, `PodDeliveryPanel.tsx:1027` | Memory stable, ไม่จอดำ |
+| 1.3 | เพิ่ม `activeOrder` sync ใน `refresh()` — ถ้า server ไม่มี order นั้น ให้ `setActiveOrder(null)` | `RiderPwaPage.tsx:140-175` | Reload state ตรง server |
+| 1.4 | Harden `completeDelivery`: `finally` block บังคับ `setDeliverBusy(false)`, `setDeliverStep(null)`, `setActiveOrder(null)` ทุกกรณี | `RiderPwaPage.tsx:370-373` | UI ไม่ค้าง busy |
+| 1.5 | เพิ่ม retry button เฉพาะ `kind === 'network'` ใช้ `lastPhotoRef` (มีแล้วบรรทัด 379) | `RiderPwaPage.tsx:376-380, 709-713` | ผู้ใช้ลองใหม่ได้ไม่ถ่ายรูปซ้ำ |
+
+### ปัญหา 2: Notification/Toast Layout เบี้ยวซ้ายตกจอ (Mobile-first + PWA)
+**Root Cause** (จากการอ่าน `ToastContainer.tsx`, `InAppBrowserBanner.tsx`):
+1. **`ToastContainer` ไม่มี CSS positioning** — `<div className="toast-container">` ไม่มี `fixed top-0 right-0 z-50` → ขึ้นกับ global CSS ที่อาจไม่มี
+2. **`InAppBrowserBanner` ใช้ `fixed top-0 left-0 right-0 z-50` ถูกต้อง** แต่เฉพาะ FB WebView (`isFB` guard)
+3. **Push notification toast** ไม่ได้เห็น component แสดง desktop notification ในโค้ด (อาจมาจาก SW `showNotification`)
+
+**Fix Plan:**
+| Phase | Action | Files | Verification |
+|-------|--------|-------|--------------|
+| 2.1 | เพิ่ม CSS `.toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }` + responsive `max-width: calc(100vw - 2rem)` | `src/index.css` หรือ `ToastContainer.tsx` inline style | Toast ปลอดภัยขอบจอทุกขนาด |
+| 2.2 | รองรับ safe-area: `padding-right: env(safe-area-inset-right); padding-top: env(safe-area-inset-top);` | 同上 | iOS notch ไม่ทับ |
+| 2.3 | ตรวจ Service Worker notification options (`badge`, `icon`, `vibrate`, `requireInteraction`) ให้ตรง PWA spec | `public/sw.js` หรือ `pushService.ts` | Desktop/mobile notification โชว์ถูกต้อง |
+| 2.4 | Mobile QA: Chrome DevTools device toolbar (375×667, 390×844, 412×915) + real device test | Manual + Playwright | ไม่มี overflow, toast ไม่ตกจอ |
+
+### 3-User Experience Hardening (Admin, Rider, Customer)
+| User | Action | Files |
+|------|--------|-------|
+| **Rider → Customer Sync** | `OrderTrackPage` polling 20s → ลดเหลือ 5s เมื่อ status ใน `['dispatched','in_transit','arrived']` + แสดง POD photo/timestamp จาก `proof_of_delivery_path`, `pod_captured_at` | `OrderTrackPage.tsx:31, 249-296` |
+| **Admin Visibility** | Verify `adminAdvanceDelivery` (มีแล้ว `driverService.ts:422`) UI เชื่อมครบ + audit trail | `AdminOrders.tsx` (ถ้ามี) |
+| **Mobile/PWA Compliance** | Viewport meta, touch targets ≥48×48px, safe-area, manifest `display: standalone`, SW offline-first, VAPID test iOS 16.4+/Android | `index.html`, `vite.config.ts`, `public/manifest.webmanifest`, `public/sw.js` |
+
+### Verification Gates (AI Workstate Rules: Evidence-based, Max 2 Attempts)
+| Gate | Command | Pass Criteria |
+|------|---------|---------------|
+| TypeScript | `npx tsc --noEmit` | 0 errors |
+| Lint | `npm run lint` | 0 warnings |
+| Build | `npm run build` | PASS, PWA generated |
+| Unit Tests | `npm run test` | All PASS |
+| E2E Rider Flow | Playwright: login→accept→checkin→photo→deliver→verify customer sees delivered | 7/7 scenarios PASS |
+| Mobile QA | Device toolbar + real device | No overflow, toast safe |
+| PWA Audit | Lighthouse PWA score | ≥ 90 |
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-20 (รอบ 55 · R55 · Background Music file-based engine + Mascot badge fix + OAuth/Passkey ALL CONFIGURED:
