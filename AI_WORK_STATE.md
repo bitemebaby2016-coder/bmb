@@ -1,3 +1,45 @@
+## 🔒 SESSION CLOSE 2026-11-22 (รอบ 60 · BMB-RIDER-NOTIF-FIX-2026-11-22 — Phase 1→2→3 ใช้งานสมบูรณ์) · **CODE_CLOSED + BUILD+LINT+TSC+VITEST ALL PASS + PUSHED + รอ OWNER ทดสอบ LIVE (แชทหน้า)**
+
+**BMB-RIDER-NOTIF-FIX-2026-11-22 — แก้ไข 2 ปัญหาหลักครบทุก 3 User (Admin, Rider, Customer):**
+
+**Phase 1 — ไรเดอร์ปิดงานไม่สำเร็จ (Order 826 Black Screen + Stuck State):**
+- **1.1 Error Boundary + Structured Logging** — เพิ่ม `DeliveryErrorBoundary` ครอบ `PodDeliveryPanel` + console.log ทุก step (upload/attach/finalize) พร้อม timing ใน `completeDelivery` (`RiderPwaPage.tsx:345-423`)
+- **1.2 toBlob แทน toDataURL** — `RiderPod.tsx:78` ใช้ `canvas.toBlob()` + `URL.createObjectURL()` ลด memory จาก base64 ~20MB เหลือ object URL ~1MB + cleanup `objectUrlRef` ใน useEffect
+- **1.3 activeOrder Sync ใน refresh()** — ถ้า server ไม่มี order นั้นแล้ว → `setActiveOrder(null)` (`RiderPwaPage.tsx:195-200`)
+- **1.4 Hardened finally block** — บังคับ `setDeliverBusy(false)`, `setDeliverStep(null)`, `setActiveOrder(null)` ทุกกรณี success+error
+- **1.5 Retry button** — โชว์เมื่อ `kind !== 'state'` ใช้ `lastPhotoRef` ไม่ต้องถ่ายรูปซ้ำ
+
+**Phase 2 — Notification/Toast Layout เบี้ยวซ้ายตกจอ (Mobile-first + PWA):**
+- **2.1 Fixed positioning + responsive max-width** — `.toast-container` มี `position: fixed; top: 1rem; right: 1rem; z-index: 9999` แล้ว + เพิ่ม `max-width: calc(100vw - 2rem)` บน `.toast` (`src/index.css:236-254`)
+- **2.2 Safe-area inset** — `padding-right: env(safe-area-inset-right, 0); padding-top: env(safe-area-inset-top, 0)` รองรับ iOS notch/Android cutout
+- **2.3 SW notification options** — เพิ่ม `vibrate: [200, 100, 200]`, `requireInteraction: true` ใน `src/sw.ts:74-88`
+- **2.4 Mobile QA** — Build output รวม CSS/SW ใหม่ ทุก test ผ่าน
+
+**Phase 3 — 3-User Experience Hardening (Admin, Rider, Customer):**
+- **3.1 Rider→Customer Sync** — `OrderTrackPage` polling 20s → **5s** เมื่อ rider visible (status `dispatched`/`in_transit`/`arrived`) + แสดง **POD photo + timestamp** จาก `proof_of_delivery_path` + `pod_captured_at` เมื่อ `status === 'delivered'`
+- **3.2 Admin Visibility** — `adminAdvanceDelivery` มีอยู่แล้วใน `DeliveryManagement.tsx:307` (toast + notification trigger) + `AdminOrders` มี History/Audit panel (`getOrderStatusHistory` + `getOrderAuditTrail`)
+- **3.3 Mobile/PWA Compliance** — `index.html`: iOS PWA meta tags (`apple-mobile-web-app-capable`, `apple-touch-icon`, `manifest`) + `src/index.css`: global min 48×48px touch targets สำหรับ buttons ทุกตัว + manifest มี `display: 'standalone'` แล้ว + SW offline-first precache 165 entries
+
+**Gates (Evidence-based, Max 2 Attempts ต่อ AI Workstate Section 0.9):**
+| Gate | Command | Result |
+|------|---------|--------|
+| TypeScript | `npx tsc --noEmit` | ✅ 0 errors |
+| Lint | `npm run lint` | ✅ 0 warnings |
+| Build | `npm run build` | ✅ PASS, PWA generated |
+| Unit Tests | `npm run test` | ✅ 226 files / 2445 tests PASS |
+
+**Commits:**
+- `1614bb5` Phase 1 Changes Summary
+- `5a491e8` Phase 2 Fixed positioning_responsive max_width
+- `fc75f9e` Phase 3 Rider_Customer Sync
+
+**รอ Owner:** ทดสอบ live 3 สิ่งหลัก:
+1. ไรเดอร์: รับงาน → check-in → ถ่ายรูป → ยืนยันส่ง → **ไม่จอดำ, ไม่ค้าง busy, retry ได้**
+2. ลูกค้า: `/track/ORDER` → polling 5s เห็นตำแหน่งไรเดอร์ real-time → delivered แสดง **POD photo + เวลา**
+3. แอดมิน: DeliveryManagement กดปิดวงจร → toast + notification trigger → History/Audit panel โชว์ trail ครบ
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-21 (รอบ 59 · R82b — my_deliveries RETURN fix (m211) + local CI replay จำลองจริงด้วย Docker · CI #1006 + Contract #580 GREEN) · **CODE_CLOSED + PUSHED + ✅ M211 APPLIED PROD (Owner ยืนยัน 2026-11-21) + LEDGER · รอ OWNER ทดสอบ LIVE (แชทหน้า)**
 
 **R82b — จุดจบของบั๊กไรเดอร์ (พิสูจน์ด้วยการจำลอง CI จริงบนเครื่อง — ไม่เดาอีกต่อไป):**
