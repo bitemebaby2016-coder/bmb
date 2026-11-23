@@ -10,17 +10,11 @@ import { fetchCustomerChatNotes } from './printService'
 import { renderStickerPng } from './stickerPng'
 import { niimbotPrintStickers, describeNiimbotError, niimbotSupported } from './niimbotBt'
 
-/** แยก 1 ดวง ต่อ 1 ชิ้น — Menu ในใบ = สินค้าชิ้นนั้น x1 (ออเดอร์/ลูกค้า/Order id เดิมทุกใบ) */
+/** แยก 1 ดวง ต่อ 1 ออเดอร์ (consolidated) — stickerForm.ts (R66) รองรับ ORDER LIST 4 บรรทัดต่อเนื่อง · quantity > 1 โชว์ "xN"
+ *  คืน array ความยาว 1 เพื่อ backward compatibility กับ printStickerRoll(roll[])
+ */
 export function stickerRollForOrder(data: PrintOrderData): PrintOrderData[] {
-  const roll: PrintOrderData[] = []
-  for (const it of data.items) {
-    const qty = Math.max(1, Math.floor(it.quantity || 1))
-    for (let i = 0; i < qty; i++) {
-      roll.push({ ...data, items: [{ ...it, quantity: 1 }] })
-    }
-  }
-  if (roll.length === 0) roll.push(data) // ไม่มี line = 1 ใบรวม (กันคิวว่าง)
-  return roll
+  return [data]
 }
 
 export interface StickerPrintOpts {

@@ -19,14 +19,19 @@ const order: PrintOrderData = {
   special_instructions: '',
 }
 
-describe('R31 — stickerRollForOrder: 1 ดวง ต่อ 1 ชิ้น (ออเดอร์เดียวกันก็แยก)', () => {
-  it('quantity 2+1 = 3 ใบ · แต่ละใบมีสินค้าชิ้นเดียว x1 · คง Order id/ลูกค้า', () => {
+describe('R31 — stickerRollForOrder: 1 ดวง ต่อ 1 ออเดอร์ (รวมทุกรายการ)', () => {
+  it('quantity 2+1 = 1 ใบ · ใบเดียวมีสินค้าครบทุกชนิด พร้อม quantity จริง', () => {
     const roll = stickerRollForOrder(order)
-    expect(roll).toHaveLength(3)
-    expect(roll.every((r) => r.items.length === 1 && r.items[0].quantity === 1)).toBe(true)
-    expect(roll.map((r) => r.items[0].product_name)).toEqual(['ข้าวมันไก่', 'ข้าวมันไก่', 'น้ำชา'])
-    expect(roll.every((r) => r.order_number === 'BMB-R31-001' && r.customer_name === 'ลูกค้าคิว')).toBe(true)
-    expect(roll[2].items[0].special_request).toBe('ไม่หวาน')
+    expect(roll).toHaveLength(1)
+    expect(roll[0].items).toHaveLength(2)
+    expect(roll[0].items.map((it) => `${it.product_name} x${it.quantity}`)).toEqual([
+      'ข้าวมันไก่ x2',
+      'น้ำชา x1',
+    ])
+    expect(roll[0].order_number).toBe('BMB-R31-001')
+    expect(roll[0].customer_name).toBe('ลูกค้าคิว')
+    // special_request รักษาไว้ใน item เดียว
+    expect(roll[0].items.find((it) => it.product_name === 'น้ำชา')?.special_request).toBe('ไม่หวาน')
   })
 
   it('ไม่มี item = 1 ใบรวม (กันคิวว่าง) · setting autoPrintStickers default เปิด', () => {
