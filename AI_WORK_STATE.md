@@ -1,3 +1,16 @@
+## 🔒 LIVE TEST RESULT 2026-11-23 บ่าย (R63c · CART UX + CLOSED ROUNDS — Owner: "หน้าตะกร้าไม่ต้องโชว์คูปอง/สรุปราคา เหลือปุ่มเดียว + Checkout ต้องโชว์รอบปิด status=closed เทา/กดไม่ได้") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + PUSHED `9f5f517` · frontend only (Cloudflare auto-deploy 2-3 นาที)**
+
+- **CartPage (`src/pages/CartPage.tsx`):** ลบ card 🎟️ คูปอง/โปรโมชั่น (R10 คงคูปองไว้หน้า checkout) + ลบ card 💰 สรุปราคา (รายละเอียดทั้งหมด) → เหลือรายการสินค้า + AddonCrossSellStrip + (stale pre-order warning) + ปุ่ม "ยืนยันสั่งซื้อ →" เดียวไป /checkout (gated `hasStalePreOrder`)
+- **CheckoutPage (`src/pages/CheckoutPage.tsx`):** PRE_ORDER fetch rounds ใช้ `getRoundsForDateAdmin` (all non-archived) แทน `listRoundsForDate` (active-only) → รอบที่แอดมินปิด `status='closed'` โชว์แต่ **disabled/เทา + badge "ปิดรับ (แอดมิน)"** · logic: `closed = r.status==='closed' || roundBookability!=='open'` · SAME_DAY auto-select คงเดิม
+- **Tests updated:** `checkoutModeLock`, `checkoutMixedSplit`, `r65PickupHoursNotRounds` — mock `getRoundsForDateAdmin` คืน `status='active'` · pins `go-checkout` testid คงอยู่
+- **Migration check:** ไม่มี migration ใหม่ — ระบบ `delivery_rounds.status` ('active'/'closed') + RLS public read `status='active'` อยู่แล้วถูกต้อง
+
+---
+
+## 🔒 SESSION CLOSE 2026-11-23 (R63c + R63b + R63) — **ALL CODE CLOSED · GATES PASS · CI GREEN 3/3 · FRONTEND LIVE VIA CLOUDFLARE** · เหลือแต่ Owner live test ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-23.md` (กลุ่ม H 6 ข้อ + กลุ่ม G/F ค้างเดิม)
+
+---
+
 ## 🔒 LIVE TEST RESULT 2026-11-23 บ่าย (R63b · HOTFIX — Owner live test: "รายการตะกร้าที่ผ่านลิงก์ copy มาเปิดเบราว์เซอร์ภายนอก (แท็บเล็ต) ยังมีตะกร้าเก่าโดยกู้คืน ไม่มีของใหม่") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests +1 · tsc 0 · lint OK · build OK) + PUSHED `f6e4022` · frontend only**
 
 - **Root cause:** `InAppBrowserBanner.tsx:140` อ่าน `useCartStore.getState().items` ใน render body = ค่าค้าง mount (ไม่ subscribe) — ลูกค้าเพิ่มเมนูใน WebView แล้ว banner ไม่รู้ → ปุ่มคัดลอก/กล่องลิงก์ใช้ตะกร้า mount เก่า (payload AI summary) เสมอ ทั้งที่ `encodeLiveCartParam` v2 + Layout restore v2 ถูกต้องแล้ว

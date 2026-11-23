@@ -4,6 +4,15 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-23 (R63c · CART UX + CLOSED ROUNDS — "หน้าตะกร้าลงลึกเหลือปุ่มเดียว + Checkout โชว์รอบปิด status=closed เทา/กดไม่ได้") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + PUSHED `9f5f517` · frontend only (Cloudflare auto-deploy)**:**
+
+- **CartPage (R10/R63c):** เอาเซกชั่น 🎟️ คูปอง/โปรโมชั่นออก · เอาส่วนรายละเอียด 💰 สรุปราคา (สินค้า/ส่วนลด/ค่าจัดส่ง/รวม) ออก → เหลือรายการสินค้า + cross-sell strip + (ถ้ามี stale pre-order → warning) → ปุ่ม **"ยืนยันสั่งซื้อ →"** เดียวไป /checkout (gated `hasStalePreOrder`) · คูปอง/ราคาสรุปย้ายไปหน้า checkout อยู่แล้ว (R10)
+- **CheckoutPage (R63c):** รอบที่แอดมินปิด (`status='closed'`) ต้อง **แสดงแต่เทา/กดไม่ได้** — เปลี่ยน PRE_ORDER fetch ใช้ `getRoundsForDateAdmin` (all non-archived rounds) แทน `listRoundsForDate` (active-only) · `closed = r.status==='closed' || roundBookability!=='open'` · badge "ปิดรับ (แอดมิน)" สำหรับรอบปิด · SAME_DAY auto-select คงเดิม
+- **Tests:** อัปเดต mocks (`checkoutModeLock`, `checkoutMixedSplit`, `r65PickupHoursNotRounds`) → mock `getRoundsForDateAdmin` คืน `status='active'` · pins `go-checkout` testid คงอยู่
+- **Migration check:** ไม่มี migration ใหม่ในรอบนี้ — ระบบรอบส่ง/สถานะอยู่แล้ว (`delivery_rounds.status` 'active'/'closed', RLS public read กรอง `status='active'`)
+
+---
+
 **🔒 LIVE STATE 2026-11-23 (R63b · HOTFIX จาก live test — "คัดลอกลิงก์ → เปิดเบราว์เซอร์ภายนอก (แท็บเล็ต) ได้ตะกร้าเก่าที่กู้คืน ไม่มีของใหม่") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests +1 · tsc 0 · lint OK · build OK) + PUSHED `f6e4022` · frontend only (ไม่ต้อง deploy EF)**:**
 
 - **Root cause (พิสูจน์จากโค้ด):** `InAppBrowserBanner.tsx` อ่านตะกร้าด้วย `useCartStore.getState().items` **ใน render body** = อ่านครั้งเดียวตอน mount แล้วค้าง (stale closure — `.getState()` ไม่ subscribe store) → ลูกค้าเพิ่มเมนูต่อใน WebView (17 ชิ้น) แต่ banner ยังถือตะกร้า mount (1 รายการจาก AI summary) → ปุ่มคัดลอก/กล่องลิงก์ทุกทางพา `?cart=` **เก่า** เสมอ
