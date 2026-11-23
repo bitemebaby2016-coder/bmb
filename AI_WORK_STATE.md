@@ -1,3 +1,17 @@
+## 🔒 LIVE TEST RESULT 2026-11-23 (R63d · STICKER CONSOLIDATION — Owner: "ออเดอร์ 3 กล่อง เมนู A x2 + เมนู B x1 → สติกเกอร์พิมพ์ 3 ดวง → แก้เป็น 1 ดวงรวมทุกเมนู") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + PUSHED `d67bf47` · frontend only (Cloudflare auto-deploy)**
+
+- **Root cause:** `stickerRollForOrder()` split 1 ออเดอร์ = 1 ดวง/ชิ้น × qty → 3 กล่อง = 3 สติกเกอร์ · `stickerForm.ts` (R66) รองรับ ORDER LIST 4 บรรทัดต่อเนื่อง `~24 ตัวอักษร/แถว` คั่น ` · ` อยู่แล้ว
+- **แก้ (`d67bf47`):** `stickerRollForOrder` คืน `[data]` (1 element = ออเดอร์เต็ม) แทน split per item → `printStickerRoll` render PNG 1 รูป → Bluetooth 1 job
+- **Test lock:** `stickerQueueR31.test.ts` contract ใหม่ — `roll.length === 1` · items คง quantity จริง (`x2`, `x1`) · special_request รักษาไว้
+- **AdminOrders.tsx:** toast `${roll.length} ใบ` → `1 ใบ`
+- **Impact:** 1 ออเดอร์/1 ลูกค้า = 1 สติกเกอร์ (สอดคล้อง R5c 1 cart = 1 order) · ไม่มี migration
+
+---
+
+## 🔒 SESSION CLOSE 2026-11-23 (R63d + R63c + R63b + R63) — **ALL CODE CLOSED · GATES PASS · CI GREEN 3/3 · FRONTEND LIVE VIA CLOUDFLARE** · เหลือแต่ Owner live test ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-23.md` (กลุ่ม H 8 ข้อ + กลุ่ม G/F ค้างเดิม)
+
+---
+
 ## 🔒 LIVE TEST RESULT 2026-11-23 บ่าย (R63c · CART UX + CLOSED ROUNDS — Owner: "หน้าตะกร้าไม่ต้องโชว์คูปอง/สรุปราคา เหลือปุ่มเดียว + Checkout ต้องโชว์รอบปิด status=closed เทา/กดไม่ได้") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + PUSHED `9f5f517` · frontend only (Cloudflare auto-deploy 2-3 นาที)**
 
 - **CartPage (`src/pages/CartPage.tsx`):** ลบ card 🎟️ คูปอง/โปรโมชั่น (R10 คงคูปองไว้หน้า checkout) + ลบ card 💰 สรุปราคา (รายละเอียดทั้งหมด) → เหลือรายการสินค้า + AddonCrossSellStrip + (stale pre-order warning) + ปุ่ม "ยืนยันสั่งซื้อ →" เดียวไป /checkout (gated `hasStalePreOrder`)

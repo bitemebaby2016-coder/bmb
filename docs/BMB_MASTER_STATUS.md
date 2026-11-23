@@ -4,6 +4,16 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-23 (R63d · STICKER CONSOLIDATION — "ออเดอร์ 3 กล่อง (2+1 เมนู) พิมพ์สติกเกอร์ออกมา 3 ดวง → แก้เป็น 1 ดวงรวมทุกเมนู") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + PUSHED `d67bf47` · frontend only (Cloudflare auto-deploy)**:**
+
+- **Root cause:** `stickerQueue.ts:stickerRollForOrder()` วน split ออเดอร์เป็น 1 ดวงต่อ 1 ชิ้น × quantity (qty 2 = 2 ใบ) → ออเดอร์ 3 กล่อง = 3 สติกเกอร์ · `stickerForm.ts` (R66) รองรับ ORDER LIST 4 บรรทัดต่อเนื่องอยู่แล้ว
+- **แก้ (`d67bf47`):** `stickerRollForOrder` คืน `[data]` (1 element = ออเดอร์เต็ม) แทน split per item → `printStickerRoll` render PNG 1 รูป → Bluetooth queue 1 job
+- **Test lock:** `stickerQueueR31.test.ts` R31 contract ใหม่ — `expect(roll).toHaveLength(1)` · items คง quantity จริง (`x2`, `x1`) · special_request รักษาไว้
+- **AdminOrders.tsx:** toast messages เปลี่ยน `${roll.length} ใบ` → `1 ใบ`
+- **Impact:** 1 ออเดอร์/1 ลูกค้า = 1 สติกเกอร์ (R5c invariant) · ไม่มี migration / DB change
+
+---
+
 **🔒 LIVE STATE 2026-11-23 (R63c · CART UX + CLOSED ROUNDS — "หน้าตะกร้าลงลึกเหลือปุ่มเดียว + Checkout โชว์รอบปิด status=closed เทา/กดไม่ได้") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + PUSHED `9f5f517` · frontend only (Cloudflare auto-deploy)**:**
 
 - **CartPage (R10/R63c):** เอาเซกชั่น 🎟️ คูปอง/โปรโมชั่นออก · เอาส่วนรายละเอียด 💰 สรุปราคา (สินค้า/ส่วนลด/ค่าจัดส่ง/รวม) ออก → เหลือรายการสินค้า + cross-sell strip + (ถ้ามี stale pre-order → warning) → ปุ่ม **"ยืนยันสั่งซื้อ →"** เดียวไป /checkout (gated `hasStalePreOrder`) · คูปอง/ราคาสรุปย้ายไปหน้า checkout อยู่แล้ว (R10)
