@@ -609,6 +609,11 @@ BEGIN
   VALUES ('tenant-bmb-001', 'Bite Me Baby Test', 'bmb-test', 'active', NOW(), NOW())
   ON CONFLICT (id) DO NOTHING;
 
+  -- 0b. ensure store is OPEN for fixture test (CI may run outside 10:00-22:00 Bangkok)
+  INSERT INTO public.business_settings (key, value, created_at, updated_at)
+  VALUES ('operating_hours', '{"same_day_open": true, "pre_order_open": true, "morning_open": true, "midday_open": true, "evening_open": true}'::jsonb, NOW(), NOW())
+  ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
+
   -- 1. branch fixture (จำเป็นสำหรับ delivery_rounds.branch_id FK)
   DECLARE
     v_fixture_branch_id text := 'branch-fix-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '99999999999');
