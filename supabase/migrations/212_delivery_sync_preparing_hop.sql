@@ -422,4 +422,9 @@ BEGIN
 END;
 $$;
 
+-- ACL สำหรับ driver_checkin_arrival (driver function pattern)
+REVOKE EXECUTE ON FUNCTION public.driver_checkin_arrival(text, numeric, numeric) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.driver_checkin_arrival(text, numeric, numeric) FROM anon;
+GRANT EXECUTE ON FUNCTION public.driver_checkin_arrival(text, numeric, numeric) TO authenticated;
+
 COMMIT;
