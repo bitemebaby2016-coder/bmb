@@ -137,7 +137,10 @@ function PwaInstallButton({ canInstall }: { canInstall: boolean }) {
 
 export function InAppBrowserBanner({ children }: { children: React.ReactNode }) {
   const { isFB, dismissed, dismiss, installApp, canInstall } = useInAppBrowser()
-  const liveCart = useCartStore.getState().items
+  // R63b (live test 2026-11-23 "คัดลอกลิงก์ → เปิดเบราว์เซอร์ภายนอก ได้ตะกร้าเก่า"): ต้องเป็น
+  // subscription hook — `.getState()` ใน render body อ่านครั้งเดียวตอน mount (ไม่ re-render
+  // เมื่อลูกค้าเพิ่มเมนูต่อใน WebView) → ปุ่มคัดลอกใช้ตะกร้า mount เก่าเสมอ ทั้งที่ตะกร้าสดเพิ่มแล้ว
+  const liveCart = useCartStore((state) => state.items)
 
   // hooks ทั้งหมดต้องอยู่ก่อน early return (R90-hotfix — ห้ามย้ายลงไปข้างล่าง)
   // lazy initializer: รันครั้งเดียวตอน mount ซึ่ง URL ยังไม่ถูก strip โดย Layout
@@ -161,17 +164,8 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
   // → ปุ่มหลักเดียว = คัดลอกลิงก์ (มี ?cart= เสมอ) + guide ต่อ platform — ทางเดียวที่พิสูจน์ว่าใช้ได้จริง
   // URL ส่งต่อ: ถ้า Layout strip ?cart= ไปแล้ว ให้ใส่ค่า raw ที่เก็บไว้กลับเข้ามาก่อน
   // Phase 1: strip fbclid (tracking param) ความสะอาด
-  const handoffUrl = (() => {
-    const current = window.location.href
-    try {
-      const u = new URL(current)
-      u.searchParams.delete('fbclid')
-      if (cartHandoff && !u.searchParams.has('cart')) u.searchParams.set('cart', cartHandoff.raw)
-      return u.toString()
-    } catch {
-      return current
-    }
-  })()
+  // R63b: handoffUrl เดิม (ประกอบจาก mount snapshot ตอน render) = dead code ตัดทิ้ง —
+  // ปุ่มคัดลอก/กล่องลิงก์ทุกทางผ่าน buildLiveHandoffUrl ณ เวลากด (fallback chain เดียว)
 
   // สร้าง URL พาตะกร้าสด ณ เวลากด — fallback chain: live cart → mount snapshot → bmb:cart-resume (TTL 30 นาที)
   const buildLiveHandoffUrl = useCallback(() => {

@@ -144,6 +144,15 @@ describe('R101-B — Banner: copy 3 ชั้น + กล่องลิงก�
     expect(bannerSrc).toContain("localStorage.setItem(CART_RESUME_KEY")
     expect(bannerSrc).toContain('readCartResume')
   })
+
+  it('R63b (live 2026-11-23 "คัดลอกลิงก์ → เปิดเบราว์เซอร์ภายนอก ได้ตะกร้าเก่า"): liveCart ต้องเป็น subscription hook — ห้าม getState() ใน render body (stale closure)', () => {
+    // liveCart ต้อง subscribe store → banner re-render ทุกครั้งที่ตะกร้าเปลี่ยน
+    expect(bannerSrc).toMatch(/const liveCart = useCartStore\(\(state\) => state\.items\)/)
+    // ห้ามกลับไปอ่าน .getState().items นอก callback อีก (อ่านครั้งเดียวตอน mount = ตะกร้าเก่าเสมอ)
+    expect(bannerSrc).not.toMatch(/useCartStore\.getState\(\)\.items/)
+    // ปุ่มคัดลอก/กล่องลิงก์ทุกทางผ่าน buildLiveHandoffUrl (fallback chain เดียว — ไม่มี dead URL ที่สอง)
+    expect(bannerSrc).not.toMatch(/const handoffUrl = /)
+  })
 })
 
 describe('R101-C — Layout: normalize ใช้จริง + กติกา R43 B6 คงเดิม', () => {
