@@ -179,10 +179,13 @@ export function DeliveryManagement() {
     // Warning when assigning to non-available rider (offline/busy)
     const selectedDriver = drivers.find(d => d.id === driverId)
     if (selectedDriver && selectedDriver.status !== 'available') {
-      const statusLabel = selectedDriver.status === 'offline' ? 'ออฟไลน์ (พักงาน)' : 'ไม่ว่าง (กำลังส่ง)'
+      const isOffline = selectedDriver.status === 'offline'
+      const statusLabel = isOffline ? 'ออฟไลน์ (พักงาน)' : 'ไม่ว่าง (กำลังส่ง)'
       const confirmMsg = `⚠️ ไรเดอร์ "${selectedDriver.driver_name}" สถานะ: ${statusLabel}\n` +
-        `แอดมินมอบหมายได้ (override) แต่ไรเดอร์จะกดรับงานไม่ได้จนกว่าจะเปิดสถานะพร้อมรับงาน\n` +
-        `ต้องการมอบหมายต่อหรือไม่?`
+        (isOffline
+          ? `ไรเดอร์ออฟไลน์ — ต้องเปิดสถานะพร้อมรับงานก่อนจึงจะรับงานได้`
+          : `ไรเดอร์กำลังมีงาน — รับงานเพิ่มได้ (multi-job รอบเดียวกัน)`) +
+        `\nต้องการมอบหมายต่อหรือไม่?`
       if (!window.confirm(confirmMsg)) return
     }
 
@@ -533,10 +536,21 @@ export function DeliveryManagement() {
                       📍 {resolveOrderDeliveryAddress(o) || '—'}
                     </span>
                   </div>
-                  {/* exception visibility: แจ้งเฉพาะสถานะที่อยู่นอกช่วง dispatch จริง ๆ —
+{/* exception visibility: แจ้งเฉพาะสถานะที่อยู่นอกช่วง dispatch จริง ๆ —
                       confirmed/preparing อยู่ในคิวได้ตามสัญญา RPC (020:610 / 135:104) ห้ามเตือนมั่ว */}
-                  {!['confirmed', 'preparing', 'ready_for_dispatch', 'dispatched'].includes(o.status) ? <p className="text-xs text-red-500 mt-2">⚠ สถานะออเดอร์ = {o.status} (ไม่อยู่ในช่วง dispatch)</p> : null}
-                  <div className="mt-3 flex gap-2 flex-wrap items-center">
+                   {!['confirmed', 'preparing', 'ready_for_dispatch', 'dispatched'].includes(o.status) ? <p className="text-xs text-red-500 mt-2">⚠ สถานะออเดอร์ = {o.status} (ไม่อยู่ในช่วง dispatch)</p> : null}
+                   {/* NEW: preparing badge + kitchen link */}
+                   {o.status === 'preparing' && (
+                     <div className="mt-2 flex items-center gap-2">
+                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs">
+                         🍳 รอครัวยืนยันพร้อมส่ง
+                       </span>
+                       <a href="/admin/kitchen" target="_blank" rel="noopener" className="text-xs text-brand-primary underline hover:text-brand-accent" title="เปิดหน้าครัวยืนยันพร้อมส่ง">
+                         👉 ไปหน้าครัว
+                       </a>
+                     </div>
+                   )}
+                   <div className="mt-3 flex gap-2 flex-wrap items-center">
                     <select value={pending[o.order_number] || ''} onChange={(e) => setPending((p) => ({ ...p, [o.order_number]: e.target.value }))} className="input text-sm w-auto">
                       <option value="">— เลือกไรเดอร์ —</option>
                       {drivers.map((d) => <option key={d.id} value={d.id}>{d.driver_name} ({d.status})</option>)}

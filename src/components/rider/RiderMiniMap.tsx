@@ -1,5 +1,5 @@
 // ============================================
-// Bite Me Baby — RiderMiniMap (PHASE 2 map fix, 2026-10-20)
+// Bite Me Baby — RiderMiniMap (PHASE 2 map fix, 2026-10-20, restructured 2026-11-23)
 // แผนที่ย่อในหน้า /rider: แสดง "จุดปัก" ที่แยกชนิดกันชัดเจน
 //   🏠 ปลายทาง = พิกัดจากออเดอร์ (dropoff — trusted source, ไม่ใช่ค่า default)
 //   🛵 คุณ      = GPS ปัจจุบันของไรเดอร์ (ตอนกดตรวจพิกัดเท่านั้น)
@@ -11,7 +11,7 @@
 //   + polyline เส้นทาง (คำนวณฝั่ง deliveryPlan.ts · null/[] = โหมดเดิมจุดเดียว)
 // ============================================
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { loadGoogleMapsJS, isGoogleMapsConfigured, getGoogleMapId, getGoogleMapsLoadError, haversineDistanceSimple } from '@/lib/googleMaps'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
 import { loadLeaflet, OSM_TILE, OSM_ATTRIBUTION } from '@/lib/leafletLoader'
@@ -30,15 +30,18 @@ type MapStatus = 'loading' | 'ready' | 'unavailable'
 export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<unknown>(null)
-  const markerRefs = useRef<Record<string, unknown>>({})
+  const markerRefs = useRef<Record<string, { setMap?: (m: unknown) => void }>>({})
   const polylineRef = useRef<{ setMap: (m: unknown) => void } | null>(null)
   const leafletMapRef = useRef<any>(null)
   const leafletMarkersRef = useRef<any[]>([])
+  const leafletPolylineRef = useRef<any>(null)
   const [status, setStatus] = useState<MapStatus>('loading')
   const [mode, setMode] = useState<MapMode>('google')
   const stopList = stops && stops.length > 0 ? stops : null
+  const initDoneRef = useRef(false)
+  const resizeObserverRef = useRef<ResizeObserver | null>(null)
 
-  // Google Maps effect
+  // ---- Google Maps init (runs once) ----
   useEffect(() => {
     let cancelled = false
     const onMapsError = () => {
@@ -70,26 +73,39 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
           fullscreenControl: false,
           ...(getGoogleMapId() ? { mapId: getGoogleMapId() } : {}),
         })
-        if (!cancelled) setStatus('ready')
+        if (!cancelled) {
+          setStatus('ready')
+          initDoneRef.current = true
+        }
       } catch {
         if (!cancelled) setStatus('unavailable')
       }
     })
-    return () => { cancelled = true; window.removeEventListener('bmb-maps-error', onMapsError) }
+    return () => {
+      cancelled = true
+      window.removeEventListener('bmb-maps-error', onMapsError)
+      // Cleanup Google map instance
+      if (mapInstanceRef.current && typeof mapInstanceRef.current === 'object') {
+        const map = mapInstanceRef.current as { setMap?: (m: unknown) => void; div?: HTMLElement }
+        // Google Maps API doesn't have explicit destroy, but removing div content works
+        if (mapRef.current) mapRef.current.innerHTML = ''
+      }
+      mapInstanceRef.current = null
+    }
   }, [])
 
-  // Leaflet fallback effect
+  // ---- Leaflet init (runs once when status becomes unavailable) ----
   useEffect(() => {
-    if (status !== 'unavailable') return
+    if (status !== 'unavailable' || mode === 'leaflet') return
     let cancelled = false
     void loadLeaflet().then(() => {
       if (cancelled) return
       if (!mapRef.current || (window as any).L === undefined) return
       try {
         const L = (window as any).L
-        // 2026-11-17: Google อาจ inject DOM ค้างใน div ก่อน fail — เคลียร์ก่อน Leaflet ยึดครอง
+        // Clear any Google-injected DOM before Leaflet takes over
         if (mapRef.current) mapRef.current.innerHTML = ''
-        // Delete default marker icon images to use emoji markers instead
+        // Use emoji markers (no default icon images)
         delete (L.Icon.Default.prototype as any)._getIconUrl
         L.Icon.Default.mergeOptions({
           iconRetinaUrl: '',
@@ -108,30 +124,57 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
         }).addTo(map)
         leafletMapRef.current = map
         setMode('leaflet')
-        // Render markers after map is ready
+        initDoneRef.current = true
+        // Render initial markers
         renderLeafletMarkers(L, map)
+        // ResizeObserver for invalidateSize on container resize
+        if (mapRef.current) {
+          resizeObserverRef.current = new ResizeObserver(() => {
+            if (leafletMapRef.current) leafletMapRef.current.invalidateSize()
+          })
+          resizeObserverRef.current.observe(mapRef.current)
+        }
       } catch (e) {
         console.error('[RiderMiniMap] Leaflet init failed:', e)
-        // Leaflet failed, stay unavailable but map container exists
       }
     }).catch((e) => {
       if (cancelled) return
       console.error('[RiderMiniMap] Leaflet CDN load failed:', e)
-      // CDN failed - map container exists but no tiles
     })
     return () => {
       cancelled = true
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect()
+        resizeObserverRef.current = null
+      }
       if (leafletMapRef.current) {
         leafletMapRef.current.remove()
         leafletMapRef.current = null
       }
     }
-  }, [status, dropOff.latitude, dropOff.longitude, rider?.latitude, rider?.longitude, stopList])
+  }, [status, dropOff.latitude, dropOff.longitude])
+
+  // ---- Imperative marker updates for Leaflet (on rider/dropOff/stopList change) ----
+  const updateLeafletMarkers = useCallback(() => {
+    if (mode !== 'leaflet' || !leafletMapRef.current) return
+    const L = (window as any).L
+    const map = leafletMapRef.current
+    renderLeafletMarkers(L, map)
+  }, [mode, rider?.latitude, rider?.longitude, dropOff.latitude, dropOff.longitude, stopList])
+
+  useEffect(() => {
+    if (mode !== 'leaflet') return
+    updateLeafletMarkers()
+  }, [updateLeafletMarkers])
 
   function renderLeafletMarkers(L: any, map: any) {
     // Clear existing markers
     leafletMarkersRef.current.forEach(m => m.remove())
     leafletMarkersRef.current = []
+    if (leafletPolylineRef.current) {
+      leafletPolylineRef.current.remove()
+      leafletPolylineRef.current = null
+    }
 
     const points: Array<{ key: string; title: string; label: string; pos: { lat: number; lng: number } }> = []
     if (rider) points.push({ key: 'rider', title: 'ตำแหน่งคุณ (GPS)', label: '🛵', pos: { lat: rider.latitude, lng: rider.longitude } })
@@ -168,11 +211,11 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
         ...(rider ? [{ lat: rider.latitude, lng: rider.longitude }] : []),
         ...stopList.map(s => ({ lat: s.latitude, lng: s.longitude })),
       ].map(p => L.latLng(p.lat, p.lng))
-      L.polyline(path, { color: '#2563eb', weight: 4, opacity: 0.9 }).addTo(map)
+      leafletPolylineRef.current = L.polyline(path, { color: '#2563eb', weight: 4, opacity: 0.9 }).addTo(map)
     }
   }
 
-  // Google Maps marker sync
+  // ---- Google Maps marker sync (imperative updates, no re-create) ----
   useEffect(() => {
     if (status !== 'ready') return
     const g = (window as { google?: { maps?: Record<string, unknown> } }).google
@@ -181,11 +224,7 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
     type GMarker = { setPosition?: (p: { lat: number; lng: number }) => void; setMap?: (m: unknown) => void }
     const MarkerCtor = g.maps.Marker as new (opts: Record<string, unknown>) => GMarker
     try {
-      for (const key of Object.keys(markerRefs.current)) {
-        const old = markerRefs.current[key] as GMarker | undefined
-        old?.setMap?.(null)
-      }
-      markerRefs.current = {}
+      // Update existing or create new markers
       const points: Array<{ key: string; title: string; label: string; pos: { lat: number; lng: number } }> = []
       if (rider) points.push({ key: 'rider', title: 'ตำแหน่งคุณ (GPS)', label: '🛵', pos: { lat: rider.latitude, lng: rider.longitude } })
       if (stopList) {
@@ -196,15 +235,30 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
         points.push({ key: 'dropoff', title: 'ปลายทาง (จากออเดอร์)', label: '🏠', pos: { lat: dropOff.latitude, lng: dropOff.longitude } })
       }
       points.push({ key: 'kitchen', title: 'ครัว (จุดอ้างอิง)', label: '🍳', pos: { lat: KITCHEN_LAT, lng: KITCHEN_LNG } })
+
       for (const p of points) {
-        markerRefs.current[p.key] = new MarkerCtor({ position: p.pos, map, title: p.title, label: p.label })
+        let marker = markerRefs.current[p.key] as GMarker | undefined
+        if (marker) {
+          marker.setPosition?.(p.pos)
+        } else {
+          marker = new MarkerCtor({ position: p.pos, map, title: p.title, label: p.label })
+          markerRefs.current[p.key] = marker
+        }
+      }
+      // Remove stale markers (keys no longer in points)
+      const currentKeys = new Set(points.map(p => p.key))
+      for (const key of Object.keys(markerRefs.current)) {
+        if (!currentKeys.has(key)) {
+          markerRefs.current[key]?.setMap?.(null)
+          delete markerRefs.current[key]
+        }
       }
       const focus = rider ?? (stopList ? { latitude: stopList[0].latitude, longitude: stopList[0].longitude } : { latitude: dropOff.latitude, longitude: dropOff.longitude })
       map.setCenter({ lat: focus.latitude, lng: focus.longitude })
     } catch { /* marker พัง — แผนที่ยังใช้ดูได้ */ }
   }, [status, dropOff.latitude, dropOff.longitude, rider?.latitude, rider?.longitude, stopList])
 
-  // Google Maps polyline
+  // ---- Google Maps polyline ----
   useEffect(() => {
     if (status !== 'ready') return
     const g = (window as { google?: { maps?: Record<string, unknown> } }).google
@@ -229,7 +283,7 @@ export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
 
   return (
     <div className="mt-2" data-testid="rider-mini-map">
-      {/* 2026-11-17 render-order fix: div ต้องมีใน DOM ตั้งแต่ mount — เดิม render เฉพาะตอน
+      {/* 2026-11-23 render-order fix: div ต้องมีใน DOM ตั้งแต่ mount — เดิม render เฉพาะตอน
           status='ready' → mapRef.current = null ตอน Google init เสร็จ → เข้าสาย unavailable
           ทั้งที่ key ใช้ได้ (AdminLiveMap render div ตั้งแต่ loading = ทำงานได้ · Leaflet
           fallback ก็ต้องใช้ ref เดียวกัน ไม่งั้นวงจรติดกับดักโหลดไม่ขึ้นทั้งสองเจ้า) */}

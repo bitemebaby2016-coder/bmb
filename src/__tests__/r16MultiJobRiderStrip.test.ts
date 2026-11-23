@@ -139,7 +139,7 @@ describe('R16 — RiderPwaPage/RiderMiniMap source: route card + แผนที
     expect(miniMapSrc).toContain('stops?: PlanStop[] | null')
     expect(miniMapSrc).toContain('stop-${s.order_number}')
     expect(miniMapSrc).toContain('g.maps.Polyline')
-    expect(miniMapSrc).toContain('old?.setMap?.(null)')
+    expect(miniMapSrc).toContain('markerRefs.current[key]?.setMap?.(null)')
   })
 
   // 2026-11-17 render-order fix — บั๊กจริง production: div แผนที่เดิม render เฉพาะตอน

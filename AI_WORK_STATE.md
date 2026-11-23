@@ -1,3 +1,33 @@
+## 🔒 LIVE TEST RESULT 2026-11-23 (R64 · DELIVERY SYNC FIX — Owner live test 23/11/2569: "ไรเดอร์กดรับอาหารเพื่อเดินทางออกส่งไม่ได้ ตัน preparing → NULL chain + แผนที่รายออเดอร์ขาว + ลูกค้า Map โหลดไม่ได้") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + MIGRATION 212 APPLIED + PUSHED**
+
+- **อาการจาก live test (รูป 18:34–20:07):**
+  1. ไรเดอร์กด "รับอาหารเพื่อเดินทางออกส่ง" → `ERR_DELIVERY_SYNC_BLOCKED: order PO-20261124-544 cannot advance preparing -> <NULL> (target dispatched)` — วงจรตัน
+  2. ลูกค้าทุกเครื่องค้างที่ "จัดทำรอบพรีออเดอร์" ไทม์ไลน์ไม่ขยับ
+  3. แผนที่รวมไรเดอร์ใช้ได้ · แผนที่รายออเดอร์ขาว 1 ใบ (multi-instance Leaflet init race)
+  4. Error แล้วแผง POD ปิดเอง (ดูเหมือนปิดงาน แต่งานยัง accepted + POD แนบครึ่งทาง)
+  5. แอดมิน "🏁 แอดมินปิดวงจร" ตันจุดเดิม
+  6. หน้าที่อยู่ลูกค้า: Google Maps โหลดไม่ได้ (key ถูกปฏิเสธ) + กล่องพิกัดแมนนวลแดงทั้งที่ GPS ยืนยันแล้ว
+
+- **Root cause (พิสูจน์จากโค้ดจริง):**
+  - RC1: 3 RPC canonical (`driver_update_delivery_status` m197, `admin_advance_delivery_status` m116, `driver_checkin_arrival` m166) มี hop chain เริ่มแค่ `ready_for_dispatch` → ออเดอร์ `preparing` ตันค้าง (R87b pattern)
+  - RC2: `driverErrorText` ไม่มี mapping ERR_DELIVERY_SYNC_BLOCKED/ERR_KITCHEN_NOT_READY → โชว์อังกฤษดิบ + kind='state' ซ่อนปุ่ม retry
+  - RC3: `completeDelivery` finally เคลียร์ `activeOrder` แม้ error → แผง POD ปิดตัวเอง
+  - RC4: `RiderMiniMap` สร้าง/ทำลายแผนที่ซ้ำทุกครั้ง GPS/pin เปลี่ยน + init race + Google leak → ขาวบางใบ
+  - RC5: `DeliveryMapPicker` ไม่มี Leaflet fallback + UX กล่องแมนนวลหลอก
+  - RC6: warning มอบหมายซ้ำไม่ตรง (busy = multi-job OK)
+
+- **การแก้ไขแบ่ง 5 เฟส (ตามแพลน `.kilo/plans/1795441113954-delivery-sync-fix-plan.md`):**
+  - **Phase A (m212):** ต่อ hop chain — เพิ่ม `preparing → ready_for_dispatch` + guard `pending/confirmed` raise `ERR_KITCHEN_NOT_READY` (ไทยชัด) ใน 3 RPC · audit message ระบุ auto-hop
+  - **Phase B:** `driverService.ts` เพิ่ม mapping ไทย 2 error · `RiderPwaPage.tsx` completeDelivery ไม่เคลียร์ activeOrder ตอน error + `podAttachDoneRef` skip re-upload · order_status chip ในการ์ด + ปุ่ม label "🛵 รับอาหารเพื่อเดินทางออกส่ง"
+  - **Phase C:** `DeliveryManagement.tsx` warning copy แยก busy/offline · preparing badge + kitchen link ในคิว dispatch
+  - **Phase D:** `RiderMiniMap` restructure: single init + imperative marker update + invalidateSize + ResizeObserver + stable keys · `DeliveryMapPicker` เพิ่ม Leaflet/OSM fallback + ซ่อนกล่องแมนนวลเมื่อมี candidate
+  - **Phase E:** Test source-contract (r212DeliverySyncPreparingHop + updates) + gates ผ่าน + docs updated
+
+- **Migration:** `212_delivery_sync_preparing_hop.sql` (REVOKE PUBLIC / GRANT authenticated เท่า baseline · 3 ฟังก์ชัน canonical verbatim + hop ใหม่ + guard)
+- **Out of scope:** state machine / assignment structure / server-side cart / Google Maps key (ฝั่ง Owner)
+
+---
+
 ## 🔒 LIVE TEST RESULT 2026-11-23 (R63d · STICKER CONSOLIDATION — Owner: "ออเดอร์ 3 กล่อง เมนู A x2 + เมนู B x1 → สติกเกอร์พิมพ์ 3 ดวง → แก้เป็น 1 ดวงรวมทุกเมนู") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + PUSHED `d67bf47` · frontend only (Cloudflare auto-deploy)**
 
 - **Root cause:** `stickerRollForOrder()` split 1 ออเดอร์ = 1 ดวง/ชิ้น × qty → 3 กล่อง = 3 สติกเกอร์ · `stickerForm.ts` (R66) รองรับ ORDER LIST 4 บรรทัดต่อเนื่อง `~24 ตัวอักษร/แถว` คั่น ` · ` อยู่แล้ว

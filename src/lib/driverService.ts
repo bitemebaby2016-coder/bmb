@@ -70,7 +70,7 @@ export function classifyDriverError(raw: unknown): { error: string; kind: Driver
   if (/ERR_NOT_AUTHENTICATED|ERR_FORBIDDEN|ERR_NOT_A_DRIVER|JWT|401|403/i.test(s)) {
     return { error: msg, kind: 'permission' }
   }
-  if (/ERR_ASSIGNMENT|ERR_ALREADY_DELIVERED|ERR_POD|ERR_DELIVERY_SYNC_BLOCKED|ERR_GEOFENCE|ERR_INVALID|ERR_ORDER_|ERR_OFFER|ERR_DRIVER_OFFLINE/i.test(s)) {
+  if (/ERR_ASSIGNMENT|ERR_ALREADY_DELIVERED|ERR_POD|ERR_DELIVERY_SYNC_BLOCKED|ERR_GEOFENCE|ERR_INVALID|ERR_ORDER_|ERR_OFFER|ERR_DRIVER_OFFLINE|ERR_KITCHEN_NOT_READY/i.test(s)) {
     return { error: msg, kind: 'state' }
   }
   return { error: msg, kind: 'unknown' }
@@ -540,6 +540,8 @@ const DRIVER_ERROR_TH: Record<string, string> = {
   ERR_DRIVER_OFFLINE: 'ไรเดอร์อยู่ในสถานะออฟไลน์ (พักงาน) — ต้องเปิดสถานะพร้อมรับงานก่อนจึงจะรับงานได้',
   ERR_SUBSCRIPTION_INVALID: 'ข้อมูลสมัครแจ้งเตือนไม่ถูกต้อง — ลองใหม่อีกครั้ง',
   ERR_NO_CUSTOMER_PROFILE: 'บัญชีนี้ยังไม่มีโปรไฟล์ในระบบ — ติดต่อแอดมิน',
+  ERR_KITCHEN_NOT_READY: 'ครัวยังไม่ยืนยันพร้อมส่ง — แจ้งแอดมินกด "✅ พร้อมส่ง" ในหน้าครัวก่อน แล้วกดรับอาหารใหม่',
+  ERR_DELIVERY_SYNC_BLOCKED: 'ระบบเดินสถานะไม่ได้ชั่วคราว — รีเฟรชรายการแล้วลองใหม่ (ถ้ายังติด แจ้งแอดมิน)',
 }
 
 /** แปลงรหัส error / ข้อความจากฐานข้อมูล เป็นภาษาไทยที่คนอ่านเข้าใจ */

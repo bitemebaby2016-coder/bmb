@@ -375,6 +375,8 @@ export function RiderPwaPage() {
 
   // ---------- A3: POD upload → attach → delivered (ทุกขั้นต้องผ่านก่อนปิดงาน) ----------
   const lastPhotoRef = useRef<{ order: string; file: File; coords: { latitude: number; longitude: number } } | null>(null)
+  // NEW: track when POD attach succeeded to skip re-upload on retry
+  const podAttachDoneRef = useRef<string | null>(null)
   // R3 (D-02/D-07): progress รายขั้นตอน — ผู้ใช้ต้องเห็นว่าค้างที่ upload/attach/ปิดงาน
   const [deliverStep, setDeliverStep] = useState<'upload' | 'attach' | 'finalize' | null>(null)
 
@@ -386,17 +388,28 @@ export function RiderPwaPage() {
     setActionError(null)
     lastPhotoRef.current = { order: orderNumber, file: photo, coords }
     try {
-      setDeliverStep('upload')
-      const up = await uploadPodPhoto(photo, driver.id, orderNumber)
-      const upPath = up.ok ? up.path : 'none'
-      const upKind = up.ok ? 'none' : up.kind
-      console.log(`[completeDelivery] uploadPodPhoto result order=${orderNumber} ok=${up.ok} path=${upPath} kind=${upKind} duration=${Date.now() - startTime}ms`)
-      if (!up.ok) { showActionError(orderNumber, up); return }
-      setDeliverStep('attach')
-      const att = await driverAttachPod(orderNumber, up.path, coords)
-      const attKind = att.ok ? 'none' : att.kind
-      console.log(`[completeDelivery] driverAttachPod result order=${orderNumber} ok=${att.ok} kind=${attKind} duration=${Date.now() - startTime}ms`)
-      if (!att.ok) { showActionError(orderNumber, att); return }
+      let podPath = ''
+      let att
+      // Skip upload+attach if POD already attached for this order (retry path)
+      if (podAttachDoneRef.current !== orderNumber) {
+        setDeliverStep('upload')
+        const up = await uploadPodPhoto(photo, driver.id, orderNumber)
+        const upPath = up.ok ? up.path : 'none'
+        const upKind = up.ok ? 'none' : up.kind
+        console.log(`[completeDelivery] uploadPodPhoto result order=${orderNumber} ok=${up.ok} path=${upPath} kind=${upKind} duration=${Date.now() - startTime}ms`)
+        if (!up.ok) { showActionError(orderNumber, up); return }
+        podPath = up.path
+        setDeliverStep('attach')
+        att = await driverAttachPod(orderNumber, podPath, coords)
+        const attKind = att.ok ? 'none' : att.kind
+        console.log(`[completeDelivery] driverAttachPod result order=${orderNumber} ok=${att.ok} kind=${attKind} duration=${Date.now() - startTime}ms`)
+        if (!att.ok) { showActionError(orderNumber, att); return }
+        // Mark POD attached for this order (idempotent retry safety)
+        podAttachDoneRef.current = orderNumber
+      } else {
+        console.log(`[completeDelivery] ข้าม upload+attach — POD แนบแล้ว order=${orderNumber}`)
+        att = { ok: true, kind: 'none' }
+      }
       setDeliverStep('finalize')
       const del = await driverUpdateDeliveryStatus(orderNumber, 'delivered', coords)
       const delKind = del.ok ? 'none' : del.kind
@@ -405,6 +418,7 @@ export function RiderPwaPage() {
       setNotice(`🏠 ส่งมอบ ${orderNumber} สำเร็จ (บันทึกรูป POD แล้ว) — จบงานแล้ว กลับหน้าหลัก`)
       setActiveOrder(null)
       lastPhotoRef.current = null
+      podAttachDoneRef.current = null
       // R13 (Owner 2026-10-28): จบลูป = ออกไปหน้าจอหลักอัตโนมัติ (เลื่อนกลับบนสุด)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       void refresh({ silent: true })
@@ -419,10 +433,8 @@ export function RiderPwaPage() {
       // R14 (Phase 1.4): บังคับ reset state ทุกกรณี (success + error) — กัน UI ค้าง busy
       setDeliverBusy(false)
       setDeliverStep(null)
-      // หาก error และไม่ได้สำเร็จ ให้เคลียร์ activeOrder ด้วย เพื่อให้ผู้ใช้กลับไปเลือกงานใหม่ได้
-      if (lastPhotoRef.current?.order === orderNumber) {
-        setActiveOrder(null)
-      }
+      // NEW: เคลียร์ activeOrder เฉพาะ success — error ค้างเปิดไว้เพื่อ retry (แก้ S5 "ส่งรูปปิดงานได้")
+      // success path ตั้ง activeOrder null เอง
     }
   }
 
@@ -683,6 +695,7 @@ export function RiderPwaPage() {
                   {plan.noOrigin ? ' · ยังไม่มีตำแหน่งคุณ — คงลำดับเดิม (ไม่เดา)' : ' · เรียงจากจุดใกล้ที่สุด (คำนวณในเครื่อง)'}
                 </p>
                 <RiderMiniMap
+                  key="route-plan-map"
                   dropOff={{ latitude: plan.stops[0].latitude, longitude: plan.stops[0].longitude }}
                   rider={riderGps}
                   stops={plan.stops}
@@ -731,6 +744,7 @@ export function RiderPwaPage() {
               {activeOrder.dropoff_latitude != null && activeOrder.dropoff_longitude != null ? (
                 <>
                   <RiderMiniMap
+                    key={`pod-map-${activeOrder.order_number}`}
                     dropOff={{ latitude: Number(activeOrder.dropoff_latitude), longitude: Number(activeOrder.dropoff_longitude) }}
                     rider={riderGps}
                   />
@@ -888,8 +902,28 @@ export function RiderPwaPage() {
                       <li key={it.product_name}>• {it.product_name} × {it.quantity}</li>
                     ))}
                   </ul>
-                  <p className="text-xs text-slate-500 mb-3">📍 {a.dropoff_detail || '—'}</p>
-                  {actionError?.order === a.order_number && (
+<p className="text-xs text-slate-500 mb-3">📍 {a.dropoff_detail || '—'}</p>
+                   {/* NEW: order_status chip — ช่วยให้ไรเดอร์รู้บริบทครัว */}
+                   {a.order_status && (
+                     <div className="mb-2 text-xs">
+                       {a.order_status === 'preparing' && (
+                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-800">
+                           🍳 ครัวกำลังเตรียม — กดรับอาหารได้เมื่อพร้อมส่ง
+                         </span>
+                       )}
+                       {(a.order_status === 'pending' || a.order_status === 'confirmed') && (
+                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-800">
+                           🍳 ครัวยังไม่เริ่มทำ — แจ้งแอดมิน
+                         </span>
+                       )}
+                       {a.order_status === 'ready_for_dispatch' && (
+                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-800">
+                           📦 พร้อมส่งแล้ว — กดรับอาหารได้เลย
+                         </span>
+                       )}
+                     </div>
+                   )}
+                   {actionError?.order === a.order_number && (
                     <div className="mb-2 p-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
                       ⚠️ {actionError.error}
                     </div>
@@ -921,7 +955,7 @@ export function RiderPwaPage() {
                         disabled={busyOn === a.order_number}
                         onClick={() => { lastActionRef.current = () => void advance(a.order_number, 'picked_up'); void advance(a.order_number, 'picked_up') }}
                       >
-                        🛵 รับอาหารแล้ว
+                        🛵 รับอาหารเพื่อเดินทางออกส่ง
                       </button>
                     )}
                     {a.assignment_status === 'picked_up' && (
