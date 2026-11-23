@@ -533,7 +533,9 @@ export function buildCartLink(items: CartSummaryItem[], site = 'https://biteme-b
 }
 
 /** ประโยคท้ายข้อความที่ "ระบบเป็นคนเขียน" (ไม่ใช่คำแต่งของ AI) — แนบลิงก์ตะกร้าสรุป
- *  R46 (Owner 2026-11-01): แจ้งว่าลิงก์เปิดเว็บภายนอก Facebook — ผู้ใช้ยืนยันเปิดเอง */
+ *  R46 (Owner 2026-11-01): แจ้งว่าลิงก์เปิดเว็บภายนอก Facebook — ผู้ใช้ยืนยันเปิดเอง
+ *  Phase 1 (Owner 2026-11-23): เพิ่มบรรทัด scope disclosure — บอกจริงว่าลิงก์นี้พาเฉพาะ
+ *  รายการที่คุยในรอบนี้ ไม่รวมของที่เพิ่มเองบนเว็บ (เว็บกดคัดลอก = พาตะกร้าเต็ม) */
 export function buildCartSummaryFooter(items: CartSummaryItem[], site = 'https://biteme-baby.com', ctx?: CartLinkContext): string {
   const link = buildCartLink(items, site, ctx)
   const names = items
@@ -544,7 +546,7 @@ export function buildCartSummaryFooter(items: CartSummaryItem[], site = 'https:/
   const head = names
     ? `🛒 สรุปรายการของคุณ (${names}) เปิดดูบนเว็บได้เลยครับ — `
     : '🛒 สรุปรายการของคุณเปิดดูบนเว็บได้เลยครับ — '
-  return `${head}กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: ${link}\n🔗 ลิงก์เปิดเว็บ biteme-baby.com ภายนอก Facebook — ถ้าแตะแล้วยังค้างอยู่ในเฟซ ให้กดคัดลอกลิงก์ในแถบที่ขึ้น แล้ววางใน Chrome/Safari ได้เลย`
+  return `${head}กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: ${link}\n🔗 ลิงก์เปิดเว็บ biteme-baby.com ภายนอก Facebook — ถ้าแตะแล้วยังค้างอยู่ในเฟซ ให้กดคัดลอกลิงก์ในแถบที่ขึ้น แล้ววางใน Chrome/Safari ได้เลย\nℹ️ ลิงก์นี้พาเฉพาะรายการที่คุยกันในรอบนี้ — ของที่เพิ่มเองบนเว็บยังอยู่กับเว็บของคุณ (ในหน้าเว็บกดคัดลอกลิงก์ = พาตะกร้าเต็มไปด้วย)`
 }
 
 /** R92 (Owner 2026-11-11 "ลิงก์ตะกร้าต้องติดทุก reply ที่จับคู่ได้บางส่วน"): pure helper

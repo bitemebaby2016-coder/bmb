@@ -1,3 +1,40 @@
+## 🔒 SESSION CLOSE 2026-11-23 (รอบ 63 · BMB-FB-CART-BRIDGE-LIVE-2026-11-23 — สะพาน "ตะกร้าสด" ข้ามช่องทาง Facebook → เบราว์เซอร์จริง Phase 1–3) · **CODE_CLOSED + LOCAL GATES PASS + CI READY · รอ OWNER อนุมัติโค้ด + DEPLOY social-ai-worker**
+
+**ปัญหาที่ Owner ชี้ (พิสูจน์จากรูป 08:48–08:52 + โค้ดจริงแล้ว):**
+ใน Facebook WebView ตะกร้ามี **4 บรรทัด / 17 ชิ้น / ฿1,313** แต่กด "คัดลอกลิงก์ → วางใน Chrome" แล้วได้เพียง **1 รายการ ฿79** (= payload ของลิงก์ AI สรุปรอบคุยล่าสุด) — ข้อมูลไม่ตรงกันทุกช่องทาง
+
+**Root cause 4 ชั้น (ที่ตรวจจาก Actual Code):**
+1. AI สร้าง `?cart=` จาก **รายการ matched ของรอบคุยเท่านั้น** — `supabase/functions/_shared/socialOrderIntake.ts:555-561` (`cartFooterForMatch`) — server ไม่มีตะกร้าฝั่งลูกค้าให้อ่าน
+2. ปุ่มคัดลอกส่งต่อ **สแนปชอต mount ครั้งเดียว / `bmb:cart-resume` ที่ไม่มี TTL** — `src/components/InAppBrowserBanner.tsx:62-70, 131-159` — ไม่มีโค้ดใด serialize ตะกร้าสดลงลิงก์
+3. `Layout.tsx:136-141` strip `?cart=`/`?s=` หลัง restore (§T-A) → ลิงก์ที่คัดลอกพา payload เก่าเสมอ
+4. Restore ทั้งสอง path **hardcode `addItem(p, q, {}, 'SAME_DAY')`** → ทิ้ง add-ons + line_mode — `Layout.tsx:125, 199`
+
+**ข้อเท็จจริงที่เปิดทางแก้:** `customizations = { addOns: [{ addonId, selections, note }] }` — เก็บแค่ id/ตัวเลือก/โน้ต **ไม่มีราคา ไม่มี PII** (ราคา server re-derive) → ฝังลงลิงก์ได้ปลอดภัย (`src/lib/addonDisplay.ts:66-79`, `src/types/index.ts:822-825`)
+
+---
+
+### การแก้ไข Phase 1–3 (ตามแพลน `.kilo/plans/1795399498532-fb-cart-bridge-live-plan.md`)
+
+**Phase 1 — `cartDeepLink.ts` payload v2 (pure lib):**
+- เพิ่ม `encodeLiveCartParam(lines)` → `{v:2, items:[{id,q,mods?,lm?}]}`; caps: 30 items, 50 qty/item, payload ≤1800 chars; downgrade: ตัด mods ก่อน (droppedMods) แล้วค่อยตัดบรรทัด (truncated); v1 API เดิมไม่แตะ (server mirror)
+- `decodeCartParam` / `normalizeCartParam` / `readCartParam` รองรับ v1+v2 (validate mods = object addOns, lm∈{0,1}); back-compat round-trip tests
+
+**Phase 2 — ปุ่มคัดลอกพาตะกร้าสด (`InAppBrowserBanner.tsx` + `Layout.tsx`):**
+- `copyHandoff` สร้าง URL ณ เวลากดจาก `encodeLiveCartParam(useCartStore.getState().items)` — live cart; fallback chain: live cart → cartHandoff.raw (mount) → readCartResume (TTL 30 นาที); banner count ใช้จำนวนตะกร้าสด + แจ้ง truncated/droppedMods ตามจริง; strip `fbclid` ใน handoffUrl; hooks-before-return (R90) คงเดิม; ห้าม intent:// (R92 ถาวร)
+- `Layout.tsx` restore ทั้ง 2 path ส่ง `mods`/`lm` เข้า `addItem` จริง (เลิก hardcode `{}`/`'SAME_DAY'`); addOns ที่ addonId ไม่พบใน `product.addons` = ตัดออก (fail-safe); เคลียร์ `bmb:cart-resume` หลัง restore สำเร็จ
+
+**Phase 3 — ความจริงทุกช่องทาง (server shared lib):**
+- `socialOrderIntake.ts` `buildCartSummaryFooter`: เติมบรรทัด scope disclosure จริง — "ℹ️ ลิงก์นี้พาเฉพาะรายการที่คุยกันในรอบนี้ — ของที่เพิ่มเองบนเว็บยังอยู่กับเว็บของคุณ (ในหน้าเว็บกดคัดลอกลิงก์ = พาตะกร้าเต็มไปด้วย)" (`cartFooterForMatch` R92 คงพฤติกรรม)
+- **Deploy `social-ai-worker` เท่านั้น** (importer เดียวของ intake footer — channel-webhook ใช้ `resolveKitchenPoint` อย่างเดียว) — เป็น mutating deploy ต้อง owner approve
+
+**Phase 4 — Tests + Gates:**
+- อัปเดต `cartDeepLink.test.ts` (v2 round-trip, caps/downgrade, back-compat v1, double-encode), `r101CartHandoffFix.test.ts` (banner contract ใหม่: live-cart-at-click + fallback + TTL + testids), `socialOrderIntake.test.ts` + `socialAiContinuity.test.ts` (scope line)
+- เกตผ่านครบ: `tsc` 0 errors · `npm run lint` OK · `npm run test` 226 files / 2446 tests PASS · `npm run build` PASS (PWA v1.3.0)
+
+**Out of scope (ประกาศชัด):** Server-side/account cart (ซิงก์ข้ามเครื่องจริง) — future; คูปอง/referral/ค่าส่งในลิงก์; LINE/IG เฉพาะทาง
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-22 (รอบ 62 · BMB-ADMIN-FOCUS-LOOP-FOLLOWUP — แก้ CI #1014 แดง: source-contract test ยึดพฤติกรรมเก่า + Node 20 warning) · **CODE_CLOSED + LOCAL GATES PASS + CI #1015 ✅ + CONTRACT #589 ✅ + ANNOTATIONS ว่าง + PUSHED**
 
 **ต้นตอ (พิสูจน์จาก annotations CI #1014 จริง):**

@@ -120,8 +120,8 @@ describe('R101-B — Banner: copy 3 ชั้น + กล่องลิงก�
     expect(bannerSrc).toMatch(/el\.setSelectionRange\(0, el\.value\.length\)/)
   })
 
-  it('กล่องลิงก์แสดงเฉพาะเมื่อมี cartHandoff (ไม่มีรายการ = ข้อความแนะนำตาม R100d คงเดิม)', () => {
-    expect(bannerSrc).toMatch(/\{cartHandoff && \(/)
+  it('กล่องลิงก์แสดงเมื่อมี cartHandoff หรือ live cart (ไม่มีรายการ = ข้อความแนะนำตาม R100d คงเดิม)', () => {
+    expect(bannerSrc).toMatch(/\(cartHandoff \|\| liveCart\.length > 0\) && \(/)
     // ข้อความ "ไม่พบรายการตะกร้า" ยังอยู่ (ห้ามเงียบ — R43 B6)
     expect(bannerSrc).toContain('ลิงก์ที่เปิดอยู่ไม่พบรายการตะกร้า')
   })

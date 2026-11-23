@@ -86,11 +86,14 @@ describe('Layout — ?cart= deep-link wiring', () => {
     // R61 (§T-1): ต้องถอดค่าด้วย decode ตรง ๆ — ห้ามใช้ readCartParam(raw) (รอ query string = null ทุกครั้ง)
     // R101-fix (Owner 2026-11-15 A-4): อัปเกรดเป็น normalizeCartParam (⊇ decodeCartParam —
     // ถอด % มั่วจาก copy/paste ข้าม WebView→address bar ได้ด้วย) — ไม่ใช่การอ่อน assertion
+    // Phase 1: v2 payload รองรับ mods + lm (ไม่ hardcode {}/'SAME_DAY' แล้ว)
     expect(layoutSrc).toContain("normalizeCartParam(searchParams.get('cart'))")
     expect(layoutSrc).not.toContain('readCartParam(raw)')
     expect(layoutSrc).not.toContain('decodeCartParam(raw)')
     expect(layoutSrc).toMatch(/searchParams\.delete\('cart'\)/)
-    expect(layoutSrc).toMatch(/addItem\(p, it\.q, \{\}, 'SAME_DAY'\)/)
+    // Phase 1: ใช้ v2 mods + lm (ถ้ามี) — มีทั้ง main effect และ R100d fallback
+    expect(layoutSrc).toMatch(/mods \?\? \{\}/)
+    expect(layoutSrc).toMatch(/lm === 1 \? 'PRE_ORDER' : 'SAME_DAY'/)
     expect(layoutSrc).toMatch(/setCheckoutOpen\(true\)/)
     // รอ isHydrated ก่อนเติม (กัน persistence restore ทับรายการจากลิงก์)
     expect(layoutSrc).toMatch(/isHydrated/)

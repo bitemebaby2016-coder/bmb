@@ -1,7 +1,7 @@
 // ============================================
 // Bite Me Baby — In-App Browser Banner
 // ============================================
-// แสดง banner แจ้งเตือนเมื่อเปิดใน FB WebView + ปุ่มเปิดนอก + dismiss + ปุ่มติดตั้งแอป
+// แสดง banner แจ้งเตือนเมื่อเปิดใน FB WebView + ปุ่มคัดลอกลิงก์ + dismiss + ปุ่มติดตั้งแอป
 // R90-hotfix (Owner 2026-11-11): เวอร์ชันก่อนพังทั้งเว็บ (Minified React error #310 =
 // "Rendered more hooks than during the previous render") เพราะ useState/useEffect
 // ถูกวางไว้หลัง early return → render แรก (isFB=false) ข้าม hooks, render ถัดไป
@@ -14,11 +14,14 @@
 //     ที่เก็บไว้ตอนเข้าหน้ากลับเข้าไปก่อนคัดลอก)
 // • R92 (Owner 2026-11-11): ลบปุ่มเปิดแบบ intent ทั้งหมด — ภาพ 3 พิสูจน์ FB Android WebView
 //   ไม่ dispatch รูปแบบนี้ = ERR_UNKNOWN_URL_SCHEME หน้าพัง (R76/R79/R81-B2) ห้ามใส่อีก
+// • R101 / Phase 1: ปุ่มคัดลอกพา **ตะกร้าสด ณ เวลากด** (encodeLiveCartParam v2) + fallback chain
+//   live cart → mount snapshot → bmb:cart-resume (TTL 30 นาที)
 // ============================================
 
 import { useCallback, useRef, useState } from 'react'
 import { useInAppBrowser } from '@/hooks/useInAppBrowser'
-import { normalizeCartParam } from '@/lib/cartDeepLink'
+import { useCartStore } from '@/store/cartStore'
+import { normalizeCartParam, encodeLiveCartParam } from '@/lib/cartDeepLink'
 
 // ============================================
 // Global beforeinstallprompt capture — shared across all banner instances
@@ -50,20 +53,29 @@ async function _triggerInstall(): Promise<void> {
 }
 
 const CART_RESUME_KEY = 'bmb:cart-resume'
+const CART_RESUME_TTL = 30 * 60 * 1000 // 30 นาที
 
 interface CartHandoff {
   raw: string
   count: number
+  at?: number
 }
 
 /** อ่านสแนปชอตตะกร้าจาก localStorage (จากครั้งก่อนในแอป/เครื่องเดียวกัน) —
  *  R96-R100d (Owner 2026-11-14 "copy ไป Chrome แล้วไม่มีสินค้า"): เมื่อจุดจับ ?cart=
- *  ณ  mount แรกพลาด (URL ไม่มี param/decode fail) ต้องมีแหล่งถอดลิงก์คัดลอกสำรองเสมอ — ไม่เงียบ */
+ *  ณ mount แรกพลาด (URL ไม่มี param/decode fail) ต้องมีแหล่งถอดลิงก์คัดลอกสำรองเสมอ — ไม่เงียบ
+ *  R101e/Phase 1: เพิ่ม TTL 30 นาที + เคลียร์เมื่อหมดอายุ (กันสแนปชอตเก่า) */
 function readCartResume(): CartHandoff | null {
   try {
-    const j = JSON.parse(localStorage.getItem(CART_RESUME_KEY) || 'null') as { raw?: string; items?: number } | null
+    const j = JSON.parse(localStorage.getItem(CART_RESUME_KEY) || 'null') as { raw?: string; items?: number; at?: number } | null
     if (j && typeof j.raw === 'string' && j.raw.length > 0 && Number(j.items) > 0) {
-      return { raw: j.raw, count: Number(j.items) }
+      const at = Number(j.at || 0)
+      if (at > 0 && Date.now() - at > CART_RESUME_TTL) {
+        // หมดอายุ = เคลียร์ทิ้ง
+        try { localStorage.removeItem(CART_RESUME_KEY) } catch {}
+        return null
+      }
+      return { raw: j.raw, count: Number(j.items), at }
     }
   } catch { /* localStorage ถูกบล็อก/ข้อมูลพัง = ไม่มีสำรอง */ }
   return null
@@ -125,9 +137,10 @@ function PwaInstallButton({ canInstall }: { canInstall: boolean }) {
 
 export function InAppBrowserBanner({ children }: { children: React.ReactNode }) {
   const { isFB, dismissed, dismiss, installApp, canInstall } = useInAppBrowser()
+  const liveCart = useCartStore.getState().items
 
   // hooks ทั้งหมดต้องอยู่ก่อน early return (R90-hotfix — ห้ามย้ายลงไปข้างล่าง)
-  // lazy initializer:รันครั้งเดียวตอน mount ซึ่ง URL ยังไม่ถูก strip โดย Layout
+  // lazy initializer: รันครั้งเดียวตอน mount ซึ่ง URL ยังไม่ถูก strip โดย Layout
   const [cartHandoff] = useState<CartHandoff | null>(() => {
     try {
       // R101-fix (A-4): normalizeCartParam = ถอด % มั่วจาก copy/paste ได้ด้วย
@@ -137,7 +150,7 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
       try {
         localStorage.setItem(CART_RESUME_KEY, JSON.stringify({ raw: cap.raw, items: cap.items.length, at: Date.now() }))
       } catch { /* localStorage ถูกบล็อก = มี state ในหน้าพอแล้ว */ }
-      return { raw: cap.raw, count: cap.items.length }
+      return { raw: cap.raw, count: cap.items.length, at: Date.now() }
     } catch {
       return readCartResume()
     }
@@ -147,16 +160,67 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
   // FB Android WebView ไม่ dispatch รูปแบบนี้ = บทเรียน R76/R79/R81-B2 ห้ามกลับมาใส่อีกเด็ดขาด
   // → ปุ่มหลักเดียว = คัดลอกลิงก์ (มี ?cart= เสมอ) + guide ต่อ platform — ทางเดียวที่พิสูจน์ว่าใช้ได้จริง
   // URL ส่งต่อ: ถ้า Layout strip ?cart= ไปแล้ว ให้ใส่ค่า raw ที่เก็บไว้กลับเข้ามาก่อน
+  // Phase 1: strip fbclid (tracking param) ความสะอาด
   const handoffUrl = (() => {
     const current = window.location.href
     try {
       const u = new URL(current)
+      u.searchParams.delete('fbclid')
       if (cartHandoff && !u.searchParams.has('cart')) u.searchParams.set('cart', cartHandoff.raw)
       return u.toString()
     } catch {
       return current
     }
   })()
+
+  // สร้าง URL พาตะกร้าสด ณ เวลากด — fallback chain: live cart → mount snapshot → bmb:cart-resume (TTL 30 นาที)
+  const buildLiveHandoffUrl = useCallback(() => {
+    let enc = ''
+    let droppedMods = false
+    let truncated = false
+    let usedLiveCart = false
+    let liveCount = 0
+
+    // 1) ตะกร้าสดจาก cartStore (ถ้ามีของ)
+    if (liveCart.length > 0) {
+      const res = encodeLiveCartParam(
+        liveCart.map((it) => ({
+          id: it.product.id,
+          quantity: it.quantity,
+          customizations: it.customizations,
+          line_mode: it.line_mode,
+        })),
+      )
+      enc = res.encoded
+      droppedMods = res.droppedMods
+      truncated = res.truncated
+      usedLiveCart = true
+      liveCount = liveCart.reduce((s, it) => s + it.quantity, 0)
+    }
+
+    // 2) fallback: mount snapshot (cartHandoff)
+    if (!enc && cartHandoff?.raw) {
+      enc = cartHandoff.raw
+    }
+
+    // 3) fallback: bmb:cart-resume (มี TTL 30 นาที)
+    if (!enc) {
+      const resume = readCartResume()
+      if (resume?.raw) enc = resume.raw
+    }
+
+    // สร้าง URL พร้อม ?s= (บริบทแชท) จาก URL ปัจจุบันถ้ามี
+    let finalUrl = window.location.href
+    try {
+      const u = new URL(finalUrl)
+      u.searchParams.delete('fbclid')
+      if (enc) u.searchParams.set('cart', enc)
+      // เก็บ ?s= ไว้ถ้ามี (บริบทแชทต่อเนื่อง)
+      finalUrl = u.toString()
+    } catch { /* fall through */ }
+
+    return { url: finalUrl, usedLiveCart, liveCount, droppedMods, truncated }
+  }, [liveCart, cartHandoff])
 
   // R91 (Owner 2026-11-11 "ในข้อความ ออกไม่ได้"): Messenger in-app บล็อกลิงก์ intent — เส้นทางเดียว
   // ที่ใช้ได้จริงคือ คัดลอกลิงก์ + เปิดเบราว์เซอร์เอง (หรือเมนู ⋯ ของแอป) → ให้ปุ่มสำรองเสมอ
@@ -172,17 +236,18 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
   const isIOS = /iPhone|iPad/i.test(ua)
 
   const copyHandoff = useCallback(async () => {
+    const { url, usedLiveCart, liveCount, droppedMods, truncated } = buildLiveHandoffUrl()
     let done = false
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(handoffUrl)
+        await navigator.clipboard.writeText(url)
         done = true
       }
     } catch { /* fall through → textarea */ }
     if (!done) {
       try {
         const ta = document.createElement('textarea')
-        ta.value = handoffUrl
+        ta.value = url
         ta.setAttribute('readonly', '')
         ta.style.cssText = 'position:fixed;opacity:0'
         document.body.appendChild(ta)
@@ -195,13 +260,13 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
       // R101-fix: WebView บางรุ่นบล็อกทั้ง clipboard API และ execCommand →
       // prompt modal = ทางเดียวที่ user คัดลอกเองได้แน่นอน (ทุก platform)
       try {
-        window.prompt('คัดลอกลิงก์นี้เองครับ (กดค้าง/Ctrl+C):', handoffUrl)
+        window.prompt('คัดลอกลิงก์นี้เองครับ (กดค้าง/Ctrl+C):', url)
         done = true // user เห็น/คัดลอกเองแล้ว — ไม่รู้ผลจริง แต่ guide ต่อไปช่วยได้
       } catch { /* prompt ถูกบล็อก (หายาด) = ปุ่มกล่องลิงก์ด้านล่างรับช่วงต่อ */ }
     }
     setCopyState(done ? 'copied' : 'failed')
     setGuideOpen(true)
-  }, [handoffUrl])
+  }, [buildLiveHandoffUrl])
 
   // R101-fix: เลือกทั้งหมดในกล่องลิงก์ (user กดค้าง → คัดลอกเองได้ทุก WebView)
   const selectLinkBox = useCallback(() => {
@@ -211,6 +276,15 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
     el.select()
     try { el.setSelectionRange(0, el.value.length) } catch { /* iOS รุ่นเก่า */ }
   }, [])
+
+  // สร้าง URL สำหรับกล่องลิงก์ (ใช้ live cart ถ้ามี)
+  const { url: linkBoxUrl } = buildLiveHandoffUrl()
+
+  // จำนวนรายการสำหรับแสดงใน banner — ใช้ตะกร้าสดเมื่อมีของ มิฉะนั้นใช้ mount snapshot
+  const displayCount = liveCart.length > 0
+    ? liveCart.reduce((s, it) => s + it.quantity, 0)
+    : (cartHandoff?.count ?? 0)
+  const displayLineCount = liveCart.length > 0 ? liveCart.length : (cartHandoff?.count ?? 0)
 
   if (!isFB || dismissed) return <>{children}</>
 
@@ -227,8 +301,11 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
             <span className="text-lg" aria-hidden="true">⚠️</span>
             <div>
               <p className="font-semibold">Facebook ไม่รองรับการเปิดลิงก์ตะกร้าอัตโนมัติ</p>
-              {cartHandoff ? (
-                <p className="text-xs opacity-90">พบรายการ {cartHandoff.count} รายการ — กดคัดลอกลิงก์ข้างล่าง แล้ววางใน Chrome/Safari หรือติดตั้งแอปเลยก็ได้ครับ</p>
+              {(displayCount > 0 || displayLineCount > 0) ? (
+                <p className="text-xs opacity-90">
+                  พบรายการ {displayLineCount} รายการ ({displayCount} ชิ้น)
+                  {liveCart.length > 0 ? ' — ลิงก์นี้พาตะกร้าเต็มของคุณ' : ' — กดคัดลอกลิงก์ข้างล่าง แล้ววางใน Chrome/Safari หรือติดตั้งแอปเลยก็ได้ครับ'}
+                </p>
               ) : (
                 // R96-R100d (Owner): ห้ามเงียบ — บอกตรงว่าลิงก์นี้ไม่มีรายการ กัน "คัดลอกลิงก์เปล่าไป Chrome แล้วไม่มีตะกร้า"
                 <p className="text-xs opacity-90">ลิงก์ที่เปิดอยู่ไม่พบรายการตะกร้า — ให้ใช้ลิงก์จากคอมเมนต์/ข้อความที่ระบบตอบไว้ (ที่มีข้อความ "สรุปรายการของคุณ") หรือเลือกเมนูที่หน้าร้านได้เลย</p>
@@ -288,12 +365,12 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
             <p className="mt-1 opacity-90">สำรองทุกเครื่อง: คัดลอกลิงก์แล้ว <b>วางใน Chrome / Safari</b> = เข้าเว็บจริงเสมอ</p>
             {/* R101-fix (A-4): กล่องลิงก์เต็ม — WebView บางรุ่นคัดลอกโปรแกรมไม่ได้จริง →
                 user เลือกทั้งหมด + กดค้าง/Ctrl+C คัดลอกเองได้ทุกเครื่อง (สะพานที่พิสูจน์ว่าใช้ได้จริง) */}
-            {cartHandoff && (
+            {(cartHandoff || liveCart.length > 0) && (
               <div className="mt-2">
                 <textarea
                   ref={linkBoxRef}
                   readOnly
-                  value={handoffUrl}
+                  value={linkBoxUrl}
                   rows={2}
                   data-testid="inapp-link-box"
                   onFocus={(e) => e.currentTarget.select()}

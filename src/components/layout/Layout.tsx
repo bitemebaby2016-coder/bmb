@@ -12,7 +12,7 @@ import { PushPermissionPrompt } from '../notification/PushPermissionPrompt'
 import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
-import { normalizeCartParam } from '@/lib/cartDeepLink'
+import { normalizeCartParam, type CartDeepItemV2 } from '@/lib/cartDeepLink'
 import { decodeSocialContextParam, detectSocialSource, saveSocialHandoff } from '@/lib/socialHandoff'
 import { showToast } from '../ui/ToastContainer'
 
@@ -122,7 +122,15 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
         for (const it of restoredItems) {
           const p = byId.get(it.id)
           if (!p || (p as { is_available?: boolean }).is_available === false) { missing++; continue }
-          const res = useCartStore.getState().addItem(p, it.q, {}, 'SAME_DAY')
+          // Phase 1: ใช้ v2 mods + lm (ถ้ามี) แทน hardcode {}/'SAME_DAY'
+          const mods = (it as CartDeepItemV2).mods
+          const lm = (it as CartDeepItemV2).lm
+          const res = useCartStore.getState().addItem(
+            p,
+            it.q,
+            mods ?? {},
+            lm === 1 ? 'PRE_ORDER' : 'SAME_DAY',
+          )
           if (res === 'added') added++
         }
         if (cancelled) return
@@ -139,6 +147,8 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
             url.searchParams.delete('s')
             window.history.replaceState(null, '', url.pathname + url.search + url.hash)
           } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
+          // Phase 1: เคลียร์ bmb:cart-resume หลัง restore สำเร็จ (กันสแนปชอตเก่า)
+          try { localStorage.removeItem('bmb:cart-resume') } catch {}
         } else if (missing > 0 && !toasted) {
           toasted = true
           showToast('รายการจากลิงก์หาไม่เจอในเมนูปัจจุบัน — เลือกเมนูใหม่ได้ที่หน้าร้าน', 'warning')
@@ -177,7 +187,7 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       if (sp.get('cart') || sp.get('s')) return // ลิงก์เต็มอยู่แล้ว = effect ตะกร้าหลักรับผิดชอบ
       const CART_STORAGE_KEY = 'bmb:cart-from-link'
       const snap = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || 'null') as
-        { items?: Array<{ id: string; q: number }>; at?: number } | null
+        { items?: Array<{ id: string; q: number; mods?: Record<string, any>; lm?: 0 | 1 }>; at?: number } | null
       if (!snap || !Array.isArray(snap.items) || snap.items.length === 0) return
       if (typeof snap.at !== 'number' || Date.now() - snap.at > 30 * 60_000) {
         localStorage.removeItem(CART_STORAGE_KEY) // เก่าเกิน 30 นาที = ลบทิ้ง ไม่กินพื้นที่
@@ -196,7 +206,15 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
           for (const it of items) {
             const p = byId.get(it.id)
             if (!p || (p as { is_available?: boolean }).is_available === false) continue
-            const res = useCartStore.getState().addItem(p, Math.max(1, Math.trunc(Number(it.q)) || 1), {}, 'SAME_DAY')
+            // Phase 1: ใช้ v2 mods + lm (ถ้ามี) แทน hardcode {}/'SAME_DAY'
+            const mods = (it as CartDeepItemV2).mods
+            const lm = (it as CartDeepItemV2).lm
+            const res = useCartStore.getState().addItem(
+              p,
+              Math.max(1, Math.trunc(Number(it.q)) || 1),
+              mods ?? {},
+              lm === 1 ? 'PRE_ORDER' : 'SAME_DAY',
+            )
             if (res === 'added') added++
           }
           if (added > 0) {

@@ -294,6 +294,13 @@ describe('R92 cartFooterForMatch — ลิงก์ตะกร้าติด�
     expect(f).not.toContain('ยังจับคู่ไม่ได้')
   })
 
+  it('footer มี scope disclosure line (Phase 1: บอกจริงว่าลิงก์นี้พาเฉพาะรายการรอบนี้)', () => {
+    const f = cartFooterForMatch({ matched, unmatched: [] })
+    expect(f).toContain('ลิงก์นี้พาเฉพาะรายการที่คุยกันในรอบนี้')
+    expect(f).toContain('ของที่เพิ่มเองบนเว็บยังอยู่กับเว็บของคุณ')
+    expect(f).toContain('ในหน้าเว็บกดคัดลอกลิงก์ = พาตะกร้าเต็มไปด้วย')
+  })
+
   it('matched บางส่วน → footer = ลิงก์ของรายการที่จับคู่ได้เท่านั้น + ระบบแจ้งของที่ยังไม่รวม (ไม่ซ่อนลิงก์ทั้งหมด)', () => {
     const f = cartFooterForMatch({ matched, unmatched: ['ลาบหมูเพี้ยน'] })
     expect(f).toContain('/shop?cart=')
