@@ -610,8 +610,9 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   -- 0b. ensure store is OPEN for fixture test (CI may run outside 10:00-22:00 Bangkok)
+  -- enforce_shop_hours (m160) reads key='hours' with {open, close} format
   INSERT INTO public.business_settings (key, value, created_at, updated_at)
-  VALUES ('operating_hours', '{"same_day_open": true, "pre_order_open": true, "morning_open": true, "midday_open": true, "evening_open": true}'::jsonb, NOW(), NOW())
+  VALUES ('hours', '{"open": "00:00", "close": "23:59"}'::jsonb, NOW(), NOW())
   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 
   -- 1. branch fixture (จำเป็นสำหรับ delivery_rounds.branch_id FK)
