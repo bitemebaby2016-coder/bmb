@@ -4,7 +4,7 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**🔒 LIVE STATE 2026-11-23 (รอบ 63 · BMB-FB-CART-BRIDGE-LIVE-2026-11-23 — สะพาน "ตะกร้าสด" ข้ามช่องทาง Facebook → เบราว์เซอร์จริง Phase 1–3) · **CODE_CLOSED + LOCAL GATES PASS + CI READY · รอ OWNER อนุมัติโค้ด + DEPLOY social-ai-worker**:**
+**🔒 LIVE STATE 2026-11-23 (รอบ 63 · BMB-FB-CART-BRIDGE-LIVE-2026-11-23 — สะพาน "ตะกร้าสด" ข้ามช่องทาง Facebook → เบราว์เซอร์จริง Phase 1–3) · **SESSION CLOSED — CODE_CLOSED + PUSHED (`9b913c9`) + EF `social-ai-worker` DEPLOYED exit=0 + SMOKE http=200 boot_ok=true (เขาทุกกก 2026-11-23 05:21Z · `e2e/_r74_deploy.log` + `_r82_smoke.json`) · เหลือแต่ Owner live test กลุ่ม H (6 ข้อ) + กลุ่ม G/F ค้างเดิม**:**
 
 - **ปัญหาที่ Owner ชี้ (พิสูจน์จากรูป 08:48–08:52 + โค้ดจริงแล้ว):**
   ใน Facebook WebView ตะกร้ามี **4 บรรทัด / 17 ชิ้น / ฿1,313** แต่กด "คัดลอกลิงก์ → วางใน Chrome" แล้วได้เพียง **1 รายการ ฿79** (= payload ของลิงก์ AI สรุปรอบคุยล่าสุด) — ข้อมูลไม่ตรงกันทุกช่องทาง
@@ -23,7 +23,7 @@
   - **Phase 3 — ความจริงทุกช่องทาง (server shared lib):** `socialOrderIntake.ts` `buildCartSummaryFooter` เพิ่ม scope disclosure line: `"ℹ️ ลิงก์นี้พาเฉพาะรายการที่คุยกันในรอบนี้ — ของที่เพิ่มเองบนเว็บยังอยู่กับเว็บของคุณ (ในหน้าเว็บกดคัดลอกลิงก์ = พาตะกร้าเต็มไปด้วย)"` (`cartFooterForMatch` R92 คงพฤติกรรม)
   - **Phase 4 — Tests + Gates:** อัปเดต `cartDeepLink.test.ts` (v2 round-trip, caps/downgrade, back-compat v1, double-encode), `r101CartHandoffFix.test.ts` (banner contract ใหม่: live-cart-at-click + fallback + TTL + testids), `socialOrderIntake.test.ts` + `socialAiContinuity.test.ts` (scope line) — **เกตผ่านครบ: `tsc` 0 errors · `npm run lint` OK · `npm run test` 226 files / 2446 tests PASS · `npm run build` PASS (PWA v1.3.0)**
 
-- **Deploy step ที่ต้อง Owner อนุมัติ:** `social-ai-worker` เท่านั้น (shared lib `socialOrderIntake.ts` ถูก import ที่นี่อย่างเดียว) — เป็น mutating deploy ผ่าน Management API pattern
+- **Deploy (Owner อนุมัติ 2026-11-23 05:02 และ 05:19):** `social-ai-worker` เท่านั้น (intake footer ถูก import ที่นี่อย่างเดียว — channel-webhook ใช้ `resolveKitchenPoint` ซึ่งไม่เปลี่ยน) — **DEPLOYED exit=0** (2026-11-23 05:21:08Z · `npx supabase functions deploy social-ai-worker --project-ref ivkdfognyiwjcmrhcnwz` · พิสูจน์ boot: smoke fake event_id → http=200 + "no RECEIVED social events")
 
 - **Out of scope (ประกาศชัด):** Server-side/account cart (ซิงก์ข้ามเครื่องจริง) — future; คูปอง/referral/ค่าส่งในลิงก์; LINE/IG เฉพาะทาง
 

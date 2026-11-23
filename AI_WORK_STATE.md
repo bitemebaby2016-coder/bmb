@@ -1,4 +1,4 @@
-## 🔒 SESSION CLOSE 2026-11-23 (รอบ 63 · BMB-FB-CART-BRIDGE-LIVE-2026-11-23 — สะพาน "ตะกร้าสด" ข้ามช่องทาง Facebook → เบราว์เซอร์จริง Phase 1–3) · **CODE_CLOSED + LOCAL GATES PASS + CI READY · รอ OWNER อนุมัติโค้ด + DEPLOY social-ai-worker**
+## 🔒 SESSION CLOSE 2026-11-23 (รอบ 63 · BMB-FB-CART-BRIDGE-LIVE-2026-11-23 — สะพาน "ตะกร้าสด" ข้ามช่องทาง Facebook → เบราว์เซอร์จริง Phase 1–3) · **SESSION CLOSED — CODE_CLOSED + PUSHED (`9b913c9`) + EF `social-ai-worker` DEPLOYED exit=0 + SMOKE http=200 boot_ok=true · เหลือแต่ Owner live test (กลุ่ม H 6 ข้อ + G/F ค้างเดิม = 32 ข้อใน `docs/BMB_REMAIN_TESTS_LIVE_2026-11-23.md`)**
 
 **ปัญหาที่ Owner ชี้ (พิสูจน์จากรูป 08:48–08:52 + โค้ดจริงแล้ว):**
 ใน Facebook WebView ตะกร้ามี **4 บรรทัด / 17 ชิ้น / ฿1,313** แต่กด "คัดลอกลิงก์ → วางใน Chrome" แล้วได้เพียง **1 รายการ ฿79** (= payload ของลิงก์ AI สรุปรอบคุยล่าสุด) — ข้อมูลไม่ตรงกันทุกช่องทาง
@@ -32,6 +32,12 @@
 - เกตผ่านครบ: `tsc` 0 errors · `npm run lint` OK · `npm run test` 226 files / 2446 tests PASS · `npm run build` PASS (PWA v1.3.0)
 
 **Out of scope (ประกาศชัด):** Server-side/account cart (ซิงก์ข้ามเครื่องจริง) — future; คูปอง/referral/ค่าส่งในลิงก์; LINE/IG เฉพาะทาง
+
+**ปิดเซสชัน 2026-11-23 05:21Z (Owner อนุมัติ deploy 2 ครั้ง 05:02/05:19 · "ปิดทุกอย่างให้เหลือแต่ทดสอบไลฟ์เท่านั้น"):**
+- เคลียร์สเตจค้าง = commit `e1d22cb` (docs: BMB_MASTER_STATUS.md + BMB_REMAIN_TESTS_LIVE_2026-11-23.md 32 ข้อ)
+- **Deploy `social-ai-worker` exit=0** (2026-11-23 05:21:08Z · `npx supabase functions deploy social-ai-worker --project-ref ivkdfognyiwjcmrhcnwz` ผ่าน `_r74DeployFns.cjs` scope เดียว · log `e2e/_r74_deploy.log`) — scope ยืนยันจากโค้ด: ฟังก์ชันที่เปลี่ยน (`buildCartSummaryFooter`/`cartFooterForMatch`) ถูกใช้เฉพาะ social-ai-worker; channel-webhook import เฉพาะ `resolveKitchenPoint` (ไม่เปลี่ยน)
+- **SMOKE PASS:** `node e2e/_r82_smoke.cjs` → http=200 + `{"processed":0,"note":"no RECEIVED social events"}` boot_ok=true (`e2e/_r82_smoke.json`) = พิสูจน์ build ใหม่ boot ได้จริง (ไม่แตะลูกค้า)
+- เหลือ: Owner live test ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-23.md` (เฉพาะกลุ่ม H ใหม่ 6 ข้อ · H-4 ใช้ footer ที่ deploy นี้)
 
 ---
 

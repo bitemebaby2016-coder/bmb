@@ -2,6 +2,7 @@
 
 > **📋 สถานะ deployment จริง (ยืนยัน 2026-11-23):**
 > - **R63 pushed:** `9b913c9` (FB Cart Bridge Live — สะพานตะกร้าสดข้ามช่องทาง Facebook → เบราว์เซอร์จริง Phase 1–3)
+> - **EF `social-ai-worker` DEPLOYED exit=0 (2026-11-23 05:21Z · SMOKE http=200 boot_ok=true `e2e/_r82_smoke.json`)** — กลุ่ม H พร้อมทดสอบทันที (H-4 ใช้ footer ใหม่ที่ deploy แล้ว)
 > - **R78/R79/R80 pushed:** `71667e8` + `9d43386` + `4fc13a2` (โพสต์การตลาด 5 รูป · Studio picker แท็บหัวข้อ · Floating Ad Exact Clone) — **CI 2/2 success ทั้ง 3 commit** (ยืนยันผ่าน GitHub API)
 > - **R55 pushed:** `e31312d` (Background Music + Mascot badge fix + OAuth/Passkey ALL CONFIGURED)
 > - **Migration 103** CI-safe (idempotent bucket create + RLS)
