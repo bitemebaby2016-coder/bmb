@@ -124,38 +124,8 @@ export function CartPage() {
         </div>
       )}
 
-      {/* M2: coupon UI รวมเป็น CouponBox component เดียว — ใช้ร่วมกับ CheckoutPage */}
-      {/* R10 (Owner 2026-10-27): คูปองใช้ที่หน้าเช็คเอาท์อย่างเดียว — กล่องเลือกโค้ด (popup)
-          อยู่ที่ CheckoutPage เท่านั้น ที่นี่โชว์ทางไปต่อ */}
-      <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-2">🎟️ คูปอง/โปรโมชั่น</h3>
-        <p className="text-sm text-brand-muted">เลือกใช้โค้ดส่วนลดได้ที่หน้าชำระเงิน — แตะกล่องคูปองแล้วเลือกโค้ดที่ใช้ได้ตอนนี้ (เติมอัตโนมัติ)</p>
-      </div>
-
-      {/* Summary */}
+      {/* ปุ่มยืนยันสั่งซื้อ — เหลือเพียงปุ่มเดียว (R10: คูปอง/สรุปราคาอยู่หน้า checkout) */}
       <div className="card">
-        <h3 className="font-bold text-brand-accent mb-4">💰 สรุปราคา</h3>
-        <div className="space-y-2 mb-4">
-          <div className="flex justify-between">
-            <span className="text-brand-muted">สินค้า</span>
-            <span className="font-medium">{subtotal.toFixed(2)} บาท</span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>ส่วนลด</span>
-              <span>-{discount.toFixed(2)} บาท</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span className="text-brand-muted">ค่าจัดส่ง</span>
-            <span className="font-medium">{deliveryFee.toFixed(2)} บาท</span>
-          </div>
-          <div className="border-t border-brand-border pt-2 flex justify-between text-xl font-bold">
-            <span>รวมทั้งหมด</span>
-            <span className="text-brand-primary">{total.toFixed(2)} บาท</span>
-          </div>
-        </div>
-        
         <Link to="/checkout" data-testid="go-checkout" aria-disabled={hasStalePreOrder} onClick={(e) => { if (hasStalePreOrder) e.preventDefault() }} className={`btn btn-primary w-full text-lg${hasStalePreOrder ? ' btn-locked' : ''}`}>
           ยืนยันสั่งซื้อ →
         </Link>

@@ -27,7 +27,7 @@ import { useLocationStore, isTrustedSource, deliveryPointStatus } from '@/store/
 import { sendGuestCheckoutOtp, createGuestCheckoutSession, describeGuestOtpError } from '@/lib/guestCheckout'
 import { resolveAddOnLines } from '@/lib/addonDisplay'
 import { DistanceChecker } from '@/components/delivery/DistanceChecker'
-import { listRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
+import { listRoundsForDate, getRoundsForDateAdmin, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
 import { haversineDistanceKm } from '@/lib/deliveryRouter'
 import { KITCHEN_POINT } from '@/config/kitchenLocation'
 import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, checkModeEligibility, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
@@ -254,6 +254,8 @@ export function CheckoutPage() {
   // Owner 2026-10-17 "รอบส่งมั่ว": auto-select the FIRST still-bookable round —
   // rows past cutoff/delivery window show as disabled (display mirror only; the
   // create RPC remains the authority and re-checks everything at order time).
+  // R63c (2026-11-23): PRE_ORDER ใช้ getRoundsForDateAdmin แสดงทุกรอบ (รวม status='closed')
+  // เพื่อให้ลูกค้าเห็นรอบที่ปิดแล้วเป็น disabled/เทา — SAME_DAY คงเดิม (auto-select)
   useEffect(() => {
     if (!customer) return // guests are redirected above — skip fetch (no 401 noise)
     let active = true
@@ -266,7 +268,10 @@ export function CheckoutPage() {
         setSelectedRoundId('')
         return
       }
-      const list = await listRoundsForDate(scheduledDate)
+      // PRE_ORDER: ใช้ all rounds (รวม closed) เพื่อแสดงสถานะครบ · SAME_DAY: active-only เหมือนเดิม
+      const list = orderMode === 'PRE_ORDER'
+        ? await getRoundsForDateAdmin(scheduledDate)
+        : await listRoundsForDate(scheduledDate)
       if (!active) return
       setRounds(list)
       setSelectedRoundId((prev) => {
@@ -1129,7 +1134,9 @@ export function CheckoutPage() {
             {rounds.map((r) => {
               const remaining = Math.max(0, Number(r.max_capacity) - Number(r.current_count))
               const status = roundBookability(r, { isToday: scheduledDate === today, mode: orderMode, preOrderCutoffHours: cutoffHours, shopHoursMs: hoursToMs(shopHours), operatingHours })
-              const closed = status !== 'open'
+              // R63c: closed rounds (status='closed' จากแอดมิน) ต้องแสดงแต่ disabled/เทา — รวมกับ bookability gates
+              const isRoundClosed = r.status === 'closed'
+              const closed = isRoundClosed || status !== 'open'
               const selected = selectedRoundId === r.id
               return (
                 <label
@@ -1150,12 +1157,12 @@ export function CheckoutPage() {
                     {/* พื้นปุ่มเลือกเป็นสีครีม (bg-orange-50) → ตัวอักษรต้องเข้มเสมอ ห้ามใช้สีธีม */}
                     <div className={`font-medium ${selected ? 'text-slate-900' : ''}`}>{r.display_name || r.round_key || r.id}</div>
                     <div className={`text-xs ${selected ? 'text-slate-600' : 'text-brand-muted'}`}>
-                      ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · {orderMode === 'PRE_ORDER' ? `ปิดรับพรีออเดอร์ ${roundCutoffLabel(r, 'PRE_ORDER', cutoffHours)} น.` : `เปิดรับถึงปิดร้าน · ${roundCutoffLabel(r, 'SAME_DAY', cutoffHours)}`} · {closed ? roundStatusLabel(status) : `เหลือ ${remaining} ที่`}
+                      ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · {orderMode === 'PRE_ORDER' ? `ปิดรับพรีออเดอร์ ${roundCutoffLabel(r, 'PRE_ORDER', cutoffHours)} น.` : `เปิดรับถึงปิดร้าน · ${roundCutoffLabel(r, 'SAME_DAY', cutoffHours)}`} · {closed ? (isRoundClosed ? 'ปิดรับแล้ว (แอดมิน)' : roundStatusLabel(status)) : `เหลือ ${remaining} ที่`}
                     </div>
                   </div>
                   {closed && (
                     <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-slate-200 text-slate-700 whitespace-nowrap">
-                      {roundStatusLabel(status)}
+                      {isRoundClosed ? 'ปิดรับ' : roundStatusLabel(status)}
                     </span>
                   )}
                 </label>

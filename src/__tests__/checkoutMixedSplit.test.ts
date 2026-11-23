@@ -33,6 +33,7 @@ const m = vi.hoisted(() => ({
   showToast: vi.fn(),
   createOrder: vi.fn(),
   listRoundsForDate: vi.fn(),
+  getRoundsForDateAdmin: vi.fn(),
   getPublishedScheduleForDate: vi.fn(),
   getProductScheduleMap: vi.fn(),
   fetchServerDeliveryFee: vi.fn(),
@@ -65,7 +66,7 @@ vi.mock('@/lib/guestCheckout', () => ({
 }))
 vi.mock('@/components/delivery/DistanceChecker', () => ({ DistanceChecker: () => null }))
 vi.mock('@/components/delivery/DeliveryMapPicker', () => ({ DeliveryMapPicker: () => null }))
-vi.mock('@/lib/bmbAdminApi_rounds', () => ({ listRoundsForDate: m.listRoundsForDate }))
+vi.mock('@/lib/bmbAdminApi_rounds', () => ({ listRoundsForDate: m.listRoundsForDate, getRoundsForDateAdmin: m.getRoundsForDateAdmin }))
 vi.mock('@/lib/bmbMenuSchedule', () => ({
   getPublishedScheduleForDate: m.getPublishedScheduleForDate,
   mirrorPreOrderScheduleGate: vi.fn(() => ({ allowed: true })),
@@ -113,6 +114,7 @@ const round = {
   id: 'r1', round_key: 'midday', display_name: 'Round Midday',
   cutoff_time: '23:59', delivery_start: '10:00', delivery_end: '14:00',
   current_count: 0, max_capacity: 99,
+  status: 'active',
 }
 
 let container: HTMLDivElement
@@ -175,6 +177,7 @@ beforeEach(() => {
   vi.useFakeTimers()
   vi.clearAllMocks()
   m.listRoundsForDate.mockResolvedValue([round])
+  m.getRoundsForDateAdmin.mockResolvedValue([round])
   m.getPublishedScheduleForDate.mockResolvedValue([])
   m.getProductScheduleMap.mockResolvedValue({ 'menu-1': MENU_DATE })
   m.fetchServerDeliveryFee.mockResolvedValue({ delivery_fee: 0, source: 'server' })
