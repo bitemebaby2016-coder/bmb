@@ -4,6 +4,13 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-23 (R63b · HOTFIX จาก live test — "คัดลอกลิงก์ → เปิดเบราว์เซอร์ภายนอก (แท็บเล็ต) ได้ตะกร้าเก่าที่กู้คืน ไม่มีของใหม่") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests +1 · tsc 0 · lint OK · build OK) + PUSHED `f6e4022` · frontend only (ไม่ต้อง deploy EF)**:**
+
+- **Root cause (พิสูจน์จากโค้ด):** `InAppBrowserBanner.tsx` อ่านตะกร้าด้วย `useCartStore.getState().items` **ใน render body** = อ่านครั้งเดียวตอน mount แล้วค้าง (stale closure — `.getState()` ไม่ subscribe store) → ลูกค้าเพิ่มเมนูต่อใน WebView (17 ชิ้น) แต่ banner ยังถือตะกร้า mount (1 รายการจาก AI summary) → ปุ่มคัดลอก/กล่องลิงก์ทุกทางพา `?cart=` **เก่า** เสมอ
+- **แก้ (`f6e4022`):** ① `liveCart` = `useCartStore((state) => state.items)` — subscription hook จริง: banner re-render ทุกครั้งที่ตะกร้าเปลี่ยน → `buildLiveHandoffUrl`/`copyHandoff`/`linkBoxUrl` ใช้ตะกร้าสด **ณ เวลากด** ทุกทาง ② ตัด dead code `handoffUrl` (URL จาก mount snapshot — ต้นตอเดิมที่ค้างมาจากแนวคิดเก่า) — คัดลอกทุกทางผ่าน fallback chain เดียว (live → mount → resume TTL 30 น.)
+- **Test lock:** `r101CartHandoffFix.test.ts` เพิ่ม R63b — assert banner ใช้ selector hook + ห้าม `getState().items` + ห้าม dead `handoffUrl` กลับมา
+- **จำนวนชิ้น/ราคาที่หาย:** encoding v2 (mods + line_mode) ถูกต้องมาก่อน — ตะกร้าเก่าที่เห็น = ปัญหาเดียวกัน 2 ชั้น (R63 stale ชั้นนี้ + payload v1 เดิม) — R63b ปิดชั้น stale สุดท้าย
+
 **🔒 LIVE STATE 2026-11-23 (รอบ 63 · BMB-FB-CART-BRIDGE-LIVE-2026-11-23 — สะพาน "ตะกร้าสด" ข้ามช่องทาง Facebook → เบราว์เซอร์จริง Phase 1–3) · **SESSION CLOSED — CODE_CLOSED + PUSHED (`9b913c9`) + EF `social-ai-worker` DEPLOYED exit=0 + SMOKE http=200 boot_ok=true (เขาทุกกก 2026-11-23 05:21Z · `e2e/_r74_deploy.log` + `_r82_smoke.json`) · เหลือแต่ Owner live test กลุ่ม H (6 ข้อ) + กลุ่ม G/F ค้างเดิม**:**
 
 - **ปัญหาที่ Owner ชี้ (พิสูจน์จากรูป 08:48–08:52 + โค้ดจริงแล้ว):**

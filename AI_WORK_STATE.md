@@ -1,3 +1,12 @@
+## 🔒 LIVE TEST RESULT 2026-11-23 บ่าย (R63b · HOTFIX — Owner live test: "รายการตะกร้าที่ผ่านลิงก์ copy มาเปิดเบราว์เซอร์ภายนอก (แท็บเล็ต) ยังมีตะกร้าเก่าโดยกู้คืน ไม่มีของใหม่") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests +1 · tsc 0 · lint OK · build OK) + PUSHED `f6e4022` · frontend only**
+
+- **Root cause:** `InAppBrowserBanner.tsx:140` อ่าน `useCartStore.getState().items` ใน render body = ค่าค้าง mount (ไม่ subscribe) — ลูกค้าเพิ่มเมนูใน WebView แล้ว banner ไม่รู้ → ปุ่มคัดลอก/กล่องลิงก์ใช้ตะกร้า mount เก่า (payload AI summary) เสมอ ทั้งที่ `encodeLiveCartParam` v2 + Layout restore v2 ถูกต้องแล้ว
+- **แก้:** ① `liveCart = useCartStore((state) => state.items)` — subscription hook จริง (banner re-render ทุกการเปลี่ยนตะกร้า → URL ทุกทางจากตะกร้าสด ณ เวลากด) ② ตัด dead code `handoffUrl` (mount snapshot URL — ต้นทางแนวคิดเก่า) — คัดลอกทุกทางผ่าน `buildLiveHandoffUrl` เดียว
+- **Test lock:** R63b ใน `r101CartHandoffFix.test.ts` (selector hook + ห้าม getState().items + ห้าม handoffUrl)
+- **รอ Owner retest:** H-1/H-2 (แท็บเล็ต: FB WebView สั่ง ≥4 บรรทัด → คัดลอกลิงก์ → วางในเบราว์เซอร์ภายนอก = ตะกร้าตรงทุกตัวเลข) — เกต: hard reload ก่อนเริ่ม (Cloudflare deploy 2-3 นาทีหลัง push)
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-23 (รอบ 63 · BMB-FB-CART-BRIDGE-LIVE-2026-11-23 — สะพาน "ตะกร้าสด" ข้ามช่องทาง Facebook → เบราว์เซอร์จริง Phase 1–3) · **SESSION CLOSED — CODE_CLOSED + PUSHED (`9b913c9`) + EF `social-ai-worker` DEPLOYED exit=0 + SMOKE http=200 boot_ok=true · เหลือแต่ Owner live test (กลุ่ม H 6 ข้อ + G/F ค้างเดิม = 32 ข้อใน `docs/BMB_REMAIN_TESTS_LIVE_2026-11-23.md`)**
 
 **ปัญหาที่ Owner ชี้ (พิสูจน์จากรูป 08:48–08:52 + โค้ดจริงแล้ว):**
