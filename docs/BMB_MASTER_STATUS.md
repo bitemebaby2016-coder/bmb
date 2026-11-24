@@ -4,9 +4,9 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**🔒 SESSION CLOSE 2026-11-24 (R105c · README REWRITE — Owner: "อ่าน readme และปรับปรุงใหม่จากสถานะโค้ดความสามารถและฟีเจอร์จริงปัจจุบัน เล่าเรื่องให้เหมือนเพรีเซนต์นักลงทุน") · **CODE_CLOSED — เอกสารเดียว ไม่มี code change ไม่ต้องรัน code gates**
+**🔒 SESSION CLOSE 2026-11-24 (R105c · README REWRITE — เวอร์ชันแรกแบบพรีเซนต์นักลงทุนถูก Owner ตัดสินไม่เอา → กู้โครงเดิม R74-OMNI กลับมา อัปเดตแบบปกติตามฟีเจอร์จริงล่าสุด) · **CODE_CLOSED — เอกสารเดียว ไม่มี code change ไม่ต้องรัน code gates**
 
-- **งาน:** เขียน `README.md` ใหม่ทั้งไฟล์จากสถานะจริง 2026-11-24 (เดิมค้างที่ R74-OMNI 2026-11-06) — โครงเรื่องพรีเซนต์นักลงทุน 5 ตอน + ตาราง "ตัวเลขที่ยืนยันได้" (2,521 tests/230 ไฟล์ · 213 migrations · 24 EF · contract replay CI) + ตาราง ฟีเจอร์→จุดยืนยันในโค้ด ทุกกลุ่ม LIVE + สถานะจริง + เงื่อนไขก่อนเปิดเงินจริง + กติกา repo (bootstrap 15.1/16.3)
+- **งาน:** กู้ README โครงเดิม (R74-OMNI style) ครบทุก section → อัปเดตแบบปกติ: สถานะหัวไฟล์ R105b · §3 +บรรทัดข้ามช่องทาง R101–R104 · §4 +Background Music R55→R105b · §5 +4 แถว (ตะกร้าข้ามช่องทาง/เพลงบรรเลง m196 RLS/สติกเกอร์ R63d) + social "EF deployed R104 · เหลือ live test H/I" + rider m210–212 · §6 migrations 197→213 + EF 24 + vitest 230 ไฟล์/2,521 tests · §7 ตัวเลขโฟลเดอร์ · §10 live test H/I + ปิดแล้ว +R105b/m212/R82 · §11 +AI_WORK_STATE + กติกา bootstrap/16.3
 - **หลักฐานที่ยึด:** App.tsx · package.json · supabase/functions · migrations 001–213 · vitest 230 ไฟล์/2521 tests (วัดจริง 2026-11-24) · สถานะ LIVE จาก R51–R105b ใน ledger — ไม่มีข้อความอวดโดยไม่มีโค้ด · ค้างงานระบุตรง (Omise TEST card · live test H/I · §T)
 
 ---
