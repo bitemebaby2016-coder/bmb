@@ -1,4 +1,4 @@
-## 🔒 LIVE TEST RESULT 2026-11-24 (R104 · "1 REPLY = 1 ลิงก์ของระบบ + เปิด ?cart= = ตั้งตะกร้า" — Owner live 10:45-10:46 "อาการที่แก้ไม่หายสักอาการ" · อนุมัติ "โอเคอนุมัติ") · **CODE_CLOSED + GATES PASS (vitest 2516 tests · tsc 0 · lint OK · build OK) · ⚠️ EF social-ai-worker รอ DEPLOY (mutating — Owner approve)**
+## 🔒 LIVE TEST RESULT 2026-11-24 (R104 · "1 REPLY = 1 ลิงก์ของระบบ + เปิด ?cart= = ตั้งตะกร้า" — Owner live 10:45-10:46 "อาการที่แก้ไม่หายสักอาการ" · อนุมัติ "โอเคอนุมัติ") · **CODE_CLOSED + GATES PASS (vitest 2516 tests · tsc 0 · lint OK · build OK) + PUSHED `47d2043` · ✅ EF social-ai-worker DEPLOYED (2026-11-24 · Owner deploy เอง exit=ok)**
 
 - **หลักฐาน live (5 ภาพ 10:45-10:46):**
   1. IAB กดลิงก์จากหลาย reply → ตะกร้าโตขึ้นเรื่อย ๆ: 26 ชิ้น ฿2,134 → 32 ชิ้น ฿2,608 (**+6 ชิ้น × ฿79 = +฿474 เป๊ะ** = ราคาเมนูที่ AI สรุป) → 34 ชิ้น ฿2,766
@@ -18,7 +18,7 @@
 
 - **ผลตาม live หลังแก้ (คาดการณ์ — รอ Owner ทดสอบตาม REMAIN_TESTS กลุ่ม I):** กดลิงก์ AI ลิงก์ไหนก็ได้ = เห็นตะกร้าตามสรุปของลิงก์นั้นพอดี (ไม่กอง) · ลิงก์ที่กด = ลิงก์ตะกร้าจริงเสมอ (ไม่มีลิงก์เปล่าให้กดพลาด)
 
-- **⚠️ เหลือ Owner approve + deploy:** `social-ai-worker` Edge Function ต้อง deploy ลง prod (mutating — แก้ prompt/assembly) ก่อนทดสอบ live กลุ่ม I · frontend (Layout/socialLinkFormat) = Cloudflare auto-deploy จาก push
+- **✅ EF DEPLOYED (2026-11-24 · Owner):** `social-ai-worker` ตัวล่าสุดบน prod แล้ว (R104 prompt/assembly) · frontend (Layout/socialLinkFormat) = Cloudflare auto-deploy จาก push · **เหลือแต่ Owner live test กลุ่ม I (8 ข้อ) ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-23.md`**
 
 ---
 

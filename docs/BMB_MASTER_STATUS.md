@@ -4,12 +4,11 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**🔒 LIVE STATE 2026-11-24 (R104 · "1 REPLY = 1 ลิงก์ของระบบ + เปิด ?cart= = ตั้งตะกร้า" — Owner live "อาการที่แก้ไม่หายสักอาการ": ตะกร้าโต 26→32→34 (+6 ชิ้น × ฿79 = +฿474 เป๊ะ) และเปิดข้ามเบราว์เซอร์แล้วว่าง (URL = biteme-baby.com/ ไม่มี query)) · **CODE_CLOSED + GATES PASS (vitest 2516 tests · tsc 0 · lint OK · build OK) · ⚠️ EF social-ai-worker รอ DEPLOY:**
-
+**🔒 LIVE STATE 2026-11-24 (R104 · "1 REPLY = 1 ลิงก์ของระบบ + เปิด ?cart= = ตั้งตะกร้า" — Owner live "อาการที่แก้ไม่หายสักอาการ": ตะกร้าโต 26→32→34 (+6 ชิ้น × ฿79 = +฿474 เป๊ะ) และเปิดข้ามเบราว์เซอร์แล้วว่าง (URL = biteme-baby.com/ ไม่มี query)) · **CODE_CLOSED + GATES PASS (vitest 2516 tests · tsc 0 · lint OK · build OK) + PUSHED `47d2043` · ✅ EF social-ai-worker DEPLOYED (2026-11-24 · Owner)**
 - **Root Cause 2 ขา (ที่ R102 ปิดไม่ครบ):** RC-A = Layout เปิด `?cart=` แล้ว "เติม" payload ทับรายการเดิม (addItem merge บวกจำนวน) → กดลิงก์จากหลาย reply = กองซ้ำ (guard R102 กันแค่ payload เดิมซ้ำ) · RC-B = prompt เดิมสั่ง AI เขียน `https://biteme-baby.com/shop` เอง + template `?cart=<encoded>` ที่ AI คำนวณไม่ได้ → ทุก reply มีลิงก์เปล่าเด่นกว่าลิงก์จริง
 - **การแก้:** ① Layout `?cart=` = **"ตั้งตะกร้าตามลิงก์" (replace)** — resolve ก่อนแตะตะกร้า (ไม่มีของใช้ได้ = ห้ามทำลายตะกร้าเดิม) · guard R102 คงอยู่ = กดลิงก์เดิมซ้ำไม่แตะตะกร้า ② `stripBareShopLinks(draft)` ใหม่ — draft ห้ามมีลิงก์ร้านเองทุกรูปแบบ (regex จับ template `<encoded>` ครบ) ③ worker กฎ **"1 reply = 1 ลิงก์ของระบบ"** — prompt/notes ห้ามเขียน URL · finalText = strip(draft) + footers + **default CTA** เมื่อไม่มี footer มีลิงก์ → ทุก reply มีลิงก์ร้านถูกต้องอันเดียวเสมอ
 - **เกต (ผลจริง):** tsc 0 · vitest **2516 tests PASS** (r75 pin อัปเดตตาม R104 — post worker คงกฎเดิม) · lint OK (U+FFFD จาก edit แก้ครบ) · build PASS
-- **⚠️ Deploy:** `social-ai-worker` ต้อง deploy (Owner approve) · frontend = Cloudflare auto-deploy
+- **Deploy (เสร็จแล้ว):** `social-ai-worker` ✅ DEPLOYED (Owner 2026-11-24 exit=ok) · frontend = Cloudflare auto-deploy — **เหลือแต่ Owner live test กลุ่ม I (8 ข้อ) ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-23.md`**
 
 ---
 

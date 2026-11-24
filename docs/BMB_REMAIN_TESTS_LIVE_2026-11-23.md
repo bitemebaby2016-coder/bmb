@@ -1,7 +1,7 @@
 # BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-24 · R104 Complete + R103 Complete + R102 Complete + R63 Complete + R78/R79/R80 Complete + R55 Complete + m209/m212/m213 APPLIED PROD · Code Cleanup Complete)
 
 > **📋 สถานะ deployment จริง (ยืนยัน 2026-11-24):**
-> - **R104 pushed** (1 reply = 1 ลิงก์ของระบบ + เปิด ?cart= = ตั้งตะกร้า) — ⚠️ **EF `social-ai-worker` ต้อง DEPLOY (รอ Owner approve) ก่อนทดสอบ I-7/I-8** · frontend = Cloudflare auto-deploy
+> - **R104 pushed + ✅ EF `social-ai-worker` DEPLOYED (2026-11-24 · Owner deploy เอง exit=ok)** (1 reply = 1 ลิงก์ของระบบ + เปิด ?cart= = ตั้งตะกร้า) · frontend = Cloudflare auto-deploy (hard reload ก่อนเริ่ม)
 > - **R103 pushed:** `43121c3` (Server-side Cart Sync v1 — login cross-device real cart sync via `cart_sessions.payload` + RLS select_own)
 > - **R102 pushed:** `d6f0a7b` (FB IAB Cart Double-Add Guard + External Copy Live-Cart Handoff)
 > - **EF `social-ai-worker` DEPLOYED exit=0 (2026-11-23 05:21Z · SMOKE http=200 boot_ok=true `e2e/_r82_smoke.json`)**
@@ -37,7 +37,7 @@
 | **I-5** | External copy live cart — IAB → Chrome (R102) | 1) ใน FB WebView เปิดลิงก์ AI → ตะกร้ามี ≥4 บรรทัด 2) กด "📋 คัดลอกลิงก์" (กล่องลิงก์เต็มโผล่ = กด "เลือกทั้งหมด" แล้วกดค้าง/Ctrl+C) 3) วางใน Chrome/Safari | ตะกร้าใน Chrome = **ตรงทุกตัวเลขกับ WebView** (บรรทัด/จำนวน/ราคา/addOns/line_mode) · ไม่มีของหาย/เพิ่มเอง |
 | **I-6** | External copy payload integrity — double-encoded guard (R102) | 1) ทำ I-5 สำเร็จ → ตะกร้าใน Chrome ถูกต้อง 2) ตรวจ console / network ว่า URL ที่คัดลอกมี `?cart=` payload v2 (มี mods/line_mode) ไม่มี `fbclid` | URL ไม่มี `fbclid` · payload ถอดได้ผ่าน `normalizeCartParam` (v2 mods/lm รอด) · ไม่มี double-encode residue |
 | **I-7** | กดลิงก์ AI หลายลิงก์ → ตะกร้า "ตั้งตามลิงก์" ไม่กอง (R104 — แก้ live 26→32→34) | 1) ทัก AI ให้สรุปรายการ 2 รอบแตกต่างกัน (reply A = เมนู X, reply B = เมนู Y) 2) เปิดลิงก์ reply A → ตรวจตะกร้า 3) เปิดลิงก์ reply B → ตรวจตะกร้า 4) กดลิงก์ reply A ซ้ำ | ตะกร้าหลังเปิดลิงก์ A = **รายการของ A พอดี** (ไม่รวมของเดิม) · เปิดลิงก์ B = **รายการของ B พอดี** (ไม่กองกับ A) · **กดลิงก์ A ซ้ำ = ตะกร้าคงเดิม** (guard — ของที่เพิ่มเองหลังจาก A ไม่หาย) · toast "เปิดรายการที่สรุปไว้ให้แล้ว 🛒" |
-| **I-8** | 1 reply = 1 ลิงก์ของระบบ (R104 — แก้ลิงก์เปล่า) — **ต้อง deploy EF ก่อน** | 1) ทัก AI ให้สรุปออเดอร์ → ดู reply (คอมเมนต์/ข้อความ) 2) ทักคุยทั่วไป (ไม่สั่งอะไร) → ดู reply | reply ออเดอร์ = **ลิงก์เดียว = ลิงก์ตะกร้าจริง (`?cart=`)** — ไม่มี `biteme-baby.com/shop` เปล่าปนมา · ไม่มีลิงก์ `?cart=<encoded>` template · reply คุยทั่วไป = มี CTA ร้าน "🛍️ เมนูทั้งหมดและสั่งซื้อ" ลิงก์เดียว · **กดลิงก์ที่ reply มี = ได้ของจริงทุกครั้ง** |
+| **I-8** | 1 reply = 1 ลิงก์ของระบบ (R104 — แก้ลิงก์เปล่า) | 1) ทัก AI ให้สรุปออเดอร์ → ดู reply (คอมเมนต์/ข้อความ) 2) ทักคุยทั่วไป (ไม่สั่งอะไร) → ดู reply | reply ออเดอร์ = **ลิงก์เดียว = ลิงก์ตะกร้าจริง (`?cart=`)** — ไม่มี `biteme-baby.com/shop` เปล่าปนมา · ไม่มีลิงก์ `?cart=<encoded>` template · reply คุยทั่วไป = มี CTA ร้าน "🛍️ เมนูทั้งหมดและสั่งซื้อ" ลิงก์เดียว · **กดลิงก์ที่ reply มี = ได้ของจริงทุกครั้ง** |
 
 ---
 
@@ -184,7 +184,7 @@
 
 | กลุ่ม | จำนวนข้อ | สถานะ |
 |------|----------|-------|
-| **I (R102+R103+R104 — Server-side Cart Sync + FB IAB Guard + 1 reply 1 ลิงก์)** | 8 | 🆕 พร้อมทดสอบ (I-7/I-8 ต้อง deploy EF ก่อน) |
+| **I (R102+R103+R104 — Server-side Cart Sync + FB IAB Guard + 1 reply 1 ลิงก์)** | 8 | 🆕 พร้อมทดสอบ (EF deployed ✓) |
 | **H (R63 ใหม่ — FB Cart Bridge Live)** | 6 | 🆕 พร้อมทดสอบ |
 | **G (R78/R79/R80 ใหม่)** | 7 | 🆕 พร้อมทดสอบ |
 | **F (R55)** | 7 | 🔄 carried over |
