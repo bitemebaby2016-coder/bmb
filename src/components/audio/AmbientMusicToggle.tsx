@@ -62,6 +62,7 @@ export function AmbientMusicToggle() {
             : 'bg-brand-bg text-brand-muted hover:text-brand-primary'
         }`}
         data-testid="ambient-music-toggle"
+        style={{ zIndex: 100 }}
       >
         <span aria-hidden="true">{state.playing ? '⏸' : '♪'}</span>
       </button>

@@ -36,7 +36,6 @@ CREATE POLICY background_music_authenticated_upload ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (
     (SELECT id FROM storage.buckets WHERE name = 'background_music') = bucket_id
-    AND auth.role() = 'authenticated'
   );
 
 -- Admin update: UPDATE only for profiles.role='admin'
