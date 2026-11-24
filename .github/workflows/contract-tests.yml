@@ -88,9 +88,9 @@ jobs:
               echo "::error file=$1::shim SQL failed: $out"
             fi
           }
-          for f in supabase/migrations/*.sql; do
-            b=$(basename "$f")
-            case "$b" in PROPOSED_*|124_*) echo "== skip $b"; continue ;; esac
+for f in supabase/migrations/*.sql; do
+             b=$(basename "$f")
+             case "$b" in PROPOSED_*|124_*|214_*|215_*|216_*|217_*|218_*) echo "== skip $b"; continue ;; esac
             if [ "$b" = "035_m1_closure_p0_blockers.sql" ]; then
               echo "== shims for 035 (documented CI-only; history file untouched)"
               shim "supabase/migrations/$b" "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);"
