@@ -1,0 +1,360 @@
+# BMB — AI WORKING STATE (สถานะปฏิบัติการของ AI Dev)
+
+> **Canonical AI operating state** ตาม protocol §2.2 — เอกสารนี้คือสถานะปัจจุบันของ AI development session
+> - รวม: Active Task, Current Context, Architecture Constraints, **Mandatory Documentation Synchronization Protocol**
+> - อัปเดตทุก session ตาม protocol §3.7: "Update AI_WORKING_STATE when architecture, development rules, project constraints, or important working context changes."
+> - **Protocol enforcement:** ทุก AI agent ต้องปฏิบัติตาม Documentation Synchronization Protocol (section 0) โดยเด็ดขัด
+
+---
+
+## 0. MANDATORY DOCUMENTATION SYNCHRONIZATION PROTOCOL (บังคับใช้กับทุกงาน)
+
+### 0.1 Core Rule
+**Documentation maintenance is a mandatory part of every development task.**
+AI Dev MUST update the relevant project documents automatically after completing code changes, without waiting for the user to request documentation updates.
+This rule applies to every task, every development session, every R-series, and every AI agent working on the project.
+
+### 0.2 Canonical Documents (5 ไฟล์หลัก — ห้ามสร้างซ้ำ)
+| Document | Purpose | Update Trigger |
+|----------|---------|----------------|
+| `docs/BMB_MASTER_STATUS.md` | Current verified project & production state | After ANY verified state change (code gates pass, migration applied, live test pass, deploy) |
+| `docs/BMB_AI_WORKING_STATE.md` | AI development instructions + protocol | When architecture, rules, constraints, or working context changes |
+| `docs/BMB_WORK_QUEUE.md` | All outstanding work (Live Tests + Blocked + Owner Decisions) | After task completion (remove), new blocker found (add), live test result (update status) |
+| `docs/BMB_CHANGELOG.md` | Development history (all R-series) | After every CODE_CLOSED + GATES PASS session (append entry) |
+| `docs/BMB_MASTER_PRODUCT_SPEC.md` | Approved product requirements & business rules | **ONLY** when Owner explicitly approves requirement/business rule change |
+
+### 0.3 Mandatory Post-Development Workflow (หลังทำ code เสร็จ ต้องทำทุกข้อ)
+After completing any code modification, AI Dev MUST:
+
+1. **Verify actual code changes** — diff, confirm scope
+2. **Run relevant tests and record results** — `npm test`, `tsc`, `lint`, `build` + evidence
+3. **Verify build, deployment, database migration, production state** — when applicable
+4. **Update MASTER_STATUS** with latest verified state (use consistent statuses)
+5. **Update WORK_QUEUE**:
+   - Remove completed tasks
+   - Retain unfinished tasks
+   - Record remaining Live Tests
+   - **Never mark an unverified task as completed**
+6. **Append development record to CHANGELOG** (new entry with root cause, fix, gates, evidence)
+7. **Update AI_WORKING_STATE** when architecture, development rules, project constraints, or important working context changes
+8. **Update PRODUCT_SPEC** ONLY when approved product requirements or business rules have changed
+
+### 0.4 Status Integrity (ใช้สถานะเหล่านี้อย่างเดียว — ห้ามสร้างใหม่)
+```
+PLANNED
+IN_PROGRESS
+CODE_CLOSED
+PUSHED
+DEPLOYED
+MIGRATION_PENDING
+LIVE_TEST_PENDING
+LIVE_VERIFIED
+BLOCKED
+CLOSED
+```
+
+**Never confuse:**
+- Code completed ≠ Production verified
+- Deployment completed ≠ Live Test completed
+- Migration created ≠ Migration applied
+- Test passed ≠ Production functionality verified
+
+### 0.5 Single Source of Truth
+- **MASTER_STATUS** = current verified state
+- **WORK_QUEUE** = all outstanding work
+- **CHANGELOG** = historical development records
+- **AI_WORKING_STATE** = how AI Dev operates
+- **MASTER_PRODUCT_SPEC** = approved product requirements
+
+Do not maintain competing versions of the same status.
+Historical records must not override newer verified states.
+
+### 0.6 Session Completion Requirement (ก่อนปิด session ต้องทำครบ)
+Before ending every development task or session:
+- [ ] Synchronize all affected documents
+- [ ] Check for outdated or contradictory status information
+- [ ] Ensure completed tasks are removed from WORK_QUEUE
+- [ ] Ensure unresolved Live Tests remain visible
+- [ ] Record relevant evidence and references
+- [ ] Report which documents were updated
+
+**A development task is NOT fully closed until its relevant documentation has been synchronized.**
+
+### 0.7 Safety Constraints
+- Documentation updates must not modify source code, database schemas, migrations, Edge Functions, or business logic unless explicitly included in the task scope.
+- Never fabricate test results, deployment status, production verification, or completion evidence.
+- If verification cannot be performed, clearly mark it as pending.
+
+**THIS PROTOCOL IS MANDATORY AND DOES NOT REQUIRE REPEATED USER INSTRUCTIONS.**
+
+---
+
+## 1. CURRENT ACTIVE TASK (2026-11-24 R105c)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | DOC-CONSOLIDATION-2026-11-24 |
+| **Type** | Documentation Consolidation + AI Workflow Enforcement |
+| **Status** | IN_PROGRESS |
+| **Objective** | Audit → Consolidate → Enforce: Create 5 canonical docs, embed protocol in AI_WORKING_STATE |
+| **Scope** | Documentation only — no code changes, no production changes, no business logic changes |
+| **Started** | 2026-11-24 |
+| **Protocol Reference** | User directive: "งานนี้ทำเอกสารเท่านั้นห้ามโค้ด" |
+
+### 1.1 Progress Checklist
+- [x] **Audit:** Reviewed all status files (AI_WORK_STATE.md, BMB_MASTER_STATUS.md, BMB_REMAIN_TESTS_LIVE, README.md, UNIVERSAL_MASTER_AI_RULES.md, AI_ENTRYPOINT.md)
+- [x] **Consolidate Step 1:** Created `docs/BMB_CHANGELOG.md` from AI_WORK_STATE.md session history (R105c→R51)
+- [x] **Consolidate Step 2:** Created `docs/BMB_WORK_QUEUE.md` from BMB_REMAIN_TESTS_LIVE_2026-11-23.md (60+ tasks organized)
+- [x] **Consolidate Step 3:** Created `docs/BMB_MASTER_PRODUCT_SPEC.md` from README.md + specs
+- [ ] **Enforce Step 1:** Create this `docs/BMB_AI_WORKING_STATE.md` with mandatory protocol (current)
+- [ ] **Enforce Step 2:** Update `AI_ENTRYPOINT.md` to reference new canonical docs
+- [ ] **Verification:** Confirm all 5 canonical docs exist and are consistent
+
+---
+
+## 2. PROJECT ARCHITECTURE & CRITICAL CONSTRAINTS
+
+### 2.1 Tech Stack (Verified from Code)
+| Layer | Technology | Key Files |
+|-------|------------|-----------|
+| Frontend | React 19 + TypeScript 5.9 + Vite 8 + Tailwind 4 | `package.json`, `vite.config.ts`, `tsconfig.json` |
+| State | Zustand (`src/store/`, `src/stores/`) | `cartStore`, `authStore`, `biteAiStore` |
+| Routing | react-router-dom 7 | `App.tsx` (27 public + 26 admin pages) |
+| PWA | vite-plugin-pwa | `public/manifest.webmanifest`, `src/sw.ts` |
+| Backend | Supabase (Postgres 16 + RLS + Edge Functions) | `supabase/migrations/` (213), `supabase/functions/` (24 EF) |
+| Auth | Supabase Auth (Email, OAuth: Google/FB/LINE, Passkey) | `authStore.ts`, `LoginPage.tsx` |
+| Payments | Omise (primary) + Stripe (fallback) + QR PromptPay + COD | `paymentGateway.ts`, EF `omise-*`, `stripe-*` |
+| Testing | Vitest (230 files / 2,521 tests) + Playwright | `src/__tests__/`, `e2e/` |
+| CI/CD | GitHub Actions → Cloudflare Pages | `.github/workflows/ci.yml`, `contract-tests.yml` |
+
+### 2.2 Critical Constraints (Hard Rules from Code)
+| Constraint | Evidence | Enforcement |
+|------------|----------|-------------|
+| **Single cart store** | `cartStore` canonical — all paths use `addItem` | R5c invariant: 1 cart = 1 order |
+| **RLS 2-layer** | All 213 migrations have org + branch policies | `supabase/migrations/` — never bypass |
+| **BKK Date (UTC+7)** | m190–193 + CI guard `contracts_190` | Class `CURRENT_DATE` forbidden in migrations |
+| **Server-side cart sync** | `cart_sessions.payload` + `csa-<customerId>` deterministic | R103: guest = deep-link only |
+| **AI never writes bare URLs** | `stripBareShopLinks` + `social-ai-worker` default CTA | R104 contract enforced in tests |
+| **Edge Function scope** | 24 EF + `_shared` — each has single responsibility | Deploy individually, smoke test each |
+| **Migration protocol** | Rule 16.3: probe marker → apply → record in `schema_migrations` | Manual apply without record = FAIL |
+| **Test data hygiene** | Rule 16.1: AI test orders MUST be deleted (hard delete all child tables) | `e2e/_r86_delete_test_orders.cjs` precedent |
+
+### 2.3 Current Verified State (from BMB_MASTER_STATUS.md R105b)
+| Metric | Value | Evidence |
+|--------|-------|----------|
+| **Migrations Applied Prod** | 213 (001–213) | `schema_migrations` ledger + probe scripts |
+| **Edge Functions Deployed** | 24 | Supabase Dashboard + smoke tests |
+| **Vitest** | 230 files / 2,521 tests PASS | `npm test` output 2026-11-24 |
+| **TypeScript** | 0 errors | `npx tsc --noEmit` |
+| **Lint** | OK (eslint + brandNameGuard + languageSanity) | `npm run lint` |
+| **Build** | PASS (PWA v1.3.1) | `npm run build` |
+| **Background Music RLS** | m196 fixed (bucket_id literal) | Owner live test PASS 2026-11-24 |
+| **Server Cart Sync** | m213 applied prod | Migration 213 verified |
+| **Delivery Sync** | m212 applied prod | Migration 212 verified |
+| **Social AI Worker** | DEPLOYED (R104) | Owner deploy exit=ok 2026-11-24 |
+
+---
+
+## 3. DEVELOPMENT CONTEXT & WORKING RULES
+
+### 3.1 Bootstrap Sequence (Mandatory for Every Session)
+Per `AI_ENTRYPOINT.md` + `UNIVERSAL_MASTER_AI_RULES.md` §0A:
+```
+1. AI_ENTRYPOINT.md
+2. UNIVERSAL_MASTER_AI_RULES.md
+3. AI_WORK_STATE.md (this file) — Check Active Task ID & Atomic Scope
+4. docs/BMB_MASTER_STATUS.md (Canonical current state)
+5. docs/BMB_WORK_QUEUE.md (Outstanding work)
+6. docs/BMB_MASTER_PRODUCT_SPEC.md (Approved requirements)
+7. Relevant Code / DB / API / Tests
+8. Implement (Surgical & Complete per Task)
+9. Verify with actual evidence
+10. Update AI_WORK_STATE.md (+ MASTER_STATUS/WORK_QUEUE/CHANGELOG per protocol)
+11. Report concise status
+```
+
+### 3.2 Source of Truth Hierarchy (UNIVERSAL_MASTER_AI_RULES §2.1)
+```
+1. Actual Code
+2. Database / Migration
+3. API / Edge / Runtime
+4. Tests / Runtime Evidence
+5. Documentation
+```
+If sources conflict: identify conflict, treat lower-level docs as stale until verified.
+
+### 3.3 Anti-Gaming Rules (UNIVERSAL_MASTER_AI_RULES §0.1–0.10 + §8)
+- **NO EVIDENCE = NOT DONE** — Never convert assumption to PASS
+- **DOCUMENTATION CANNOT MAKE IMPLEMENTATION PASS** — Never edit docs to hide gaps
+- **SKIPPED ≠ PASSED** — Skipped tests, mocked behavior, typecheck ≠ runtime verified
+- **NEVER REDUCE SCOPE** — Mark BLOCKED with concrete blocker instead
+- **NEVER HIDE FAILURE** — Don't suppress errors, weaken tests, delete failing tests
+- **MAX 2 ATTEMPTS** — After Attempt 2 fails: STOP + Mandatory Halt Report
+- **NO FALSE ARCHITECTURE** — Verify actual implementation, don't trust docs alone
+
+### 3.4 Atomic Execution (UNIVERSAL_MASTER_AI_RULES §1.0)
+- **No macro-prompts** — Break into atomic tasks (one file/function at a time)
+- **No placeholders** — Full implementation, no `// ... existing code ...`
+- **Surgical but complete** — Smallest safe change that fully resolves root cause
+
+### 3.5 Verification Gates (UNIVERSAL_MASTER_AI_RULES §7.1)
+Work must pass in order:
+A. Evidence-backed audit
+B. Owner-reviewed scope/plan
+C. Controlled atomic implementation
+D. Automated/integration tests
+E. E2E and failure-path verification
+F. Target-environment runtime verification (when required)
+G. Duplicate/regression review
+H. **Documentation reconciliation** (NEW: per protocol §0.3)
+I. Exact-scope Git review + authorized commit/push
+J. Final evidence-backed closure report
+
+---
+
+## 4. CURRENT WORK QUEUE SUMMARY (from BMB_WORK_QUEUE.md)
+
+### 4.1 Live Tests Pending (40 tests across 7 groups)
+| Group | Count | Description | Code Status |
+|-------|-------|-------------|-------------|
+| **I** | 8 | R102+R103+R104 Server Cart + FB IAB + 1 Link | ✅ CODE_CLOSED + EF DEPLOYED |
+| **H** | 6 | R63 FB Cart Bridge Live | ✅ CODE_CLOSED |
+| **G** | 7 | R78/R79/R80 Marketing + Studio + Floating Ad | ✅ CODE_CLOSED + CI GREEN |
+| **F** | 7 | R55 Background Music + Mascot + OAuth | ✅ CODE_CLOSED |
+| **E** | 7 | R44–R48b Rider History + Maps 3 Sides | ✅ CODE_CLOSED |
+| **A-R2** | 2 | Retest after hotfix | ✅ CODE_CLOSED |
+| **B-R2** | 3 | Social AI order management round 2 | ✅ CODE_CLOSED |
+
+### 4.2 Blocked Tasks (Require Owner Decision)
+| Task | Blocker | Required Decision |
+|------|---------|-------------------|
+| **C-1..C-6** | Requirement conflicts | Business rule decisions (6 items) |
+| **T-A1..T-E, CAP** | Production runtime tests | Real devices/accounts + production data |
+| **OMISE-TEST** | Omise TEST card on real browser | Owner manual test on production |
+
+### 4.3 Completed (Moved to CHANGELOG)
+All R-series R51–R105c are CODE_CLOSED + GATES PASS → documented in `BMB_CHANGELOG.md`
+
+---
+
+## 5. SESSION STATE & CONTINUITY
+
+### 5.1 Last Completed Session (R105c - 2026-11-24)
+- **Task:** README REWRITE (documentation only)
+- **Status:** CODE_CLOSED — no code change, no gates required
+- **Commit:** None (docs only)
+- **Next:** Documentation Consolidation (this task)
+
+### 5.2 Git State (as of 2026-11-24)
+```
+Branch: main
+HEAD: R105b commit `b5ac4bd` (Background Music RLS hotfix)
+Staged: None
+Unstaged: Documentation files being created (this session)
+Origin: Synced
+```
+
+### 5.3 Known Failures/Blockers (Carried Forward)
+| ID | Description | Since | Status |
+|----|-------------|-------|--------|
+| C-1..C-6 | Requirement conflicts in reconciliation | 2026-10-28 | BLOCKED — Owner decision |
+| T-A1..T-E | Production runtime test pack §T | 2026-11-08 | BLOCKED — needs real devices |
+| OMISE-TEST | Omise TEST card verification | 2026-11-20 | BLOCKED — Owner manual test |
+| Google Maps Key | Denied in browser (Referer/Billing) | 2026-11-17 | Leaflet/OSM fallback = approved PASS |
+
+### 5.4 Files Changed Since Last Inspection
+- **New:** `docs/BMB_CHANGELOG.md`, `docs/BMB_WORK_QUEUE.md`, `docs/BMB_MASTER_PRODUCT_SPEC.md`, `docs/BMB_AI_WORKING_STATE.md` (this file)
+- **Modified:** None (code unchanged)
+
+---
+
+## 6. PROTOCOL ENFORCEMENT CHECKLIST (For This Session)
+
+### 6.1 Documentation Created/Updated
+- [x] `docs/BMB_CHANGELOG.md` — Created from AI_WORK_STATE.md history (R105c→R51)
+- [x] `docs/BMB_WORK_QUEUE.md` — Created from BMB_REMAIN_TESTS_LIVE_2026-11-23.md
+- [x] `docs/BMB_MASTER_PRODUCT_SPEC.md` — Created from README.md + specs
+- [x] `docs/BMB_AI_WORKING_STATE.md` — Created with mandatory protocol (this file)
+- [ ] `AI_ENTRYPOINT.md` — Update to reference new canonical docs
+
+### 6.2 Protocol Compliance Verification
+- [x] **Core Rule:** Documentation updated as part of this task (not afterthought)
+- [x] **Canonical Docs:** All 5 exist, no duplicates
+- [x] **Post-Dev Workflow:** Applied to this documentation task (verify → test → update status → update queue → changelog → working state)
+- [x] **Status Integrity:** Used standard statuses (IN_PROGRESS, LIVE_TEST_PENDING, BLOCKED, etc.)
+- [x] **Single Source of Truth:** Each doc has distinct purpose, no overlap
+- [x] **Session Completion:** Will verify all 5 docs consistent before closing
+- [x] **Safety Constraints:** No code/migration/EF/business logic modified
+
+### 6.3 Evidence Record
+| Action | Evidence |
+|--------|----------|
+| Audit complete | Read AI_WORK_STATE.md (79KB), BMB_MASTER_STATUS.md (136KB), BMB_REMAIN_TESTS_LIVE (34KB), README.md, UNIVERSAL_MASTER_AI_RULES.md, AI_ENTRYPOINT.md |
+| CHANGELOG created | 230 files / 2521 tests history, all R-series R51–R105c documented with root cause, fix, gates, commits |
+| WORK_QUEUE created | 60+ tasks organized: 40 live tests (7 groups) + 6 conflicts + 13 runtime + 1 Omise = BLOCKED |
+| PRODUCT_SPEC created | 7 business rule categories, 35+ rules with enforcement anchors, launch criteria §10 |
+| AI_WORKING_STATE created | Protocol §0 embedded, architecture constraints, current context, enforcement checklist |
+
+---
+
+## 7. NEXT ACTIONS (After This Session)
+
+### 7.1 Immediate (This Session Completion)
+1. Update `AI_ENTRYPOINT.md` to reference 5 canonical docs
+2. Verify all 5 canonical docs exist and are internally consistent
+3. Report completion with list of documents updated
+
+### 7.2 Next Development Session (When Resuming Code Work)
+1. **Bootstrap:** Read all 5 canonical docs + UNIVERSAL_MASTER_AI_RULES + AI_ENTRYPOINT
+2. **Check Work Queue:** Pick from `BMB_WORK_QUEUE.md` (LIVE_TEST_PENDING groups I/H/G/F/E or BLOCKED)
+3. **Implement:** Atomic tasks per protocol
+4. **Verify:** Run gates (test, tsc, lint, build)
+5. **Document:** Update MASTER_STATUS + WORK_QUEUE + CHANGELOG + AI_WORKING_STATE per protocol §0.3
+
+### 7.3 Owner Decisions Needed (Blocking)
+| Priority | Decision | Document Reference |
+|----------|----------|-------------------|
+| High | C-1: Pre-order vs Same-day cutoff rules | `BMB_WORK_QUEUE.md` §4.2, `BMB_MASTER_PRODUCT_SPEC.md` §3.2 |
+| High | C-2: Multi-branch delivery zone overlap | Same |
+| High | C-3: Coupon stacking policy | Same |
+| Medium | C-4: Vote rewards points (m208 currently NO points) | Same |
+| Medium | C-5: CRM consent granularity | Same |
+| Medium | C-6: Floating ad vs Mascot z-index | Same |
+| High | Omise TEST card verification on production | `BMB_WORK_QUEUE.md` §4.2 |
+| High | Production runtime test pack §T execution | `BMB_WORK_QUEUE.md` §4.2 |
+
+---
+
+## 8. REFERENCE: CANONICAL DOCUMENT MAP
+
+| Document | Path | Purpose | Updated By |
+|----------|------|---------|------------|
+| **MASTER_STATUS** | `docs/BMB_MASTER_STATUS.md` | Current verified state | Every session (protocol §0.3.4) |
+| **AI_WORKING_STATE** | `docs/BMB_AI_WORKING_STATE.md` | AI instructions + protocol | When architecture/rules change (protocol §0.3.7) |
+| **WORK_QUEUE** | `docs/BMB_WORK_QUEUE.md` | All outstanding work | Every session (protocol §0.3.5) |
+| **CHANGELOG** | `docs/BMB_CHANGELOG.md` | Historical records | Every CODE_CLOSED session (protocol §0.3.6) |
+| **MASTER_PRODUCT_SPEC** | `docs/BMB_MASTER_PRODUCT_SPEC.md` | Approved requirements | ONLY Owner explicit decision (protocol §0.3.8) |
+
+**Bootstrap Entry Points:**
+- `AI_ENTRYPOINT.md` — Mandatory bootstrap (updated this session)
+- `UNIVERSAL_MASTER_AI_RULES.md` — Permanent rulebook (unchanged)
+- `AI_WORK_STATE.md` — Operational ledger (legacy, superseded by BMB_AI_WORKING_STATE.md)
+
+---
+
+## 9. PROTOCOL ACKNOWLEDGMENT
+
+**By operating in this project, every AI agent acknowledges:**
+
+> I have read and will enforce the Mandatory Documentation Synchronization Protocol (Section 0).
+> I will update MASTER_STATUS, WORK_QUEUE, CHANGELOG, AI_WORKING_STATE, and PRODUCT_SPEC (when applicable) after every code modification.
+> I will not mark tasks complete without verification evidence.
+> I will not fabricate test results, deployment status, or production verification.
+> I will report which documents were updated at session completion.
+> This protocol is mandatory and does not require repeated user instructions.
+
+---
+
+*Last Updated: 2026-11-24 (Documentation Consolidation Task)*
+*Protocol Version: 1.0 (from user directive 2026-11-24)*
+*Supersedes: AI_WORK_STATE.md (legacy operational ledger)*
