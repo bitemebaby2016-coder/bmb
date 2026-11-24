@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore'
 import { shouldShowAdminLink } from '@/lib/adminUi'
 import { useRiderIdentity } from '@/hooks/useRiderIdentity'
 import { NotificationDropdown } from '@/components/notification/NotificationDropdown'
+import { AmbientMusicToggle } from '@/components/audio/AmbientMusicToggle'
 import { applyTheme, cycleTheme, getTheme, THEME_LABELS, type ThemeName } from '@/lib/theme'
 import { scrollMainToTop } from '@/lib/scrollTo'
 
@@ -92,6 +93,7 @@ const riderIdentity = useRiderIdentity()
             <span className="sr-only">ธีม: {THEME_LABELS[theme]}</span>
             {theme === 'light' ? '☀️' : theme === 'graphite' ? '🎭' : '🌙'}
           </button>
+          <AmbientMusicToggle />
           {customer ? (
             <div className="flex items-center gap-3">
               <NotificationDropdown />

@@ -37,11 +37,15 @@ describe('R44 — มุมขวา: ไม่มีปุ่มทับซ้
     // เดิม: wrapper กว้างเท่า bubble (max-w-[220px] + mr-4 ใน flow) = ต้องหายไปแล้ว
     expect(mascotSrc).not.toContain('max-w-[220px] cursor-pointer')
   })
-  it('AmbientMusicToggle: offset คำนวณตาม cluster ที่แท้จริง (มีของ=288 · ว่าง=216) ไม่ใช่ 168 ตายตัว', () => {
-    expect(musicSrc).toContain('useCartStore')
-    expect(musicSrc).toContain('clusterClear')
-    expect(musicSrc).toContain('cartCount > 0 ? 288 : 216')
-    expect(musicSrc).not.toContain('+ 168px)')
+  it('AmbientMusicToggle: ย้ายมาเป็นปุ่มใน Header ข้าง Theme Toggle แล้ว (ไม่ใช่ floating pill ซ้ายล่าง)', () => {
+    // ไม่ใช้ useCartStore / clusterClear offset อีกต่อไป
+    expect(musicSrc).not.toContain('useCartStore')
+    expect(musicSrc).not.toContain('clusterClear')
+    expect(musicSrc).not.toContain('cartCount > 0 ? 288 : 216')
+    // ตัวใหม่เป็นแค่ปุ่ม ♫ ใน header
+    expect(musicSrc).toContain('aria-pressed={state.playing}')
+    expect(musicSrc).toContain('state.playing ?')
+    expect(musicSrc).toContain('emptyBucket')
   })
 })
 

@@ -1,7 +1,7 @@
 // ============================================
-// Bite Me Baby — Ambient music control (compact floating pill)
-// Play/stop + volume + clear playing state. Renders once from Layout —
-// state lives in the AmbientMusicManager singleton (survives route changes).
+// Bite Me Baby — Ambient music control (header compact button)
+// Play/stop only. Volume controlled via manager state.
+// State lives in the AmbientMusicManager singleton (survives route changes).
 // Never autoplays: toggle only fires from this click (user gesture).
 // ============================================
 
@@ -11,28 +11,20 @@ import {
   MUSIC_EVENT,
   type MusicState,
 } from '@/lib/ambientMusic'
-import { useCartStore } from '@/store/cartStore'
 
 export function AmbientMusicToggle() {
   const manager = getAmbientMusic()
   const [state, setState] = useState<MusicState>(() => manager.getState())
   const [emptyBucket, setEmptyBucket] = useState(false)
-  // R44 (Owner 2026-11-01):  łazienk pill ให้พ้น "cluster" ของ Floating Bite ทั้งระบบ —
-  // mascot ลอยที่ bottom 84 (ว่าง) / 152 (มีของในตะกร้า) + ปุ่ม 64px + bubble ลอยด้านบน (~48px)
-  // → เดิม offset 168 = ทับ bubble/mascot เสมอเมื่อตะกร้ามีของ (ภาพ Owner: ♪ ชนข้อความตั้ง)
-  const cartCount = useCartStore((s) => s.items.length)
-  const clusterClear = cartCount > 0 ? 288 : 216
 
   useEffect(() => {
     const onMusic = () => {
       const s = manager.getState()
       setState(s)
-      // ถ้า playing แต่ไม่มี volume (engine เริ่มไม่ได้ เพราะ bucket ว่าง) → แสดงเตือน
       if (s.playing && s.volume === 0) setEmptyBucket(true)
       else setEmptyBucket(false)
     }
     window.addEventListener(MUSIC_EVENT, onMusic)
-    // sync in case another instance changed state while we were unmounted
     onMusic()
     return () => window.removeEventListener(MUSIC_EVENT, onMusic)
   }, [manager])
@@ -44,55 +36,22 @@ export function AmbientMusicToggle() {
   }
 
   return (
-    <div
-      className="fixed left-3 z-40 flex items-center gap-2 rounded-2xl glass-surface border border-brand-border px-3 py-2 shadow-lg no-print"
-      // เหนือ Floating Bite cluster ทั้งหมด (ปุ่ม+bubble · R44: ปรับ offset ตามตะกร้า — ห้ามทับกันอีก)
-      style={{ bottom: `calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + ${clusterClear}px)` }}
-      data-testid="ambient-music"
+    <button
+      type="button"
+      onClick={handleToggle}
+      aria-pressed={state.playing}
+      aria-label={state.playing ? 'หยุดเพลงบรรเลง' : 'เปิดเพลงบรรเลง'}
+      title={state.playing ? 'หยุดเพลง' : emptyBucket ? 'ไม่มีเพลงใน bucket — โปรดอัปโหลดในแอดมิน' : 'เปิดเพลงบรรเลง'}
+      className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary ${
+        state.playing
+          ? 'bg-brand-primary text-white'
+          : emptyBucket
+          ? 'bg-brand-bg text-red-500 hover:text-red-400'
+          : 'bg-brand-bg text-brand-muted hover:text-brand-primary'
+      }`}
+      data-testid="ambient-music-toggle"
     >
-      <button
-        type="button"
-        onClick={handleToggle}
-        aria-pressed={state.playing}
-        aria-label={state.playing ? 'หยุดเพลงบรรเลง' : 'เปิดเพลงบรรเลง'}
-        title={state.playing ? 'หยุดเพลง' : 'เปิดเพลงบรรเลง'}
-        className={`w-9 h-9 rounded-full flex items-center justify-center text-lg transition-colors focus-visible:outline-2 focus-visible:outline-brand-primary ${
-          state.playing
-            ? 'bg-brand-primary text-white'
-            : 'bg-brand-bg text-brand-muted hover:text-brand-primary'
-        }`}
-        data-testid="ambient-music-toggle"
-        style={{ zIndex: 100 }}
-      >
-        <span aria-hidden="true">{state.playing ? '⏸' : '♪'}</span>
-      </button>
-      {/* Owner 2026-10-17: ตอนปิดเพลงเหลือเฉพาะปุ่มกลม — pill กว้าง ๆ เดิมทับราคา/
-          ปุ่มบนการ์ดบนมือถือ (แสดง label + slider เฉพาะตอนกำลังเล่น) */}
-      {state.playing && !emptyBucket && (
-        <div className="flex flex-col gap-0.5">
-          <span
-            className="text-[10px] font-semibold text-brand-muted leading-none"
-            data-testid="ambient-music-status"
-          >
-            {state.ducked ? 'ลดเสียง (Bite กำลังพูด)' : 'กำลังเล่น'}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={Math.round(state.volume * 100)}
-            onChange={(e) => manager.setVolume(Number(e.target.value) / 100)}
-            aria-label="ระดับเสียงเพลงบรรเลง"
-            className="w-20 h-1 accent-[var(--color-brand-primary)] cursor-pointer"
-            data-testid="ambient-music-volume"
-          />
-        </div>
-      )}
-      {state.playing && emptyBucket && (
-        <span className="text-[10px] text-red-500" data-testid="ambient-music-empty">
-          ไม่มีเพลงใน bucket — โปรดอัปโหลดในแอดมิน
-        </span>
-      )}
-    </div>
+      <span aria-hidden="true">{state.playing ? '⏸' : '♪'}</span>
+    </button>
   )
 }

@@ -337,8 +337,6 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
 
         {showBottomNav && <BottomNav />}
         <ToastContainer />
-        {/* Ambient music player — session-persistent singleton state */}
-        <AmbientMusicToggle />
         <PushPermissionPrompt />
         <OrderBuilderModal />
         {/* Decorative + floating AI mascot (pointer-events guarded) */}
