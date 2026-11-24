@@ -4,6 +4,45 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-24 (R103 · SERVER-SIDE CART SYNC v1 — Owner: "เตรียมทำ Server-side cart sync ต่อให้สมบูรณ์") · **CODE_CLOSED + GATES PASS (vitest 229 ไฟล์/2501 tests · tsc 0 · lint OK · build OK) · ⚠️ MIGRATION 213 APPLIED PROD (2026-11-24 · Owner อนุมัติ):**
+
+- **ขอบเขต (ต่อยอด R102 — deep-link แก้ guest ข้ามเครื่องได้แล้ว · R103 แก้ "ล็อกอินแล้วตะกร้าตามข้ามเครื่องจริง"):**
+  1. **`supabase/migrations/213_cart_sessions_payload.sql`**: ADD COLUMN `payload JSONB` ให้ `cart_sessions` (เนื้อตะกร้าจริง — รูปเดียวกับ localStorage `bmb-cart-v1`: ids/qty/customizations/mode/coupon/referral · **ไม่มีราคา/ยอดรวม/PII** — server re-derive ตอน RPC 025 เสมอ) + RLS **`cart_sessions_select_own`** FOR SELECT TO authenticated (m180 ขาดน้องนี้ — เขียนได้อ่านไม่ได้) · ADDITIVE ONLY re-run ปลอดภัย
+  2. **`cartSessionSync.ts`** (R49 telemetry → R103 sync จริง): upsert **`id = 'csa-' + customerId`** (deterministic — 1 แถว/1 ลูกค้า · อัปเดตจากเครื่องไหนก็แถวเดิม · บัญชีต่างกัน = แถวต่างกัน = intent R68 ยังครบ) + `payload: serializeCartObject(state)` (ตะกร้าว่าง = payload null) + `customerId` cache ต่อ uid + **`fetchLatestServerCart()`** ใหม่ (select payload ตาม customer_id · latest updated_at · ผ่าน `parseStoredCart` strict validate · guest/anon = null เงียบ ๆ R63 posture คงเดิม)
+  3. **`cartPersistence.ts`**: hydration path เพิ่ม restore จาก server — กฎเดียว: **local ไม่มีรายการ = ลอง server** (local มีของ = local ชนะ — ไม่ surprise merge · ไม่ยุ่ง flow `?cart=` ของ Layout/R102) · dynamic import `cartSessionSync` (กัน cycle) · restore เสร็จก่อน `setHydrated()` (ลำดับ deterministic — Layout `?cart=` รอ isHydrated)
+  4. **เทสต์ `r213CartServerSync.test.ts` (15 cases)**: migration contract (payload/select_own/ไม่แตะ policy เดิม) · guest guard ก่อน upsert (r49/r63 pin คงอยู่) · deterministic id · payload round-trip (ไม่มีราคาหลุด · strict parse) · ลำดับ restore→setHydrated · boot wiring ครบ · **R68 test contract อัปเดตตามข้อเท็จจริง** (sessionId localStorage → csa-<customerId> — intent "ไม่ทับข้ามบัญชี" ยังครบ + pin ใหม่ ยิงยืนยัน identity จาก auth.uid())
+
+- **เกต (เห็นผลจริงทั้งหมด):** `tsc --noEmit` 0 · `vitest run` 229 ไฟล์ / 2501 tests PASS · `npm run lint` OK (3 gates) · `npm run build` PASS (PWA)
+
+- **ผลลัพธ์ข้ามเครื่อง ณ ปิดงานนี้ (ครบทั้ง 2 แนวทาง):** ล็อกอิน = server sync (R103 อัตโนมัติ ข้ามเครื่องทุกเครื่องที่ล็อกอินบัญชีเดียวกัน) · guest = deep-link `?cart=` (R101/R63b/R102 — พิสูจน์ live แล้ว)
+
+---
+
+**🔒 LIVE STATE 2026-11-24 (R102 · FB IAB CART DOUBLE-ADD + EXTERNAL COPY EMPTY CART — Owner: "IAB กดลิงก์ซ้ำนับเพิ่มทุกครั้ง + คัดลอกไป Chrome ตะกร้าว่าง") · **CODE_CLOSED + GATES PASS (vitest 228 ไฟล์/2486 tests · tsc 0 · lint OK · build OK):**
+
+- **อาการจาก live test (รูป 4 ภาพ FB Post/Comment + WebView + Chrome):**
+  1. **IAB (ในแอปเฟซ)**: กดลิงก์ AI (ใต้โพส/ข้อความ) หลายครั้ง / navigate กลับ `/shop` → นับสินค้าเพิ่มทุกครั้ง (24 → 26 → 26 ชิ้น)
+  2. **External (Chrome/Safari ผ่านแบนเนอร์คัดลอก)**: คัดลอกลิงก์จาก IAB → เปิดใน Chrome → ตะกร้าว่าง / ไม่ตรงกับ WebView
+
+- **Root Cause เดียวกัน (พิสูจน์จากโค้ดจริง):**
+  - RC1: `history.replaceState` **ล้มเหลวใน FB IAB** → `?cart=` ค้างใน URL → navigate กลับ `/shop` (แม้ใน SPA) → Layout effect รันใหม่ → decode `?cart=` ซ้ำ → `addItem` ซ้ำ → นับซ้ำ
+  - RC2: ลิงก์ที่คัดลอกมาจาก IAB มี `?cart=` **เสียหาย (double-encoded / payload แพะจากบั๊ก IAB)** → `normalizeCartParam` ถอดไม่ได้ → `return` ไม่เติมของ
+
+- **การแก้ไข 4 จุด:**
+  1. **`Layout.tsx` (effect ?cart=)**: เพิ่ม **sessionStorage guard** `bmb:cart-processed-<hash16>` check ก่อน `runAdd` → เคย process แล้วข้ามทันที + mark flag หลัง `added > 0` → กัน double-add แม้ `replaceState` fail
+  2. **`InAppBrowserBanner.tsx` (`buildLiveHandoffUrl`)**: **strip `fbclid` ก่อน fallback chain** + **บังคับ live cart เสมอเมื่อมีของ** (ไม่ fallback mount snapshot/resume ที่อาจเก่า) + เพิ่ม `data-testid="inapp-live-cart-count"`
+  3. **`cartDeepLink.ts`**: `cartParamFingerprint(raw)` — FNV-1a 32-bit + ความยาว (ห้าม prefix slice: b64url ของ JSON ต่างกันแต่ prefix เดียวกัน = key เดิม → บล็อกลิงก์ใหม่ผิด — เทสต์จับ collision จริง)
+  4. **Test ใหม่ `fbCartBridgeIAB.test.ts` (16 cases)**: IAB double-add guard (navigate 5 ครั้ง → addItem 1 ครั้ง) + External copy decode (double-encoded + fbclid → ผ่าน)
+
+- **เกต (เห็นผลจริงทั้งหมด):** `tsc --noEmit` 0 error · `vitest run` 228 ไฟล์ / 2486 tests PASS · `npm run lint` OK (eslint + brandNameGuard + languageSanity — จับ U+FFFD 2 จุดจากการ edit แล้วแก้) · `npm run build` PASS (PWA)
+
+- **Out of Scope (ไม่ทำในแผนนี้):**
+  - Server-side/account cart (ต้อง architecture ใหม่ — งานแยก sprint) ← **แก้แล้วใน R103**
+  - LINE/IG in-app browser (hook รองรับแล้ว รอ channel จริง)
+  - PWA install flow (ทำงานอยู่แล้ว)
+
+---
+
 **🔒 LIVE STATE 2026-11-23 (R64 · DELIVERY SYNC FIX — "ไรเดอร์กดรับอาหารเพื่อเดินทางออกส่งไม่ได้ ตัน preparing → NULL chain + แผนที่รายออเดอร์ขาว + ลูกค้า Map โหลดไม่ได้") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + PUSHED + MIGRATION 212 APPLIED**:**
 
 - **อาการจาก live test (23/11/2569 · รูป 18:34–20:07):**

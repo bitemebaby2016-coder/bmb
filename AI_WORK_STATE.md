@@ -28,7 +28,7 @@
 
 ---
 
-## 🔒 SESSION CLOSE 2026-11-24 (R103 · SERVER-SIDE CART SYNC v1 — Owner: "เตรียมทำ Server-side cart sync ต่อให้สมบูรณ์") · **CODE_CLOSED + GATES PASS (vitest 229 ไฟล์/2501 tests · tsc 0 · lint OK · build OK) · ⚠️ MIGRATION 213 รอ APPLY (mutating — Owner approve)**
+## 🔒 SESSION CLOSE 2026-11-24 (R103 · SERVER-SIDE CART SYNC v1 — Owner: "เตรียมทำ Server-side cart sync ต่อให้สมบูรณ์") · **CODE_CLOSED + GATES PASS (vitest 229 ไฟล์/2501 tests · tsc 0 · lint OK · build OK) · ✅ MIGRATION 213 APPLIED PROD (2026-11-24 · Owner อนุมัติ):**
 
 - **ขอบเขตที่ส่งมอบ (ต่อยอด R102 — deep-link แก้ guest ข้ามเครื่องได้แล้ว · R103 แก้ "ล็อกอินแล้วตะกร้าตามข้ามเครื่องจริง"):**
   1. **`supabase/migrations/213_cart_sessions_payload.sql`**: ADD COLUMN `payload JSONB` ให้ `cart_sessions` (เนื้อตะกร้าจริง — รูปเดียวกับ localStorage `bmb-cart-v1`: ids/qty/customizations/mode/coupon/referral · **ไม่มีราคา/ยอดรวม/PII** — server re-derive ตอน RPC 025 เสมอ) + RLS **`cart_sessions_select_own`** FOR SELECT TO authenticated (m180 ขาดน้องนี้ — เขียนได้อ่านไม่ได้) · ADDITIVE ONLY re-run ปลอดภัย
@@ -38,7 +38,7 @@
 
 - **เกต (เห็นผลจริงทั้งหมด):** `tsc --noEmit` 0 · `vitest run` 229 ไฟล์ / 2501 tests PASS · `npm run lint` OK (3 gates) · `npm run build` PASS (PWA)
 
-- **⚠️ เหลือ Owner approve + apply:** `213_cart_sessions_payload.sql` ต้อง apply ลง production DB (mutating) ก่อนใช้งานจริง — client sync ยังทำงานปลอดภัยแม้ migration ยังไม่ apply (upsert ที่มี payload = error เงียบ · restore = select คอลัมน์ไม่มี = error เงียบ → behavior เท่าก่อน R103)
+- **✅ Migration 213 APPLIED PROD (2026-11-24 · Owner อนุมัติ):** `cart_sessions.payload` + `cart_sessions_select_own` RLS live บน production — client sync ทำงานเต็มรูปทันที
 
 - **ทางข้ามเครื่อง ณ ปิดงานนี้ (ครบทั้ง 2 แนวทาง):** ล็อกอิน = server sync (R103 อัตโนมัติ ข้ามเครื่องทุกเครื่องที่ล็อกอินบัญชีเดียวกัน) · guest = deep-link `?cart=` (R101/R63b/R102 — พิสูจน์ live แล้ว)
 
@@ -64,7 +64,6 @@
 - **เกต (เห็นผลจริงทั้งหมด):** `tsc --noEmit` 0 error · `vitest run` 228 ไฟล์ / 2486 tests PASS (รวม r101 contract เดิมไม่พัง) · `npm run lint` OK (eslint + brandNameGuard + languageSanity — จับ U+FFFD 2 จุดจากการ edit แล้วแก้) · `npm run build` PASS (PWA precache 165 entries)
 
 - **Out of Scope (ไม่ทำในแผนนี้ — ทำต่อรอบถัดไปตามคำสั่ง Owner):**
-  - Server-side cart sync (ต้อง architecture ใหม่ — งานแยก sprint)
   - LINE/IG in-app browser (hook รองรับแล้ว รอ channel จริง)
   - PWA install flow (ทำงานอยู่แล้ว)
 

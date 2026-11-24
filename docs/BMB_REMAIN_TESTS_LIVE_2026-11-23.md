@@ -1,19 +1,40 @@
-# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-23 · R63 Complete + R78/R79/R80 Complete + R55 Complete + m209 APPLIED PROD · Code Cleanup Complete)
+# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-24 · R103 Complete + R102 Complete + R63 Complete + R78/R79/R80 Complete + R55 Complete + m209/m212/m213 APPLIED PROD · Code Cleanup Complete)
 
-> **📋 สถานะ deployment จริง (ยืนยัน 2026-11-23):**
+> **📋 สถานะ deployment จริง (ยืนยัน 2026-11-24):**
+> - **R103 pushed:** `43121c3` (Server-side Cart Sync v1 — login cross-device real cart sync via `cart_sessions.payload` + RLS select_own)
+> - **R102 pushed:** `d6f0a7b` (FB IAB Cart Double-Add Guard + External Copy Live-Cart Handoff)
+> - **EF `social-ai-worker` DEPLOYED exit=0 (2026-11-23 05:21Z · SMOKE http=200 boot_ok=true `e2e/_r82_smoke.json`)**
+> - **Migration 213 APPLIED PROD ✓ (2026-11-24 · Owner อนุมัติ)** — `cart_sessions.payload` + `cart_sessions_select_own` RLS (verify cols + policy applied)
+> - **Migration 212 APPLIED PROD ✓ (2026-11-23 · Owner อนุมัติ)** — `delivery_sync_preparing_hop` + guard
+> - **Migration 209 APPLIED PROD ✓ (2026-11-20)** — `is_floating_ad` cols (verify cols/indexes 2/2)
+> - **R102 pushed:** `d6f0a7b` (FB IAB Cart Double-Add Guard + External Copy Live-Cart Handoff)
 > - **R63 pushed:** `9b913c9` (FB Cart Bridge Live — สะพานตะกร้าสดข้ามช่องทาง Facebook → เบราว์เซอร์จริง Phase 1–3)
-> - **EF `social-ai-worker` DEPLOYED exit=0 (2026-11-23 05:21Z · SMOKE http=200 boot_ok=true `e2e/_r82_smoke.json`)** — กลุ่ม H พร้อมทดสอบทันที (H-4 ใช้ footer ใหม่ที่ deploy แล้ว)
-> - **R78/R79/R80 pushed:** `71667e8` + `9d43386` + `4fc13a2` (โพสต์การตลาด 5 รูป · Studio picker แท็บหัวข้อ · Floating Ad Exact Clone) — **CI 2/2 success ทั้ง 3 commit** (ยืนยันผ่าน GitHub API)
+> - **R78/R79/R80 pushed:** `71667e8` + `9d43386` + `4fc13a2` (โพสต์การตลาด 5 รูป · Studio picker แท็บหัวข้อ · Floating Ad Exact Clone) — **CI 2/2 success ทั้ง 3 commit**
 > - **R55 pushed:** `e31312d` (Background Music + Mascot badge fix + OAuth/Passkey ALL CONFIGURED)
 > - **Migration 103** CI-safe (idempotent bucket create + RLS)
-> - **Migration 209 APPLIED PROD ✓ (2026-11-20 · Owner อนุมัติ "อนุมัติแอพพลายมิเกรชั่นที่ขาดอยู๋รวม209")** — `is_floating_ad` บน products + marketing_posts (verify cols 2/2 + indexes 2/2 · evidence `e2e/_r80_apply209_result.json`) · **+ record ledger ค้าง 5 ตัว (186/205/206/207/208)** — พิสูจน์แล้วว่า apply อยู่แล้วจาก schema จริง แต่ไม่เคย record (probe `e2e/_r80_deploy_probe.json` + `_r80_probe_207.json` · ledger หลัง = `e2e/_r80_verify_ledger.json` ครบ 6/6 · history prod รวม = 208 รายการ)
-> - **vitest 226 files / 2446 tests PASS** · lint ✅ · build ✅ (tsc + vite + PWA v1.3.0)
+> - **vitest 229 files / 2501 tests PASS** · lint ✅ · build ✅ (tsc + vite + PWA v1.3.1)
 > - **OAuth/Passkey ทั้ง 4 ช่องทาง Owner ตั้งค่า Dashboard เสร็จแล้ว** (Google/Facebook built-in · LINE Custom OIDC · Passkey built-in)
 > - Cloudflare Pages auto-deploy จาก push (รอ 2-3 นาที)
 
-> **📌 ฉบับนี้ = รายการเดียวที่ต้องรัน** (แทนที่ 2026-11-20 ทั้งหมด — ของปิดแล้วไม่อยู่ในนี้)
+> **📌 ฉบับนี้ = รายการเดียวที่ต้องรัน** (แทนที่ 2026-11-23 ทั้งหมด — ของปิดแล้วไม่อยู่ในนี้)
 > · สร้างตามคำสั่ง Owner 2026-11-20: "ทำทุกสถานะให้พร้อม อัพเดทเอกสารจากโค้ดจริงปัจจุบันรวมถึงสร้าง remain test ใหม่ ให้เหลือแต่ทดสอบบน live จริงเท่านั้น"
 > · **กติกาเดิมทุกข้อ:** ใช้ `https://biteme-baby.com` · **hard reload (Ctrl+Shift+R) 1 ครั้ง** ก่อนเริ่ม · บันทึก `ข้อ ID · เวลา · อุปกรณ์ · PASS/FAIL · evidence (ภาพ/copy ข้อความ verbatim)` · **FAIL = จด defect ใหม่ลง AI_WORK_STATE + two-try** · **SKIPPED ≠ PASS · ห้ามตัดข้อทิ้ง** · **ห้ามใช้ข้อมูลลูกค้าจริง** · ออเดอร์ทดสอบ = cancel ทำลายเมื่อจบ
+
+---
+
+## 🆕 กลุ่ม I — R102 + R103 (2026-11-24 · Server-side Cart Sync + FB IAB Guard · รอ Owner live test)
+
+> เงื่อนไขก่อนเริ่ม: migration 213 APPLIED PROD ✓ · push `43121c3` + `d6f0a7b` รอ Cloudflare deploy 2-3 นาที · hard reload (Ctrl+Shift+R) 1 ครั้ง · ล็อกอินลูกค้า/ไรเดอร์ตามต้องการ
+> Gates โค้ด: lint ✅ · vitest 229 ไฟล์ / 2501 tests PASS · build ✅ (PWA v1.3.1)
+
+| ข้อ | รีเทสต์อะไร | วิธีทำ | เกณฑ์ผ่าน |
+|---|---|---|---|
+| **I-1** | Server-side cart sync — login cross-device (R103) | 1) ล็อกอินบัญชีเดียวกันบนอุปกรณ์ 2 เครื่อง (เช่น มือถือ + เดสก์ท็อป) 2) เพิ่มเมนูบนเครื่องแรก (≥2 รายการ รวม addOns/pre-order) 3) รอ 5-10 วินาที 4) รีเฟรชเครื่องที่ 2 → ดูตะกร้า | ตะกร้าบนเครื่องที่ 2 = **ตรงชนิดทุกตัวเลขกับเครื่องแรก** (บรรทัด/จำนวนชิ้น/ราคา/ addOns/ line_mode) · ไม่มีของซ้ำ/หาย · ไม่มี toast error |
+| **I-2** | Server-side cart sync — server cart persists after logout/login (R103) | 1) ทำ I-1 สำเร็จ → เครื่องที่ 2 มีตะกร้า 2) ล็อกเอาท์เครื่องที่ 2 → ล็อกอินใหม่บัญชีเดียวกัน | ตะกร้ายังคงของเดิมครบ (ไม่หาย/ไม่ว่าง) · ไม่มี toast "ตะกร้าว่าง" · ไม่ต้องกดคัดลอกลิงก์ |
+| **I-3** | Server-side cart sync — guest NOT synced (R103) | 1) เปิดเบราว์เซอร์ incognito (ไม่ล็อกอิน) → เพิ่มเมนู ≥2 รายการ 2) เปิดเบราว์เซอร์ incognito ใบใหม่ / เครื่องอื่น → เปิด biteme-baby.com | ตะกร้าว่าง (guest ไม่มี server sync · รักษา R63 posture) · deep-link `?cart=` ยังใช้ได้ตามปกติ |
+| **I-4** | IAB double-add guard — กดลิงก์ซ้ำไม่เพิ่มของ (R102) | 1) เข้าแชท FB → สั่งเมนู 1-2 รายการ → ตะกร้ามีของ 2) กดลิงก์ AI เดียวกัน 5 ครั้ง / navigate กลับ `/shop` 5 ครั้ง | ตะกร้า **ไม่เพิ่มของ** ทุกครั้ง · toast แสดงครั้งเดียวครั้งแรก ("เปิดรายการที่สรุปไว้ให้แล้ว 🛒 N รายการ") · ไม่มี toast วาร์นซ้ำ |
+| **I-5** | External copy live cart — IAB → Chrome (R102) | 1) ใน FB WebView เปิดลิงก์ AI → ตะกร้ามี ≥4 บรรทัด 2) กด "📋 คัดลอกลิงก์" (กล่องลิงก์เต็มโผล่ = กด "เลือกทั้งหมด" แล้วกดค้าง/Ctrl+C) 3) วางใน Chrome/Safari | ตะกร้าใน Chrome = **ตรงทุกตัวเลขกับ WebView** (บรรทัด/จำนวน/ราคา/addOns/line_mode) · ไม่มีของหาย/เพิ่มเอง |
+| **I-6** | External copy payload integrity — double-encoded guard (R102) | 1) ทำ I-5 สำเร็จ → ตะกร้าใน Chrome ถูกต้อง 2) ตรวจ console / network ว่า URL ที่คัดลอกมี `?cart=` payload v2 (มี mods/line_mode) ไม่มี `fbclid` | URL ไม่มี `fbclid` · payload ถอดได้ผ่าน `normalizeCartParam` (v2 mods/lm รอด) · ไม่มี double-encode residue |
 
 ---
 
@@ -156,17 +177,18 @@
 
 ---
 
-## 📋 สรุปรายการที่เหลือ (2026-11-23 หลัง R63 Complete + R78/R79/R80 + R55 + m209 APPLIED)
+## 📋 สรุปรายการที่เหลือ (2026-11-24 หลัง R103 Complete + R102 Complete + R63 Complete + R78/R79/R80 + R55 + m209/m212/m213 APPLIED)
 
 | กลุ่ม | จำนวนข้อ | สถานะ |
 |------|----------|-------|
+| **I (R102+R103 ใหม่ — Server-side Cart Sync + FB IAB Guard)** | 6 | 🆕 พร้อมทดสอบ |
 | **H (R63 ใหม่ — FB Cart Bridge Live)** | 6 | 🆕 พร้อมทดสอบ |
 | **G (R78/R79/R80 ใหม่)** | 7 | 🆕 พร้อมทดสอบ |
 | **F (R55)** | 7 | 🔄 carried over |
 | **E (R44–R48b)** | 7 | 🔄 carried over |
 | **A รอบ 2** | 2 | 🔄 carried over |
 | **B รอบ 2** | 3 | 🔄 carried over |
-| **รวม** | **32 ข้อ** | |
+| **รวม** | **38 ข้อ** | |
 
 ---
 
