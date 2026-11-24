@@ -11,6 +11,11 @@ export interface RecipeRow {
   quantity_per_unit: number
   ingredient_name?: string
   inventory_status?: string
+  // Phase 1: Batch yield fields (Owner Decision B3)
+  batch_yield_factor?: number
+  batch_waste_pct?: number
+  cost_per_unit?: number
+  last_cost_calculated_at?: string
 }
 
 export async function listRecipes(): Promise<RecipeRow[]> {

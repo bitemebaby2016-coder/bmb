@@ -1,6 +1,7 @@
 // ============================================
 // Bite Me Baby Admin API - Inventory
 // ✅ v3.1: Using Supabase (replaces localStorage)
+// Phase 1: Added prep yield, unit conversion, WAVG, supplier_id (Owner Decisions B1, B2, B3)
 // ============================================
 
 import { supabase } from './supabase'
@@ -17,6 +18,19 @@ export interface InventoryForm {
   unit_price: number
   supplier_name: string
   supplier_phone: string
+  // Phase 1: New fields
+  supplier_id?: string
+  prep_yield_factor?: number
+  prep_waste_pct?: number
+  purchase_unit?: string
+  use_unit?: string
+  conversion_factor?: number
+  package_size?: number
+  gross_weight?: number
+  net_weight?: number
+  wavg_cost?: number
+  last_purchase_price?: number
+  last_approved_price?: number
 }
 
 // ============================================
@@ -42,6 +56,19 @@ export async function createInventory(data: InventoryForm): Promise<Ingredient |
     current_stock: data.current_stock, min_stock: data.min_stock,
     max_stock: data.max_stock, unit_price: data.unit_price,
     supplier_name: data.supplier_name, supplier_phone: data.supplier_phone,
+    // Phase 1: New fields
+    supplier_id: data.supplier_id,
+    prep_yield_factor: data.prep_yield_factor ?? 1.0,
+    prep_waste_pct: data.prep_waste_pct ?? 0,
+    purchase_unit: data.purchase_unit,
+    use_unit: data.use_unit,
+    conversion_factor: data.conversion_factor ?? 1.0,
+    package_size: data.package_size,
+    gross_weight: data.gross_weight,
+    net_weight: data.net_weight,
+    wavg_cost: data.wavg_cost,
+    last_purchase_price: data.last_purchase_price,
+    last_approved_price: data.last_approved_price,
   }).select().single()
 
   if (error) { console.error('[createInventory] Error:', error); return null }

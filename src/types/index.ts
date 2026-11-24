@@ -496,6 +496,132 @@ export interface ReorderAlert {
   resolved_at?: string;
 }
 
+// ============================================
+// Supplier & Supplier Product Types (Phase 1)
+// ============================================
+
+export interface Supplier {
+  id: string;
+  name: string;
+  code: string;
+  contact_name?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  payment_terms_days: number;
+  lead_time_days: number;
+  is_active: boolean;
+  tenant_id?: string;
+  branch_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SupplierForm {
+  id?: string;
+  name: string;
+  code?: string;
+  contact_name?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  payment_terms_days?: number;
+  lead_time_days?: number;
+  is_active?: boolean;
+  tenant_id?: string;
+  branch_id?: string;
+}
+
+export interface SupplierProduct {
+  id: string;
+  supplier_id: string;
+  ingredient_id: string;
+  supplier_sku?: string;
+  supplier_name?: string;
+  purchase_unit: string;
+  use_unit: string;
+  conversion_factor: number;
+  
+  // Three Price States — Owner Decision B4
+  last_committed_price?: number;      // PO approved (committed)
+  last_realized_price?: number;       // GRN posted (realized)
+  last_approved_price?: number;       // Admin approved for costing
+  
+  last_committed_at?: string;
+  last_realized_at?: string;
+  last_approved_at?: string;
+  
+  last_purchase_date?: string;
+  min_order_qty: number;
+  lead_time_days: number;
+  is_preferred: boolean;
+  is_active: boolean;
+  tenant_id?: string;
+  branch_id?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Joined relations (optional, for admin UI)
+  supplier?: Supplier;
+  ingredient?: Ingredient;
+}
+
+export interface SupplierProductForm {
+  id?: string;
+  supplier_id: string;
+  ingredient_id: string;
+  supplier_sku?: string;
+  supplier_name?: string;
+  purchase_unit: string;
+  use_unit: string;
+  conversion_factor?: number;
+  last_committed_price?: number;
+  last_realized_price?: number;
+  last_approved_price?: number;
+  min_order_qty?: number;
+  lead_time_days?: number;
+  is_preferred?: boolean;
+  is_active?: boolean;
+  tenant_id?: string;
+  branch_id?: string;
+}
+
+// Extended Ingredient with new Phase 1 fields
+export interface Ingredient {
+  id: string;
+  name: string;
+  category: string; // 'protein', 'vegetable', 'carbohydrate', 'sauce', 'seasoning', 'beverage', 'other'
+  unit: IngredientUnit;                    // Legacy: same as use_unit
+  current_stock: number;
+  min_stock: number; // reorder point
+  max_stock: number; // max capacity
+  unit_price: number;                       // LEGACY: retained for backward compat
+  supplier_name: string;
+  supplier_phone: string;
+  last_restocked_at: string;
+  next_expected_date?: string;
+  expiration_date?: string;
+  status: InventoryStatus;
+  image_url?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Phase 1: New fields (Owner Decisions B1, B2, B3)
+  supplier_id?: string;                     // FK to suppliers table
+  prep_yield_factor: number;                // Ingredient prep yield (e.g., 0.85 for veg trim)
+  prep_waste_pct: number;                   // Ingredient prep waste %
+  purchase_unit?: string;                   // Unit when purchasing (e.g., carton)
+  use_unit?: string;                        // Unit used in recipes (base unit)
+  conversion_factor: number;                // use_units per 1 purchase_unit
+  package_size?: number;                    // Units per package
+  gross_weight?: number;                    // kg per package
+  net_weight?: number;                      // kg per package (net)
+  wavg_cost?: number;                       // Perpetual Moving Weighted Average per use_unit
+  last_purchase_price?: number;             // Last GRN realized landed cost per use_unit
+  last_approved_price?: number;             // Last admin-approved price for costing
+}
+
 export interface PurchaseOrder {
   id: string;
   supplier_name: string;
