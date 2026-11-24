@@ -18,13 +18,27 @@ import {
 } from '@/lib/ambientMusic'
 import { emitVoiceActivity } from '@/lib/audioEvents'
 
+// Mock supabase for business_settings check
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn(() => Promise.resolve({ data: { value: { enabled: true } } })),
+        })),
+      })),
+    })),
+  },
+}))
+
 // Fake engine for testing the manager logic (not the file engine)
 class FakeEngine implements AmbientEngine {
   startCalls: number[] = []
   stopCalls = 0
   sets: { v: number; ramp?: number }[] = []
-  start(volume: number): void {
+  async start(volume: number): Promise<boolean> {
     this.startCalls.push(volume)
+    return true
   }
   setVolume(v: number, rampSeconds?: number): void {
     this.sets.push({ v, ramp: rampSeconds })
@@ -108,9 +122,9 @@ describe('ambient music — audio ducking while Bite speaks', () => {
   beforeEach(() => localStorage.clear())
   afterEach(() => vi.restoreAllMocks())
 
-  it('ducks on voice start and restores smoothly on voice end', () => {
+  it('ducks on voice start and restores smoothly on voice end', async () => {
     const { engine, manager } = makeManager(0.8)
-    void manager.toggle()
+    await manager.toggle()
     emitVoiceActivity(true)
     expect(manager.getState().ducked).toBe(true)
     expect(engine.sets[engine.sets.length - 1].v).toBeCloseTo(0.8 * DUCK_LEVEL)
@@ -129,9 +143,9 @@ describe('ambient music — audio ducking while Bite speaks', () => {
     manager.dispose()
   })
 
-  it('a voice failure (speaking=false after error) always restores the level', () => {
+  it('a voice failure (speaking=false after error) always restores the level', async () => {
     const { engine, manager } = makeManager(0.6)
-    void manager.toggle()
+    await manager.toggle()
     emitVoiceActivity(true)
     // aiVoice always emits speaking=false on ended/onerror/stop — simulate error path
     emitVoiceActivity(false)
@@ -140,9 +154,9 @@ describe('ambient music — audio ducking while Bite speaks', () => {
     manager.dispose()
   })
 
-  it('setVolume while ducked keeps the ducked target', () => {
+  it('setVolume while ducked keeps the ducked target', async () => {
     const { engine, manager } = makeManager(0.8)
-    void manager.toggle()
+    await manager.toggle()
     emitVoiceActivity(true)
     manager.setVolume(0.4)
     expect(engine.sets[engine.sets.length - 1].v).toBeCloseTo(0.4 * DUCK_LEVEL)
@@ -153,7 +167,7 @@ describe('ambient music — audio ducking while Bite speaks', () => {
 
   it('dispose stops audio and detaches the voice listener', async () => {
     const { engine, manager } = makeManager()
-    void manager.toggle()
+    await manager.toggle()
     manager.dispose()
     expect(engine.stopCalls).toBe(1)
     expect(manager.getState().playing).toBe(false)

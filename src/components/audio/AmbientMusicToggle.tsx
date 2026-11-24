@@ -16,6 +16,7 @@ import { useCartStore } from '@/store/cartStore'
 export function AmbientMusicToggle() {
   const manager = getAmbientMusic()
   const [state, setState] = useState<MusicState>(() => manager.getState())
+  const [emptyBucket, setEmptyBucket] = useState(false)
   // R44 (Owner 2026-11-01):  łazienk pill ให้พ้น "cluster" ของ Floating Bite ทั้งระบบ —
   // mascot ลอยที่ bottom 84 (ว่าง) / 152 (มีของในตะกร้า) + ปุ่ม 64px + bubble ลอยด้านบน (~48px)
   // → เดิม offset 168 = ทับ bubble/mascot เสมอเมื่อตะกร้ามีของ (ภาพ Owner: ♪ ชนข้อความตั้ง)
@@ -23,7 +24,13 @@ export function AmbientMusicToggle() {
   const clusterClear = cartCount > 0 ? 288 : 216
 
   useEffect(() => {
-    const onMusic = () => setState(manager.getState())
+    const onMusic = () => {
+      const s = manager.getState()
+      setState(s)
+      // ถ้า playing แต่ไม่มี volume (engine เริ่มไม่ได้ เพราะ bucket ว่าง) → แสดงเตือน
+      if (s.playing && s.volume === 0) setEmptyBucket(true)
+      else setEmptyBucket(false)
+    }
     window.addEventListener(MUSIC_EVENT, onMusic)
     // sync in case another instance changed state while we were unmounted
     onMusic()
@@ -31,7 +38,9 @@ export function AmbientMusicToggle() {
   }, [manager])
 
   async function handleToggle() {
-    await manager.toggle() // user gesture — engine start/stop inside
+    const started = await manager.toggle()
+    if (!started) setEmptyBucket(true)
+    else setEmptyBucket(false)
   }
 
   return (
@@ -58,7 +67,7 @@ export function AmbientMusicToggle() {
       </button>
       {/* Owner 2026-10-17: ตอนปิดเพลงเหลือเฉพาะปุ่มกลม — pill กว้าง ๆ เดิมทับราคา/
           ปุ่มบนการ์ดบนมือถือ (แสดง label + slider เฉพาะตอนกำลังเล่น) */}
-      {state.playing && (
+      {state.playing && !emptyBucket && (
         <div className="flex flex-col gap-0.5">
           <span
             className="text-[10px] font-semibold text-brand-muted leading-none"
@@ -77,6 +86,11 @@ export function AmbientMusicToggle() {
             data-testid="ambient-music-volume"
           />
         </div>
+      )}
+      {state.playing && emptyBucket && (
+        <span className="text-[10px] text-red-500" data-testid="ambient-music-empty">
+          ไม่มีเพลงใน bucket — โปรดอัปโหลดในแอดมิน
+        </span>
       )}
     </div>
   )

@@ -112,16 +112,25 @@ export function BackgroundMusicSettingsPage() {
       showToast('วาง URL ก่อน', 'error')
       return
     }
+    setImportingUrl(true)
+    setStatus((p) => ({ ...p, [url]: { kind: 'idle', text: '⏳ กำลังดาวน์โหลด…' } }))
     try {
-      setImportingUrl(true)
-      const res = await fetch(url)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const res = await fetch(url, { mode: 'cors' })
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
+      const contentType = res.headers.get('content-type') || ''
+      if (!contentType.startsWith('audio/')) {
+        throw new Error(`MIME ไม่ใช่เสียง: ${contentType}`)
+      }
+      setStatus((p) => ({ ...p, [url]: { kind: 'idle', text: '📦 กำลังบีบอัด…' } }))
       const blob = await res.blob()
-      const file = new File([blob], url.split('/').pop() || 'music.webm', { type: blob.type || 'audio/webm' })
+      const file = new File([blob], url.split('/').pop() || 'music.webm', { type: contentType })
       await onFileUpload(file)
       setExternalUrl('')
-    } catch {
-      showToast('❌ นำเข้าไม่สำเร็จ — ตรวจ URL/CORS/ขนาดไฟล์', 'error')
+      showToast('✅ นำเข้า URL สำเร็จ', 'success')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'ข้อผิดพลาดไม่ทราบสาเหตุ'
+      showToast(`❌ นำเข้าไม่สำเร็จ: ${msg}`, 'error')
+      setStatus((p) => ({ ...p, [url]: { kind: 'error', text: msg } }))
     } finally {
       setImportingUrl(false)
     }
@@ -218,9 +227,18 @@ export function BackgroundMusicSettingsPage() {
               data-testid="music-url-import-btn"
               onClick={() => void onImportUrl()}
             >
-              {importingUrl ? '⏳ นำเข้า…' : '📥 นำเข้า'}
+              {importingUrl ? (
+                <span className="flex items-center gap-1">
+                  <span className="animate-spin">⏳</span> กำลังนำเข้า…
+                </span>
+              ) : '📥 นำเข้า'}
             </button>
           </div>
+          {importingUrl && (
+            <div className="text-[11px] text-brand-muted animate-pulse">
+              กำลังดาวน์โหลด → บีบอัด (Opus 128kbps) → อัปโหลดเข้า bucket…
+            </div>
+          )}
         </div>
       </GlassCard>
 

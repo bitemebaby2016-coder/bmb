@@ -1,6 +1,6 @@
 -- ============================================
--- Bite Me Baby — Migration 103: Storage policies for `background_music` bucket
--- Date: 2026-11-20
+-- Bite Me Baby — Migration 196: Storage policies for `background_music` bucket
+-- Date: 2026-11-24
 -- Context:
 --   - storage bucket `background_music` (public bucket)
 --   - Admin Background Music Settings (BackgroundMusicSettingsPage.tsx) needs:
@@ -60,5 +60,5 @@ CREATE POLICY background_music_admin_delete ON storage.objects
 COMMIT;
 
 -- ============================================
--- END OF MIGRATION 103
+-- END OF MIGRATION 196
 -- ============================================

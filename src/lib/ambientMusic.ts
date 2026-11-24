@@ -6,6 +6,7 @@
 
 import { onVoiceActivity } from './audioEvents'
 import { listBackgroundMusicFiles, createShuffleQueue } from './backgroundMusic'
+import { supabase } from './supabase'
 
 export const MUSIC_VOLUME_KEY = 'bmb-music-volume'
 export const MUSIC_EVENT = 'bmb:musicchange'
@@ -16,8 +17,8 @@ export const RESTORE_RAMP_SEC = 0.6
 export const DEFAULT_VOLUME = 0.6
 
 export interface AmbientEngine {
-  /** Begin playback at volume 0..1 (called only from a user gesture). */
-  start(volume: number): void
+  /** Begin playback at volume 0..1 (called only from a user gesture). Returns true if playback actually started. */
+  start(volume: number): Promise<boolean>
   /** Smoothly change volume (ramp seconds; used for ducking + user slider). */
   setVolume(volume: number, rampSeconds?: number): void
   /** Halt playback completely. Safe to call when already stopped. */
@@ -81,13 +82,33 @@ export class AmbientMusicManager {
 
   /** Play/stop — MUST be called from a user gesture (browser autoplay policy). */
   async toggle(): Promise<boolean> {
+    // 1) ตรวจ master flag จาก business_settings ก่อน
+    try {
+      const { data } = await supabase
+        .from('business_settings')
+        .select('value')
+        .eq('key', 'ambient_music')
+        .maybeSingle()
+      const enabled = typeof data?.value === 'object' && data.value.enabled === true
+      if (!enabled) {
+        this.emit()
+        return false
+      }
+    } catch {
+      // ไม่บล็อก — คงเล่นตาม state เดิม ถ้าอ่านไม่ได้
+    }
+
     if (this.playing) {
       this.stopMusic()
       return false
     }
     try {
       if (!this.engine) this.engine = this.engineFactory()
-      this.engine.start(this.volume)
+      const started = await this.engine.start(this.volume)
+      if (!started) {
+        this.emit()
+        return false
+      }
       this.playing = true
       this.emit()
       return true
@@ -224,13 +245,17 @@ export function createAudioFileEngine(getUrls: UrlGetter): AmbientEngine {
   }
 
   return {
-    start(volume: number): void {
+    async start(volume: number): Promise<boolean> {
       currentVolume = volume
       isPlaying = true
-      void ensureQueue().then(() => {
+      return ensureQueue().then(() => {
         const url = pickNextUrl()
-        if (url && isPlaying) playUrl(url)
-        else isPlaying = false
+        if (url && isPlaying) {
+          playUrl(url)
+          return true
+        }
+        isPlaying = false
+        return false
       })
     },
     setVolume(volume: number, _rampSeconds = 0.3): void {
