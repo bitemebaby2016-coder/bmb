@@ -80,8 +80,8 @@ function plainCustomizations(cust: unknown): Record<string, string | string[]> |
 }
 
 /** Minimal serialization — ids/qty/customizations/mode/coupon/referral only. */
-export function serializeCart(state: SerializeSource): string {
-  const payload: StoredCart = {
+export function serializeCartObject(state: SerializeSource): StoredCart {
+  return {
     v: SCHEMA_VERSION,
     savedAt: new Date().toISOString(),
     order_mode: state.order_mode ?? null,
@@ -96,7 +96,10 @@ export function serializeCart(state: SerializeSource): string {
       }))
       .filter((row) => row.productId.length > 0),
   }
-  return JSON.stringify(payload)
+}
+
+export function serializeCart(state: SerializeSource): string {
+  return JSON.stringify(serializeCartObject(state))
 }
 
 /** Strict shape validation — malformed / tampered / future-version → null. */
@@ -252,6 +255,24 @@ export function initCartPersistence(fetchProducts: () => Promise<Product[]>): vo
         if (msg) showToast(msg, 'warning')
         if (report.restored > 0) showToast(`กู้คืนตะกร้า ${report.restored} รายการให้แล้ว 🛒`, 'success')
         writeNow() // persist the reconciled (catalog-backed) state
+      }
+      // R103 (2026-11-24 · m213): server-side cart sync — restore ข้ามเครื่องสำหรับลูกค้าที่
+      // ล็อกอิน · กฎ restore เดียว: local ไม่มี "รายการ" = ลอง server ล่าสุด (local มีของ =
+      // local ชนะ — ไม่ surprise merge · ไม่ยุ่งกับ flow deep-link ?cart= ของ Layout) ·
+      // guest/anon = fetch คืน null เงียบ ๆ (R63 posture คงเดิม)
+      if (!stored || stored.items.length === 0) {
+        try {
+          const { fetchLatestServerCart } = await import('./cartSessionSync')
+          const serverCart = await fetchLatestServerCart()
+          if (serverCart && (serverCart.items.length > 0 || (!stored && serverCart.referralCode))) {
+            const catalog = await fetchProducts()
+            const report = restoreWithCatalog(serverCart, catalog)
+            const msg = reportToToastMessage(report, 'hydrate')
+            if (msg) showToast(msg, 'warning')
+            if (report.restored > 0) showToast(`กู้คืนตะกร้าจากบัญชีของคุณ 🛒 ${report.restored} รายการ`, 'success')
+            writeNow()
+          }
+        } catch { /* server restore fail = เงียบ — local path ยังเดินตามปกติ */ }
       }
     } catch (e) {
       console.warn('[cartPersistence] hydration skipped (cart stays in-memory):', e)

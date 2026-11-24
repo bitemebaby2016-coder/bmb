@@ -28,6 +28,22 @@
 
 ---
 
+## 🔒 SESSION CLOSE 2026-11-24 (R103 · SERVER-SIDE CART SYNC v1 — Owner: "เตรียมทำ Server-side cart sync ต่อให้สมบูรณ์") · **CODE_CLOSED + GATES PASS (vitest 229 ไฟล์/2501 tests · tsc 0 · lint OK · build OK) · ⚠️ MIGRATION 213 รอ APPLY (mutating — Owner approve)**
+
+- **ขอบเขตที่ส่งมอบ (ต่อยอด R102 — deep-link แก้ guest ข้ามเครื่องได้แล้ว · R103 แก้ "ล็อกอินแล้วตะกร้าตามข้ามเครื่องจริง"):**
+  1. **`supabase/migrations/213_cart_sessions_payload.sql`**: ADD COLUMN `payload JSONB` ให้ `cart_sessions` (เนื้อตะกร้าจริง — รูปเดียวกับ localStorage `bmb-cart-v1`: ids/qty/customizations/mode/coupon/referral · **ไม่มีราคา/ยอดรวม/PII** — server re-derive ตอน RPC 025 เสมอ) + RLS **`cart_sessions_select_own`** FOR SELECT TO authenticated (m180 ขาดน้องนี้ — เขียนได้อ่านไม่ได้) · ADDITIVE ONLY re-run ปลอดภัย
+  2. **`cartSessionSync.ts`** (R49 telemetry → R103 sync จริง): upsert **`id = 'csa-' + customerId`** (deterministic — 1 แถว/1 ลูกค้า · อัปเดตจากเครื่องไหนก็แถวเดิม · บัญชีต่างกัน = แถวต่างกัน = intent R68 ยังครบ) + `payload: serializeCartObject(state)` (ตะกร้าว่าง = payload null) + `customerId` cache ต่อ uid + **`fetchLatestServerCart()`** ใหม่ (select payload ตาม customer_id · latest updated_at · ผ่าน `parseStoredCart` strict validate · guest/anon = null เงียบ ๆ R63 posture คงเดิม)
+  3. **`cartPersistence.ts`**: hydration path เพิ่ม restore จาก server — กฎเดียว: **local ไม่มีรายการ = ลอง server** (local มีของ = local ชนะ — ไม่ surprise merge · ไม่ยุ่ง flow `?cart=` ของ Layout/R102) · dynamic import `cartSessionSync` (กัน cycle) · restore เสร็จก่อน `setHydrated()` (ลำดับ deterministic — Layout `?cart=` รอ isHydrated)
+  4. **เทสต์ `r213CartServerSync.test.ts` (15 cases)**: migration contract (payload/select_own/ไม่แตะ policy เดิม) · guest guard ก่อน upsert (r49/r63 pin คงอยู่) · deterministic id · payload round-trip (ไม่มีราคาหลุด · strict parse) · ลำดับ restore→setHydrated · boot wiring ครบ · **R68 test contract อัปเดตตามข้อเท็จจริง** (sessionId localStorage → csa-<customerId> — intent "ไม่ทับข้ามบัญชี" ยังครบ + pin ใหม่ ยิงยืนยัน identity จาก auth.uid())
+
+- **เกต (เห็นผลจริงทั้งหมด):** `tsc --noEmit` 0 · `vitest run` 229 ไฟล์ / 2501 tests PASS · `npm run lint` OK (3 gates) · `npm run build` PASS (PWA)
+
+- **⚠️ เหลือ Owner approve + apply:** `213_cart_sessions_payload.sql` ต้อง apply ลง production DB (mutating) ก่อนใช้งานจริง — client sync ยังทำงานปลอดภัยแม้ migration ยังไม่ apply (upsert ที่มี payload = error เงียบ · restore = select คอลัมน์ไม่มี = error เงียบ → behavior เท่าก่อน R103)
+
+- **ทางข้ามเครื่อง ณ ปิดงานนี้ (ครบทั้ง 2 แนวทาง):** ล็อกอิน = server sync (R103 อัตโนมัติ ข้ามเครื่องทุกเครื่องที่ล็อกอินบัญชีเดียวกัน) · guest = deep-link `?cart=` (R101/R63b/R102 — พิสูจน์ live แล้ว)
+
+---
+
 ## 🔒 LIVE TEST RESULT 2026-11-24 (R102 · FB IAB CART DOUBLE-ADD + EXTERNAL COPY EMPTY CART — Owner: "IAB กดลิงก์ซ้ำนับเพิ่มทุกครั้ง + คัดลอกไป Chrome ตะกร้าว่าง") · **CODE_CLOSED + GATES PASS (vitest 228 ไฟล์/2486 tests · tsc 0 · lint OK · build OK)** · แผน `.kilo/plans/1795485479602-fb-iab-cart-double-fix.md`
 
 - **อาการจาก live test (รูป 4 ภาพ FB Post/Comment + WebView + Chrome):**

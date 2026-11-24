@@ -226,11 +226,14 @@ describe('R68 · console noise #1 — driver_login ERR_NOT_A_DRIVER', () => {
 
 })
 
-describe('R68 · console noise #2 — cart_sessions RLS 42501', () => {
-  it('session id = key ต่อผู้ใช้ (อีกบัญชีใช้เครื่องเดียวกันไม่ upsert ทับกัน)', () => {
-    expect(cartSyncSrc).toContain("const key = SESSION_KEY + ':' + uid")
-    expect(cartSyncSrc).toContain('function sessionId(uid: string)')
-    expect(cartSyncSrc).toContain('id: sessionId(uid),')
+describe('R68 · console noise #2 — cart_sessions RLS 42501 (R103 upgrade: id = csa-<customerId>)', () => {
+  it('row id ผูกกับบัญชีจริง (csa-<customerId>) — อีกบัญชีใช้เครื่องเดียวกันไม่ upsert ทับกัน', () => {
+    // R103 (2026-11-24 · m213): เดิม id = localStorage key ต่อ uid (csx-*) — R103 เปลี่ยนเป็น
+    // deterministic id จาก customers.id ที่ resolve จาก auth.uid() → บัญชีต่างกัน = customerId
+    // ต่างกัน = คนละแถว (intent เดิมของ R68 ยังครบ + ข้ามเครื่อง restore ได้)
+    expect(cartSyncSrc).toContain("id: 'csa-' + customerId")
+    expect(cartSyncSrc).toContain("from('customers').select('id')")
+    expect(cartSyncSrc).toContain("eq('user_id', uid)")
     // ลำดับเดิมของ R63 ต้องคงอยู่: guest guard อยู่ก่อน upsert
     expect(cartSyncSrc).toContain('if (!uid) return')
     expect(cartSyncSrc.indexOf('if (!uid) return')).toBeLessThan(cartSyncSrc.indexOf('.upsert('))
