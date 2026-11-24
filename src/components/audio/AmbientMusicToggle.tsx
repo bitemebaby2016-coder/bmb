@@ -30,9 +30,10 @@ export function AmbientMusicToggle() {
   }, [manager])
 
   async function handleToggle() {
+    const wasPlaying = manager.getState().playing
     const started = await manager.toggle()
-    if (!started) setEmptyBucket(true)
-    else setEmptyBucket(false)
+    // stop สำเร็จ = started false แต่ bucket ไม่ว่าง — ห้ามโชว์ "ไม่มีเพลง"
+    setEmptyBucket(!started && !wasPlaying)
   }
 
   return (

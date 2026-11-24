@@ -9,6 +9,11 @@
 --   - Runtime plays audio files directly via public URLs from this bucket
 -- ROLE: OWNER applies this in the Supabase SQL Editor
 -- IDEMPOTENT: safe to re-run. Creates bucket if missing (CI/production).
+-- ROOT CAUSE FIX (2026-11-24, same bug as m119):
+--   เดิมใช้ subquery `(SELECT id FROM storage.buckets WHERE name='background_music') = bucket_id`
+--   RLS ของ storage.buckets ซ่อนแถว bucket จาก anon/authenticated → subquery = NULL
+--   → NULL = bucket_id = NULL → policy fail ทุกข้อ → list ว่าง + upload 42501
+--   แก้เป็น bucket_id literal (canonical Supabase pattern จาก m119) ทั้ง 4 policies
 -- ============================================
 
 BEGIN;
@@ -28,14 +33,14 @@ ON CONFLICT (id) DO NOTHING;
 DROP POLICY IF EXISTS background_music_public_read ON storage.objects;
 CREATE POLICY background_music_public_read ON storage.objects
   FOR SELECT
-  USING ((SELECT id FROM storage.buckets WHERE name = 'background_music') = bucket_id);
+  USING (bucket_id = 'background_music');
 
 -- Authenticated upload: any signed-in user may INSERT (admin UI enforces role)
 DROP POLICY IF EXISTS background_music_authenticated_upload ON storage.objects;
 CREATE POLICY background_music_authenticated_upload ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (
-    (SELECT id FROM storage.buckets WHERE name = 'background_music') = bucket_id
+    bucket_id = 'background_music'
   );
 
 -- Admin update: UPDATE only for profiles.role='admin'
@@ -43,7 +48,7 @@ DROP POLICY IF EXISTS background_music_admin_update ON storage.objects;
 CREATE POLICY background_music_admin_update ON storage.objects
   FOR UPDATE TO authenticated
   USING (
-    (SELECT id FROM storage.buckets WHERE name = 'background_music') = bucket_id
+    bucket_id = 'background_music'
     AND (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'
   );
 
@@ -52,7 +57,7 @@ DROP POLICY IF EXISTS background_music_admin_delete ON storage.objects;
 CREATE POLICY background_music_admin_delete ON storage.objects
   FOR DELETE TO authenticated
   USING (
-    (SELECT id FROM storage.buckets WHERE name = 'background_music') = bucket_id
+    bucket_id = 'background_music'
     AND (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'
   );
 

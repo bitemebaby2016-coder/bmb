@@ -1,3 +1,24 @@
+## 🔒 HOTFIX 2026-11-24 (R105b · BACKGROUND MUSIC RLS — Owner live: "ปุ่มยังกดไม่ได้บอกไม่มีไฟล์ใน bucket ทั้งที่มี 5 ไฟล์ + แอดมินอัปโหลดก็ fail") · **CODE_CLOSED + GATES PASS (tsc 0 · lint OK · vitest 230 ไฟล์/2521 tests · build OK) — รอ Owner รัน migration 196 ที่แก้แล้วใน SQL Editor**
+
+- **Root Cause (พิสูจน์จาก m119 ของโปรเจกต์เอง — probe จริงเมื่อ 2026-10-07):**
+  - `196_background_music_bucket_policies.sql` (เดิม = m103) ใช้ subquery `(SELECT id FROM storage.buckets WHERE name='background_music') = bucket_id` ทั้ง 4 policies
+  - RLS ของ `storage.buckets` ซ่อนแถว bucket จาก `anon`/`authenticated` → subquery คืน **NULL** → `NULL = bucket_id` = NULL → policy fail ทุกข้อ
+  - ผล: `.list('')` คืน [] (ปุ่มโชว์ "ไม่มีเพลงใน bucket") + `.upload()` โดน 42501 "new row violates row-level security policy" — **ตรงกับอาการ live ทั้งสอง**
+  - m119 แก้บั๊กแบบเดียวกันให้ bmb-images แล้ว (bucket_id literal) — m103→m196 เลื่อนชื่อแล้วคง pattern พังเดิมมา = จุดที่ Owner ถาม "เลื่อนชื่อ migration เกี่ยวไหม" → **เกี่ยว ตรงนี้**
+
+- **การแก้ (2 ไฟล์):**
+  1. **`196_background_music_bucket_policies.sql`** — เปลี่ยนทั้ง 4 policies เป็น `bucket_id = 'background_music'` literal (SELECT/INSERT/UPDATE/DELETE · subquery บน public.profiles คงเดิม — m119 ยืนยันว่าทำงาน) · idempotent เหมือนเดิม → **Owner รันซ้ำใน SQL Editor ได้ทันที**
+  2. **`AmbientMusicToggle.tsx` `handleToggle()`** — เดิมกด "หยุดเพลง" (toggle คืน false) ก็ตั้ง `emptyBucket=true` โชว์ข้อความหลอก "ไม่มีเพลงใน bucket" → แก้เป็น `setEmptyBucket(!started && !wasPlaying)`
+
+- **เกต (เห็นผลจริงทั้งหมด):** `tsc --noEmit` 0 · `npm run lint` OK · `vitest run` **230 ไฟล์ / 2521 tests PASS** (ambientMusic 21 · backgroundMusic 13 · rXXBackgroundMusicAdmin 13 · r44UiTheater 6 รวมอยู่ในชุดเต็ม) · `npm run build` PASS
+
+- **⚠️ เหลือ Owner (blocking — ทำตามลำดับ):**
+  1. เปิด `supabase/migrations/196_background_music_bucket_policies.sql` (ตัวแก้ใหม่) → คัดลอกทั้งไฟล์ → รันใน **Supabase SQL Editor (prod)** → ต้องเห็น "Success. No rows returned" (idempotent รันซ้ำปลอดภัย)
+  2. record ลง `supabase_migrations.schema_migrations` ด้วย (กฎ 16.3 — manual apply ไม่บันทึกให้เอง)
+  3. hard refresh เว็บ → Admin Settings → Music ควรเห็น 5 ไฟล์ + อัปโหลดได้ + ปุ่ม ♫ เล่นได้
+
+---
+
 ## 🔒 LIVE STATE 2026-11-24 (R105 · BACKGROUND MUSIC FIX — "เปิดเพลงแล้วแต่ไม่มีเสียง / UI แสดงกำลังเล่นแต่เงียบ" · Migration 196 APPLIED PROD + Master Flag ENABLED + CORS OK) · **CODE_CLOSED + GATES PASS (vitest 2516 tests · tsc 0 · lint OK · build OK) + PUSHED `94d9958`**
 
 - **Root Cause (พิสูจน์จากโค้ดจริง):**

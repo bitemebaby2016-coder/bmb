@@ -4,6 +4,15 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 HOTFIX 2026-11-24 (R105b · BACKGROUND MUSIC RLS — Owner live: "ปุ่มยังกดไม่ได้บอกไม่มีไฟล์ใน bucket ทั้งที่มี 5 ไฟล์ + แอดมินอัปโหลดก็ fail") · **CODE_CLOSED + GATES PASS (tsc 0 · lint OK · vitest 230 ไฟล์/2521 tests · build OK) — รอ Owner รัน migration 196 ที่แก้แล้วใน SQL Editor**
+
+- **Root Cause (พิสูจน์จาก m119 ของโปรเจกต์เอง — probe จริง 2026-10-07):** m196 (เดิม m103) ใช้ subquery `(SELECT id FROM storage.buckets WHERE name='background_music') = bucket_id` ทั้ง 4 policies → RLS ของ `storage.buckets` ซ่อนแถว bucket จาก `anon`/`authenticated` → subquery = NULL → policy fail ทุกข้อ → `.list('')` คืน [] (ปุ่มโชว์ "ไม่มีเพลงใน bucket") + `.upload()` 42501 — ตรงอาการ live ทั้งสอง · m119 เคยแก้บั๊กเดียวกันให้ bmb-images (bucket_id literal) — m103→m196 เลื่อนชื่อแล้วคง pattern พังเดิม = คำตอบ "เลื่อนชื่อ migration เกี่ยวไหม" → **เกี่ยว**
+- **การแก้ (2 ไฟล์):** ① `196_background_music_bucket_policies.sql` — 4 policies เป็น `bucket_id = 'background_music'` literal (subquery public.profiles คงเดิม — m119 ยืนยันว่าทำงาน) · idempotent → **Owner รันซ้ำใน SQL Editor ได้ทันที** ② `AmbientMusicToggle.tsx` `handleToggle()` — กด "หยุดเพลง" (toggle คืน false) ไม่ตั้ง emptyBucket แล้ว (`setEmptyBucket(!started && !wasPlaying)`) — เดิมโชว์ "ไม่มีเพลงใน bucket" หลอก
+- **เกต (ผลจริง):** `tsc --noEmit` 0 · `npm run lint` OK · `vitest run` **230 ไฟล์ / 2521 tests PASS** (ambientMusic 21 · backgroundMusic 13 · rXXBackgroundMusicAdmin 13 · r44UiTheater 6 รวมชุดเต็ม) · `npm run build` PASS
+- **⚠️ เหลือ Owner (blocking):** 1) รัน `196_background_music_bucket_policies.sql` ตัวแก้ใหม่ใน SQL Editor (prod) → "Success" 2) record ลง `supabase_migrations.schema_migrations` (กฎ 16.3) 3) hard refresh → Admin Music เห็น 5 ไฟล์ + อัปโหลดได้ + ปุ่ม ♫ เล่นได้
+
+---
+
 **🔒 LIVE STATE 2026-11-24 (R105 · BACKGROUND MUSIC FIX — "เปิดเพลงแล้วแต่ไม่มีเสียง / UI แสดงกำลังเล่นแต่เงียบ" · Migration 196 APPLIED PROD + Master Flag ENABLED + CORS OK) · **CODE_CLOSED + GATES PASS (vitest 2516 tests · tsc 0 · lint OK · build OK) + PUSHED `94d9958`**
 
 - **Root Cause (พิสูจน์จากโค้ดจริง):**
