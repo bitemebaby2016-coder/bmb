@@ -1,4 +1,4 @@
-## 🔒 HOTFIX 2026-11-24 (R105b · BACKGROUND MUSIC RLS — Owner live: "ปุ่มยังกดไม่ได้บอกไม่มีไฟล์ใน bucket ทั้งที่มี 5 ไฟล์ + แอดมินอัปโหลดก็ fail") · **CODE_CLOSED + GATES PASS (tsc 0 · lint OK · vitest 230 ไฟล์/2521 tests · build OK) — รอ Owner รัน migration 196 ที่แก้แล้วใน SQL Editor**
+## 🔒 LIVE VERIFIED 2026-11-24 (R105b · BACKGROUND MUSIC RLS HOTFIX — Owner live test: "โฮเคทดสอบแล้วได้ ผ่านแล้วดีมาก" · Migration 196 (ตัวแก้) APPLIED PROD + RECORD LEDGER ✓) · **CODE_CLOSED + GATES PASS (tsc 0 · lint OK · vitest 230 ไฟล์/2521 tests · build OK) + PUSHED `b5ac4bd` + SESSION CLOSED**
 
 - **Root Cause (พิสูจน์จาก m119 ของโปรเจกต์เอง — probe จริงเมื่อ 2026-10-07):**
   - `196_background_music_bucket_policies.sql` (เดิม = m103) ใช้ subquery `(SELECT id FROM storage.buckets WHERE name='background_music') = bucket_id` ทั้ง 4 policies
@@ -7,15 +7,17 @@
   - m119 แก้บั๊กแบบเดียวกันให้ bmb-images แล้ว (bucket_id literal) — m103→m196 เลื่อนชื่อแล้วคง pattern พังเดิมมา = จุดที่ Owner ถาม "เลื่อนชื่อ migration เกี่ยวไหม" → **เกี่ยว ตรงนี้**
 
 - **การแก้ (2 ไฟล์):**
-  1. **`196_background_music_bucket_policies.sql`** — เปลี่ยนทั้ง 4 policies เป็น `bucket_id = 'background_music'` literal (SELECT/INSERT/UPDATE/DELETE · subquery บน public.profiles คงเดิม — m119 ยืนยันว่าทำงาน) · idempotent เหมือนเดิม → **Owner รันซ้ำใน SQL Editor ได้ทันที**
+  1. **`196_background_music_bucket_policies.sql`** — เปลี่ยนทั้ง 4 policies เป็น `bucket_id = 'background_music'` literal (SELECT/INSERT/UPDATE/DELETE · subquery บน public.profiles คงเดิม — m119 ยืนยันว่าทำงาน) · idempotent
   2. **`AmbientMusicToggle.tsx` `handleToggle()`** — เดิมกด "หยุดเพลง" (toggle คืน false) ก็ตั้ง `emptyBucket=true` โชว์ข้อความหลอก "ไม่มีเพลงใน bucket" → แก้เป็น `setEmptyBucket(!started && !wasPlaying)`
 
 - **เกต (เห็นผลจริงทั้งหมด):** `tsc --noEmit` 0 · `npm run lint` OK · `vitest run` **230 ไฟล์ / 2521 tests PASS** (ambientMusic 21 · backgroundMusic 13 · rXXBackgroundMusicAdmin 13 · r44UiTheater 6 รวมอยู่ในชุดเต็ม) · `npm run build` PASS
 
-- **⚠️ เหลือ Owner (blocking — ทำตามลำดับ):**
-  1. เปิด `supabase/migrations/196_background_music_bucket_policies.sql` (ตัวแก้ใหม่) → คัดลอกทั้งไฟล์ → รันใน **Supabase SQL Editor (prod)** → ต้องเห็น "Success. No rows returned" (idempotent รันซ้ำปลอดภัย)
-  2. record ลง `supabase_migrations.schema_migrations` ด้วย (กฎ 16.3 — manual apply ไม่บันทึกให้เอง)
-  3. hard refresh เว็บ → Admin Settings → Music ควรเห็น 5 ไฟล์ + อัปโหลดได้ + ปุ่ม ♫ เล่นได้
+- **✅ Owner Steps ทำครบแล้ว (2026-11-24) + LIVE VERIFIED:**
+  - Migration 196 **ตัวแก้ (bucket_id literal)** APPLIED PROD ผ่าน SQL Editor ✓ (Owner ยืนยัน "196 รันผ่าน")
+  - RECORD LEDGER ✓ — `supabase_migrations.schema_migrations` มี `196_background_music_bucket_policies` จริง (probe `e2e/_r105bRecord196.cjs` → `e2e/_r105b_record196.json` · gate: policies 4/4 pattern ใหม่ · pattern เสีย 0 · bucket public ✓ · objects 5 ✓ · กฎ 16.3 ครบ)
+  - **LIVE TEST PASS ✓** (Owner: "โฮเคทดสอบแล้วได้ ผ่านแล้วดีมาก") — list เห็นไฟล์ + อัปโหลดได้ + ปุ่ม ♫ เล่นได้
+
+- **Commit:** `b5ac4bd` fix: background music RLS — bucket_id literal per m119 (list ว่าง + upload 42501) + ไม่โชว์ไม่มีเพลงตอนกดหยุด · frontend live ผ่าน Cloudflare auto-deploy
 
 ---
 

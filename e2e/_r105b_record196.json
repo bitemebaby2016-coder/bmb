@@ -1,0 +1,35 @@
+{
+  "at": "2026-11-24T12:38:59.841Z",
+  "project": "ivkdfognyiwjcmrhcnwz",
+  "mode": "RECORD ONLY (apply โดย Owner ผ่าน SQL Editor แล้ว)",
+  "owner_approved": "2026-11-24 record 196 + live test ผ่าน",
+  "probe": {
+    "policies": "[{\"policyname\":\"background_music_admin_delete\",\"cmd\":\"DELETE\",\"def\":\"((bucket_id = 'background_music'::text) AND (( SELECT profiles.role\\n   FROM profiles\\n  WHERE (profiles.id = auth.uid())) = 'admin'::text))\"},{\"policyname\":\"background_music_admin_update\",\"cmd\":\"UPDATE\",\"def\":\"((bucket_id = 'background_music'::text) AND (( SELECT profiles.role\\n   FROM profiles\\n  WHERE (profiles.id = auth.uid())) = 'admin'::text))\"},{\"policyname\":\"background_music_authenticated_upload\",\"cmd\":\"INSERT\",\"def\":\"(bucket_id = 'background_music'::text)\"},{\"policyname\":\"background_music_public_read\",\"cmd\":\"SELECT\",\"def\":\"(bucket_id = 'background_music'::text)\"}]",
+    "brokenPattern": "[{\"n\":0}]",
+    "bucket": "[{\"id\":\"background_music\",\"name\":\"background_music\",\"public\":true}]",
+    "objectCount": "[{\"n\":5}]",
+    "ledgerBefore": "[{\"version\":\"103\",\"name\":\"tenant_id_defaults\"}]"
+  },
+  "gate": {
+    "polOk": true,
+    "brokenOk": true,
+    "bucketOk": true,
+    "policies": [
+      "background_music_admin_delete",
+      "background_music_admin_update",
+      "background_music_authenticated_upload",
+      "background_music_public_read"
+    ],
+    "defs": [
+      "((bucket_id = 'background_music'::text) AND (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = 'admin'::text))",
+      "((bucket_id = 'background_music'::text) AND (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = 'admin'::text))",
+      "(bucket_id = 'background_music'::text)",
+      "(bucket_id = 'background_music'::text)"
+    ]
+  },
+  "record": {
+    "ins196": "[]",
+    "reload": "[]",
+    "ledgerTopAfter": "[{\"version\":\"209\",\"name\":\"209_add_floating_ad_flags\"},{\"version\":\"208\",\"name\":\"208_preorder_vote_cast\"},{\"version\":\"207\",\"name\":\"207_rider_history_dates\"},{\"version\":\"206\",\"name\":\"206_mascot_bucket_selfservice\"},{\"version\":\"205\",\"name\":\"205_social_order_actions\"},{\"version\":\"204\",\"name\":null}]"
+  }
+}
