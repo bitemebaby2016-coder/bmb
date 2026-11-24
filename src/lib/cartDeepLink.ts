@@ -197,3 +197,16 @@ export function readCartParam(search: string): (CartDeepItem | CartDeepItemV2)[]
     return null
   }
 }
+
+/** R102: fingerprint ของ ?cart= payload สำหรับ sessionStorage dedup guard ใน Layout —
+ *  FNV-1a 32-bit + ความยาว payload · sync ไม่มี I/O (ไม่ใช่เชิงความปลอดภัย — dedup เท่านั้น)
+ *  เหตุผล: ห้ามใช้ prefix slice — b64url ของ JSON ต่างกันแต่ prefix เดียวกัน
+ *  (เช่น `{"v":2,"items":[{"id":"p-a"` vs `p-b`) ให้ prefix เหมือนกัน = บล็อกลิงก์ใหม่ผิด */
+export function cartParamFingerprint(raw: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < raw.length; i++) {
+    h ^= raw.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return ('0000000' + (h >>> 0).toString(16)).slice(-8) + '-' + raw.length
+}

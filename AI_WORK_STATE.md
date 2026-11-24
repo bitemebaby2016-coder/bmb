@@ -28,6 +28,32 @@
 
 ---
 
+## 🔒 LIVE TEST RESULT 2026-11-24 (R102 · FB IAB CART DOUBLE-ADD + EXTERNAL COPY EMPTY CART — Owner: "IAB กดลิงก์ซ้ำนับเพิ่มทุกครั้ง + คัดลอกไป Chrome ตะกร้าว่าง") · **CODE_CLOSED + GATES PASS (vitest 228 ไฟล์/2486 tests · tsc 0 · lint OK · build OK)** · แผน `.kilo/plans/1795485479602-fb-iab-cart-double-fix.md`
+
+- **อาการจาก live test (รูป 4 ภาพ FB Post/Comment + WebView + Chrome):**
+  1. **IAB (ในแอปเฟซ)**: กดลิงก์ AI (ใต้โพส/ข้อความ) หลายครั้ง / navigate กลับ `/shop` → นับสินค้าเพิ่มทุกครั้ง (24 → 26 → 26 ชิ้น)
+  2. **External (Chrome/Safari ผ่านแบนเนอร์คัดลอก)**: คัดลอกลิงก์จาก IAB → เปิดใน Chrome → ตะกร้าว่าง / ไม่ตรงกับ WebView
+
+- **Root Cause เดียวกัน (พิสูจน์จากโค้ดจริง):**
+  - RC1: `history.replaceState` **ล้มเหลวใน FB IAB** → `?cart=` ค้างใน URL → navigate กลับ `/shop` (แม้ใน SPA) → Layout effect รันใหม่ → decode `?cart=` ซ้ำ → `addItem` ซ้ำ → นับซ้ำ
+  - RC2: ลิงก์ที่คัดลอกมาจาก IAB มี `?cart=` **เสียหาย (double-encoded / payload แพะจากบั๊ก IAB)** → `normalizeCartParam` ถอดไม่ได้ → `return` ไม่เติมของ
+  - งานเก่า R63 (`1795399498532-fb-cart-bridge-live-plan.md`) ทำ logic encode v2/live-cart/scope-line ถูกแล้ว แต่ **ไม่มี dedup guard** — ปล่อยให้ IAB strip-fail กลายเป็น double-add
+
+- **การแก้ไข 4 จุด:**
+  1. **`cartDeepLink.ts`**: เพิ่ม `cartParamFingerprint(raw)` — FNV-1a 32-bit + ความยาว (pure, sync, dedup เท่านั้น) · **เหตุผลสำคัญ: ห้ามใช้ prefix slice** — เทสต์จับ collision จริง: b64url ของ JSON `{"id":"p-a"` vs `p-b` มี 12 ไบต์แรกเหมือนกัน → prefix 16 ตัวให้ key เดิม = **บล็อกลิงก์ใหม่ผิด** (รอบใหม่ AI สรุปรายการต่างกันแต่ key ชน)
+  2. **`Layout.tsx` (effect ?cart=)**: sessionStorage guard `bmb:cart-processed-<fingerprint>` — check ก่อน side effect ทุกอย่าง (ก่อนเขียน snapshot) → เคย process แล้ว return ทันที · mark `=== '1'` หลัง `added > 0` **ก่อน** `replaceState` (กัน race — IAB strip fail ก็ mark แล้ว) · wrap try/catch ตาม house style
+  3. **`InAppBrowserBanner.tsx` (`buildLiveHandoffUrl`)**: strip `fbclid` **ก่อน** fallback chain + live cart บังคับใช้เสมอเมื่อมีของ (fallback snapshot/resume เฉพาะ `!enc`) + `u.searchParams.set('cart', enc)` = **เขียนทับ payload แพะเดิมใน URL เสมอ** + `data-testid="inapp-live-cart-count"`
+  4. **เทสต์ใหม่ `fbCartBridgeIAB.test.ts` (16 cases)**: v2 round-trip (mods+lm) · mangle 1/2/3 ชั้นถอดได้ (เคส copy ข้าม WebView) · URLSearchParams round-trip · garbage=null · v1 back-compat · payload>1800 → truncated · source contracts (guard ก่อน side-effect, mark ก่อน replaceState, fbclid ก่อน chain, live-cart priority) · behavioral guard ใช้ fingerprint จริง (กด 5 ครั้ง → อนุญาต 1 · ลิงก์ใหม่ = คนละ fingerprint = ผ่าน)
+
+- **เกต (เห็นผลจริงทั้งหมด):** `tsc --noEmit` 0 error · `vitest run` 228 ไฟล์ / 2486 tests PASS (รวม r101 contract เดิมไม่พัง) · `npm run lint` OK (eslint + brandNameGuard + languageSanity — จับ U+FFFD 2 จุดจากการ edit แล้วแก้) · `npm run build` PASS (PWA precache 165 entries)
+
+- **Out of Scope (ไม่ทำในแผนนี้ — ทำต่อรอบถัดไปตามคำสั่ง Owner):**
+  - Server-side cart sync (ต้อง architecture ใหม่ — งานแยก sprint)
+  - LINE/IG in-app browser (hook รองรับแล้ว รอ channel จริง)
+  - PWA install flow (ทำงานอยู่แล้ว)
+
+---
+
 ## 🔒 LIVE TEST RESULT 2026-11-23 (R63d · STICKER CONSOLIDATION — Owner: "ออเดอร์ 3 กล่อง เมนู A x2 + เมนู B x1 → สติกเกอร์พิมพ์ 3 ดวง → แก้เป็น 1 ดวงรวมทุกเมนู") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + PUSHED `d67bf47` · frontend only (Cloudflare auto-deploy)**
 
 - **Root cause:** `stickerRollForOrder()` split 1 ออเดอร์ = 1 ดวง/ชิ้น × qty → 3 กล่อง = 3 สติกเกอร์ · `stickerForm.ts` (R66) รองรับ ORDER LIST 4 บรรทัดต่อเนื่อง `~24 ตัวอักษร/แถว` คั่น ` · ` อยู่แล้ว

@@ -12,7 +12,7 @@ import { PushPermissionPrompt } from '../notification/PushPermissionPrompt'
 import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
-import { normalizeCartParam, type CartDeepItemV2 } from '@/lib/cartDeepLink'
+import { normalizeCartParam, cartParamFingerprint, type CartDeepItemV2 } from '@/lib/cartDeepLink'
 import { decodeSocialContextParam, detectSocialSource, saveSocialHandoff } from '@/lib/socialHandoff'
 import { showToast } from '../ui/ToastContainer'
 
@@ -68,6 +68,7 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
   // → รอ persistence hydration ให้เสร็จ (กัน restore ทับ) → เติมรายการลงตะกร้า
   // → เปิดแผงตะกร้าให้เช็คเอาท์ต่อหรือเพิ่มเมนูเอง · strip พารามิเตอร์หลังเพิ่มสำเร็จ (กัน reload ซ้ำ)
   // R96 Fix (2026-11-12): localStorage fallback สำหรับ Facebook IAB — IAB strip ?cart= param เมื่อเปิด external browser
+  // R102 (2026-11-24): IAB replaceState fail → ?cart= ค้าง → double-add → guard ด้วย sessionStorage key
   useEffect(() => {
     if (typeof window === 'undefined') return
     // R92 (Owner 2026-11-11): จับ `?s=` (บริบทต่อเนื่อง "ระบบเขียน" จากแชท FB/Messenger)
@@ -90,6 +91,16 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
     }
     const raw = norm.raw
     const items = norm.items
+
+    // R102: Guard กัน double-process เดียวกับ ?cart= นี้ — key จาก fingerprint เต็ม payload
+    // (ห้าม prefix slice: b64url ของ JSON ต่างกันแต่ prefix เดียวกัน = key เดิม → บล็อกลิงก์ใหม่ผิด)
+    const processedKey = 'bmb:cart-processed-' + cartParamFingerprint(raw)
+    let alreadyProcessed = false
+    try { alreadyProcessed = sessionStorage.getItem(processedKey) === '1' } catch { /* storage ถูกบล็อก = ไม่มี guard */ }
+    if (alreadyProcessed) {
+      return // เคย process แล้ว ข้ามทั้งหมด
+    }
+
     // R96 Fix → R100d (Owner 2026-11-14 "copy ไป Chrome แล้วไม่มีสินค้า"): เดิมเก็บ sessionStorage
     // แต่ไม่มีจุดอ่านเลย + sessionStorage ข้ามแอป (FB IAB ↔ Chrome) ไม่แชร์กัน = ของตาย
     // → เก็บ localStorage (อยู่ข้าม reload ในแอป/เครื่องเดียวกัน) และมีจุดอ่านจริงที่ effect ถัดไป
@@ -136,6 +147,8 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
         if (cancelled) return
         if (added > 0) {
           addedTotal += added
+          // R102: mark processed ก่อน strip URL (กัน race กับ replaceState fail)
+          try { sessionStorage.setItem(processedKey, '1') } catch { /* storage ถูกบล็อก */ }
           showToast('เปิดรายการที่สรุปไว้ให้แล้ว 🛒 ' + added + ' รายการ — เช็คเอาท์หรือเพิ่มเมนูต่อได้เลย', 'success')
           useCartStore.getState().setCheckoutOpen(true)
           // §T-A: strip ?cart= param AFTER successful cart restoration
@@ -146,7 +159,10 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
             url.searchParams.delete('cart')
             url.searchParams.delete('s')
             window.history.replaceState(null, '', url.pathname + url.search + url.hash)
-          } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
+          } catch {
+            // R102: replaceState fail (IAB) → flag ยังคงอยู่ใน sessionStorage กัน double-add
+            /* URL แปลก ๆ = ปล่อยตามเดิม */
+          }
           // Phase 1: เคลียร์ bmb:cart-resume หลัง restore สำเร็จ (กันสแนปชอตเก่า)
           try { localStorage.removeItem('bmb:cart-resume') } catch {}
         } else if (missing > 0 && !toasted) {

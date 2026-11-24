@@ -168,14 +168,23 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
   // ปุ่มคัดลอก/กล่องลิงก์ทุกทางผ่าน buildLiveHandoffUrl ณ เวลากด (fallback chain เดียว)
 
   // สร้าง URL พาตะกร้าสด ณ เวลากด — fallback chain: live cart → mount snapshot → bmb:cart-resume (TTL 30 นาที)
+  // R102 (2026-11-24): strip fbclid ก่อน fallback chain + บังคับ live cart เสมอเมื่อมีของ
   const buildLiveHandoffUrl = useCallback(() => {
+    // R102: strip fbclid ทันที (ก่อน encode) กัน tracking param ปน payload
+    let finalUrl = window.location.href
+    try {
+      const u = new URL(finalUrl)
+      u.searchParams.delete('fbclid')
+      finalUrl = u.toString()
+    } catch { /* fall through */ }
+
     let enc = ''
     let droppedMods = false
     let truncated = false
     let usedLiveCart = false
     let liveCount = 0
 
-    // 1) ตะกร้าสดจาก cartStore (ถ้ามีของ)
+    // 1) ตะกร้าสดจาก cartStore (ถ้ามีของ) — บังคับใช้ live cart เสมอ ไม่ fallback
     if (liveCart.length > 0) {
       const res = encodeLiveCartParam(
         liveCart.map((it) => ({
@@ -192,22 +201,20 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
       liveCount = liveCart.reduce((s, it) => s + it.quantity, 0)
     }
 
-    // 2) fallback: mount snapshot (cartHandoff)
+    // 2) fallback: mount snapshot (cartHandoff) — ใช้ได้ก็ต่อเมื่อ live cart ว่าง
     if (!enc && cartHandoff?.raw) {
       enc = cartHandoff.raw
     }
 
-    // 3) fallback: bmb:cart-resume (มี TTL 30 นาที)
+    // 3) fallback: bmb:cart-resume (มี TTL 30 นาที) — ใช้ได้ก็ต่อเมื่อ live cart ว่าง
     if (!enc) {
       const resume = readCartResume()
       if (resume?.raw) enc = resume.raw
     }
 
-    // สร้าง URL พร้อม ?s= (บริบทแชท) จาก URL ปัจจุบันถ้ามี
-    let finalUrl = window.location.href
+    // สร้าง URL พร้อม ?cart= (ถ้ามี) + ?s= (บริบทแชท) จาก URL ปัจจุบันถ้ามี
     try {
       const u = new URL(finalUrl)
-      u.searchParams.delete('fbclid')
       if (enc) u.searchParams.set('cart', enc)
       // เก็บ ?s= ไว้ถ้ามี (บริบทแชทต่อเนื่อง)
       finalUrl = u.toString()
@@ -296,7 +303,7 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
             <div>
               <p className="font-semibold">Facebook ไม่รองรับการเปิดลิงก์ตะกร้าอัตโนมัติ</p>
               {(displayCount > 0 || displayLineCount > 0) ? (
-                <p className="text-xs opacity-90">
+                <p className="text-xs opacity-90" data-testid="inapp-live-cart-count">
                   พบรายการ {displayLineCount} รายการ ({displayCount} ชิ้น)
                   {liveCart.length > 0 ? ' — ลิงก์นี้พาตะกร้าเต็มของคุณ' : ' — กดคัดลอกลิงก์ข้างล่าง แล้ววางใน Chrome/Safari หรือติดตั้งแอปเลยก็ได้ครับ'}
                 </p>
