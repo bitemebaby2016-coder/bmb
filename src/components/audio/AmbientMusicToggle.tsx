@@ -36,7 +36,7 @@ export function AmbientMusicToggle() {
 
   return (
     <div
-      className="fixed right-3 z-40 flex items-center gap-2 rounded-2xl glass-surface border border-brand-border px-3 py-2 shadow-lg no-print"
+      className="fixed left-3 z-40 flex items-center gap-2 rounded-2xl glass-surface border border-brand-border px-3 py-2 shadow-lg no-print"
       // เหนือ Floating Bite cluster ทั้งหมด (ปุ่ม+bubble · R44: ปรับ offset ตามตะกร้า — ห้ามทับกันอีก)
       style={{ bottom: `calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + ${clusterClear}px)` }}
       data-testid="ambient-music"
