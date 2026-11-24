@@ -66,3 +66,31 @@ export function normalizeAiTextLinks(text: string): string {
   out = out.replace(BMB_URL_RE, (m) => canonicalizeBmbUrl(m))
   return out
 }
+
+/**
+ * R104: token ลิงก์ร้านสำหรับ "ตัดออกจาก draft" — เหมือน BMB_URL_RE แต่คลาส path
+ * เพิ่ม < > เพื่อจับ template ที่ AI พิมพ์ตามคำสั่งเดิม `?cart=<encoded>` ให้ครบทั้ง URL
+ * (< > ไม่ใช่อักขระ URL จริง — มีแค่ใน template มั่วที่ AI สร้าง เท่านั้น)
+ */
+const STRIP_URL_RE = /(?<![A-Za-z0-9./_@=-])(?:https?:\/\/)?(?:www\.)?biteme-baby\.com(?![A-Za-z0-9])(?:[/?#][-A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%<>]*)?/g
+
+/**
+ * R104 (2026-11-24 live "กดลิงก์ AI ลิงก์เปล่าเปิดใน Chrome แล้วตะกร้าว่าง"): draft ของ AI
+ * ห้ามมีลิงก์ของร้านเองทุกรูปแบบ —
+ *   · /shop เปล่า = ลิงก์ไม่มีตะกร้า (ลูกค้ากด → เบราว์เซอร์จริงเห็นตะกร้าว่าง — ภาพ live
+ *     แสดง URL bar `biteme-baby.com/` ไม่มี query ทั้งที่ลูกค้าคิดว่า "ลิงก์ตะกร้า AI")
+ *   · /shop?cart=<encoded> template ที่ AI พิมพ์ตามคำสั่งเดิม = payload มั่ว (AI คำนวณ b64 ไม่ได้
+ *     → ถอดไม่ได้ → toast "ลิงก์ไม่สมบูรณ์")
+ * กฎ "1 reply = 1 ลิงก์ของระบบ": ลิงก์จริงต้องมาจาก footer ที่ระบบคำนวณจากผลบริการจริง
+ * (intakeFooter ?cart= หรือ default CTA) เท่านั้น → เรียกฟังก์ชันนี้เฉพาะกับ draft
+ * (ห้ามเรียกกับ footer ระบบ — จะกินลิงก์จริงทิ้ง) · คืนข้อความที่แทนลิงก์ด้วย
+ * "ลิงก์ท้ายข้อความ (ระบบแนบให้)" + คงเครื่องหมายวรรคตอนท้ายเดิม
+ * PURE — ไม่มี I/O
+ */
+export function stripBareShopLinks(text: string): string {
+  if (!text) return text
+  return String(text).replace(STRIP_URL_RE, (m) => {
+    const { tail } = splitTrailingPunct(m)
+    return 'ลิงก์ท้ายข้อความ (ระบบแนบให้)' + tail
+  })
+}

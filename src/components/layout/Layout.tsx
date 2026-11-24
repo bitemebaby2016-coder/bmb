@@ -14,6 +14,7 @@ import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
 import { normalizeCartParam, cartParamFingerprint, type CartDeepItemV2 } from '@/lib/cartDeepLink'
 import { decodeSocialContextParam, detectSocialSource, saveSocialHandoff } from '@/lib/socialHandoff'
+import type { Product } from '@/types'
 import { showToast } from '../ui/ToastContainer'
 
 interface LayoutProps {
@@ -126,13 +127,31 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
         const { getProducts } = await import('@/lib/bmbAdminApi_products')
         const catalog = await getProducts()
         const byId = new Map(catalog.map((p) => [p.id, p]))
-        let added = 0
         let missing = 0
-        // R96 Fix: ถ้า URL param หาย (Facebook IAB strip) → อ่านจาก sessionStorage
-        const restoredItems = items
-        for (const it of restoredItems) {
+        // R104: resolve ก่อนแตะตะกร้า — ถ้ารายการในลิงก์ไม่เหลืออะไรใช้ได้เลย ห้ามทำลายตะกร้าเดิม
+        const resolvable: Array<{ p: Product; it: (typeof items)[number] }> = []
+        for (const it of items) {
           const p = byId.get(it.id)
           if (!p || (p as { is_available?: boolean }).is_available === false) { missing++; continue }
+          resolvable.push({ p, it })
+        }
+        if (resolvable.length === 0) {
+          if (!cancelled && missing > 0 && !toasted) {
+            toasted = true
+            showToast('รายการจากลิงก์หาไม่เจอในเมนูปัจจุบัน — เลือกเมนูใหม่ได้ที่หน้าร้าน', 'warning')
+          }
+          return
+        }
+        // R104 (2026-11-24 live "กดลิงก์ AI หลายครั้ง ตะกร้าโตขึ้นเรื่อย ๆ +6 ชิ้น × ฿79"):
+        // เปลี่ยนความหมายลิงก์ ?cart= จาก "เติม" เป็น "ตั้งตะกร้าตามลิงก์" — AI สัญญาว่า
+        // "ใส่ตะกร้าให้แล้ว กดลิงก์เพื่อดูตะกร้า" → เปิดต้องเห็นตะกร้าตามสรุปเสมอ
+        // เดิม addItem บวกทับรายการเดิม (cartStore merge เมนูเดิม+ตัวเลือกเดิม) →
+        // คลิกลิงก์จากหลาย reply (payload คนละ fingerprint) = กองซ้ำไม่รู้จบ
+        // · guard R102 ยังคงกันลิงก์เดิมซ้ำ → กดลิงก์เดิมซ้ำ = ไม่แตะตะกร้า
+        //   (ของที่ลูกค้าเพิ่มเองหลังจากลิงก์นั้นไม่หาย)
+        useCartStore.getState().clearCart()
+        let added = 0
+        for (const { p, it } of resolvable) {
           // Phase 1: ใช้ v2 mods + lm (ถ้ามี) แทน hardcode {}/'SAME_DAY'
           const mods = (it as CartDeepItemV2).mods
           const lm = (it as CartDeepItemV2).lm
@@ -165,9 +184,9 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
           }
           // Phase 1: เคลียร์ bmb:cart-resume หลัง restore สำเร็จ (กันสแนปชอตเก่า)
           try { localStorage.removeItem('bmb:cart-resume') } catch {}
-        } else if (missing > 0 && !toasted) {
+        } else if (!toasted) {
           toasted = true
-          showToast('รายการจากลิงก์หาไม่เจอในเมนูปัจจุบัน — เลือกเมนูใหม่ได้ที่หน้าร้าน', 'warning')
+          showToast('รายการจากลิงก์ใช้ไม่ได้ชั่วขณะ — เลือกเมนูใหม่ได้ที่หน้าร้าน', 'warning')
         }
       } catch {
         if (!cancelled && !toasted) {

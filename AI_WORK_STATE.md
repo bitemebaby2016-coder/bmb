@@ -1,3 +1,27 @@
+## 🔒 LIVE TEST RESULT 2026-11-24 (R104 · "1 REPLY = 1 ลิงก์ของระบบ + เปิด ?cart= = ตั้งตะกร้า" — Owner live 10:45-10:46 "อาการที่แก้ไม่หายสักอาการ" · อนุมัติ "โอเคอนุมัติ") · **CODE_CLOSED + GATES PASS (vitest 2516 tests · tsc 0 · lint OK · build OK) · ⚠️ EF social-ai-worker รอ DEPLOY (mutating — Owner approve)**
+
+- **หลักฐาน live (5 ภาพ 10:45-10:46):**
+  1. IAB กดลิงก์จากหลาย reply → ตะกร้าโตขึ้นเรื่อย ๆ: 26 ชิ้น ฿2,134 → 32 ชิ้น ฿2,608 (**+6 ชิ้น × ฿79 = +฿474 เป๊ะ** = ราคาเมนูที่ AI สรุป) → 34 ชิ้น ฿2,766
+  2. คัดลอกเปิดข้ามเบราว์เซอร์ → ตะกร้าว่าง — **URL bar = `biteme-baby.com/` ไม่มี query เลย** = ลูกค้ากด "ลิงก์เปล่า" ที่ AI เขียนเอง
+
+- **Root Cause 2 ขา (ที่ R102 ปิดไม่ครบ):**
+  - RC-A (ตะกร้าโตเรื่อย ๆ): Layout เปิด `?cart=` แล้ว **เติม** payload ทับรายการเดิม (`addItem` merge เมนูเดิม+ตัวเลือกเดิม = บวกจำนวน) — กดลิงก์จากหลาย reply (payload คนละ fingerprint) = กองซ้ำไม่รู้จบ · guard R102 กันได้แค่ payload เดิมซ้ำ
+  - RC-B (ลิงก์เปล่า): prompt เดิม (DRAFT_SYSTEM/BITE_MESSENGER_SYSTEM) **สั่ง AI เขียน `https://biteme-baby.com/shop` เป็นลิงก์ของตัวเอง** + template `?cart=<encoded>` ที่ AI คำนวณไม่ได้ → ทุก reply มีลิงก์เปล่าที่เด่นกว่าลิงก์จริง → ลูกค้ากด = เจอตะกร้าว่างใน Chrome
+
+- **การแก้ (Owner อนุมัติ "โอเคอนุมัติ"):**
+  1. **`Layout.tsx`**: เปลี่ยนความหมาย `?cart=` จาก "เติม" → **"ตั้งตะกร้าตามลิงก์" (replace)** — ตรงคำสัญญาของ AI "ใส่ตะกร้าให้แล้ว กดลิงก์เพื่อดูตะกร้า" · **resolve ก่อนแตะตะกร้า** (รายการไม่มีอะไรใช้ได้เลย = ห้ามทำลายตะกร้าเดิม + toast เดิม) · guard R102 คงอยู่ = กดลิงก์เดิมซ้ำไม่แตะตะกร้า (ของที่เพิ่มเองหลังจากลิงก์นั้นไม่หาย) · toast ผลสำเร็จคงเดิมเป๊ะ (เกณฑ์ H-1/I-5)
+  2. **`socialLinkFormat.ts`**: `stripBareShopLinks(draft)` ใหม่ — draft ห้ามมีลิงก์ร้านเองทุกรูปแบบ (เปล่า/checkout/orders/template `<encoded>`) → แทนด้วย "ลิงก์ท้ายข้อความ (ระบบแนบให้)" · regex เฉพาะ `STRIP_URL_RE` (path class เพิ่ม `<>` จับ template ครบ) · PURE
+  3. **`social-ai-worker`**: กฎ **"1 reply = 1 ลิงก์ของระบบ"** — prompt ทั้ง 2 persona + REPLY_GROUNDING_RULES + intake/order-action notes ห้ามเขียน URL เองทุกกรณี (อ้าง "ลิงก์ท้ายข้อความ" แทน) · `finalText` = strip(draft) + footers + **default CTA `🛍️ เมนูทั้งหมดและสั่งซื้อ: https://biteme-baby.com/shop`** เมื่อไม่มี footer ใดมีลิงก์ → ทุก reply มีลิงก์ร้านที่ถูกต้องอันเดียวเสมอ
+  4. **เทสต์ `r104OneLinkOneCart.test.ts`**: stripBareShopLinks pure ทุกเคส (เปล่า/template/checkout/orders/วรรคตอน/ต่างโดเมน/idempotent/pipeline กับ normalize) + worker contracts (ไม่มี template · draftTextClean · defaultShopFooter) + Layout replace contracts (resolve ก่อน clear · clear ก่อน add · guard/toast/retry คงเดิม) · r75 test อัปเดตตามข้อเท็จจริง (AI worker ห้ามเขียน URL — post worker คงกฎเดิม)
+
+- **เกต (เห็นผลจริงทั้งหมด):** `tsc --noEmit` 0 · `vitest run` **2516 tests PASS** (รวม r75/r57/g6/socialAiContinuity pin เดิมครบ) · `npm run lint` OK (brandNameGuard + languageSanity — จับ U+FFFD จาก edit แล้วแก้ครบ) · `npm run build` PASS
+
+- **ผลตาม live หลังแก้ (คาดการณ์ — รอ Owner ทดสอบตาม REMAIN_TESTS กลุ่ม I):** กดลิงก์ AI ลิงก์ไหนก็ได้ = เห็นตะกร้าตามสรุปของลิงก์นั้นพอดี (ไม่กอง) · ลิงก์ที่กด = ลิงก์ตะกร้าจริงเสมอ (ไม่มีลิงก์เปล่าให้กดพลาด)
+
+- **⚠️ เหลือ Owner approve + deploy:** `social-ai-worker` Edge Function ต้อง deploy ลง prod (mutating — แก้ prompt/assembly) ก่อนทดสอบ live กลุ่ม I · frontend (Layout/socialLinkFormat) = Cloudflare auto-deploy จาก push
+
+---
+
 ## 🔒 LIVE TEST RESULT 2026-11-23 (R64 · DELIVERY SYNC FIX — Owner live test 23/11/2569: "ไรเดอร์กดรับอาหารเพื่อเดินทางออกส่งไม่ได้ ตัน preparing → NULL chain + แผนที่รายออเดอร์ขาว + ลูกค้า Map โหลดไม่ได้") · **CODE_CLOSED + GATES PASS (vitest 226 ไฟล์/2447 tests · tsc 0 · lint OK · build OK) + MIGRATION 212 APPLIED + PUSHED**
 
 - **อาการจาก live test (รูป 18:34–20:07):**

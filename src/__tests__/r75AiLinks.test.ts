@@ -78,8 +78,15 @@ describe('R75 — ท่อส่งออกทุกเส้นผ่าน n
     expect(publishSrc).toMatch(/ลิงก์เปิดเว็บภายนอก Facebook[^\n]*https:\/\/biteme-baby\.com\/shop/)
   })
 
-  it('prompts ทุกตัวสอนเขียน https:// URL เต็ม + ห้าม markdown (กันต้นเหตุ)', () => {
-    expect(aiWorkerSrc).toContain('ทุกลิงก์ต้องเขียนเป็น URL เต็มรูปแบบที่ขึ้นต้นด้วย https://')
+  it('prompts กันต้นเหตุ (R104 supersedes: AI worker ห้ามเขียน URL เอง · post worker คงสอน URL เต็ม)', () => {
+    // R104 (2026-11-24 live "ลิงก์เปล่าเปิดข้ามเบราว์เซอร์แล้วตะกร้าว่าง"): social-ai-worker
+    // เปลี่ยนกฎจาก "AI เขียน URL เต็ม" → "AI ห้ามเขียน URL เอง" — เหตุผลจาก live: AI คำนวณ
+    // ?cart=<encoded> ไม่ได้ → เขียน /shop เปล่า (ไม่มีตะกร้า) หรือ template มั่ว (ลิงก์เสีย)
+    // → ลิงก์จริงต้องมาจากระบบเสมอ (intakeFooter ?cart= / default CTA) — ดู r104OneLinkOneCart.test.ts
+    expect(aiWorkerSrc).toContain('ห้ามเขียน URL เอง')
+    expect(aiWorkerSrc).toContain('ระบบจะแนบลิงก์จริงที่แตะได้ท้ายข้อความให้เสมอ')
+    expect(aiWorkerSrc).not.toContain('ทุกลิงก์ต้องเขียนเป็น URL เต็มรูปแบบ')
+    // social-post-worker (โพสต์การตลาด — ระบบ publish แนบ CTA เองแยกต่างหาก) คงกฎเดิม
     expect(postWorkerSrc).toContain('ทุกลิงก์ต้องเขียนเป็น URL เต็มรูปแบบที่ขึ้นต้นด้วย https://')
     expect(aiWorkerSrc).toContain('ห้ามเขียนลิงก์แบบ markdown')
     expect(postWorkerSrc).toContain('ห้ามเขียนลิงก์แบบ markdown')
