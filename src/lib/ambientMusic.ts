@@ -205,40 +205,66 @@ export function createAudioFileEngine(getUrls: UrlGetter): AmbientEngine {
     return url
   }
 
-  function playUrl(url: string): void {
-    if (audio) {
-      audio.pause()
-      audio.src = ''
-      audio.removeEventListener('ended', onEnded)
-      audio.removeEventListener('error', onError)
-    }
-    audio = new Audio(url)
-    audio.loop = false // we handle next track manually via ended
-    audio.volume = currentVolume * duckLevel
-    audio.addEventListener('ended', onEnded)
-    audio.addEventListener('error', onError)
-    const playPromise = audio.play()
-    if (playPromise && typeof playPromise.catch === 'function') {
-      playPromise.catch(() => {
-        // autoplay blocked or codec error — try next
-        onEnded()
-      })
-    }
+  /** Play a single URL. Resolves when playback actually starts (onplay), rejects on error (onerror). */
+  function playUrl(url: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (audio) {
+        audio.pause()
+        audio.src = ''
+        audio.removeEventListener('ended', onEnded)
+        audio.removeEventListener('error', onError)
+      }
+
+      const newAudio = new Audio(url)
+      audio = newAudio
+      newAudio.loop = false
+      newAudio.volume = currentVolume * duckLevel
+
+      const onPlay = () => {
+        newAudio.removeEventListener('play', onPlay)
+        newAudio.removeEventListener('error', onErrorHandler)
+        resolve()
+      }
+
+      const onErrorHandler = () => {
+        newAudio.removeEventListener('play', onPlay)
+        newAudio.removeEventListener('error', onErrorHandler)
+        reject(new Error('playback failed'))
+      }
+
+      newAudio.addEventListener('play', onPlay, { once: true })
+      newAudio.addEventListener('error', onErrorHandler, { once: true })
+      newAudio.addEventListener('ended', onEnded)
+      newAudio.addEventListener('error', onError)
+
+      const playResult = newAudio.play()
+      if (playResult && typeof playResult.then === 'function') {
+        // Real browser: play() returns Promise that resolves when playback starts
+        playResult.then(() => resolve()).catch(() => reject(new Error('playback failed')))
+      } else {
+        // jsdom: play() is a no-op stub returning undefined — resolve immediately
+        resolve()
+      }
+    })
   }
 
   function onEnded(): void {
+    if (!isPlaying) return
     const nextUrl = pickNextUrl()
-    if (nextUrl && isPlaying) {
-      playUrl(nextUrl)
+    if (nextUrl) {
+      playUrl(nextUrl).catch(() => {
+        // error will be handled by onError event listener
+      })
     } else {
       isPlaying = false
     }
   }
 
   function onError(): void {
+    if (!isPlaying) return
     const nextUrl = pickNextUrl()
-    if (nextUrl && isPlaying) {
-      playUrl(nextUrl)
+    if (nextUrl) {
+      playUrl(nextUrl).catch(() => {})
     } else {
       isPlaying = false
     }
@@ -248,15 +274,23 @@ export function createAudioFileEngine(getUrls: UrlGetter): AmbientEngine {
     async start(volume: number): Promise<boolean> {
       currentVolume = volume
       isPlaying = true
-      return ensureQueue().then(() => {
+      await ensureQueue()
+
+      while (isPlaying) {
         const url = pickNextUrl()
-        if (url && isPlaying) {
-          playUrl(url)
+        if (!url) break
+
+        try {
+          await playUrl(url)
           return true
+        } catch {
+          // try next track
+          continue
         }
-        isPlaying = false
-        return false
-      })
+      }
+
+      isPlaying = false
+      return false
     },
     setVolume(volume: number, _rampSeconds = 0.3): void {
       currentVolume = volume

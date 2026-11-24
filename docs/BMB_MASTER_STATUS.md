@@ -4,6 +4,30 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-24 (R105 · BACKGROUND MUSIC FIX — "เปิดเพลงแล้วแต่ไม่มีเสียง / UI แสดงกำลังเล่นแต่เงียบ" · Migration 196 APPLIED PROD + Master Flag ENABLED + CORS OK) · **CODE_CLOSED + GATES PASS (vitest 2516 tests · tsc 0 · lint OK · build OK) + PUSHED `94d9958`**
+
+- **Root Cause (พิสูจน์จากโค้ดจริง):**
+  - `AmbientMusicManager.toggle()` ตั้ง `playing = true` ทันที โดยไม่รอ `engine.start()` เริ่มเล่นจริง → engine async (`void ensureQueue().then(...)`) ถ้า bucket ว่าง / list error / `audio.play()` fail → engine ใช้ `isPlaying = false` ภายใน แต่ manager ไม่รู้ → UI ค้าง "กำลังเล่น" (⏸) ตลอดไป
+  - ไม่มี master gate เช็ค `business_settings.ambient_music.enabled` → แอดมินปิดใน settings ก็เล่นได้
+  - External URL import (มีอยู่แล้วใน R55) ความน่าเชื่อถือไม่มั่น: `fetch()` ไม่มี CORS mode / ไม่ validate MIME / ไม่มี progress indicator / error message กรอบ
+
+- **การแก้ (เฟส 1–2 ตามแผน `.kilo/plans/1795450079061-background-music-bugfix-and-import-hardening.md`):**
+  1. **`ambientMusic.ts`**: `AmbientEngine.start()` คืน `Promise<boolean>` (resolve `true` ตอนเล่นจริง) · `toggle()` await engine result ก่อนตั้ง `playing` + อ่าน `business_settings.ambient_music.enabled` เป็น master gate (disabled = คืน false ทันที) · import `supabase`
+  2. **`AmbientMusicToggle.tsx`**: state `emptyBucket` + `useEffect` ฟัง `MUSIC_EVENT` — ถ้า `playing && volume===0` = bucket ว่าง → แสดง "ไม่มีเพลงใน bucket — โปรดอัปโหลดในแอดมิน" แทน slider
+  3. **`BackgroundMusicSettingsPage.tsx`**: `onImportUrl()` — `fetch(url, {mode:'cors'})` + validate `content-type` เริ่ม `audio/` + progress indicator "กำลังดาวน์โหลด → บีบอัด (Opus 128kbps) → อัปโหลดเข้า bucket…" + error message ชัดเจน (HTTP status / MIME / CORS)
+  4. **Tests**: `ambientMusic.test.ts` mock `supabase` + async `FakeEngine.start()` + await `manager.toggle()`
+
+- **Migration:** `196_background_music_bucket_policies.sql` (renumbered from 103 conflict) — bucket `background_music` + policies: public read (anon SELECT) / admin write (authenticated + role='admin') / idempotent
+- **Admin Steps (เสร็จแล้ว 2026-11-24):**
+  - Migration 196 APPLIED PROD ✓
+  - `business_settings.ambient_music.enabled = true` ✓
+  - Bucket CORS allow `biteme-baby.com` ✓ (มีตั้งแต่ R55)
+
+- **Gates:** `tsc --noEmit` 0 · `vitest run` **2516 tests PASS** (ambientMusic 16/16 · backgroundMusic 13/13) · `npm run lint` OK · `npm run build` PASS (PWA v1.3.0)
+- **Commit:** `94d9958` fix: background music state sync + master gate + URL import hardening
+
+---
+
 **🔒 LIVE STATE 2026-11-24 (R104 · "1 REPLY = 1 ลิงก์ของระบบ + เปิด ?cart= = ตั้งตะกร้า" — Owner live "อาการที่แก้ไม่หายสักอาการ": ตะกร้าโต 26→32→34 (+6 ชิ้น × ฿79 = +฿474 เป๊ะ) และเปิดข้ามเบราว์เซอร์แล้วว่าง (URL = biteme-baby.com/ ไม่มี query)) · **CODE_CLOSED + GATES PASS (vitest 2516 tests · tsc 0 · lint OK · build OK) + PUSHED `47d2043` · ✅ EF social-ai-worker DEPLOYED (2026-11-24 · Owner)**
 - **Root Cause 2 ขา (ที่ R102 ปิดไม่ครบ):** RC-A = Layout เปิด `?cart=` แล้ว "เติม" payload ทับรายการเดิม (addItem merge บวกจำนวน) → กดลิงก์จากหลาย reply = กองซ้ำ (guard R102 กันแค่ payload เดิมซ้ำ) · RC-B = prompt เดิมสั่ง AI เขียน `https://biteme-baby.com/shop` เอง + template `?cart=<encoded>` ที่ AI คำนวณไม่ได้ → ทุก reply มีลิงก์เปล่าเด่นกว่าลิงก์จริง
 - **การแก้:** ① Layout `?cart=` = **"ตั้งตะกร้าตามลิงก์" (replace)** — resolve ก่อนแตะตะกร้า (ไม่มีของใช้ได้ = ห้ามทำลายตะกร้าเดิม) · guard R102 คงอยู่ = กดลิงก์เดิมซ้ำไม่แตะตะกร้า ② `stripBareShopLinks(draft)` ใหม่ — draft ห้ามมีลิงก์ร้านเองทุกรูปแบบ (regex จับ template `<encoded>` ครบ) ③ worker กฎ **"1 reply = 1 ลิงก์ของระบบ"** — prompt/notes ห้ามเขียน URL · finalText = strip(draft) + footers + **default CTA** เมื่อไม่มี footer มีลิงก์ → ทุก reply มีลิงก์ร้านถูกต้องอันเดียวเสมอ

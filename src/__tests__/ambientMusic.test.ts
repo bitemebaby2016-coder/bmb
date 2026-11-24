@@ -183,13 +183,6 @@ describe('ambient music — audio ducking while Bite speaks', () => {
 import { createAudioFileEngine } from '@/lib/ambientMusic'
 
 describe('ambient music — createAudioFileEngine', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
   it('start picks a URL from getter and plays it', async () => {
     const urls = ['https://example.com/track1.webm', 'https://example.com/track2.webm']
     let getUrlsCalls = 0
@@ -197,17 +190,15 @@ describe('ambient music — createAudioFileEngine', () => {
       getUrlsCalls++
       return urls
     })
-    engine.start(0.5)
-    // Wait for async getter
-    await vi.runAllTimersAsync()
+    const result = await engine.start(0.5)
     expect(getUrlsCalls).toBe(1)
+    expect(result).toBe(true)
   })
 
   it('setVolume sets audio.volume', async () => {
     const urls = ['https://example.com/track.webm']
     const engine = createAudioFileEngine(async () => urls)
-    engine.start(0.6)
-    await vi.runAllTimersAsync()
+    await engine.start(0.6)
     engine.setVolume(0.3)
     // Can't directly test audio.volume without DOM, but no error = pass
   })
@@ -215,24 +206,75 @@ describe('ambient music — createAudioFileEngine', () => {
   it('stop pauses and cleans up', async () => {
     const urls = ['https://example.com/track.webm']
     const engine = createAudioFileEngine(async () => urls)
-    engine.start(0.6)
-    await vi.runAllTimersAsync()
+    await engine.start(0.6)
     engine.stop()
     // No error = pass
   })
 
   it('empty URL list results in no playback', async () => {
     const engine = createAudioFileEngine(async () => [])
-    engine.start(0.5)
-    await vi.runAllTimersAsync()
-    // Should not throw, just not play
+    const result = await engine.start(0.5)
+    expect(result).toBe(false)
   })
 
   it('shuffle queue uses all URLs before repeating', async () => {
     const urls = ['1.webm', '2.webm', '3.webm']
     const engine = createAudioFileEngine(async () => urls)
-    engine.start(0.5)
-    await vi.runAllTimersAsync()
+    await engine.start(0.5)
     // Queue logic tested in backgroundMusic.test.ts createShuffleQueue
+  })
+
+  // ============================================
+  // New tests for start() race condition fix
+  // ============================================
+
+  it('start() returns false when bucket is empty (no URLs)', async () => {
+    const engine = createAudioFileEngine(async () => [])
+    const result = await engine.start(0.5)
+    expect(result).toBe(false)
+  })
+
+  it('start() returns true when first track plays successfully', async () => {
+    const urls = ['https://example.com/track1.webm']
+    const engine = createAudioFileEngine(async () => urls)
+    const result = await engine.start(0.5)
+    expect(result).toBe(true)
+  })
+
+  it('start() tries next track when first track fails to play', async () => {
+    const urls = ['https://example.com/fail.webm', 'https://example.com/success.webm']
+    const engine = createAudioFileEngine(async () => urls)
+    const result = await engine.start(0.5)
+    expect(result).toBe(true)
+  })
+
+  it('start() returns false when all tracks fail (simulated by empty queue after getter)', async () => {
+    const engine = createAudioFileEngine(async () => [])
+    const result = await engine.start(0.5)
+    expect(result).toBe(false)
+  })
+
+  it('start() awaits actual playback start (onplay) before returning true', async () => {
+    const urls = ['https://example.com/track.webm']
+    let playCalled = false
+    const originalAudio = global.Audio
+    global.Audio = vi.fn().mockImplementation((url) => {
+      const audio = new originalAudio(url)
+      const originalPlay = audio.play.bind(audio)
+      audio.play = vi.fn().mockImplementation(async () => {
+        playCalled = true
+        return originalPlay()
+      })
+      return audio
+    })
+
+    try {
+      const engine = createAudioFileEngine(async () => urls)
+      const result = await engine.start(0.5)
+      expect(playCalled).toBe(true)
+      expect(result).toBe(true)
+    } finally {
+      global.Audio = originalAudio
+    }
   })
 })

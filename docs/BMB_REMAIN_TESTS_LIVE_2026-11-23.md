@@ -113,7 +113,7 @@
 | **F-4** | โหวตจริงหลังล็อกอิน (ยืนยันคงเดิม) | ล็อกอิน → /vote → โหวตเมนูที่ยังไม่เคยโหวต | โหวตสำเร็จ · ตัวเลข/เปอร์เซ็นต์เปลี่ยนจริง · ป้าย "โหวตแล้ว ✓" ขึ้น · โหวตเมนูเดิมซ้ำ = "คุณโหวตเมนูนี้ไว้แล้วค่ะ" |
 | **F-5** | ล็อกอินด้วยเบอร์โทร (R55 — ของเก่าเปิดใช้จริง) | /login → แท็บ "📱 เบอร์โทร" → กรอกเบอร์+รหัสผ่าน (บัญชีที่เคยตั้งรหัสผ่าน) | เข้าสู่ระบบได้ ไป /shop · เบอร์/รหัสผิด = "เบอร์โทรศัพท์หรือรหัสผ่านไม่ถูกต้อง…" |
 | **F-6** | OAuth ทั้ง 4 + Passkey (Owner ตั้งค่า Dashboard เสร็จแล้ว) | /login → hard reload → กดทีละปุ่ม: Google / Facebook / LINE / Passkey (Passkey แสดงเฉพาะเบราว์เซอร์ที่รองรับ) | เด้งไปหน้า provider → กลับมาล็อกอินสำเร็จ · LINE = Custom OIDC (Channel ID/Secret + Attribute Mapping sub/email/name/picture) · Passkey = RP ID + Origin |
-| **F-7** | เล่นเพลงพื้นหลัง (Background Music R55) | /admin/settings?tab=music → อัปโหลด 2-3 เพลง (MP3/WAV/OGG/WebM/AAC ≤20MB) → Enable toggle ON → กลับหน้าร้าน → กดปุ่ม ♪ (AmbientMusicToggle) | เพลงเล่นสุ่ม (shuffle queue) · กด ♪ อีกครั้ง = หยุด · Bite พูด (VoiceInterface) → เสียงลด 25% (ducking) → Bite จบพูด → คืนเสียง 0.6s · volume slider ปรับได้ · bucket ว่าง/ปิด = ไม่เล่น ไม่มี fallback synthetic |
+| **F-7** | เล่นเพลงพื้นหลัง (Background Music R55 + R105) | /admin/settings?tab=music → อัปโหลด 2-3 เพลง (MP3/WAV/OGG/WebM/AAC ≤20MB) → Enable toggle ON → กลับหน้าร้าน → กดปุ่ม ♪ (AmbientMusicToggle) | เพลงเล่นสุ่ม (shuffle queue) · กด ♪ อีกครั้ง = หยุด · Bite พูด (VoiceInterface) → เสียงลด 25% (ducking) → Bite จบพูด → คืนเสียง 0.6s · volume slider ปรับได้ · **bucket ว่าง/ปิด = UI แสดง "ไม่มีเพลงใน bucket" ไม่เล่น ไม่มี fallback synthetic** · Migration 196 APPLIED PROD ✓ · Master flag enabled ✓ · CORS OK ✓ |
 
 **ตารางบันทึกผลกลุ่ม F** (กรอกเมื่อทดสอบ):
 
