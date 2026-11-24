@@ -4,6 +4,13 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 SESSION CLOSE 2026-11-24 (R105c · README REWRITE — Owner: "อ่าน readme และปรับปรุงใหม่จากสถานะโค้ดความสามารถและฟีเจอร์จริงปัจจุบัน เล่าเรื่องให้เหมือนเพรีเซนต์นักลงทุน") · **CODE_CLOSED — เอกสารเดียว ไม่มี code change ไม่ต้องรัน code gates**
+
+- **งาน:** เขียน `README.md` ใหม่ทั้งไฟล์จากสถานะจริง 2026-11-24 (เดิมค้างที่ R74-OMNI 2026-11-06) — โครงเรื่องพรีเซนต์นักลงทุน 5 ตอน + ตาราง "ตัวเลขที่ยืนยันได้" (2,521 tests/230 ไฟล์ · 213 migrations · 24 EF · contract replay CI) + ตาราง ฟีเจอร์→จุดยืนยันในโค้ด ทุกกลุ่ม LIVE + สถานะจริง + เงื่อนไขก่อนเปิดเงินจริง + กติกา repo (bootstrap 15.1/16.3)
+- **หลักฐานที่ยึด:** App.tsx · package.json · supabase/functions · migrations 001–213 · vitest 230 ไฟล์/2521 tests (วัดจริง 2026-11-24) · สถานะ LIVE จาก R51–R105b ใน ledger — ไม่มีข้อความอวดโดยไม่มีโค้ด · ค้างงานระบุตรง (Omise TEST card · live test H/I · §T)
+
+---
+
 **🔒 LIVE VERIFIED 2026-11-24 (R105b · BACKGROUND MUSIC RLS HOTFIX — Owner live test: "โฮเคทดสอบแล้วได้ ผ่านแล้วดีมาก" · Migration 196 (ตัวแก้) APPLIED PROD + RECORD LEDGER ✓) · **CODE_CLOSED + GATES PASS (tsc 0 · lint OK · vitest 230 ไฟล์/2521 tests · build OK) + PUSHED `b5ac4bd` + SESSION CLOSED**
 
 - **Root Cause (พิสูจน์จาก m119 ของโปรเจกต์เอง — probe จริง 2026-10-07):** m196 (เดิม m103) ใช้ subquery `(SELECT id FROM storage.buckets WHERE name='background_music') = bucket_id` ทั้ง 4 policies → RLS ของ `storage.buckets` ซ่อนแถว bucket จาก `anon`/`authenticated` → subquery = NULL → policy fail ทุกข้อ → `.list('')` คืน [] (ปุ่มโชว์ "ไม่มีเพลงใน bucket") + `.upload()` 42501 — ตรงอาการ live ทั้งสอง · m119 เคยแก้บั๊กเดียวกันให้ bmb-images (bucket_id literal) — m103→m196 เลื่อนชื่อแล้วคง pattern พังเดิม = คำตอบ "เลื่อนชื่อ migration เกี่ยวไหม" → **เกี่ยว**
