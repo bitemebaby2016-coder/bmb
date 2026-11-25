@@ -9,7 +9,7 @@
 **SESSION CLOSE 2026-11-25 r2 (CI GREEN AGAIN + LINT FIX - HANDOFF TO NEXT SESSION: LIVE TEST GROUPS E-I)**
 
 - **CI GREEN confirmed:** commit `1c2f749` (Edit doc BOM) - Lint OK (brandNameGuard + languageSanity 2,054 files clean), Unit tests 230 files/2,519 tests PASS, Typecheck tsc 0 error. Owner confirmed "เขียวหมด".
-- **Lint root cause fixed:** (1) UTF-8 BOM on 4 docs files (BMB_*.* written by PowerShell Set-Content -Encoding UTF8 = always BOM in PS 5.1) - rewritten without BOM via Node fs; (2) foreign chars in Admin_User_Manual_TH.md 5 spots (Arabic ارد = การ์ด, Chinese 排程 = ตามเวลา, Hebrew יק = ยกเลิก, Chinese 分页 = คัดกรอง) - fixed to proper Thai.
+- **Lint root cause fixed:** (1) UTF-8 BOM on 4 docs files (BMB_*.* written by PowerShell Set-Content -Encoding UTF8 = always BOM in PS 5.1) - rewritten without BOM via Node fs; (2) foreign chars in Admin_User_Manual_TH.md 5 spots (Arabic (Arabic/Chinese/Hebrew/Chinese = การ์ด/ตามเวลา/ยกเลิก/คัดกรอง) - fixed to proper Thai.
 - **RULE FOR NEXT SESSIONS: NEVER use PowerShell Set-Content/Out-File to write .md files (adds BOM + ANSI mojibake risk). Use Node fs.writeFileSync(..., "utf8") or the Write tool. languageSanity rejects BOM/foreign chars in ALL files.**
 - **Contract suite 124-213 COMPLETE: 67 files ALL GREEN (0 FAIL)** (Docker bmb_replay_w2, migrations 001-218 applied). 15 new files for 28 migrations (179-213) + fixed 033 (anon SELECT allowlist + suppliers/supplier_products per m214/m217) + 036 (G4 accepts ERR_KITCHEN_NOT_READY).
 - **NEXT SESSION TASK (Owner order via commit `9221626` "check audit closure start Live Test Groups p1 wait"): START LIVE TEST GROUPS E-I (40 cases total) - then WAIT for Owner Gate Phase 1 -> Phase 2.**
