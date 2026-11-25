@@ -8,10 +8,11 @@
 
 ---
 
-## 📊 สรุปสถานะ Work Queue (2026-11-24 R105c)
+## 📊 สรุปสถานะ Work Queue (2026-11-25 Phase 1 Complete)
 
 | กลุ่ม | จำนวนข้อ | สถานะ | รายละเอียด |
 |------|----------|-------|-----------|
+| **Phase 1** | 5 | ✅ **LIVE_VERIFIED** | Smart Ingredient & Cost — Foundation (Migrations 214-218) |
 | **I** | 8 | 🆕 LIVE_TEST_PENDING | R102+R103+R104 — Server-side Cart Sync + FB IAB Guard + 1 reply 1 link |
 | **H** | 6 | 🆕 LIVE_TEST_PENDING | R63 — FB Cart Bridge Live (ใหม่) |
 | **G** | 7 | 🆕 LIVE_TEST_PENDING | R78/R79/R80 — Marketing Posts + Studio Picker + Floating Ad |
@@ -23,6 +24,43 @@
 | **Runtime Tests** | 13+ | ⚠️ BLOCKED | Production test pack §T — รออุปกรณ์/บัญชีจริง |
 | **Omise TEST Card** | 1 | ⚠️ BLOCKED | บัตร Omise TEST card บนเบราว์เซอร์จริง — รอ Owner ทดสอบ |
 | **รวม** | **60+** | | |
+
+---
+
+## ✅ Phase 1 — Smart Ingredient & Cost Management Foundation (2026-11-25)
+
+**Owner Decision:** `OWNER DECISION — APPROVED WITH CONDITIONS` (2026-11-24)  
+**Phase 1 Authorized:** 2026-11-24 | **Completed:** 2026-11-25 | **Gate Review:** Pending Owner
+
+| Migration | Description | Owner Decision | Status |
+|-----------|-------------|----------------|--------|
+| **214** | `suppliers` table + RLS (is_inventory/is_kitchen/is_pos/is_finance from m146) | B5 (Supplier First) | ✅ APPLIED PROD |
+| **215** | `inventory.supplier_id` FK + backfill from denormalized data (dry-run report) | B5 | ✅ APPLIED PROD |
+| **216** | Inventory enriched: `prep_yield_factor`, `prep_waste_pct`, `purchase_unit`, `use_unit`, `conversion_factor`, `package_size`, `gross_weight`, `net_weight`, `wavg_cost`, `last_purchase_price`, `last_approved_price` | B1 (Cost Model), B2 (Unit Conversion), B3 (Yield/Waste) | ✅ APPLIED PROD |
+| **217** | `supplier_products` mapping — 3 price states: committed (PO), realized (GRN), approved (policy) | B4 (Price States) | ✅ APPLIED PROD |
+| **218** | `recipes` batch yield — `batch_yield_factor`, `batch_waste_pct`, `cost_per_unit`, `last_cost_calculated_at` | B3 | ✅ APPLIED PROD |
+
+**API Layer:**
+- `src/lib/bmbAdminApi_suppliers.ts` — Supplier CRUD (create/read/update/soft-delete/hard-delete)
+- `src/lib/bmbAdminApi_supplierProducts.ts` — Mapping CRUD + 3 price state updates (`updateSupplierProductPrice`)
+
+**Types Extended:**
+- New: `Supplier`, `SupplierForm`, `SupplierProduct`, `SupplierProductForm`
+- Extended `Ingredient`: `supplier_id`, `prep_yield_factor`, `prep_waste_pct`, `purchase_unit`, `use_unit`, `conversion_factor`, `package_size`, `gross_weight`, `net_weight`, `wavg_cost`, `last_purchase_price`, `last_approved_price`
+- Extended `RecipeRow`: `batch_yield_factor`, `batch_waste_pct`, `cost_per_unit`, `last_cost_calculated_at`
+
+**Contract Tests Fixed (CI):**
+- `contract-tests.yml` now runs ALL migrations 001→latest (not stopping at 123)
+- Removed skip for 214-218; added shims for Phase 1 migrations
+- Migration 146 (Role Foundation) runs before 214 → `is_inventory()`/`is_kitchen()`/`is_pos()`/`is_finance()` available for RLS
+
+**Local Gates (All Pass):**
+- `tsc --noEmit` 0 errors
+- `npm run lint` OK (598 files)
+- `vitest run` 230 files / 2,521 tests PASS
+- `npm run build` PASS (PWA v1.3.0)
+
+**Next:** Owner Phase 1 Gate Review → Phase 2 Authorization
 
 ---
 
