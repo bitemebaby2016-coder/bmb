@@ -31,6 +31,12 @@
 
 ---
 
+### R107 r2 - Lint fix (commit 1c2f749 "Edit doc BOM") - CI GREEN AGAIN
+- Root cause 1: UTF-8 BOM on BMB_AI_WORKING_STATE / BMB_CHANGELOG / BMB_MASTER_STATUS / BMB_WORK_QUEUE (PowerShell Set-Content -Encoding UTF8 always adds BOM in PS 5.1) - rewritten without BOM via Node fs
+- Root cause 2: Admin_User_Manual_TH.md foreign chars 5 spots (ارد/排程/יק/分页 = การ์ด/ตามเวลา/ยกเลิก/คัดกรอง) - fixed to proper Thai
+- Gates after fix: lint OK (languageSanity 2,054 files clean) - tsc 0 - vitest 230 files/2,519 tests PASS
+- New rule: never write .md via PowerShell Set-Content (BOM); use Node fs or Write tool - languageSanity rejects BOM/foreign chars
+
 ## R106 — 2026-11-25 — PHASE 1 (Smart Ingredient Foundation) + CONTRACT AUDIT r1-r3 (PAUSED/HANDOFF)
 
 **Status:** CODE_CLOSED (Phase 1) + IN_PROGRESS (Audit — ครอบถึง 180 · เหลือ 28) — pushed

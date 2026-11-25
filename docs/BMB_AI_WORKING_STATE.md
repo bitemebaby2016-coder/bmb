@@ -89,6 +89,9 @@ Before ending every development task or session:
 
 ---
 
+
+**HANDOFF 2026-11-25 r2 - NEXT SESSION TASK: Live Test Groups E-I (40 cases). Owner order "check audit closure start Live Test Groups p1 wait" (commit 9221626). CI green (commit 1c2f749): lint OK, tsc 0, vitest 230/2519. Contract suite 124-213 = 67 files ALL GREEN. Start Group E/F (Rider Maps + Background Music, AI+Owner), then G/H, then I (critical path, Owner) per PHASE1_PENDING_TEST_CLEARANCE_PLAN.md L140-188 sprints. WAIT for Owner Gate Phase 1 -> Phase 2 after I-1/I-2 pass. Phase 1-6 paused otherwise. RULE: write .md files via Node fs (never PowerShell Set-Content - BOM).**
+
 ## 1. CURRENT ACTIVE TASK (2026-11-25 — HANDOFF TO NEXT SESSION)
 
 **DONE 2026-11-25 - CONTRACT-AUDIT-CLOSURE-124-213 COMPLETE (status below is the historical task record):**

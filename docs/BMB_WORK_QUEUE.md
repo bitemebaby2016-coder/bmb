@@ -24,6 +24,9 @@
 ---
 
 
+
+**DONE 2026-11-25 r2 - Audit closure + CI green (commit 1c2f749). NEXT GROUP (Owner order "start Live Test Groups p1 wait"): Live Test Groups E-I (40 cases) - see MASTER_STATUS r2 block + PHASE1_PENDING_TEST_CLEARANCE_PLAN.md L54-65. Group E/F first (AI+Owner), then G/H, then I (critical path, Owner). WAIT for Owner Gate Phase 1 -> Phase 2 after I-1/I-2 pass.**
+
 **DONE 2026-11-25 - Contract Audit Closure 124-213 COMPLETE: 67 files ALL GREEN (0 FAIL) in Docker replay (bmb_replay_w2, migrations 001-218 applied). 15 new contract files for 28 migrations (179-213) written + fixed until every case passes. See BMB_MASTER_STATUS.md SESSION CLOSE 2026-11-25 for the full fix list. Next: Owner audit review -> Live Test Groups E-I (40 cases).**
 
 ## 🔨 กลุ่มปัจจุบัน — Contract Audit Closure 124-213 (ทำต่อเซสชันหน้า — ตามสั่ง Owner 2026-11-25)
