@@ -93,7 +93,7 @@
 | วิธีชำระ | ขั้นตอนลูกค้า | ขั้นตอนแอดมิน (Manual) | ระบบออโต้ (Auto) |
 |----------|--------------|------------------------|------------------|
 | **PromptPay QR** | สแกน QR โอน → กรอกเลขอ้างอิง (TXN ID) → ส่ง | 1. เปิด **แผงตรวจสลิป** (SlipReviewPanel) <br>2. ดูรูปสลิปจริง <br>3. กด **ยืนยันชำระ** (`confirm_offline_payment`) | - ลูกค้าส่ง TXN ID → `submitOfflinePaymentReference` (pending → processing) <br>- แอดมินกดยืนยัน → RPC `confirm_offline_payment` → `payment_status = paid` <br>- `triggerEvent('payment_confirmed')` |
-| **เงินสดปลายทาง (COD)** | ไม่ต้องจ่ายล่วงหน้า | 1. ส่งออเดอร์จนถึง `delivered` <br>2. กลับมา `/admin/orders` หรือ `/admin/payment-exceptions` <br>3. กด **ยืนยันชำระ** (`confirm_offline_payment`) | - ต้องมีสถานะออเดอร์ = `delivered` ถึงจะยืนยันได้ (กاردฝั่งเซิร์ฟเวอร์) <br>- `triggerEvent('payment_confirmed')` |
+| **เงินสดปลายทาง (COD)** | ไม่ต้องจ่ายล่วงหน้า | 1. ส่งออเดอร์จนถึง `delivered` <br>2. กลับมา `/admin/orders` หรือ `/admin/payment-exceptions` <br>3. กด **ยืนยันชำระ** (`confirm_offline_payment`) | - ต้องมีสถานะออเดอร์ = `delivered` ถึงจะยืนยันได้ (การ์ดฝั่งเซิร์ฟเวอร์) <br>- `triggerEvent('payment_confirmed')` |
 | **บัตรเครดิต (Omise/Stripe)** | ใส่เลขบัตร → 3D Secure → สำเร็จ | ❌ ไม่ต้องแทรกแซง (ระบบจัดการครบเอง) | - `createCheckout` เรียก Edge Function `omise-checkout` (หรือ Stripe fallback) <br>- Webhook `omise-webhook` / `stripe-webhook` → `record_payment_result` → `payment_status = paid` <br>- `triggerEvent('payment_confirmed')` |
 
 ### 📋 หน้าจอที่เกี่ยวข้อง
@@ -166,7 +166,7 @@
 | **แจ้งเตือนสต็อกต่ำ** | วัตถุดิบต่ำกว่า `min_stock` | `triggerEvent('low_stock_alert')` → แจ้งแอดมินในแอป |
 | **รางวัลแนะนำเพื่อน (Referral)** | เพื่อนสั่งซื้อครบรอบแรก | `triggerEvent('referral_awarded')` → แต้มเข้า wallet อัตโนมัติ |
 | **สะสมแต้มความภักดี** | ออเดอร์สถานะ `delivered` + ชำระครบ | `triggerEvent('loyalty_points_earned')` |
-| **โพสต์การตลาด排程** | แอดมินตั้งเวลาเผยแพร่ใน `/admin/marketing` | `marketing_schedule_post` RPC (GH cron ทุกชั่วโมง) → เผยแพร่อัตโนมัติ |
+| **โพสต์การตลาดตามเวลา** | แอดมินตั้งเวลาเผยแพร่ใน `/admin/marketing` | `marketing_schedule_post` RPC (GH cron ทุกชั่วโมง) → เผยแพร่อัตโนมัติ |
 
 ### 🗂 การยกเลิกออเดอร์ (Cancel Order) — กรณีพิเศษ
 - **แอดมินกด ✖ Cancel** บน `/admin/orders` (สถานะไหนก็ได้ ยกเว้น `delivered`/`cancelled`/`failed`)
@@ -175,7 +175,7 @@
   2. **ปล่อย capacity รอบจัดส่ง** (ถ้าเป็น PRE_ORDER)
   3. **คืนสต็อกวัตถุดิบ** (ถ้าหักไปแล้ว)
   4. บันทึก audit log
-- **ลูกค้ายกเลיקเอง**: ไม่มีในระบบปัจจุบัน — ต้องติดต่อแอดมิน
+- **ลูกค้ายกเลิกเอง**: ไม่มีในระบบปัจจุบัน — ต้องติดต่อแอดมิน
 
 ---
 
@@ -234,7 +234,7 @@
 
 ### 6. `/admin/notifications` — ล็อกการแจ้งเตือน
 - ตาราง: id, recipient (customer_id opaque), event/type, channel, status (read/unread), created_at
-- ค้นหาได้, 分页ได้ — ใช้สืบสวนว่าลูกค้าได้รับแจ้งเตือนหรือไม่
+- ค้นหาได้, คัดกรองได้ — ใช้สืบสวนว่าลูกค้าได้รับแจ้งเตือนหรือไม่
 
 ### 7. `/admin/settings` และหน้าตั้งค่าอื่นๆ
 | หน้า | เนื้อหาสำคัญ |
@@ -312,7 +312,7 @@
 | **LINE Notify** | `src/lib/billingApi.ts` (comment), `src/pages/admin/AdminBilling.tsx` | แจ้งเตือนงวดบริการตัดงวดร้านพาร์ทเนอร์ | 🔧 ต้องตั้ง secret + automation job รอบถัดไป (บันทึกใน changelog) |
 | **Web Bluetooth (Niimbot Printer)** | `src/lib/niimbotBt.ts`, `src/lib/stickerQueue.ts` | พิมพ์สติกเกอร์ Bluetooth 1 ดวง/ชิ้น | ✅ ต้องใช้ Chrome/Edge (HTTPS) |
 | **Grab / Lineman / Foodpanda (Rider Providers)** | `src/lib/deliveryRouter.ts`, `src/lib/driverService.ts` — `type DeliveryMethod` | รองรับไรเดอร์ภายนอก | ❌ **FROZEN** — ยังไม่ได้ใช้งาน |
-| **GitHub Actions / Cron** | `src/lib/adminMarketing.ts` — `marketing_publish_due`, `marketing_schedule_post` | เผยแพร่โพสต์การตลาดตาม排程 | ✅ GH cron ทุกชั่วโมง (แต่เคยข้ามรอบ → มี promote ตอนโหลดหน้า) |
+| **GitHub Actions / Cron** | `src/lib/adminMarketing.ts` — `marketing_publish_due`, `marketing_schedule_post` | เผยแพร่โพสต์การตลาดตามเวลา | ✅ GH cron ทุกชั่วโมง (แต่เคยข้ามรอบ → มี promote ตอนโหลดหน้า) |
 | **Supabase Edge Functions** | หลายจุด: `create-checkout`, `omise-checkout`, `omise-webhook`, `stripe-webhook`, `record_payment_result`, `marketing_schedule_post`, `marketing_publish_due`, `cancel_order`, `confirm_offline_payment`, `assignDriver`, `deduct_inventory_for_order`, `create_payment_intent_record`, `submit_offline_payment_reference`, `submit_payment_slip`, `create_notification`, `marketing_save_rules`, `set_menu_schedule`, `publish_menu_schedule`, `admin_list_jobs`, `admin_delete_job` | Backend logic ทั้งหมดรันบน Supabase | ✅ ใช้งานจริง |
 | **Google Maps / Geocoding** | `src/lib/googleMaps.ts`, `src/lib/deliveryRouter.ts` | คำนวณระยะทาง, เขตส่ง, reverse geocode | ✅ ใช้งานจริง |
 

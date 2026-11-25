@@ -1,4 +1,4 @@
-﻿# BMB — CHANGELOG (ประวัติการพัฒนาทุก R-series)
+# BMB — CHANGELOG (ประวัติการพัฒนาทุก R-series)
 
 > เอกสารนี้รวม **ประวัติการเปลี่ยนแปลงจริงจาก AI_WORK_STATE.md** ตาม protocol §3.6
 > - ทุก R-series ที่ CODE_CLOSED + GATES PASS ต้องมี entry ในนี้

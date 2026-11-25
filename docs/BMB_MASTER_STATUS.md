@@ -1,4 +1,4 @@
-﻿# BMB — MASTER STATUS (เอกสารสถานะหลักเดียวของโปรเจกต์)
+# BMB — MASTER STATUS (เอกสารสถานะหลักเดียวของโปรเจกต์)
 
 > **เอกสารนี้คือ canonical current state ไฟล์เดียว** ตาม Owner directive 2026-10-26
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)

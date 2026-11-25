@@ -1,4 +1,4 @@
-﻿# BMB — AI WORKING STATE (สถานะปฏิบัติการของ AI Dev)
+# BMB — AI WORKING STATE (สถานะปฏิบัติการของ AI Dev)
 
 > **Canonical AI operating state** ตาม protocol §2.2 — เอกสารนี้คือสถานะปัจจุบันของ AI development session
 > - รวม: Active Task, Current Context, Architecture Constraints, **Mandatory Documentation Synchronization Protocol**

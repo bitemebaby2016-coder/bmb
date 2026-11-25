@@ -1,4 +1,4 @@
-﻿# BMB — WORK QUEUE (งานค้างทั้งหมดที่ยังไม่ปิด)
+# BMB — WORK QUEUE (งานค้างทั้งหมดที่ยังไม่ปิด)
 
 > **Canonical work queue** ตาม protocol §2.3 — เอกสารนี้คือแหล่งข้อมูลเดียวสำหรับงานค้าง
 > - รวม: Remaining Live Tests + Blocked Tasks + Tasks Requiring Owner Decisions
