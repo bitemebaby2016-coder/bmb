@@ -125,29 +125,36 @@ BEGIN
 END $$;
 
 -- 214.7 Trigger updated_at works
+-- Split into two DO blocks (two transactions): `now()` inside the trigger is
+-- transaction_timestamp(), constant within one transaction — inserting and
+-- updating in a single transaction can never show updated_at advance.
 DO $$
-DECLARE
-  test_id TEXT := 'test-sup-trigger-' || gen_random_uuid()::text;
-  created_at_val TIMESTAMPTZ;
-  updated_at_val TIMESTAMPTZ;
 BEGIN
   INSERT INTO public.suppliers (id, name, code, phone, is_active)
-  VALUES (test_id, 'Trigger Test', 'TRG', '0777777777', true)
-  RETURNING created_at, updated_at INTO created_at_val, updated_at_val;
-  
-  IF created_at_val IS NULL OR updated_at_val IS NULL THEN
-    RAISE EXCEPTION '214.7 FAIL: created_at/updated_at not set on insert';
+  VALUES ('test-sup-trigger-2147', 'Trigger Test', 'TRG', '0777777777', true);
+END $$;
+
+DO $$
+DECLARE
+  v_created TIMESTAMPTZ;
+  v_after   TIMESTAMPTZ;
+BEGIN
+  SELECT created_at INTO v_created FROM public.suppliers WHERE id = 'test-sup-trigger-2147';
+  IF v_created IS NULL THEN
+    RAISE EXCEPTION '214.7 FAIL: insert block did not commit the fixture row';
   END IF;
-  
-  PERFORM pg_sleep(0.01);
-  UPDATE public.suppliers SET name = 'Trigger Updated' WHERE id = test_id;
-  
-  SELECT updated_at INTO updated_at_val FROM public.suppliers WHERE id = test_id;
-  IF updated_at_val <= created_at_val THEN
-    RAISE EXCEPTION '214.7 FAIL: updated_at not updated on update';
+
+  UPDATE public.suppliers SET name = 'Trigger Updated' WHERE id = 'test-sup-trigger-2147';
+
+  SELECT updated_at INTO v_after FROM public.suppliers WHERE id = 'test-sup-trigger-2147';
+  IF v_after IS NULL THEN
+    RAISE EXCEPTION '214.7 FAIL: updated_at is null after update';
   END IF;
-  
-  DELETE FROM public.suppliers WHERE id = test_id;
+  IF v_after <= v_created THEN
+    RAISE EXCEPTION '214.7 FAIL: updated_at not advanced after update (created %, after %)', v_created, v_after;
+  END IF;
+
+  DELETE FROM public.suppliers WHERE id = 'test-sup-trigger-2147';
   RAISE NOTICE '214.7 PASS: updated_at trigger works';
 END $$;
 
@@ -307,43 +314,38 @@ BEGIN
   RAISE NOTICE '216.2 PASS: Defaults and constraints OK';
 END $$;
 
--- 216.3 Backfill: use_unit from unit, purchase_unit = use_unit
+-- 216.3 Unit consistency constraint: both-set or both-null; mixed = rejected
+-- (the migration's one-time backfill runs BEFORE the constraint is added;
+--  the ongoing invariant is what a new row must satisfy)
 DO $$
 DECLARE
-  test_id TEXT := 'ing-backfill-units-' || gen_random_uuid()::text;
-  rec RECORD;
+  test_id TEXT := 'ing-units-consistency-2163';
 BEGIN
+  -- both NULL: allowed
   INSERT INTO public.inventory (id, name, category, unit, current_stock, min_stock, max_stock, unit_price,
                                 supplier_name, supplier_phone, status)
-  VALUES (test_id, 'Unit Backfill Test', 'other', 'liter', 10, 5, 100, 100,
+  VALUES (test_id, 'Units Consistency Test', 'other', 'liter', 10, 5, 100, 100,
           'Test Supplier', '0444444444', 'in_stock');
-  
-  -- Migration 216 backfill logic
-  UPDATE public.inventory
-  SET use_unit = unit
-  WHERE use_unit IS NULL AND unit IS NOT NULL;
-  
-  UPDATE public.inventory
-  SET purchase_unit = use_unit, conversion_factor = 1.0
-  WHERE purchase_unit IS NULL AND use_unit IS NOT NULL;
-  
-  SELECT use_unit, purchase_unit, conversion_factor INTO rec
-  FROM public.inventory WHERE id = test_id;
-  
-  IF rec.use_unit != 'liter' THEN
-    RAISE EXCEPTION '216.3 FAIL: use_unit not backfilled from unit (got %)', rec.use_unit;
-  END IF;
-  
-  IF rec.purchase_unit != 'liter' THEN
-    RAISE EXCEPTION '216.3 FAIL: purchase_unit not set to use_unit (got %)', rec.purchase_unit;
-  END IF;
-  
-  IF rec.conversion_factor != 1.0 THEN
-    RAISE EXCEPTION '216.3 FAIL: conversion_factor not defaulted to 1.0 (got %)', rec.conversion_factor;
-  END IF;
-  
+
+  BEGIN
+    UPDATE public.inventory SET use_unit = 'liter' WHERE id = test_id;
+    RAISE EXCEPTION '216.3 FAIL: setting use_unit alone did not violate inventory_units_consistency';
+  EXCEPTION WHEN check_violation THEN
+    NULL; -- expected
+  END;
+
+  BEGIN
+    UPDATE public.inventory SET purchase_unit = 'liter' WHERE id = test_id;
+    RAISE EXCEPTION '216.3 FAIL: setting purchase_unit alone did not violate inventory_units_consistency';
+  EXCEPTION WHEN check_violation THEN
+    NULL; -- expected
+  END;
+
+  -- both set: allowed
+  UPDATE public.inventory SET use_unit = 'liter', purchase_unit = 'liter' WHERE id = test_id;
+
   DELETE FROM public.inventory WHERE id = test_id;
-  RAISE NOTICE '216.3 PASS: Unit backfill works correctly';
+  RAISE NOTICE '216.3 PASS: unit consistency constraint enforces both-set or both-null';
 END $$;
 
 -- 216.4 Indexes on cost columns
@@ -445,41 +447,49 @@ BEGIN
 END $$;
 
 -- 217.6 Trigger updated_at
+-- Same two-transaction pattern as 214.7: now() inside the trigger is
+-- transaction_timestamp(), constant within one transaction.
 DO $$
 DECLARE
-  test_id TEXT := 'sp-trigger-' || gen_random_uuid()::text;
-  sup_id TEXT := 'sup-sp-trigger-' || gen_random_uuid()::text;
-  ing_id TEXT := 'ing-sp-trigger-' || gen_random_uuid()::text;
-  created_at_val TIMESTAMPTZ;
-  updated_at_val TIMESTAMPTZ;
+  sup_id TEXT := 'sup-sp-trigger-2176';
+  ing_id TEXT := 'ing-sp-trigger-2176';
+  test_id TEXT := 'sp-trigger-2176';
 BEGIN
   INSERT INTO public.suppliers (id, name, code, phone, is_active)
   VALUES (sup_id, 'SP Trigger Supplier', 'SPTS', '0333333333', true);
-  
+
   INSERT INTO public.inventory (id, name, category, unit, current_stock, min_stock, max_stock, unit_price,
                                 supplier_name, supplier_phone, status)
   VALUES (ing_id, 'SP Trigger Ingredient', 'other', 'piece', 10, 5, 100, 100,
           'SP Trigger Supplier', '0333333333', 'in_stock');
-  
+
   INSERT INTO public.supplier_products (id, supplier_id, ingredient_id, purchase_unit, use_unit, conversion_factor, is_active)
-  VALUES (test_id, sup_id, ing_id, 'carton', 'piece', 24, true)
-  RETURNING created_at, updated_at INTO created_at_val, updated_at_val;
-  
-  IF created_at_val IS NULL OR updated_at_val IS NULL THEN
-    RAISE EXCEPTION '217.6 FAIL: created_at/updated_at not set on insert';
+  VALUES (test_id, sup_id, ing_id, 'carton', 'piece', 24, true);
+END $$;
+
+DO $$
+DECLARE
+  v_created TIMESTAMPTZ;
+  v_after   TIMESTAMPTZ;
+BEGIN
+  SELECT created_at INTO v_created FROM public.supplier_products WHERE id = 'sp-trigger-2176';
+  IF v_created IS NULL THEN
+    RAISE EXCEPTION '217.6 FAIL: insert block did not commit the fixture row';
   END IF;
-  
-  PERFORM pg_sleep(0.01);
-  UPDATE public.supplier_products SET supplier_sku = 'SKU-001' WHERE id = test_id;
-  
-  SELECT updated_at INTO updated_at_val FROM public.supplier_products WHERE id = test_id;
-  IF updated_at_val <= created_at_val THEN
-    RAISE EXCEPTION '217.6 FAIL: updated_at not updated on update';
+
+  UPDATE public.supplier_products SET supplier_sku = 'SKU-001' WHERE id = 'sp-trigger-2176';
+
+  SELECT updated_at INTO v_after FROM public.supplier_products WHERE id = 'sp-trigger-2176';
+  IF v_after IS NULL THEN
+    RAISE EXCEPTION '217.6 FAIL: updated_at is null after update';
   END IF;
-  
-  DELETE FROM public.supplier_products WHERE id = test_id;
-  DELETE FROM public.inventory WHERE id = ing_id;
-  DELETE FROM public.suppliers WHERE id = sup_id;
+  IF v_after <= v_created THEN
+    RAISE EXCEPTION '217.6 FAIL: updated_at not advanced after update (created %, after %)', v_created, v_after;
+  END IF;
+
+  DELETE FROM public.supplier_products WHERE id = 'sp-trigger-2176';
+  DELETE FROM public.inventory WHERE id = 'ing-sp-trigger-2176';
+  DELETE FROM public.suppliers WHERE id = 'sup-sp-trigger-2176';
   RAISE NOTICE '217.6 PASS: updated_at trigger works';
 END $$;
 

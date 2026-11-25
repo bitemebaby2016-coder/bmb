@@ -131,37 +131,9 @@ jobs:
               echo "== shim 107: seed 9 legacy media_assets fixture rows"
               shim "supabase/migrations/$b" "INSERT INTO public.media_assets (id, url, asset_key, category) VALUES ('fx-ma-1','https://example.invalid/legacy1.png','fx-key-1','product'),('fx-ma-2','https://example.invalid/legacy2.png','fx-key-2','product'),('fx-ma-3','https://example.invalid/legacy3.png','fx-key-3','product'),('fx-ma-4','https://example.invalid/legacy4.png','fx-key-4','product'),('fx-ma-5','https://example.invalid/legacy5.png','fx-key-5','product'),('fx-ma-6','https://example.invalid/legacy6.png','fx-key-6','product'),('fx-ma-7','https://example.invalid/legacy7.png','fx-key-7','product'),('fx-ma-8','https://example.invalid/legacy8.png','fx-key-8','product'),('fx-ma-9','https://example.invalid/legacy9.png','fx-key-9','product') ON CONFLICT (id) DO NOTHING;"
             fi
-            # ============================================================
-            # Shims for Phase 1 migrations (214-218) — Smart Ingredient & Cost
-            # ============================================================
-            if [ "$b" = "214_create_suppliers_table.sql" ]; then
-              # 214 creates suppliers table with RLS using is_inventory/is_kitchen/is_pos/is_finance
-              # These functions exist from migration 146 (applied earlier in loop)
-              # Ensure platform-owner profile exists for any FK checks
-              echo "== shim 214: ensure platform-owner profile for suppliers RLS"
-              shim "supabase/migrations/$b" "INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role) VALUES ('dddf4b57-405f-4852-a985-76d8d52b1b72','fixture-owner@bmb.test','x',now(),now(),'{}','{}','authenticated','authenticated') ON CONFLICT (id) DO NOTHING; INSERT INTO public.profiles (id, role) VALUES ('dddf4b57-405f-4852-a985-76d8d52b1b72','admin') ON CONFLICT (id) DO NOTHING;"
-            fi
-            if [ "$b" = "215_add_supplier_id_to_inventory.sql" ]; then
-              # 215 backfills supplier_id from denormalized supplier_name/supplier_phone
-              # Needs inventory data to exist; seed minimal fixture if empty
-              echo "== shim 215: seed minimal inventory fixture for backfill"
-              shim "supabase/migrations/$b" "INSERT INTO public.inventory (id, name, category, unit, current_stock, min_stock, max_stock, unit_price, supplier_name, supplier_phone, status) VALUES ('ing-fx-1','Fixture Item','other','piece',0,0,10,0,'Fixture Supplier','0000000000','in_stock') ON CONFLICT (id) DO NOTHING;"
-            fi
-            if [ "$b" = "216_enrich_inventory_cost_yield.sql" ]; then
-              # 216 adds columns to inventory with defaults — no shim needed normally
-              # But ensure inventory table exists (created by 001)
-              echo "== shim 216: no-op (columns added with defaults)"
-            fi
-            if [ "$b" = "217_create_supplier_products.sql" ]; then
-              # 217 creates supplier_products with RLS using is_inventory/is_kitchen/is_pos/is_finance
-              # Ensure platform-owner profile exists
-              echo "== shim 217: ensure platform-owner profile for supplier_products RLS"
-              shim "supabase/migrations/$b" "INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role) VALUES ('dddf4b57-405f-4852-a985-76d8d52b1b72','fixture-owner@bmb.test','x',now(),now(),'{}','{}','authenticated','authenticated') ON CONFLICT (id) DO NOTHING; INSERT INTO public.profiles (id, role) VALUES ('dddf4b57-405f-4852-a985-76d8d52b1b72','admin') ON CONFLICT (id) DO NOTHING;"
-            fi
-            if [ "$b" = "218_add_batch_yield_to_recipes.sql" ]; then
-              # 218 adds columns to recipes — needs recipes table (created by 019)
-              echo "== shim 218: no-op (columns added with defaults)"
-            fi
+            # 214-218 (Phase 1): ไม่ต้องมี shim — RLS อ้าง is_*() จาก migration 146
+            # (รันก่อนหน้าใน loop นี้แล้ว) · backfill เป็น UPDATE ที่ no-op ได้บน DB ใหม่
+            # · ตรวจสอบพฤติกรรมจริงด้วย e2e/contracts_phase1_214_218.sql (กฎ §17.6)
             tmp=$(mktemp)
             preprocess "$f" "$tmp"
             echo "== apply $b"

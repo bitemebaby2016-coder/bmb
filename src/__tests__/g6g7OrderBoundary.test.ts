@@ -16,8 +16,9 @@ import webhookSrc from '../../supabase/functions/channel-webhook/index.ts?raw'
 import workerSrc from '../../supabase/functions/social-ai-worker/index.ts?raw'
 import toolsSrc from '../lib/aiToolCalling.ts?raw'
 import biteStoreSrc from '../stores/useBiteAIStore.ts?raw'
-import g6Doc from '../../BMB_G6_CONTRACT.md?raw'
-import g7Doc from '../../BMB_G7_CONTRACT.md?raw'
+// BMB_G6_CONTRACT.md / BMB_G7_CONTRACT.md ถูกถอดออกจาก repo โดย Owner (commit a592521 "Big clean doc")
+// → ชุดทดสอบ doc-alignment ที่อ้างไฟล์ md ถูกถอดตาม (Source of Truth = Actual Code, §2.1)
+// boundary ทั้งหมดยังถูก pin ครบด้วย source-scan บนโค้ดจริงด้านล่าง
 
 describe('CREATE-ONLY เส้นทางกลาง — ออเดอร์ใหม่ผ่าน create_order_with_items เท่านั้น', () => {
   it('socialOrderIntake: write หนึ่งเดียว = rpc/create_order_with_items + พก p_external_ref_id (idempotent)', () => {
@@ -101,15 +102,7 @@ describe('Tool permissions ฝั่งเว็บ — read-only เท่า�
   })
 })
 
-describe('Doc-code alignment — สัญญา G6/G7 ประกาศ boundary ที่ revise แล้วตรงกัน', () => {
-  it('BMB_G6_CONTRACT.md มี RULE REVISION ของ G6-09 (create-only ผ่าน socialOrderIntake)', () => {
-    expect(g6Doc).toContain('RULE REVISION — G6/G7 ORDER BOUNDARY')
-    expect(g6Doc).toContain('_shared/socialOrderIntake.ts')
-    expect(g6Doc).toContain('MUST NEVER')
-  })
-
-  it('BMB_G7_CONTRACT.md อ้าง boundary เดียวกัน (ไม่ขัดแย้งกันเอง)', () => {
-    expect(g7Doc).toContain('RULE REVISION — G6/G7 ORDER BOUNDARY')
-    expect(g7Doc).toContain('_shared/socialOrderIntake.ts')
-  })
-})
+// หมายเหตุ (2026-11-25): describe "Doc-code alignment" ที่เคยอ้าง BMB_G6_CONTRACT.md /
+// BMB_G7_CONTRACT.md ถูกถอดออก — เอกสารทั้งสองถูกลบจาก repo โดย Owner (a592521 "Big clean doc")
+// สัญญา boundary G6/G7 ยังถูกบังคับครบทุกข้อผ่าน source-scan โค้ดจริงด้านบน (policy · tool
+// permissions · API surface · server-side path) — ไม่มี contract ใดหลุดจากการทดสอบ

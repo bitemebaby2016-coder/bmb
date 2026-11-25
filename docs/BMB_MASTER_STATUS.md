@@ -4,7 +4,10 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**🔒 SESSION CLOSE 2026-11-25 (PHASE 1 COMPLETE — Smart Ingredient & Cost Management Foundation) · **CODE_CLOSED + GATES PASS (tsc 0 · lint OK · vitest 230 ไฟล์/2521 tests · build OK) + CONTRACT TESTS FIXED (run all migrations 001-218) + PUSHED**
+**🔒 SESSION CLOSE 2026-11-25 (PHASE 1 COMPLETE + CI ROOT CAUSE FIXED — Smart Ingredient & Cost Management Foundation) · **CODE_CLOSED + GATES PASS (tsc 0 · lint OK · vitest 230 ไฟล์/2519 tests · build OK) + CONTRACT REPLAY ALL_GREEN (222 migrations + Phase 1 contracts) + PUSHED**
+
+- **CI Root Cause (พิสูจน์จากการรัน vitest ในเครื่อง — ไม่ใช่ migration 214-218):** commit `a592521` "Big clean doc" (2026-11-24) ลบ `BMB_G6_CONTRACT.md` + `BMB_G7_CONTRACT.md` แต่ `src/__tests__/g6g7OrderBoundary.test.ts` ยัง `import ...?raw` ไฟล์ทั้งสอง → Vite import-analysis โยน "Failed to resolve import" ตอน transform → suite ล้มทั้งไฟล์ → CI "Test + Lint + Build" พังทุกรอบตั้งแต่นั้น · **แก้:** ถอด import + describe "Doc-code alignment" ออก (boundary ยังถูก pin ครบ 10 เคสด้วย source-scan โค้ดจริง — Actual Code > Documentation §2.1) · เทสผ่าน 10/10, ชุดเต็ม 230 ไฟล์/2519 tests PASS
+- **Contract-tests.yml (ตามสั่ง ห้าม skip):** รัน migration ครบ 001→latest แบบไดนามิก · ถอด skip 124-218 ทิ้ง · ถอด shims 214-218 ที่ไม่จำเป็นออก (ตามกฎ §17.5 ที่เพิ่งเพิ่ม — migration เหล่านี้ไม่อ้าง auth.users/profiles) · **พิสูจน์ด้วย Docker replay จริง:** 222 ไฟล์ OK / 0 FAIL บน fresh DB + `contracts_phase1_214_218.sql` PASS ทุกเคส (หลักฐาน `e2e/w2-replay-full-2026-11-25.log` + `e2e/ci/w2_fresh_replay_full.sh` + `w2_run_replay_full.bat`)
 
 - **Phase 1: Ingredient Master Enrichment + Supplier Master + Supplier Mapping** — ✅ COMPLETE
   - Migrations 214-218 applied to production (Rule 16.3: Probe → Apply → Verify Ledger)
@@ -15,13 +18,9 @@
   - 218: `recipes` batch yield — `batch_yield_factor`, `batch_waste_pct`, `cost_per_unit`, `last_cost_calculated_at` (Owner Decision B3)
   - API: `bmbAdminApi_suppliers.ts` (CRUD), `bmbAdminApi_supplierProducts.ts` (mapping + 3 price states)
   - Types: `Supplier`, `SupplierForm`, `SupplierProduct`, `SupplierProductForm`, extended `Ingredient`, `RecipeRow`
-  - All local gates pass: `tsc --noEmit` 0, `npm run lint` OK, `vitest run` 230 files/2521 tests PASS, `npm run build` PASS
+  - All local gates pass: `tsc --noEmit` 0, `npm run lint` OK, `vitest run` 230 files/2519 tests PASS, `npm run build` PASS
 
-- **Contract Tests Fixed (CI)** — ✅ COMPLETE
-  - `contract-tests.yml` now runs ALL migrations 001→latest (not stopping at 123)
-  - Removed skip for 214-218; added shims for Phase 1 migrations
-  - Migration 146 (Role Foundation) runs before 214 → `is_inventory()`/`is_kitchen()`/`is_pos()`/`is_finance()` available for RLS
-  - CI should now pass all migrations + contract tests
+- **Contract Tests for Phase 1 (ตามกฎใหม่ §17.6)** — ✅ `e2e/contracts_phase1_214_218.sql`: schema + indexes + RLS enabled + policies + Admin CRUD + is_inventory/is_kitchen/is_pos/is_finance + updated_at triggers + FK + backfill + constraint behavior (mixed unit states rejected) + 3 price state columns · พิสูจน์บน fresh DB ผ่านทุกเคส
 
 **🔒 SESSION CLOSE 2026-11-24 (R105c · README REWRITE — เวอร์ชันแรกแบบพรีเซนต์นักลงทุนถูก Owner ตัดสินไม่เอา → กู้โครงเดิม R74-OMNI กลับมา อัปเดตแบบปกติตามฟีเจอร์จริงล่าสุด) · **CODE_CLOSED — เอกสารเดียว ไม่มี code change ไม่ต้องรัน code gates**
 
