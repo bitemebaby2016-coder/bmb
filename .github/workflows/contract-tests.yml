@@ -557,13 +557,111 @@ jobs:
 
       - name: Contract 210 (Rider my_deliveries v3 JOIN fix + offline gate + arrived completeness)
         run: |
-          set +e   # ตามแพทเทิร์น step อื่น: GitHub รัน step ด้วย bash -e — ถ้าไม่ปิด, psql rc≠0 จะตายก่อนพิมพ์ output (run #578/#579: "exit code 3" กลืน error)
+          set +e
           out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_210_rider_my_deliveries.sql 2>&1); rc=$?
           printf '%s\n' "$out"
           if [ $rc -ne 0 ]; then
             ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
             msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
             echo "::error file=e2e/contracts_210_rider_my_deliveries.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
+      # Orphan test files — มีไฟล์มาก่อนแต่เคยไม่ถูกรันใน CI (กฎ §17.6: ทุก migration ต้องมีเทสประกบ)
+      - name: Contract 125 — driver home branch (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_125_driver_home_branch.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_125_driver_home_branch.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
+      - name: Contract 132 — rider POD push/decline (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_132_rider_pod_push_decline.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_132_rider_pod_push_decline.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
+      - name: Contract 185 — admin switches master-category gates (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_185_admin_switches.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_185_admin_switches.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
+      - name: Contract 208 — preorder vote cast (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_208_preorder_vote.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_208_preorder_vote.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
+      # กลุ่ม 124-213 ที่เคยไม่มี contract test (กฎ §17.7) — เขียนเพิ่มตามลำดับ
+      - name: Contract 126 — admin content/jobs (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_126_admin_jobs.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_126_admin_jobs.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
+      - name: Contract 134+145+150-152 — kitchen fee / two cutoffs / parity (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_134_145_150_151_152.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_134_145_150_151_152.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
+      - name: Contract 157+158 — anon policy scoping / grants alignment (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_157_158.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_157_158.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
+      - name: Contract 159-162 — legacy drops / shop hours / notify / reject payment (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_159_162.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_159_162.sql,line=${ln:-1}::$msg"
             exit 1
           fi
 

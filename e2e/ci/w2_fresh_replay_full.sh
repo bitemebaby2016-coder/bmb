@@ -162,5 +162,32 @@ if [ $rc -ne 0 ]; then
   exit 1
 fi
 
+# ---- กลุ่ม contract 124-213 (ไฟล์ใหม่ + orphan ที่เคยไม่ถูกรัน) ----
+# ลำดับเรียงตามเลข migration ในชื่อไฟล์ · ทุกไฟล์ ROLLBACK ตัวเอง · fail = exit 1
+echo "===== CONTRACT SUITE 124-213 (new + orphan files) ====="
+c_fail=0
+c_list=""
+for f in e2e/contracts_1[0-9][0-9]_*.sql e2e/contracts_1[0-9][0-9].sql; do
+  [ -e "$f" ] || continue
+  b=$(basename "$f")
+  case "$b" in
+    contracts_12[4-9]*|contracts_13[0-9]*|contracts_14[0-9]*|contracts_15[0-9]*|contracts_16[0-9]*|contracts_17[0-9]*|contracts_18[0-9]*|contracts_19[0-9]*|contracts_20[0-9]*|contracts_21[0-9]*) ;;
+    *) continue ;;
+  esac
+  echo "== contract $b"
+  out=$(psql -X -v ON_ERROR_STOP=1 -f "$f" 2>&1); rc=$?
+  printf '%s\n' "$out"
+  if [ $rc -ne 0 ]; then
+    c_fail=$((c_fail+1)); c_list="$c_list $b"
+    msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+    echo "CONTRACT_FAIL $b :: $msg"
+  fi
+done
+if [ $c_fail -gt 0 ]; then
+  echo "CONTRACT_SUITE_FAIL:$c_list"
+  exit 1
+fi
+echo "CONTRACT SUITE 124-213 ALL GREEN"
+
 echo "===== FINAL ====="
 echo "REPLAY_ALL_GREEN migrations=$ok_count + phase1_contracts PASS"
