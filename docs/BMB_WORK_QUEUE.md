@@ -13,6 +13,7 @@
 | กลุ่ม | จำนวนข้อ | สถานะ | รายละเอียด |
 |------|----------|-------|-----------|
 | **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 15 ไฟล์เทสครอบ 28 migration (179-213) ALL GREEN — 311 tests PASS |
+| **Phase 1 Contract Tests (214-218)** | 5 migration | ✅ **COMPLETE** | 1 SQL file `e2e/contracts_phase1_214_218.sql` — suppliers, inventory enrichment, supplier_products, recipes batch yield — runs in CI |
 | **Phase 1 Gate Review** | 1 | ⏸️ PAUSED — รอ Owner | Phase 1 (migrations 214-218 + APIs) applied prod — Owner ตรวจรับก่อน Phase 2 |
 | **Phase 2-6** | 5 Phase | ⏸️ PAUSED — Approved roadmap, รอ Gate ทีละ Phase | PO+GRN → Recipe Costing → OCR+CSV → Admin Nav → Analytics — **ห้ามเริ่มเอง** |
 | **Live Tests E** | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 ผ่านหมด (E-7 diagnostic) — OSM fallback verified |

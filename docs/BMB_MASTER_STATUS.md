@@ -21,6 +21,9 @@
   - C-5: CRM consent granularity — add winback/birthday/channel sub-fields
   - C-6: Floating ad vs Mascot — already fixed in layout
 - **Omise TEST Card — RESOLVED:** Not a blocker. Stripe QR = primary, Omise = fallback.
+- **Contract Coverage Complete (001-218):**
+  - **124-213:** 15 Vitest files in `src/__tests__/contracts_*.test.ts` (311 tests)
+  - **214-218 (Phase 1):** 1 SQL file `e2e/contracts_phase1_214_218.sql` (covers suppliers, inventory enrichment, supplier_products, recipes batch yield) — runs in CI
 - **Next:** Owner audit review of 67 contract files → Complete Live Test Groups G-6, G-7, H-1, H-2, I-1..I-8 → Owner Gate Phase 1 → Phase 2.
 - **Phase 1-6 all = paused per Owner order** (Phase 1 Gate Review pending).
 

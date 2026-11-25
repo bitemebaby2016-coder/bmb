@@ -1,7 +1,9 @@
 # Phase 1 Complete — Pending Test Clearance Plan
 **Date:** 2026-11-25 (อัปเดตหลัง audit round 1-4 — COMPLETE)  
-**Status:** Contract suite 124-213 ALL GREEN — 28 migration (179-213) COMPLETE (15 files, 311 tests)  
-**Proof:** `npx vitest run src/__tests__/contracts_*.test.ts` — 15 test files, 311 tests PASS + existing 52 contract files = 67 files ALL GREEN
+**Status:** Contract suite 001-218 ALL GREEN — 28 migration (179-213) COMPLETE (15 files, 311 tests) + Phase 1 (214-218) COMPLETE (1 SQL file)  
+**Proof:** `npx vitest run src/__tests__/contracts_*.test.ts` — 15 test files, 311 tests PASS + existing 52 contract files = 67 files ALL GREEN. Phase 1: `e2e/contracts_phase1_214_218.sql` runs in CI.
+
+---
 
 ---
 
@@ -9,7 +11,7 @@
 
 ## 📊 สถานะปัจจุบัน (จริง จาก replay ล่าสุด)
 
-### ครอบคลุมครบแล้ว (124-213 ALL GREEN — 67 ไฟล์, 311 tests ใน 15 ไฟล์ใหม่ + 52 ไฟล์เดิม)
+### ครอบคลุมครบแล้ว (001-218 ALL GREEN — 67 ไฟล์ Vitest + 1 ไฟล์ SQL)
 | ช่วง | วิธีครอบ |
 |------|----------|
 | 124-149 | ไฟล์เดิม + **ใหม่ 126 / 134+145+150-152** + orphan steps (125, 132) |
@@ -33,7 +35,7 @@
 | 212 | **ใหม่ contracts_212_delivery_sync_hop.test.ts** (26 tests) |
 | 213 | **ใหม่ contracts_213_cart_payload.test.ts** (6 tests) |
 | 184, 185, 190, 208, 210 | ไฟล์เดิม + orphan step (185, 208) |
-| 214-218 | contracts_phase1_214_218.sql |
+| **214-218 (Phase 1)** | **e2e/contracts_phase1_214_218.sql** (1 ไฟล์ SQL — suppliers, inventory enrichment, supplier_products, recipes batch yield) |
 
 **กลุ่มที่เสร็จสมบูรณ์ (15 ไฟล์ครอบ 28 migration):**
 1. `179` notification hub (channel_identities + notification_outbox) — `contracts_179_notification_hub.test.ts` (24)
