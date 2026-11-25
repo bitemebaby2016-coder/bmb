@@ -57,6 +57,8 @@ const DeliveryHub = lazy(() => import('./components/admin/AdminHubs').then(m => 
 const SettingsHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.SettingsHub })))
 const MenuHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.MenuHub })))
 const OrgHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.OrgHub })))
+// Phase 1: Purchase Hub — Supplier Master + Supplier Product Mapping
+const PurchaseHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.PurchaseHub })))
 // [Task 2 · T2-b] Onboarding Wizard — เปิดร้านใหม่ (tenant+brand) ที่เดียวจบ
 const AdminOnboarding = lazy(() => import('./pages/admin/AdminOnboarding').then(m => ({ default: m.AdminOnboarding })))
 // [Task 2] Billing — หน้าดูงวดบริการร้านพาร์ทเนอร์ (billing_subscriptions · m175)
@@ -320,6 +322,9 @@ export default function App() {
 {/* Admin Routes — Lazy Loaded (AdminNav = persistent admin sidebar across every /admin page) */}
         <Route path="/admin" element={<AdminPage><AdminDashboard /></AdminPage>} />
         <Route path="/admin/inventory" element={<AdminPage><InventoryPage /></AdminPage>} />
+        <Route path="/admin/purchase" element={<AdminPage><PurchaseHub /></AdminPage>} />
+        <Route path="/admin/suppliers" element={<Navigate to="/admin/purchase?tab=suppliers" replace />} />
+        <Route path="/admin/supplier-products" element={<Navigate to="/admin/purchase?tab=mappings" replace />} />
         <Route path="/admin/orders" element={<AdminPage><OrdersHub /></AdminPage>} />
         <Route path="/admin/products" element={<AdminPage><MenuHub /></AdminPage>} />
         <Route path="/admin/menu-schedule" element={<MenuScheduleRedirect />} />

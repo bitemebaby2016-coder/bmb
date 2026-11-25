@@ -66,7 +66,7 @@ describe('adminUi — admin navigation catalogue', () => {
   })
 })
 
-describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set) — consolidated to 3 groups', () => {
+describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set) — consolidated to 4 groups', () => {
   it('flattening the groups yields exactly ADMIN_NAV_ITEMS (no lost or duplicated menu)', async () => {
     const { ADMIN_NAV_GROUPS, ADMIN_NAV_ITEMS } = await import('@/lib/adminUi')
     const flat = ADMIN_NAV_GROUPS.flatMap((g) => g.items)
@@ -75,11 +75,11 @@ describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set) — co
     expect(new Set(flat.map((i) => i.to))).toEqual(new Set(ADMIN_NAV_ITEMS.map((i) => i.to)))
   })
 
-  it('has exactly 3 groups: operations, customers, settings', async () => {
+  it('has exactly 4 groups: operations, customers, settings, purchase', async () => {
     const { ADMIN_NAV_GROUPS } = await import('@/lib/adminUi')
-    expect(ADMIN_NAV_GROUPS.length).toBe(3)
+    expect(ADMIN_NAV_GROUPS.length).toBe(4)
     const ids = ADMIN_NAV_GROUPS.map((g) => g.id)
-    expect(ids).toEqual(['operations', 'customers', 'settings'])
+    expect(ids).toEqual(['operations', 'customers', 'settings', 'purchase'])
   })
 
   it('every group has an id, a label and at least one item', async () => {
@@ -135,6 +135,14 @@ describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set) — co
     expect(paths).toContain('/admin/tenants')
     expect(paths).toContain('/admin/onboarding')
     expect(paths).toContain('/admin/billing')
+  })
+
+  it('purchase group contains supplier master and mapping', async () => {
+    const { ADMIN_NAV_GROUPS } = await import('@/lib/adminUi')
+    const purchase = ADMIN_NAV_GROUPS.find(g => g.id === 'purchase')
+    expect(purchase).toBeTruthy()
+    const paths = purchase!.items.map(i => i.to)
+    expect(paths).toContain('/admin/purchase')
   })
 
   it('every grouped route is registered in App.tsx (menu never points at a dead path)', async () => {

@@ -37,6 +37,28 @@ export interface InventoryForm {
 // Inventory API — Supabase-backed
 // ============================================
 
+export async function updateInventory(id: string, data: Partial<InventoryForm>): Promise<Ingredient | null> {
+  const { data: result, error } = await supabase.from('inventory')
+    .update({
+      ...data,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) { console.error('[updateInventory] Error:', error); return null }
+  return result as Ingredient
+}
+
+export async function deactivateInventory(id: string): Promise<boolean> {
+  const { error } = await supabase.from('inventory')
+    .update({ status: 'out_of_stock', updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) { console.error('[deactivateInventory] Error:', error); return false }
+  return true
+}
+
 export async function getInventory(): Promise<Ingredient[]> {
   const { data, error } = await supabase.from('inventory').select('*').order('category')
   if (error) { console.error('[getInventory] Error:', error); return [] }

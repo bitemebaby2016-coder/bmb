@@ -18,7 +18,7 @@ export interface AdminNavGroup {
  * Grouped navigation for the desktop Sidebar / mobile drawer (single nav set).
  * Invariant (asserted in tests): flatten(groups) === ADMIN_NAV_ITEMS (same set,
  * every item exactly once) — groups are presentation only, never a second menu.
- * Consolidated to 3 groups: operations, customers, settings
+ * Consolidated to 4 groups: operations, customers, settings, purchase
  */
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
@@ -59,6 +59,13 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/billing', label: 'งวดบริการ (การเรียกเก็บเงิน)', icon: '💳' },
     ],
   },
+  {
+    id: 'purchase',
+    label: 'จัดซื้อ',
+    items: [
+      { to: '/admin/purchase', label: 'ผู้ขายและการจับคู่', icon: '🏢' },
+    ],
+  },
 ]
 
 /** Master admin navigation — DERIVED FROM groups (audit D10: single source · flatten invariant) */
@@ -90,12 +97,12 @@ export function isAdminCapableRole(role: string | null | undefined): boolean {
  * 146 — per-role nav (presentation only — RLS ยังเป็นประตูจริง):
  *   ไม่มี allowlist (owner/admin/staff/auditor/developer/unknown) = ทุกกลุ่ม
  *   specialist/pos/support = เฉพาะกลุ่มที่เกี่ยวข้อง
- * Updated for 3-group structure with merged pages
+ * Updated for 4-group structure with PurchaseHub
  */
 const ROLE_NAV_ALLOW: Record<string, string[]> = {
   pos: ['/admin', '/admin/orders', '/admin/pos', '/admin/customers', '/admin/reports'],
   kitchen: ['/admin', '/admin/orders', '/admin/kitchen', '/admin/recipes', '/admin/delivery', '/admin/products'],
-  inventory: ['/admin', '/admin/inventory', '/admin/products'],
+  inventory: ['/admin', '/admin/inventory', '/admin/products', '/admin/purchase'],
   finance: ['/admin', '/admin/reports', '/admin/orders', '/admin/pos'],
   marketing: ['/admin', '/admin/marketing', '/admin/media-portfolio'],
   support: ['/admin', '/admin/orders', '/admin/customers', '/admin/notifications'],

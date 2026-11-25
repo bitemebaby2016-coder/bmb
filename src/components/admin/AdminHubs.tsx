@@ -26,6 +26,8 @@ import { BackgroundMusicSettingsPage } from '@/pages/admin/BackgroundMusicSettin
 import { AdminRounds } from '@/pages/admin/AdminRounds'
 import { DeliveryZonesPanel } from '@/components/admin/DeliveryZonesPanel'
 import { TransportAvailabilityBoard } from '@/components/admin/TransportAvailabilityBoard'
+import { SupplierPage } from '@/pages/admin/SupplierPage'
+import { SupplierProductMappingPage } from '@/pages/admin/SupplierProductMappingPage'
 
 interface HubTab {
   key: string
@@ -153,6 +155,22 @@ export function OrgHub() {
       tabs={[
         { key: 'tenants', label: 'องค์กร/ร้านค้า', icon: '🏢', render: () => <AdminTenants /> },
         { key: 'brands', label: 'แบรนด์', icon: '🏳️', render: () => <AdminBrands /> },
+      ]}
+    />
+  )
+}
+
+// ---- Phase 1: Purchase Hub ----
+// Supplier Master + Supplier Product Mapping in one hub per Owner directive
+
+export function PurchaseHub() {
+  return (
+    <HubShell
+      title="จัดซื้อและผู้ขาย"
+      storageKey="bmb-hub-purchase"
+      tabs={[
+        { key: 'suppliers', label: 'ผู้ขาย (Supplier Master)', icon: '🏢', render: () => <SupplierPage /> },
+        { key: 'mappings', label: 'จับคู่สินค้า (Mapping)', icon: '🔗', render: () => <SupplierProductMappingPage /> },
       ]}
     />
   )

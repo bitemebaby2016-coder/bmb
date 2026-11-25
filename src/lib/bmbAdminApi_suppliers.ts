@@ -6,6 +6,9 @@
 import { supabase } from './supabase'
 import type { Supplier, SupplierForm } from '@/types'
 
+// Re-export types for consumers
+export type { Supplier, SupplierForm }
+
 // ============================================
 // Suppliers API — Supabase-backed
 // ============================================
