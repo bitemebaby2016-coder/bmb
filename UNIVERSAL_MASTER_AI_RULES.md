@@ -673,6 +673,28 @@ SECTION 16: TEST DATA HYGIENE (กติกาทดสอบ — ของท�
     - ทำแล้ว: R86 — 190 (มีแล้วแต่ไม่มีใน history → บันทึก) · 191/192/193 (ยังไม่ทำ → apply + verify)
 
 
+===============================================================================
+SECTION 17: STRICT CI & TESTING RULES (กฎเหล็กสำหรับ CI และ Testing)
+===============================================================================
+
+17.1 NO SKIP / NO MIGRATION BYPASS
+    - ห้ามแก้ไขปัญหา CI/CD พังด้วยการ Skip, Comment out หรือ Ignore ไฟล์เทสและ Migration เด็ดขาด
+    - การ Skip เทสหรือ Migration ไม่ใช่การแก้ปัญหา — เป็นการปิดบังสัญญาณเตือน
+
+17.2 NO MANUAL TEST SUBSTITUTE
+    - ห้ามใช้เหตุผลว่า "จะไปเทสบน Production/Staging ทีหลัง" เพื่อหลีกเลี่ยงการแก้ CI ให้ผ่าน
+    - CI ต้องผ่านใน Pipeline ก่อนถึงจะ Deploy — ไม่ใช่ตรงกันข้าม
+
+17.3 CI MUST REFLECT PRODUCTION
+    - สภาพแวดล้อมการทดสอบ (Ephemeral DB) ต้องรัน Migration ครบทุกไฟล์ตั้งแต่ 001 จนถึง latest เสมอ
+    - ห้าม Hardcode เลขเวอร์ชันที่หยุดรัน เพื่อให้ CI ผ่านชั่วคราว
+    - CI Pipeline ต้องสะท้อน Production อย่างสมจริง
+
+17.4 FIX ROOT CAUSE
+    - หาก Migration ใหม่พังเพราะขาด Dependency ให้ตรวจสอบลำดับการรันใน CI Pipeline
+    - หรือแก้ Test Suite ให้รองรับ Schema ใหม่
+    - ไม่ใช่การปิดการตรวจสอบ (disable checks) เพื่อให้ผ่าน
+
 
     BUILD THE PRODUCT — DO NOT BUILD THE APPEARANCE OF COMPLETION.
 
