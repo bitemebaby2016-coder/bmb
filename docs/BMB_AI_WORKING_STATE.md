@@ -89,26 +89,41 @@ Before ending every development task or session:
 
 ---
 
-## 1. CURRENT ACTIVE TASK (2026-11-24 R105c)
+## 1. CURRENT ACTIVE TASK (2026-11-25 — HANDOFF TO NEXT SESSION)
 
 | Field | Value |
 |-------|-------|
-| **Task ID** | DOC-CONSOLIDATION-2026-11-24 |
-| **Type** | Documentation Consolidation + AI Workflow Enforcement |
-| **Status** | IN_PROGRESS |
-| **Objective** | Audit → Consolidate → Enforce: Create 5 canonical docs, embed protocol in AI_WORKING_STATE |
-| **Scope** | Documentation only — no code changes, no production changes, no business logic changes |
-| **Started** | 2026-11-24 |
-| **Protocol Reference** | User directive: "งานนี้ทำเอกสารเท่านั้นห้ามโค้ด" |
+| **Task ID** | CONTRACT-AUDIT-CLOSURE-124-213 |
+| **Type** | Contract Test Audit Closure — เขียนเทสให้ครบ migration 124-213 ห้าม skip |
+| **Status** | IN_PROGRESS (พักกลางทาง — ครอบครัวไปถึง 180 · เหลือ 28 migration) |
+| **Objective** | ทุก migration 124-213 ต้องมี Contract Test ประกอบ (กฎ §17.6/§17.7) — พิสูจน์ด้วย Docker replay ALL GREEN ก่อนปิด |
+| **Owner Order** | 2026-11-25: "ออดิทและเคลียร์เทสทั้งหมดให้เป็นปัจจุบันก่อน" · Phase 1-6 พักทั้งหมด (รอ Gate) |
+| **Started** | 2026-11-25 · **Progress ที่พิสูจน์แล้ว:** suite 124-180 ALL GREEN (3 รอบ replay) |
+| **Plan File** | `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` (รายการ 28 ตัวที่เหลือ + 15 กลุ่มไฟล์ + กฎที่พบ) |
+| **Replay Tool** | `e2e/ci/w2_run_replay_full.bat` (Docker postgres:16 · 222 migrations + suite 124-213) |
 
-### 1.1 Progress Checklist
-- [x] **Audit:** Reviewed all status files (AI_WORK_STATE.md, BMB_MASTER_STATUS.md, BMB_REMAIN_TESTS_LIVE, README.md, UNIVERSAL_MASTER_AI_RULES.md, AI_ENTRYPOINT.md)
-- [x] **Consolidate Step 1:** Created `docs/BMB_CHANGELOG.md` from AI_WORK_STATE.md session history (R105c→R51)
-- [x] **Consolidate Step 2:** Created `docs/BMB_WORK_QUEUE.md` from BMB_REMAIN_TESTS_LIVE_2026-11-23.md (60+ tasks organized)
-- [x] **Consolidate Step 3:** Created `docs/BMB_MASTER_PRODUCT_SPEC.md` from README.md + specs
-- [ ] **Enforce Step 1:** Create this `docs/BMB_AI_WORKING_STATE.md` with mandatory protocol (current)
-- [ ] **Enforce Step 2:** Update `AI_ENTRYPOINT.md` to reference new canonical docs
-- [ ] **Verification:** Confirm all 5 canonical docs exist and are consistent
+### 1.1 Progress Checklist (ทำต่อจากตรงนี้ — ห้ามทำซ้ำที่ผ่านแล้ว)
+- [x] **Rules:** §17.5-17.7 ใน UNIVERSAL_MASTER_AI_RULES.md (ห้าม skip/ห้าม shim หลอก/ทุก migration ต้องมีเทส)
+- [x] **CI:** contract-tests.yml รัน 001→latest ไม่มี skip + orphan steps (125/132/185/208)
+- [x] **Audit r1:** 126, 134+145+150-152, 157+158, 159-162 — ALL GREEN (commit `47a8860`)
+- [x] **Audit r2:** 164-168, 170-174 (172/173 ครอบโดย contract 153 แล้ว) — ALL GREEN (commit `5b33cd3`)
+- [x] **Audit r3:** 175-180 (ยกเว้น 179) — ALL GREEN (commit `0785f36`)
+- [ ] **Audit r4:** กลุ่มต่อไป 15 ไฟล์ครอบ 28 ตัว (ดูรายการใน PHASE1_PENDING_TEST_CLEARANCE_PLAN.md):
+      179 · 181+186 · 182+183+187+188 · 189+197 · 191 · 192+193 · 194+195 · 196+206 ·
+      198+199+200 · 201+202 · 203+204 · 205 · 207+211 · 212 · 213
+- [ ] **Final:** replay สุดท้าย ALL GREEN ครบ 124-218 → commit → Owner ตรวจรับ audit closure
+- [ ] **หลังปิด:** จึงเริ่ม Live Test Groups E-I (40 เคส) และรอ Owner Gate Phase 1 → Phase 2
+
+### 1.2 กฎที่พบระหว่างทำ (ต้องใช้เสมอ — พิสูจน์แล้วใน replay)
+- ไฟล์เทสทุกไฟล์ = `BEGIN ... ROLLBACK` เดียว, รันได้บน fresh DB, **ห้ามสร้าง shim ใหม่**
+- fixture auth.users → trigger `handle_new_user` (006) สร้าง profile `customer` เสมอ — ยก role ต้อง `UPDATE profiles` **ก่อน** ตั้ง JWT (guard 014 bootstrap path: auth.uid() IS NULL)
+- `set_config('request.jwt.claims', ..., true)` คงค่าทั้ง transaction ของไฟล์ (BEGIN..ROLLBACK เดียว)
+- `now()` = transaction timestamp — ทดสอบ trigger updated_at ต้องแยก DO block สอง transaction (214.7/217.6 pattern)
+- GRANT/REVOKE ไม่ผลกับ superuser — ทดสอบสิทธิ์ role ต้อง `SET LOCAL ROLE anon/authenticated` (157.3/171.2 pattern)
+- PRE_ORDER fixture ต้องมี `dropoff_detail` (037) + `delivery_round_id` ที่มีจริง (145) + `pre_order_cutoff` '23:59' กันติดเวลา runner
+- เทียบค่า time จาก jsonb ด้วย `LIKE 'HH:MM%'` (format เป็น 15:00:00)
+- 148 supersede 145 (`same_day_cutoff` = DROPPED) · 198/199 supersede 157 (`reviews_anon_read` = DROPPED) — เทสต้อง pin state ปัจจุบัน ไม่ใช่ state ยุคเก่า
+- **ห้ามเรียก `bmb_tick_http` จริง** (ยิง production EF) — ตรวจแค่ว่า function มีอยู่
 
 ---
 
@@ -139,19 +154,19 @@ Before ending every development task or session:
 | **Migration protocol** | Rule 16.3: probe marker → apply → record in `schema_migrations` | Manual apply without record = FAIL |
 | **Test data hygiene** | Rule 16.1: AI test orders MUST be deleted (hard delete all child tables) | `e2e/_r86_delete_test_orders.cjs` precedent |
 
-### 2.3 Current Verified State (from BMB_MASTER_STATUS.md R105b)
+### 2.3 Current Verified State (2026-11-25 — Contract Audit session)
 | Metric | Value | Evidence |
 |--------|-------|----------|
-| **Migrations Applied Prod** | 213 (001–213) | `schema_migrations` ledger + probe scripts |
+| **Migrations Applied Prod** | 218 (001–218 · Phase 1 applied) | `schema_migrations` ledger |
+| **Migrations CI replay** | 222 files OK / 0 FAIL (fresh DB, no skip) | `e2e/w2-replay-full-2026-11-25.log` |
+| **Contract suite 124-213** | ALL GREEN ถึง 180 (ไฟล์ใหม่ 7 + orphan 4) | replay log + commits 47a8860/5b33cd3/0785f36 |
 | **Edge Functions Deployed** | 24 | Supabase Dashboard + smoke tests |
-| **Vitest** | 230 files / 2,521 tests PASS | `npm test` output 2026-11-24 |
+| **Vitest** | 230 files / 2,519 tests PASS | `npx vitest run` 2026-11-25 |
 | **TypeScript** | 0 errors | `npx tsc --noEmit` |
 | **Lint** | OK (eslint + brandNameGuard + languageSanity) | `npm run lint` |
-| **Build** | PASS (PWA v1.3.1) | `npm run build` |
-| **Background Music RLS** | m196 fixed (bucket_id literal) | Owner live test PASS 2026-11-24 |
-| **Server Cart Sync** | m213 applied prod | Migration 213 verified |
-| **Delivery Sync** | m212 applied prod | Migration 212 verified |
-| **Social AI Worker** | DEPLOYED (R104) | Owner deploy exit=ok 2026-11-24 |
+| **Build** | PASS (PWA v1.3.x) | `npm run build` |
+| **Phase 1 (Smart Ingredient)** | Migrations 214-218 applied prod + APIs + types | BMB_MASTER_STATUS.md session close 2026-11-25 |
+| **CI root cause (ก่อนหน้า)** | g6g7 test imported deleted docs (a592521) — fixed | `src/__tests__/g6g7OrderBoundary.test.ts` |
 
 ---
 

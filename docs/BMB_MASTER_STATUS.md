@@ -4,6 +4,19 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 SESSION PAUSED 2026-11-25 (HANDOFF — CONTRACT AUDIT กลางทาง) · Owner สั่งปิดเซสชัน + ยกงานไปเซสชันหน้า**
+
+- **ทำเสร็จพิสูจน์แล้วในเซสชันนี้:**
+  - **CI root cause** (g6g7 test อ้างเอกสารที่ถูกลบใน a592521) — แก้ที่ตัวเทส · 230 ไฟล์/2,519 tests PASS
+  - **กฎใหม่ §17.5-17.7** ใน UNIVERSAL_MASTER_AI_RULES.md (ห้าม skip เทส · ห้าม shim หลอกเลี่ยง schema · ทุก migration ต้องมี Contract Test)
+  - **contract-tests.yml** รัน migrations 001→latest ไม่มี skip + orphan steps (125/132/185/208)
+  - **Contract suite 124-180 ALL GREEN** (Docker replay 3 รอบ · 222 migrations OK/0 FAIL · `e2e/w2-replay-full-2026-11-25.log`) — ไฟล์ใหม่ 7 ชุด + Phase 1 contracts 214-218
+  - Commits: `a2528fc` → `47a8860` → `5b33cd3` → `0785f36` → `1dd2f84` (pushed)
+- **งานที่ยกไปเซสชันหน้า (Active Task: CONTRACT-AUDIT-CLOSURE-124-213):**
+  - เขียน Contract Test อีก **28 migration** (179, 181-189, 191-207, 211-213) = 15 ไฟล์ — รายการเต็ม + กฎที่พบ: `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` + `BMB_AI_WORKING_STATE.md §1`
+  - จบแล้ว → Owner ตรวจรับ audit closure → จึงเริ่ม Live Test Groups E-I (40 เคส)
+- **Phase 1-6 ทั้งหมด = พักตามสั่ง Owner** (Phase 1 Gate Review รออยู่ · ห้ามเริ่ม Phase 2 เอง)
+
 **🔒 SESSION CLOSE 2026-11-25 (PHASE 1 COMPLETE + CI ROOT CAUSE FIXED — Smart Ingredient & Cost Management Foundation) · **CODE_CLOSED + GATES PASS (tsc 0 · lint OK · vitest 230 ไฟล์/2519 tests · build OK) + CONTRACT REPLAY ALL_GREEN (222 migrations + Phase 1 contracts) + PUSHED**
 
 - **CI Root Cause (พิสูจน์จากการรัน vitest ในเครื่อง — ไม่ใช่ migration 214-218):** commit `a592521` "Big clean doc" (2026-11-24) ลบ `BMB_G6_CONTRACT.md` + `BMB_G7_CONTRACT.md` แต่ `src/__tests__/g6g7OrderBoundary.test.ts` ยัง `import ...?raw` ไฟล์ทั้งสอง → Vite import-analysis โยน "Failed to resolve import" ตอน transform → suite ล้มทั้งไฟล์ → CI "Test + Lint + Build" พังทุกรอบตั้งแต่นั้น · **แก้:** ถอด import + describe "Doc-code alignment" ออก (boundary ยังถูก pin ครบ 10 เคสด้วย source-scan โค้ดจริง — Actual Code > Documentation §2.1) · เทสผ่าน 10/10, ชุดเต็ม 230 ไฟล์/2519 tests PASS

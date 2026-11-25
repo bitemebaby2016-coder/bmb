@@ -7,6 +7,36 @@
 
 ---
 
+## R106 — 2026-11-25 — PHASE 1 (Smart Ingredient Foundation) + CONTRACT AUDIT r1-r3 (PAUSED/HANDOFF)
+
+**Status:** CODE_CLOSED (Phase 1) + IN_PROGRESS (Audit — ครอบถึง 180 · เหลือ 28) — pushed
+
+### Phase 1 — Migrations 214-218 applied prod (Owner Decisions B1-B5)
+- 214 suppliers + RLS (is_inventory/is_kitchen/is_pos/is_finance จาก m146) · 215 inventory.supplier_id FK + backfill · 216 inventory enriched (prep_yield/purchase_unit/use_unit/conversion_factor/package/weights/wavg_cost/last_purchase_price/last_approved_price) · 217 supplier_products (3 price states: committed/realized/approved) · 218 recipes batch yield + cost_per_unit
+- APIs: `bmbAdminApi_suppliers.ts` + `bmbAdminApi_supplierProducts.ts` · Types: Supplier*/SupplierProduct*/extended Ingredient+RecipeRow
+- Gates: tsc 0 · lint OK · vitest 230 files/2519 tests · build PASS
+
+### CI root cause (พิสูจน์ — ไม่ใช่ migration)
+- commit `a592521` "Big clean doc" ลบ BMB_G6/G7_CONTRACT.md แต่ `src/__tests__/g6g7OrderBoundary.test.ts` ยัง `import ?raw` → suite ล้มทั้งไฟล์ → CI พังทุกรอบ
+- แก้: ถอด import + doc-alignment block (boundary ยัง pin ครบ 10 เคสด้วย source-scan โค้ดจริง §2.1)
+
+### Rules ใหม่ (UNIVERSAL_MASTER_AI_RULES.md)
+- §17.5 ห้าม Shims/Mocks หลอกเลี่ยง schema fix · §17.6 ทุก migration ต้องมี Contract Test · §17.7 บังคับ audit 124-213
+
+### Contract-tests.yml — รัน 001→latest ไม่มี skip
+- ถอด skip 124-218 + orphan steps (125/132/185/208) · W-2 Docker replay tool: `e2e/ci/w2_fresh_replay_full.sh` + `w2_run_replay_full.bat`
+
+### Contract Audit r1-r3 (ALL GREEN บน fresh DB — replay 3 รอบ · `e2e/w2-replay-full-2026-11-25.log`)
+- ใหม่ 7 ชุด: 126 · 134+145+150-152 · 157+158 · 159-162 · 164-168 (rider วงจรเต็ม+multi-job) · 170-174 · 175-180
+- 172/173 = ครอบโดย contract 153 G2/G5/G8 อยู่แล้ว (ยืนยัน)
+- State จริงที่ต้อง pin: 148 supersede 145 (same_day_cutoff DROPPED) · 198/199 supersede 157 (reviews_anon_read DROPPED) · guard 014 (ยก role ต้องก่อนตั้ง JWT) · trigger timestamp = transaction-scoped (แยก DO block)
+- **เหลือ 28 migration** (179, 181-189, 191-207, 211-213) → 15 ไฟล์ — แผนใน `PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` · Active Task: CONTRACT-AUDIT-CLOSURE-124-213
+
+### Owner Decisions บันทึก
+- 2026-11-25: อนุมัติ Roadmap Phase 1-6 + เริ่ม Phase 1 เท่านั้น (Phase Gate ทีละ Phase · ห้าม auto-advance) → หลังจบ Phase 1 สั่ง "พักทั้งหมด · เคลียร์เทส 124-213 ให้เป็นปัจจุบันก่อน" → 2026-11-25 ปิดเซสชัน: ยกงานที่เหลือไปเซสชันถัดไป
+
+---
+
 ## R105c — 2026-11-24 — README REWRITE (Documentation Only)
 
 **Status:** CODE_CLOSED — เอกสารเดียว ไม่มี code change ไม่ต้องรัน code gates

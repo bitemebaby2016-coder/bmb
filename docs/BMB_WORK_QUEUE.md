@@ -8,22 +8,46 @@
 
 ---
 
-## 📊 สรุปสถานะ Work Queue (2026-11-25 Phase 1 Complete)
+## 📊 สรุปสถานะ Work Queue (2026-11-25 — SESSION PAUSED: Phase 1-6 พักทั้งหมด)
 
 | กลุ่ม | จำนวนข้อ | สถานะ | รายละเอียด |
 |------|----------|-------|-----------|
-| **Phase 1** | 5 | ✅ **LIVE_VERIFIED** | Smart Ingredient & Cost — Foundation (Migrations 214-218) |
-| **I** | 8 | 🆕 LIVE_TEST_PENDING | R102+R103+R104 — Server-side Cart Sync + FB IAB Guard + 1 reply 1 link |
-| **H** | 6 | 🆕 LIVE_TEST_PENDING | R63 — FB Cart Bridge Live (ใหม่) |
-| **G** | 7 | 🆕 LIVE_TEST_PENDING | R78/R79/R80 — Marketing Posts + Studio Picker + Floating Ad |
-| **F** | 7 | 🔄 LIVE_TEST_PENDING | R55 — Background Music + Mascot + OAuth/Passkey (carried over) |
-| **E** | 7 | 🔄 LIVE_TEST_PENDING | R44–R48b — Rider History + Maps 3 sides (carried over) |
-| **A-R2** | 2 | 🔄 LIVE_TEST_PENDING | A-4R, A-5 — Retest after hotfix (carried over) |
-| **B-R2** | 3 | 🔄 LIVE_TEST_PENDING | B-3, B-4, B-5 — Social AI round 2 (carried over) |
+| **Contract Audit Closure** | 28 migration | 🔨 **IN_PROGRESS — ทำต่อเซสชันหน้า** | เขียนเทสครอบ 179, 181-189, 191-207, 211-213 (15 ไฟล์) — ผ่านถึง 180 แล้ว (ALL GREEN) — ดู `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` + `BMB_AI_WORKING_STATE.md §1` |
+| **Phase 1 Gate Review** | 1 | ⏸️ PAUSED — รอ Owner | Phase 1 (migrations 214-218 + APIs) applied prod — Owner ตรวจรับก่อน Phase 2 |
+| **Phase 2-6** | 5 Phase | ⏸️ PAUSED — Approved roadmap, รอ Gate ทีละ Phase | PO+GRN → Recipe Costing → OCR+CSV → Admin Nav → Analytics — **ห้ามเริ่มเอง** |
+| **Live Tests E-I + A/B-R2** | 40 | ⏸️ PAUSED — รอ audit closure จบก่อน | กลุ่ม E,F,G,H,I + retest — ตารางเต็มอยู่ด้านล่าง |
 | **C-1..C-6** | 6 | ⚠️ BLOCKED | Requirement conflicts — รอ Owner ตัดสินใจ |
-| **Runtime Tests** | 13+ | ⚠️ BLOCKED | Production test pack §T — รออุปกรณ์/บัญชีจริง |
+| **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
 | **Omise TEST Card** | 1 | ⚠️ BLOCKED | บัตร Omise TEST card บนเบราว์เซอร์จริง — รอ Owner ทดสอบ |
-| **รวม** | **60+** | | |
+| **รวม** | **90+** | | |
+
+---
+
+## 🔨 กลุ่มปัจจุบัน — Contract Audit Closure 124-213 (ทำต่อเซสชันหน้า — ตามสั่ง Owner 2026-11-25)
+
+**พื้นที่ที่พิสูจน์แล้ว (ห้ามทำซ้ำ):** suite 124-180 ALL GREEN บน fresh DB — replay 3 รอบ · commits `47a8860`, `5b33cd3`, `0785f36` · หลักฐาน `e2e/w2-replay-full-2026-11-25.log`
+
+**งานที่เหลือ 28 migration → 15 ไฟล์เทส** (รายละเอียดเต็ม + กฎที่พบ: `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` + `BMB_AI_WORKING_STATE.md §1.2`):
+
+| # | ไฟล์เทสใหม่ | ครอบ migration | หมายเหตุ |
+|---|------------|----------------|----------|
+| 1 | contracts_179_notification_hub | 179 | channel_identities + notification_outbox (แยกไฟล์เดี่ยว) |
+| 2 | contracts_181_186_promotions | 181, 186 | addon margin + promotions BKK date |
+| 3 | contracts_182_188_messages | 182, 183, 187, 188 | order messages + rider notify + dedup |
+| 4 | contracts_189_197_rider_fallback | 189, 197 | claim fallback + rider loop fix |
+| 5 | contracts_191_kitchen_bkk | 191 | kitchen BKK dates |
+| 6 | contracts_192_193_crm | 192, 193 | CRM automation + consent |
+| 7 | contracts_194_195_payment | 194, 195 | payment void enum + close-on-cancel |
+| 8 | contracts_196_206_media_buckets | 196, 206 | music/mascot bucket policies |
+| 9 | contracts_198_200_reviews | 198, 199, 200 | moderation + verified rules + anon read behavior |
+| 10 | contracts_201_202_theater | 201, 202 | theater/carousel + approval_id |
+| 11 | contracts_203_204_ai_memory | 203, 204 | AI grounding + user_post_context + order memory |
+| 12 | contracts_205_social_actions | 205 | cancel_order_as_customer + social_timeline |
+| 13 | contracts_207_211_rider_history | 207, 211 | my_deliveries dates + v4 return fix |
+| 14 | contracts_212_delivery_sync_hop | 212 | preparing hop + admin_advance |
+| 15 | contracts_213_cart_payload | 213 | cart_sessions payload + helpers |
+
+**กติกา:** ทุกไฟล์ BEGIN...ROLLBACK · ห้าม shim ใหม่ · อ่าน migration จริงก่อนเขียนทุกครั้ง · replay ตรวจทุกกลุ่ม (`e2e/ci/w2_run_replay_full.bat`) · เพิ่ม CI step ต่อไฟล์ · จบด้วย replay สุดท้าย ALL GREEN ครบ 124-218 แล้วส่ง Owner
 
 ---
 
