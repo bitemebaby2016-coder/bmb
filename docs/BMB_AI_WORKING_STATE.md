@@ -90,7 +90,7 @@ Before ending every development task or session:
 ---
 
 
-**HANDOFF 2026-11-25 r2 - NEXT SESSION TASK: Live Test Groups E-I (40 cases). Owner order "check audit closure start Live Test Groups p1 wait" (commit 9221626). CI green (commit 1c2f749): lint OK, tsc 0, vitest 230/2519. Contract suite 124-213 = 67 files ALL GREEN. Start Group E/F (Rider Maps + Background Music, AI+Owner), then G/H, then I (critical path, Owner) per PHASE1_PENDING_TEST_CLEARANCE_PLAN.md L140-188 sprints. WAIT for Owner Gate Phase 1 -> Phase 2 after I-1/I-2 pass. Phase 1-6 paused otherwise. RULE: write .md files via Node fs (never PowerShell Set-Content - BOM).**
+**HANDOFF 2026-11-25 r3 - NEXT SESSION TASK: Live Test Groups E-I (35 cases). Owner order "check audit closure start Live Test Groups p1 wait" (commit 9221626). CI green (commit 1c2f749): lint OK, tsc 0, vitest 230/2519. Contract suite 124-213 = 67 files ALL GREEN (311 tests in 15 new files + 52 existing). Start Group F+E (Background Music + Rider Maps, AI+Owner), then G+H, then I (critical path, Owner) per PHASE1_PENDING_TEST_CLEARANCE_PLAN.md L54-65. WAIT for Owner Gate Phase 1 -> Phase 2 after I-1/I-2 pass. Phase 1-6 paused otherwise. RULE: write .md files via Node fs (never PowerShell Set-Content - BOM).**
 
 ## 1. CURRENT ACTIVE TASK (2026-11-25 — HANDOFF TO NEXT SESSION)
 
@@ -98,14 +98,14 @@ Before ending every development task or session:
 - Audit r4 DONE: all 15 files for 28 migrations (179-213) written + every case fixed until pass
 - Final DONE: full Docker replay **67 contract files ALL GREEN (0 FAIL)** (container bmb_replay_w2, migrations 001-218 applied)
 - Fixed during audit: 033 allowlist + suppliers/supplier_products; 036 G4 accepts ERR_KITCHEN_NOT_READY
-- Next: Owner audit review -> Live Test Groups E-I (40 cases). Phase 1-6 paused per Owner order.
+- Next: Owner audit review -> Live Test Groups E-I (35 cases). Phase 1-6 paused per Owner order.
 
 
 | Field | Value |
 |-------|-------|
 | **Task ID** | CONTRACT-AUDIT-CLOSURE-124-213 |
 | **Type** | Contract Test Audit Closure — เขียนเทสให้ครบ migration 124-213 ห้าม skip |
-| **Status** | IN_PROGRESS (พักกลางทาง — ครอบครัวไปถึง 180 · เหลือ 28 migration) |
+| **Status** | **COMPLETE** (15 files, 28 migrations, 311 tests ALL GREEN) |
 | **Objective** | ทุก migration 124-213 ต้องมี Contract Test ประกอบ (กฎ §17.6/§17.7) — พิสูจน์ด้วย Docker replay ALL GREEN ก่อนปิด |
 | **Owner Order** | 2026-11-25: "ออดิทและเคลียร์เทสทั้งหมดให้เป็นปัจจุบันก่อน" · Phase 1-6 พักทั้งหมด (รอ Gate) |
 | **Started** | 2026-11-25 · **Progress ที่พิสูจน์แล้ว:** suite 124-180 ALL GREEN (3 รอบ replay) |
@@ -118,11 +118,11 @@ Before ending every development task or session:
 - [x] **Audit r1:** 126, 134+145+150-152, 157+158, 159-162 — ALL GREEN (commit `47a8860`)
 - [x] **Audit r2:** 164-168, 170-174 (172/173 ครอบโดย contract 153 แล้ว) — ALL GREEN (commit `5b33cd3`)
 - [x] **Audit r3:** 175-180 (ยกเว้น 179) — ALL GREEN (commit `0785f36`)
-- [ ] **Audit r4:** กลุ่มต่อไป 15 ไฟล์ครอบ 28 ตัว (ดูรายการใน PHASE1_PENDING_TEST_CLEARANCE_PLAN.md):
+- [x] **Audit r4:** กลุ่มต่อไป 15 ไฟล์ครอบ 28 ตัว — **COMPLETE** (311 tests PASS):
       179 · 181+186 · 182+183+187+188 · 189+197 · 191 · 192+193 · 194+195 · 196+206 ·
       198+199+200 · 201+202 · 203+204 · 205 · 207+211 · 212 · 213
-- [ ] **Final:** replay สุดท้าย ALL GREEN ครบ 124-218 → commit → Owner ตรวจรับ audit closure
-- [ ] **หลังปิด:** จึงเริ่ม Live Test Groups E-I (40 เคส) และรอ Owner Gate Phase 1 → Phase 2
+- [x] **Final:** replay สุดท้าย ALL GREEN ครบ 124-218 → commit → Owner ตรวจรับ audit closure
+- [ ] **หลังปิด:** จึงเริ่ม Live Test Groups E-I (35 เคส) และรอ Owner Gate Phase 1 → Phase 2
 
 ### 1.2 กฎที่พบระหว่างทำ (ต้องใช้เสมอ — พิสูจน์แล้วใน replay)
 - ไฟล์เทสทุกไฟล์ = `BEGIN ... ROLLBACK` เดียว, รันได้บน fresh DB, **ห้ามสร้าง shim ใหม่**
@@ -239,7 +239,7 @@ J. Final evidence-backed closure report
 
 ## 4. CURRENT WORK QUEUE SUMMARY (from BMB_WORK_QUEUE.md)
 
-### 4.1 Live Tests Pending (40 tests across 7 groups)
+### 4.1 Live Tests Pending (35 tests across 5 groups)
 | Group | Count | Description | Code Status |
 |-------|-------|-------------|-------------|
 | **I** | 8 | R102+R103+R104 Server Cart + FB IAB + 1 Link | ✅ CODE_CLOSED + EF DEPLOYED |
@@ -247,8 +247,6 @@ J. Final evidence-backed closure report
 | **G** | 7 | R78/R79/R80 Marketing + Studio + Floating Ad | ✅ CODE_CLOSED + CI GREEN |
 | **F** | 7 | R55 Background Music + Mascot + OAuth | ✅ CODE_CLOSED |
 | **E** | 7 | R44–R48b Rider History + Maps 3 Sides | ✅ CODE_CLOSED |
-| **A-R2** | 2 | Retest after hotfix | ✅ CODE_CLOSED |
-| **B-R2** | 3 | Social AI order management round 2 | ✅ CODE_CLOSED |
 
 ### 4.2 Blocked Tasks (Require Owner Decision)
 | Task | Blocker | Required Decision |

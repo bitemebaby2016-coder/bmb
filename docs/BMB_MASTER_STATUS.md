@@ -5,6 +5,13 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-25 r3 (CONTRACT-AUDIT-CLOSURE-124-213 COMPLETE — 15 FILES, 311 TESTS ALL GREEN)**
+
+- **Contract Audit Closure COMPLETE:** 15 new contract test files for 28 remaining migrations (179, 181-189, 191-207, 211-213) written and all passing (311 tests). Combined with existing 52 contract files = 67 files ALL GREEN (0 FAIL) on fresh DB.
+- **Test files created:** contracts_179_notification_hub.test.ts (24), contracts_181_186_promotions.test.ts (13), contracts_182_188_messages.test.ts (40), contracts_189_197_rider_fallback.test.ts (24), contracts_191_kitchen_bkk.test.ts (13), contracts_192_193_crm.test.ts (22), contracts_194_195_payment.test.ts (10), contracts_196_206_media_buckets.test.ts (13), contracts_198_200_reviews.test.ts (23), contracts_201_202_theater.test.ts (14), contracts_203_204_ai_memory.test.ts (29), contracts_205_social_actions.test.ts (16), contracts_207_211_rider_history.test.ts (21), contracts_212_delivery_sync_hop.test.ts (26), contracts_213_cart_payload.test.ts (6).
+- **Full suite verified:** `npx vitest run src/__tests__/contracts_*.test.ts` — 15 test files, 311 tests PASS.
+- **Next:** Owner audit review → Live Test Groups E, F, G, H, I (35 cases total) per `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` L54-65. Sprint order: F+E week 3-4 → G+H week 5-6 → I week 7-8. WAIT for Owner Gate Phase 1 → Phase 2 after I-1/I-2 pass.
+- **Phase 1-6 all = paused per Owner order** (Phase 1 Gate Review pending - DO NOT start Phase 2 on your own).
 
 **SESSION CLOSE 2026-11-25 r2 (CI GREEN AGAIN + LINT FIX - HANDOFF TO NEXT SESSION: LIVE TEST GROUPS E-I)**
 
@@ -12,8 +19,8 @@
 - **Lint root cause fixed:** (1) UTF-8 BOM on 4 docs files (BMB_*.* written by PowerShell Set-Content -Encoding UTF8 = always BOM in PS 5.1) - rewritten without BOM via Node fs; (2) foreign chars in Admin_User_Manual_TH.md 5 spots (Arabic (Arabic/Chinese/Hebrew/Chinese = การ์ด/ตามเวลา/ยกเลิก/คัดกรอง) - fixed to proper Thai.
 - **RULE FOR NEXT SESSIONS: NEVER use PowerShell Set-Content/Out-File to write .md files (adds BOM + ANSI mojibake risk). Use Node fs.writeFileSync(..., "utf8") or the Write tool. languageSanity rejects BOM/foreign chars in ALL files.**
 - **Contract suite 124-213 COMPLETE: 67 files ALL GREEN (0 FAIL)** (Docker bmb_replay_w2, migrations 001-218 applied). 15 new files for 28 migrations (179-213) + fixed 033 (anon SELECT allowlist + suppliers/supplier_products per m214/m217) + 036 (G4 accepts ERR_KITCHEN_NOT_READY).
-- **NEXT SESSION TASK (Owner order via commit `9221626` "check audit closure start Live Test Groups p1 wait"): START LIVE TEST GROUPS E-I (40 cases total) - then WAIT for Owner Gate Phase 1 -> Phase 2.**
-- Live Test Groups (from `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` L54-65): **E** Rider History + Maps (7, AI+Owner) · **F** Background Music + Mascot + OAuth (7, Owner config) · **G** Marketing Posts + Studio + Floating Ad (7, Owner) · **H** FB Cart Bridge R63 (6, Owner) · **I** Server Cart + FB IAB + 1 Reply (8, Owner - CRITICAL PATH) · **A-R2/B-R2** Retest (5). Sprint order: F+E week 3-4 -> G+H+A-R2 week 5-6 -> I week 7-8.
+- **NEXT SESSION TASK (Owner order via commit `9221626` "check audit closure start Live Test Groups p1 wait"): START LIVE TEST GROUPS E, F, G, H, I (35 cases total) - then WAIT for Owner Gate Phase 1 -> Phase 2.**
+- Live Test Groups (from `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` L54-65): **E** Rider History + Maps (7, AI+Owner) · **F** Background Music + Mascot + OAuth (7, Owner config) · **G** Marketing Posts + Studio + Floating Ad (7, Owner) · **H** FB Cart Bridge R63 (6, Owner) · **I** Server Cart + FB IAB + 1 Reply (8, Owner - CRITICAL PATH). Sprint order: F+E week 3-4 -> G+H week 5-6 -> I week 7-8.
 - **Phase 1-6 all = paused per Owner order** (Phase 1 Gate Review pending - DO NOT start Phase 2 on your own).
 
 **SESSION CLOSE 2026-11-25 (CONTRACT-AUDIT-CLOSURE-124-213 DONE - CONTRACT SUITE ALL GREEN 67 FILES)**
@@ -35,7 +42,7 @@
   - Commits: `a2528fc` → `47a8860` → `5b33cd3` → `0785f36` → `1dd2f84` (pushed)
 - **งานที่ยกไปเซสชันหน้า (Active Task: CONTRACT-AUDIT-CLOSURE-124-213):**
   - เขียน Contract Test อีก **28 migration** (179, 181-189, 191-207, 211-213) = 15 ไฟล์ — รายการเต็ม + กฎที่พบ: `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` + `BMB_AI_WORKING_STATE.md §1`
-  - จบแล้ว → Owner ตรวจรับ audit closure → จึงเริ่ม Live Test Groups E-I (40 เคส)
+  - จบแล้ว → Owner ตรวจรับ audit closure → จึงเริ่ม Live Test Groups E, F, G, H, I (35 เคส)
 - **Phase 1-6 ทั้งหมด = พักตามสั่ง Owner** (Phase 1 Gate Review รออยู่ · ห้ามเริ่ม Phase 2 เอง)
 
 **🔒 SESSION CLOSE 2026-11-25 (PHASE 1 COMPLETE + CI ROOT CAUSE FIXED — Smart Ingredient & Cost Management Foundation) · **CODE_CLOSED + GATES PASS (tsc 0 · lint OK · vitest 230 ไฟล์/2519 tests · build OK) + CONTRACT REPLAY ALL_GREEN (222 migrations + Phase 1 contracts) + PUSHED**

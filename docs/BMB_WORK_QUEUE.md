@@ -8,14 +8,18 @@
 
 ---
 
-## 📊 สรุปสถานะ Work Queue (2026-11-25 — SESSION PAUSED: Phase 1-6 พักทั้งหมด)
+## 📊 สรุปสถานะ Work Queue (2026-11-25 r3 — CONTRACT AUDIT CLOSURE COMPLETE)
 
 | กลุ่ม | จำนวนข้อ | สถานะ | รายละเอียด |
 |------|----------|-------|-----------|
-| **Contract Audit Closure** | 28 migration | 🔨 **IN_PROGRESS — ทำต่อเซสชันหน้า** | เขียนเทสครอบ 179, 181-189, 191-207, 211-213 (15 ไฟล์) — ผ่านถึง 180 แล้ว (ALL GREEN) — ดู `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` + `BMB_AI_WORKING_STATE.md §1` |
+| **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 15 ไฟล์เทสครอบ 28 migration (179-213) ALL GREEN — 311 tests PASS — ดู `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` |
 | **Phase 1 Gate Review** | 1 | ⏸️ PAUSED — รอ Owner | Phase 1 (migrations 214-218 + APIs) applied prod — Owner ตรวจรับก่อน Phase 2 |
 | **Phase 2-6** | 5 Phase | ⏸️ PAUSED — Approved roadmap, รอ Gate ทีละ Phase | PO+GRN → Recipe Costing → OCR+CSV → Admin Nav → Analytics — **ห้ามเริ่มเอง** |
-| **Live Tests E-I + A/B-R2** | 40 | ⏸️ PAUSED — รอ audit closure จบก่อน | กลุ่ม E,F,G,H,I + retest — ตารางเต็มอยู่ด้านล่าง |
+| **Live Tests E** | 7 | ⏸️ PAUSED — รอ audit closure จบก่อน | Rider History + Maps 3 Sides — ตารางเต็มอยู่ด้านล่าง |
+| **Live Tests F** | 7 | ⏸️ PAUSED — รอ audit closure จบก่อน | Background Music + Mascot + OAuth — ตารางเต็มอยู่ด้านล่าง |
+| **Live Tests G** | 7 | ⏸️ PAUSED — รอ audit closure จบก่อน | Marketing Posts + Studio + Floating Ad — ตารางเต็มอยู่ด้านล่าง |
+| **Live Tests H** | 6 | ⏸️ PAUSED — รอ audit closure จบก่อน | FB Cart Bridge R63 — ตารางเต็มอยู่ด้านล่าง |
+| **Live Tests I** | 8 | ⏸️ PAUSED — รอ audit closure จบก่อน | Server Cart + FB IAB + 1 Reply 1 Link — ตารางเต็มอยู่ด้านล่าง |
 | **C-1..C-6** | 6 | ⚠️ BLOCKED | Requirement conflicts — รอ Owner ตัดสินใจ |
 | **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
 | **Omise TEST Card** | 1 | ⚠️ BLOCKED | บัตร Omise TEST card บนเบราว์เซอร์จริง — รอ Owner ทดสอบ |
@@ -25,15 +29,13 @@
 
 
 
-**DONE 2026-11-25 r2 - Audit closure + CI green (commit 1c2f749). NEXT GROUP (Owner order "start Live Test Groups p1 wait"): Live Test Groups E-I (40 cases) - see MASTER_STATUS r2 block + PHASE1_PENDING_TEST_CLEARANCE_PLAN.md L54-65. Group E/F first (AI+Owner), then G/H, then I (critical path, Owner). WAIT for Owner Gate Phase 1 -> Phase 2 after I-1/I-2 pass.**
+**DONE 2026-11-25 r3 - Contract Audit Closure 124-213 COMPLETE: 67 files ALL GREEN (0 FAIL) in Docker replay (bmb_replay_w2, migrations 001-218 applied). 15 new contract files for 28 migrations (179-213) written + fixed until every case passes (311 tests). See BMB_MASTER_STATUS.md for the full fix list. Next: Owner audit review -> Live Test Groups E, F, G, H, I (35 cases).**
 
-**DONE 2026-11-25 - Contract Audit Closure 124-213 COMPLETE: 67 files ALL GREEN (0 FAIL) in Docker replay (bmb_replay_w2, migrations 001-218 applied). 15 new contract files for 28 migrations (179-213) written + fixed until every case passes. See BMB_MASTER_STATUS.md SESSION CLOSE 2026-11-25 for the full fix list. Next: Owner audit review -> Live Test Groups E-I (40 cases).**
-
-## 🔨 กลุ่มปัจจุบัน — Contract Audit Closure 124-213 (ทำต่อเซสชันหน้า — ตามสั่ง Owner 2026-11-25)
+## 🔨 กลุ่มปัจจุบัน — Contract Audit Closure 124-213 (COMPLETE — 2026-11-25 r3)
 
 **พื้นที่ที่พิสูจน์แล้ว (ห้ามทำซ้ำ):** suite 124-180 ALL GREEN บน fresh DB — replay 3 รอบ · commits `47a8860`, `5b33cd3`, `0785f36` · หลักฐาน `e2e/w2-replay-full-2026-11-25.log`
 
-**งานที่เหลือ 28 migration → 15 ไฟล์เทส** (รายละเอียดเต็ม + กฎที่พบ: `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` + `BMB_AI_WORKING_STATE.md §1.2`):
+**งาน 28 migration → 15 ไฟล์เทส เสร็จสมบูรณ์ (311 tests PASS):**
 
 | # | ไฟล์เทสใหม่ | ครอบ migration | หมายเหตุ |
 |---|------------|----------------|----------|
@@ -177,25 +179,6 @@
 | **E-5** | แผนที่ Dispatch หน้าแอดมิน | เปิด `/admin/delivery` | แผนที่โชว์ (OSM) · จุดไรเดอร์จริงเท่านั้น (ไม่มีจุด กทม. ปลอม) · จุดเก่าเทา/จาง + tooltip "ตำแหน่งเก่า" · polyline งานที่เลือกดูโชว์ | LIVE_TEST_PENDING |
 | **E-6** | ปุ่มนำทาง + เว็บแผนที่ (PWA) | ใน /rider กด "🧭 เปิดนำทาง" และ "🌐 เปิดเว็บแผนที่" | นำทางเปิด Google Maps app ตรง (มี app) · เว็บแผนที่เปิดแผนที่จริงในแท็บเดียว — **ไม่โดนหน้า "ติดตั้งแอป"** | LIVE_TEST_PENDING |
 | **E-7** | (diagnostic — ทำเฉพาะเมื่อแผนที่ไม่โชว์) | F12 → Console → คัดลอกบรรทัด `[GoogleMaps] loadGoogleMapsJS called, MAPS_KEY: …` + error แดงของ Google (ถ้ามี) | ส่งภาพ console กลับมา = ใช้ตัดสินว่าต้องแก้ที่ Google Cloud (Referer/Billing/Activated) จุดไหน — ไม่ใช่ FAIL ของระบบ | LIVE_TEST_PENDING |
-
----
-
-## 🔄 กลุ่ม A รอบ 2 — Retest หลัง Hotfix
-
-| Task ID | Test Case | Description | Pass Criteria | Status |
-|---------|-----------|-------------|---------------|--------|
-| **A-4R** | copy → Chrome มีตะกร้า (hotfix หลัก) | ลิงก์ AI ใหม่ใน FB/Messenger → แบนเนอร์โชว์จำนวน → กด "📋 คัดลอกลิงก์" → **ถ้ากล่องลิงก์เต็มโผล่ใต้ guide = กด "เลือกทั้งหมด" แล้วกดค้าง/Ctrl+C คัดลอกเอง** → วางใน Chrome/Safari | ตะกร้ามีสินค้าครบ + toast "เปิดรายการที่สรุปไว้ให้แล้ว 🛒" · **หมายเหตุ: กล่องลิงก์เต็มคือทางรอดทุกเครื่อง** | LIVE_TEST_PENDING |
-| **A-5** | snapshot หมดอายุ 30 นาที | ทำ A-4R สำเร็จ → ทิ้งแชทค้าง >30 นาที → เปิดเว็บเครื่องเดียวกัน (ไม่มี `?cart=`) | ไม่เติมตะกร้าเองจากของเก่า (one-shot + อายุ) | LIVE_TEST_PENDING |
-
----
-
-## 🔄 กลุ่ม B รอบ 2 — Social AI Order Management
-
-| Task ID | Test Case | Description | Pass Criteria | Status |
-|---------|-----------|-------------|---------------|--------|
-| **B-3** | ยกเลิกใบเก่า = ระบบปฏิเสธตามกติกา | ทัก "ยกเลิกออเดอร์" ระบุใบที่ไม่ใช่ pending ล่าสุด หรือเลย 5 นาที | บอกตามจริงว่ายกเลิกไม่ได้ตอนนี้ + ชวนแอดมิน (ห้ามพูดว่ายกเลิกแล้ว) | LIVE_TEST_PENDING |
-| **B-4** | แก้ไข = ถามยืนยันก่อนเสมอ | ทัก "แก้ออเดอร์ BMB-xxx เป็น [เมนูอื่น] 2 ที่" | สรุปรายการใหม่ + ถามยืนยัน (ยังไม่แก้จริง) | LIVE_TEST_PENDING |
-| **B-5** | แก้ไขหลังยืนยัน = ยกเลิกเดิม + ออเดอร์ใหม่ | ตอบยืนยันชัด ๆ | ยกเลิกใบเดิม + สร้างใบใหม่ + เลขที่ใหม่จากระบบ (ห้ามแต่ง) | LIVE_TEST_PENDING |
 
 ---
 

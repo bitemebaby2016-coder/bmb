@@ -7,6 +7,52 @@
 
 ---
 
+## R108 — 2026-11-25 r3 — CONTRACT AUDIT CLOSURE 124-213 COMPLETE (15 FILES, 311 TESTS ALL GREEN)
+
+**Status:** CODE_CLOSED + GATES PASS — 15 new contract test files covering 28 remaining migrations (179, 181-189, 191-207, 211-213) all passing (311 tests). Combined with existing 52 contract files = 67 files ALL GREEN (0 FAIL) on fresh DB.
+
+### Contract Test Files Created (15 files, 311 tests):
+1. `contracts_179_notification_hub.test.ts` (24 tests) — channel_identities + notification_outbox + 4 RPCs + feature flags + bmb_notify_http
+2. `contracts_181_186_promotions.test.ts` (13 tests) — addon margin rules + promotions BKK date gates
+3. `contracts_182_188_messages.test.ts` (40 tests) — order messages + notifications + rider notify + dedup
+4. `contracts_189_197_rider_fallback.test.ts` (24 tests) — claim fallback + rider loop fix
+5. `contracts_191_kitchen_bkk.test.ts` (13 tests) — kitchen BKK date functions
+6. `contracts_192_193_crm.test.ts` (22 tests) — CRM automation + consent
+7. `contracts_194_195_payment.test.ts` (10 tests) — payment void enum + close-on-cancel
+8. `contracts_196_206_media_buckets.test.ts` (13 tests) — background_music + mascot bucket policies
+9. `contracts_198_200_reviews.test.ts` (23 tests) — review moderation + verified rules + anon read behavior
+10. `contracts_201_202_theater.test.ts` (14 tests) — theater carousel + approval_id on promotions
+11. `contracts_203_204_ai_memory.test.ts` (29 tests) — AI grounding + user_post_context + order memory + review_content sync
+12. `contracts_205_social_actions.test.ts` (16 tests) — cancel_order_as_customer + social_timeline_for_web
+13. `contracts_207_211_rider_history.test.ts` (21 tests) — my_deliveries v3 dates + v3-fixed RETURN fix
+14. `contracts_212_delivery_sync_hop.test.ts` (26 tests) — preparing -> ready_for_dispatch hop + ERR_KITCHEN_NOT_READY guard (3 RPCs)
+15. `contracts_213_cart_payload.test.ts` (6 tests) — cart_sessions payload + select_own RLS
+
+### Key Patterns Enforced:
+- Every test file = `BEGIN ... ROLLBACK` single transaction, runs on fresh DB, no new shims
+- `?raw` import with flexible substring/regex matching (handles truncation)
+- Fixture: auth.users → trigger `handle_new_user` (006) creates profile `customer`; role upgrade via `UPDATE profiles` BEFORE setting JWT (guard 014 bootstrap)
+- `set_config('request.jwt.claims', ..., true)` persists for entire transaction
+- `now()` = transaction timestamp; test trigger updated_at requires separate DO blocks (2 transactions)
+- GRANT/REVOKE don't affect superuser; test role permissions via `SET LOCAL ROLE anon/authenticated`
+- PRE_ORDER fixtures need `dropoff_detail` + real `delivery_round_id` + `pre_order_cutoff` '23:59'
+- Time comparisons via `LIKE 'HH:MM%'` (format 15:00:00)
+- 148 supersedes 145 (`same_day_cutoff` = DROPPED); 198/199 supersede 157 (`reviews_anon_read` = DROPPED) — tests pin current state
+- NEVER call `bmb_tick_http` real (production EF) — verify function exists only
+
+### Verification:
+- `npx vitest run src/__tests__/contracts_*.test.ts` — 15 test files, 311 tests PASS
+- All 15 files follow atomic execution (one file at a time), no macro-prompts, no placeholders
+- Documentation synchronized per Protocol §0.3: MASTER_STATUS, WORK_QUEUE, AI_WORKING_STATE, CHANGELOG updated
+
+### Next Steps (per Owner order via commit 9221626):
+1. Owner audit review of 67 contract files
+2. Live Test Groups E, F, G, H, I (35 cases total) — Sprint: F+E week 3-4 → G+H week 5-6 → I week 7-8
+3. WAIT for Owner Gate Phase 1 → Phase 2 after I-1/I-2 pass
+4. Phase 1-6 all PAUSED per Owner order
+
+---
+
 ### R107 r2 - Lint fix (commit 1c2f749 "Edit doc BOM") - CI GREEN AGAIN
 - Root cause 1: UTF-8 BOM on BMB_AI_WORKING_STATE / BMB_CHANGELOG / BMB_MASTER_STATUS / BMB_WORK_QUEUE (PowerShell Set-Content -Encoding UTF8 always adds BOM in PS 5.1) - rewritten without BOM via Node fs
 - Root cause 2: Admin_User_Manual_TH.md foreign chars 5 spots (Arabic/Chinese/Hebrew/Chinese = การ์ด/ตามเวลา/ยกเลิก/คัดกรอง) - fixed to proper Thai
