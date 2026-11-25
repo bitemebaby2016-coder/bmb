@@ -1,4 +1,4 @@
-# BMB — AI WORKING STATE (สถานะปฏิบัติการของ AI Dev)
+﻿# BMB — AI WORKING STATE (สถานะปฏิบัติการของ AI Dev)
 
 > **Canonical AI operating state** ตาม protocol §2.2 — เอกสารนี้คือสถานะปัจจุบันของ AI development session
 > - รวม: Active Task, Current Context, Architecture Constraints, **Mandatory Documentation Synchronization Protocol**
@@ -90,6 +90,13 @@ Before ending every development task or session:
 ---
 
 ## 1. CURRENT ACTIVE TASK (2026-11-25 — HANDOFF TO NEXT SESSION)
+
+**DONE 2026-11-25 - CONTRACT-AUDIT-CLOSURE-124-213 COMPLETE (status below is the historical task record):**
+- Audit r4 DONE: all 15 files for 28 migrations (179-213) written + every case fixed until pass
+- Final DONE: full Docker replay **67 contract files ALL GREEN (0 FAIL)** (container bmb_replay_w2, migrations 001-218 applied)
+- Fixed during audit: 033 allowlist + suppliers/supplier_products; 036 G4 accepts ERR_KITCHEN_NOT_READY
+- Next: Owner audit review -> Live Test Groups E-I (40 cases). Phase 1-6 paused per Owner order.
+
 
 | Field | Value |
 |-------|-------|

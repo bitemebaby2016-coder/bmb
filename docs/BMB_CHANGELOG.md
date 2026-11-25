@@ -1,9 +1,33 @@
-# BMB — CHANGELOG (ประวัติการพัฒนาทุก R-series)
+﻿# BMB — CHANGELOG (ประวัติการพัฒนาทุก R-series)
 
 > เอกสารนี้รวม **ประวัติการเปลี่ยนแปลงจริงจาก AI_WORK_STATE.md** ตาม protocol §3.6
 > - ทุก R-series ที่ CODE_CLOSED + GATES PASS ต้องมี entry ในนี้
 > - ไม่ลบหลักฐาน: Migration, Production Verification, Test Results, Root Cause Analysis
 > - เรียงใหม่→เก่า (newest first)
+
+---
+
+## R107 - 2026-11-25 - CONTRACT-AUDIT-CLOSURE-124-213 DONE (67 files ALL GREEN)
+
+**Status:** CODE_CLOSED (contract suite complete - no code changes to migrations)
+
+### 15 new contract files for 28 migrations (179-213) - all pass
+- contracts_179_notification_hub (8 cases), 181_186_promotions (6), 182_188_messages (6), 189_197_rider_fallback (5), 191_kitchen_bkk (4), 192_193_crm (7), 194_195_payment (5), 196_206_media_buckets (6), 198_200_reviews (8), 201_202_theater (4), 203_204_ai_memory (6), 205_social_actions (5), 207_211_rider_history (5), 212_delivery_sync_hop (5), 213_cart_payload (5)
+
+### Old files updated to match real migrations (Actual Code > Documentation)
+- contracts_033_table_acl: anon SELECT allowlist + suppliers/supplier_products (m214/m217 grant anon SELECT by design)
+- contracts_036_driver_status_sync: G4 accepts ERR_KITCHEN_NOT_READY as valid blocked-sync error (order still confirmed)
+
+### Key contract rules pinned by these tests (found + fixed during audit)
+- orders requires customer_name + customer_phone (NOT NULL); customer_ref FK auth.users; branch_id FK branches
+- branches requires code + slug + address_line1 + latitude + longitude; delivery_rounds requires display_name + delivery_end
+- m131 trigger auto-creates customers id=user_id -> fixtures must not insert a second customers row for the same user
+- PL/pgSQL: one EXCEPTION clause per block (multiple WHEN branches); RAISE only inside DO blocks; UPDATE has no ON CONFLICT (INSERT only)
+- business_settings rows need upsert (INSERT ... ON CONFLICT (key)) not bare UPDATE when the row may not exist
+- cancel_order_as_customer: service_role only + RAISES exception -> tests must catch with nested block and clear JWT claims before service_role calls
+- create_production_batch/get_kitchen_summary defaults fire only when params are OMITTED (passing NULL is NOT the default)
+- PRE_ORDER orders need scheduled_date >= today BKK + dropoff_detail (m038/m143b); create_order_with_items has 18 params incl. p_promotion_code (11th)
+- reviews unique partial idx_reviews_order_product(order_number, product_id) WHERE order_number IS NOT NULL -> test fixtures use separate product/order ids
 
 ---
 

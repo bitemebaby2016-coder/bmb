@@ -1,8 +1,18 @@
-# BMB — MASTER STATUS (เอกสารสถานะหลักเดียวของโปรเจกต์)
+﻿# BMB — MASTER STATUS (เอกสารสถานะหลักเดียวของโปรเจกต์)
 
 > **เอกสารนี้คือ canonical current state ไฟล์เดียว** ตาม Owner directive 2026-10-26
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
+
+
+**SESSION CLOSE 2026-11-25 (CONTRACT-AUDIT-CLOSURE-124-213 DONE - CONTRACT SUITE ALL GREEN 67 FILES)**
+
+- **Result:** Contract suite **67 files ALL GREEN (0 FAIL)** in Docker container bmb_replay_w2 (DB bmb_replay / migrations 001-218 applied)
+- **15 new contract files for 28 migrations (179-213) complete + fixed until every case passes:**
+  - contracts_179_notification_hub.sql (8 cases) - contracts_181_186_promotions.sql (6) - contracts_182_188_messages.sql (6) - contracts_189_197_rider_fallback.sql (5) - contracts_191_kitchen_bkk.sql (4) - contracts_192_193_crm.sql (7) - contracts_194_195_payment.sql (5) - contracts_196_206_media_buckets.sql (6) - contracts_198_200_reviews.sql (8) - contracts_201_202_theater.sql (4) - contracts_203_204_ai_memory.sql (6) - contracts_205_social_actions.sql (5) - contracts_207_211_rider_history.sql (5) - contracts_212_delivery_sync_hop.sql (5) - contracts_213_cart_payload.sql (5)
+- **Key fixes found during audit:** fixture orders missing customer_name/customer_phone (NOT NULL); branches missing code/slug/address/lat/lon; delivery_rounds missing display_name/delivery_end; invalid UUIDs (uid-cXXX -> 210aXXX-...); m131 trigger auto-creates customers id=user_id conflicting with fixture id; PL/pgSQL EXCEPTION written twice in one block (207.5); RAISE outside DO block (192.6/212.6); UPDATE ... ON CONFLICT invalid syntax (192.4); business_settings crm_automation needs upsert not bare UPDATE; cancel_order_as_customer RAISES EXCEPTION - catch with nested block + clear JWT claims before service_role calls; create_production_batch/get_kitchen_summary must omit params (passing NULL does not trigger DEFAULT); PRE_ORDER needs scheduled_date >= today + dropoff_detail (m038/m143b); 199.5 fixture conflicts idx_reviews_order_product -> use separate product/order ids
+- **Old files fixed:** contracts_033_table_acl.sql allowlist + suppliers/supplier_products (m214/m217 grant anon SELECT by design); contracts_036_driver_status_sync.sql G4 accepts ERR_KITCHEN_NOT_READY as valid blocked-sync error
+- **Phase 1-6 all = paused per Owner order** (Phase 1 Gate Review pending - DO NOT start Phase 2 on your own)
 
 **🔒 SESSION PAUSED 2026-11-25 (HANDOFF — CONTRACT AUDIT กลางทาง) · Owner สั่งปิดเซสชัน + ยกงานไปเซสชันหน้า**
 

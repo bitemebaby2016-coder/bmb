@@ -1,4 +1,4 @@
-# BMB — WORK QUEUE (งานค้างทั้งหมดที่ยังไม่ปิด)
+﻿# BMB — WORK QUEUE (งานค้างทั้งหมดที่ยังไม่ปิด)
 
 > **Canonical work queue** ตาม protocol §2.3 — เอกสารนี้คือแหล่งข้อมูลเดียวสำหรับงานค้าง
 > - รวม: Remaining Live Tests + Blocked Tasks + Tasks Requiring Owner Decisions
@@ -22,6 +22,9 @@
 | **รวม** | **90+** | | |
 
 ---
+
+
+**DONE 2026-11-25 - Contract Audit Closure 124-213 COMPLETE: 67 files ALL GREEN (0 FAIL) in Docker replay (bmb_replay_w2, migrations 001-218 applied). 15 new contract files for 28 migrations (179-213) written + fixed until every case passes. See BMB_MASTER_STATUS.md SESSION CLOSE 2026-11-25 for the full fix list. Next: Owner audit review -> Live Test Groups E-I (40 cases).**
 
 ## 🔨 กลุ่มปัจจุบัน — Contract Audit Closure 124-213 (ทำต่อเซสชันหน้า — ตามสั่ง Owner 2026-11-25)
 
