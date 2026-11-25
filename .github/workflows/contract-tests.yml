@@ -665,6 +665,30 @@ jobs:
             exit 1
           fi
 
+      - name: Contract 164-168 — settings open / seo seed / rider POD + multi-job (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_164_168_rider_settings.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_164_168_rider_settings.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
+      - name: Contract 170+171+174 — cost fields / my_role / rider position privacy (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_170_171_174.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_170_171_174.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+
 # ---------------------------------------------------------------------------
 # B-2 — legacy contract 7 ตัว (017_018/019/020/021/022/029/033) = CLOSED (W-2 · 2026-10-26)
 # ประวัติ: ความพยายาม 1 (commit 3a2c9f7) = ล้มเหลวทั้ง 7 (Contract Tests #147) ·
