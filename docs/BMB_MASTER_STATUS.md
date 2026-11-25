@@ -5,6 +5,25 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-25 r4 (LIVE TEST RESULTS + OWNER DECISIONS — E/F LIVE_VERIFIED, G/H PARTIAL, C-1..C-6 RESOLVED, OMISE RESOLVED)**
+
+- **Live Test Groups Results:**
+  - **Group E (Rider History + Maps):** ✅ **LIVE_VERIFIED** — E-1..E-6 PASS (7 tests), OSM fallback verified. E-7 diagnostic only.
+  - **Group F (Background Music + Mascot + OAuth):** ✅ **LIVE_VERIFIED** — F-1..F-4, F-7 PASS (5 tests). F-5, F-6 legacy verified.
+  - **Group G (Marketing + Studio + Floating Ad):** ⏸️ **PARTIAL** — G-1..G-5 PASS (5 tests). G-6, G-7 pending.
+  - **Group H (FB Cart Bridge):** ⏸️ **PARTIAL** — H-3..H-6 PASS (4 tests). H-1, H-2 pending.
+  - **Group I (Server Cart + FB IAB + 1 Reply):** ⏸️ **PAUSED** — Critical path, awaiting Owner test.
+- **Requirement Conflicts (C-1..C-6) — ALL RESOLVED by Owner 2026-11-25:**
+  - C-1: Same-day = 24h ordering; Pre-order cutoff for delivery only
+  - C-2: First-registered branch wins zone overlap
+  - C-3: Coupon stacking approved — implement min-order/max-discount/per-user limits
+  - C-4: Vote rewards points — update m208 to write points_ledger
+  - C-5: CRM consent granularity — add winback/birthday/channel sub-fields
+  - C-6: Floating ad vs Mascot — already fixed in layout
+- **Omise TEST Card — RESOLVED:** Not a blocker. Stripe QR = primary, Omise = fallback.
+- **Next:** Owner audit review of 67 contract files → Complete Live Test Groups G-6, G-7, H-1, H-2, I-1..I-8 → Owner Gate Phase 1 → Phase 2.
+- **Phase 1-6 all = paused per Owner order** (Phase 1 Gate Review pending).
+
 **SESSION CLOSE 2026-11-25 r3 (CONTRACT-AUDIT-CLOSURE-124-213 COMPLETE — 15 FILES, 311 TESTS ALL GREEN)**
 
 - **Contract Audit Closure COMPLETE:** 15 new contract test files for 28 remaining migrations (179, 181-189, 191-207, 211-213) written and all passing (311 tests). Combined with existing 52 contract files = 67 files ALL GREEN (0 FAIL) on fresh DB.

@@ -8,21 +8,21 @@
 
 ---
 
-## 📊 สรุปสถานะ Work Queue (2026-11-25 r3 — CONTRACT AUDIT CLOSURE COMPLETE)
+## 📊 สรุปสถานะ Work Queue (2026-11-25 r4 — LIVE TEST RESULTS + OWNER DECISIONS)
 
 | กลุ่ม | จำนวนข้อ | สถานะ | รายละเอียด |
 |------|----------|-------|-----------|
-| **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 15 ไฟล์เทสครอบ 28 migration (179-213) ALL GREEN — 311 tests PASS — ดู `docs/PHASE1_PENDING_TEST_CLEARANCE_PLAN.md` |
+| **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 15 ไฟล์เทสครอบ 28 migration (179-213) ALL GREEN — 311 tests PASS |
 | **Phase 1 Gate Review** | 1 | ⏸️ PAUSED — รอ Owner | Phase 1 (migrations 214-218 + APIs) applied prod — Owner ตรวจรับก่อน Phase 2 |
 | **Phase 2-6** | 5 Phase | ⏸️ PAUSED — Approved roadmap, รอ Gate ทีละ Phase | PO+GRN → Recipe Costing → OCR+CSV → Admin Nav → Analytics — **ห้ามเริ่มเอง** |
-| **Live Tests E** | 7 | ⏸️ PAUSED — รอ audit closure จบก่อน | Rider History + Maps 3 Sides — ตารางเต็มอยู่ด้านล่าง |
-| **Live Tests F** | 7 | ⏸️ PAUSED — รอ audit closure จบก่อน | Background Music + Mascot + OAuth — ตารางเต็มอยู่ด้านล่าง |
-| **Live Tests G** | 7 | ⏸️ PAUSED — รอ audit closure จบก่อน | Marketing Posts + Studio + Floating Ad — ตารางเต็มอยู่ด้านล่าง |
-| **Live Tests H** | 6 | ⏸️ PAUSED — รอ audit closure จบก่อน | FB Cart Bridge R63 — ตารางเต็มอยู่ด้านล่าง |
-| **Live Tests I** | 8 | ⏸️ PAUSED — รอ audit closure จบก่อน | Server Cart + FB IAB + 1 Reply 1 Link — ตารางเต็มอยู่ด้านล่าง |
-| **C-1..C-6** | 6 | ⚠️ BLOCKED | Requirement conflicts — รอ Owner ตัดสินใจ |
+| **Live Tests E** | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 ผ่านหมด (E-7 diagnostic) — OSM fallback verified |
+| **Live Tests F** | 7 | ✅ **LIVE_VERIFIED** | F-1..F-4, F-7 ผ่านหมด (F-5, F-6 legacy verified) |
+| **Live Tests G** | 7 | ⏸️ PARTIAL | G-1..G-5 ผ่าน · G-6, G-7 รอทดสอบ |
+| **Live Tests H** | 6 | ⏸️ PARTIAL | H-3, H-4, H-5, H-6 ผ่าน · H-1, H-2 รอทดสอบ |
+| **Live Tests I** | 8 | ⏸️ PAUSED | รอ Owner ทดสอบ (critical path) |
+| **C-1..C-6** | 6 | ✅ **RESOLVED** | Owner decisions recorded below — ไม่ใช่ BLOCKED แล้ว |
 | **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
-| **Omise TEST Card** | 1 | ⚠️ BLOCKED | บัตร Omise TEST card บนเบราว์เซอร์จริง — รอ Owner ทดสอบ |
+| **Omise TEST Card** | 1 | ✅ **RESOLVED** | ไม่ถือเป็นบล็อก — QR code (Stripe) ใช้ได้, Omise fallback เปลี่ยน role |
 | **รวม** | **90+** | | |
 
 ---
@@ -115,85 +115,89 @@
 
 ---
 
-## 🆕 กลุ่ม H — R63 (FB Cart Bridge Live — สะพานตะกร้าสดข้ามช่องทาง)
+## 🆕 กลุ่ม H — R63 (FB Cart Bridge Live — สะพานตะกร้าสดข้ามช่องทาง) — ⏸️ PARTIAL
 
 **เงื่อนไขก่อนเริ่ม:** push `9b913c9` รอ Cloudflare deploy 2-3 นาที · hard reload (Ctrl+Shift+R) 1 ครั้ง · ล็อกอินลูกค้า · เข้าแชท FB/Messenger ของเพจ Bite Me Baby
 **Gates โค้ด:** lint ✅ · vitest 226 ไฟล์ / 2446 tests PASS (+1) · build ✅ (PWA v1.3.0)
+**ผลทดสอบ (2026-11-25): H-3, H-4, H-5, H-6 ผ่าน · H-1, H-2 รอทดสอบ**
 
 | Task ID | Test Case | Description | Pass Criteria | Status |
 |---------|-----------|-------------|---------------|--------|
-| **H-1** | ปุ่มคัดลอกพาตะกร้าสด (แก้ 17↔1 · R63b hotfix) | 1) เข้าแชท FB → สั่งเมนูหลายรายการจนตะกร้ามี ≥4 บรรทัด / ≥17 ชิ้น 2) ใน FB WebView เปิดลิงก์ AI ใหม่ → ตะกร้าเพิ่มขึ้น 3) กด "📋 คัดลอกลิงก์" (ถ้ากล่องลิงก์เต็มโผล่ = กด "เลือกทั้งหมด" แล้วกดค้าง/Ctrl+C) 4) วางใน Chrome/Safari เครื่องเดียวกัน | ตะกร้าใน Chrome = **ตรงชนิดทุกตัวเลขกับ WebView** (บรรทัด/จำนวนชิ้น/ราคา/addOns/line_mode) · toast "เปิดรายการที่สรุปไว้ให้แล้ว 🛒 N รายการ" | LIVE_TEST_PENDING |
-| **H-2** | Snapshot หมดอายุ 30 นาที | ทำ H-1 สำเร็จ → ทิ้งแชทค้าง >30 นาที → เปิดเว็บเครื่องเดียวกัน (ไม่มี `?cart=`) | ไม่เติมตะกร้าเองจากของเก่า (one-shot + อายุ) | LIVE_TEST_PENDING |
-| **H-3** | Cart page UX — ลบคูปอง/สรุปราคา เหลือปุ่มเดียว | เปิด /cart (มีของ ≥1 รายการ) → hard reload | **ไม่มี** card "🎟️ คูปอง/โปรโมชั่น" · **ไม่มี** card "💰 สรุปราคา" · **มี** ปุ่ม "ยืนยันสั่งซื้อ →" เดียวไป /checkout (gated stale pre-order) | LIVE_TEST_PENDING |
-| **H-4** | Checkout PRE_ORDER — รอบปิด status=closed โชว์เทา/กดไม่ได้ | 1) แอดมินปิด 1 รอบ (เช่น "เย็น" status='closed') 2) เข้า checkout PRE_ORDER (มีเมนูปฏิทิน) | รายการรอบโชว์ **ทุกรอบ** · รอบปิด = radio disabled + opacity-60 + badge "ปิดรับ (แอดมิน)" · รอบเปิด = เลือกได้ปกติ · SAME_DAY auto-select คงเดิม | LIVE_TEST_PENDING |
-| **H-5** | Sticker consolidation — 1 sticker/order (R63d) | 1) สั่งออเดอร์: เมนู A x2 + เมนู B x1 (รวม 3 กล่อง) 2) แอดมินกด "รับออเดอร์" → auto-print sticker | **พิมพ์ 1 ดวงเดียว** · ORDER LIST โชว์ "เมนู A x2 · เมนู B x1" (1-4 บรรทัดต่อเนื่อง) · QR/ราคา/ชื่อลูกค้าถูกต้อง · toast "สติกเกอร์ 1 ใบ — เครื่องยืนยันครบแล้ว" | LIVE_TEST_PENDING |
-| **H-6** | Sticker — single item order | 1) สั่ง 1 เมนู qty 1 2) แอดมินรับออเดอร์ | พิมพ์ 1 ดวง · ORDER LIST โชว์ item เดียว · toast "สติกเกอร์ 1 ใบ — เครื่องยืนยันครบแล้ว" | LIVE_TEST_PENDING |
+| **H-1** | ปุ่มคัดลอกพาตะกร้าสด (แก้ 17↔1 · R63b hotfix) | 1) เข้าแชท FB → สั่งเมนูหลายรายการจนตะกร้ามี ≥4 บรรทัด / ≥17 ชิ้น 2) ใน FB WebView เปิดลิงก์ AI ใหม่ → ตะกร้าเพิ่มขึ้น 3) กด "📋 คัดลอกลิงก์" (ถ้ากล่องลิงก์เต็มโผล่ = กด "เลือกทั้งหมด" แล้วกดค้าง/Ctrl+C) 4) วางใน Chrome/Safari เครื่องเดียวกัน | ตะกร้าใน Chrome = **ตรงชนิดทุกตัวเลขกับ WebView** (บรรทัด/จำนวนชิ้น/ราคา/addOns/line_mode) · toast "เปิดรายการที่สรุปไว้ให้แล้ว 🛒 N รายการ" | ⏸️ LIVE_TEST_PENDING |
+| **H-2** | Snapshot หมดอายุ 30 นาที | ทำ H-1 สำเร็จ → ทิ้งแชทค้าง >30 นาที → เปิดเว็บเครื่องเดียวกัน (ไม่มี `?cart=`) | ไม่เติมตะกร้าเองจากของเก่า (one-shot + อายุ) | ⏸️ LIVE_TEST_PENDING |
+| **H-3** | Cart page UX — ลบคูปอง/สรุปราคา เหลือปุ่มเดียว | เปิด /cart (มีของ ≥1 รายการ) → hard reload | **ไม่มี** card "🎟️ คูปอง/โปรโมชั่น" · **ไม่มี** card "💰 สรุปราคา" · **มี** ปุ่ม "ยืนยันสั่งซื้อ →" เดียวไป /checkout (gated stale pre-order) | ✅ LIVE_VERIFIED |
+| **H-4** | Checkout PRE_ORDER — รอบปิด status=closed โชว์เทา/กดไม่ได้ | 1) แอดมินปิด 1 รอบ (เช่น "เย็น" status='closed') 2) เข้า checkout PRE_ORDER (มีเมนูปฏิทิน) | รายการรอบโชว์ **ทุกรอบ** · รอบปิด = radio disabled + opacity-60 + badge "ปิดรับ (แอดมิน)" · รอบเปิด = เลือกได้ปกติ · SAME_DAY auto-select คงเดิม | ✅ LIVE_VERIFIED |
+| **H-5** | Sticker consolidation — 1 sticker/order (R63d) | 1) สั่งออเดอร์: เมนู A x2 + เมนู B x1 (รวม 3 กล่อง) 2) แอดมินกด "รับออเดอร์" → auto-print sticker | **พิมพ์ 1 ดวงเดียว** · ORDER LIST โชว์ "เมนู A x2 · เมนู B x1" (1-4 บรรทัดต่อเนื่อง) · QR/ราคา/ชื่อลูกค้าถูกต้อง · toast "สติกเกอร์ 1 ใบ — เครื่องยืนยันครบแล้ว" | ✅ LIVE_VERIFIED |
+| **H-6** | Sticker — single item order | 1) สั่ง 1 เมนู qty 1 2) แอดมินรับออเดอร์ | พิมพ์ 1 ดวง · ORDER LIST โชว์ item เดียว · toast "สติกเกอร์ 1 ใบ — เครื่องยืนยันครบแล้ว" | ✅ LIVE_VERIFIED |
 
 ---
 
-## 🆕 กลุ่ม G — R78/R79/R80 (Marketing Posts 5 Images + Studio Picker Tabs + Floating Ad Exact Clone)
+## 🆕 กลุ่ม G — R78/R79/R80 (Marketing Posts 5 Images + Studio Picker Tabs + Floating Ad Exact Clone) — ⏸️ PARTIAL
 
 **เงื่อนไขก่อนเริ่ม:** m209 APPLIED PROD ✓ · push `4fc13a2` รอ Cloudflare deploy 2-3 นาที · hard reload (Ctrl+Shift+R) 1 ครั้ง · ล็อกอินแอดมิน
 **Gates โค้ด:** lint ✅ · vitest 226 ไฟล์ / 2431 tests PASS (+9 จาก R78-R80) · build ✅ · CI 2/2 success (commit `71667e8`, `9d43386`, `4fc13a2`)
+**ผลทดสอบ (2026-11-25): G-1..G-5 ผ่าน · G-6, G-7 รอทดสอบ**
 
 | Task ID | Test Case | Description | Pass Criteria | Status |
 |---------|-----------|-------------|---------------|--------|
-| **G-1** | โพสต์การตลาดแนบได้ 5 รูป (R78) | /admin/marketing → แท็บสร้างโพสต์ → เลือกรูปจากอัลบั้ม AI 5 รูป (ปุ่ม "ใช้") → กดรูปที่ 6 | ตัวนับ "แนบรูปแล้ว 5/5 รูป" · กดรูปที่ 6 = toast "เลือกได้สูงสุด 5 รูป" + ปุ่ม disable · กด "เลิก" รูปที่เลือกแล้ว = หลุดจากชุด (toggle) · อัลบั้มไฮไลต์รูปที่เลือก (ขอบสี + ✓) | LIVE_TEST_PENDING |
-| **G-2** | อัปโหลดหลายไฟล์จากเครื่อง ≤500KB (R78) | แท็บสร้างโพสต์ → "เลือกไฟล์สูงสุดจากเครื่อง" → เลือก 3-5 ไฟล์รูปใหญ่พร้อมกัน | อัปโหลดสำเร็จ + toast "ย่ออัตโนมัติ (ยาวสุด 1080px / ≤500KB)" · รูปเข้าชุด (ตัวนับเพิ่ม) · ไฟล์เกิน 5 = toast แจ้งข้าม · เช็ค Supabase → bucket `bmb-images` → `uploads/mk-<timestamp>-...` (ไฟล์ webp ≤500KB) | LIVE_TEST_PENDING |
-| **G-3** | Studio picker แท็บตามหัวข้อครบทุกเมนู (R79) | แท็บสร้างโพสต์ → การ์ด "🍽️ เลือกจากเมนูทั้งหมด (แท็บตามหัวข้อ)" → กดสลับทุกแท็บ | แท็บ = หัวข้อเมนูจริง (ชื่อ + icon + จำนวน) **ตรงกับหน้า /shop** · แต่ละแท็บโชว์ **ครบทุกเมนูในหัวข้อ (ไม่มี "แสดง 20 รายการแรก")** · 🚫 = เมนูไม่มีรูป (กดไม่ได้) · ✓ = อยู่ในชุดแล้ว (disabled) · เมนูใหม่ที่เพิ่มในอนาคตเข้าแท็บเอง | LIVE_TEST_PENDING |
-| **G-4** | Planner จิ้มเมนู = append รูป (R78) | แท็บวางแผน → จิ้มเมนู 2-3 ตัวติดกัน → กลับมาแท็บสร้างโพสต์ | หัวข้อ/เนื้อหาเติมตามเมนูสุดท้าย · รูปเมนู **เพิ่มเข้าชุดทีละรูป (ไม่ทับของเดิม)** จนครบ 5 · ลบเตือน "มีภาพเจน = ใช้ภาพเจนรูปเดียว" (R44 ยกเลิก — ภาพเจน+เมนู+อัปโหลดผสมกันได้) | LIVE_TEST_PENDING |
-| **G-5** | Floating Ad ตั้งจากแอดมิน = โคลนข้อมูลตรง (R80 — เมนู) | /admin/products → แก้เมนู 1 ตัว → เปิด toggle "📌 Floating Ad" → บันทึก → hard reload /shop | การ์ดโฆษณาลอยโชว์ **เมนูที่เลือกพอดี** (badge "🍽️ เมนูแนะนำ") · title = ชื่อเมนู **ตรงๆ ไม่มี 🔥 นำหน้า** · description = คำอธิบายเมนู **เต็ม ไม่ตัด** · รูป = รูปเมนูจริง · ปุ่มบัตรในการ์ดมี badge "📌 Floating Ad" | LIVE_TEST_PENDING |
-| **G-6** | Floating Ad ตั้งจากโพสต์ (R80 — โพสต์) | โพสต์การตลาดที่ published แล้ว 1 ใบ → /admin/marketing คิวอนุมัติ (แถว linked) → เปิด toggle "📌 Floating Ad" → hard reload /shop | การ์ดโฆษณาลอยโชว์ **โพสต์นั้นพอดี** (badge "📝 โพสต์") · title = หัวข้อโพสต์ **ตรงๆ ไม่มี 📣 นำหน้า ไม่มี "ประกาศจากร้าน"** · description = เนื้อหาโพสต์ **เต็ม** · รูป = รูปแรกของโพสต์ · ปิด toggle = การ์ดหาย | LIVE_TEST_PENDING |
-| **G-7** | Floating Ad โปรโมชั่น (เดิม) ไม่พัง + สลับ 3 แหล่ง (R80) | ตั้ง is_banner=true ให้โปร 1 ตัว (มีรูป+มาสคอต) + เมนู 1 ตัว + โพสต์ 1 ใบ → ดู /shop | โชว์สูงสุด 3 การ์ด สลับชนิด โปร→เมนู→โพสต์ (R64) · การ์ดโปร = badge "🎁 โปรโมชั่น" + รูป banner + มาสคอต banner_mascot (R61 คงเดิม) · โค้ดคูปองแสดง + ปุ่ม "ดูดีลเลย" ไป /menu?coupon= · /admin/settings ช่อง floating_ad_enabled ปิด = ทุกการ์ดหาย · checkbox sources (3 แบบใหม่) บันทึกได้ | LIVE_TEST_PENDING |
+| **G-1** | โพสต์การตลาดแนบได้ 5 รูป (R78) | /admin/marketing → แท็บสร้างโพสต์ → เลือกรูปจากอัลบั้ม AI 5 รูป (ปุ่ม "ใช้") → กดรูปที่ 6 | ตัวนับ "แนบรูปแล้ว 5/5 รูป" · กดรูปที่ 6 = toast "เลือกได้สูงสุด 5 รูป" + ปุ่ม disable · กด "เลิก" รูปที่เลือกแล้ว = หลุดจากชุด (toggle) · อัลบั้มไฮไลต์รูปที่เลือก (ขอบสี + ✓) | ✅ LIVE_VERIFIED |
+| **G-2** | อัปโหลดหลายไฟล์จากเครื่อง ≤500KB (R78) | แท็บสร้างโพสต์ → "เลือกไฟล์สูงสุดจากเครื่อง" → เลือก 3-5 ไฟล์รูปใหญ่พร้อมกัน | อัปโหลดสำเร็จ + toast "ย่ออัตโนมัติ (ยาวสุด 1080px / ≤500KB)" · รูปเข้าชุด (ตัวนับเพิ่ม) · ไฟล์เกิน 5 = toast แจ้งข้าม · เช็ค Supabase → bucket `bmb-images` → `uploads/mk-<timestamp>-...` (ไฟล์ webp ≤500KB) | ✅ LIVE_VERIFIED |
+| **G-3** | Studio picker แท็บตามหัวข้อครบทุกเมนู (R79) | แท็บสร้างโพสต์ → การ์ด "🍽️ เลือกจากเมนูทั้งหมด (แท็บตามหัวข้อ)" → กดสลับทุกแท็บ | แท็บ = หัวข้อเมนูจริง (ชื่อ + icon + จำนวน) **ตรงกับหน้า /shop** · แต่ละแท็บโชว์ **ครบทุกเมนูในหัวข้อ (ไม่มี "แสดง 20 รายการแรก")** · 🚫 = เมนูไม่มีรูป (กดไม่ได้) · ✓ = อยู่ในชุดแล้ว (disabled) · เมนูใหม่ที่เพิ่มในอนาคตเข้าแท็บเอง | ✅ LIVE_VERIFIED |
+| **G-4** | Planner จิ้มเมนู = append รูป (R78) | แท็บวางแผน → จิ้มเมนู 2-3 ตัวติดกัน → กลับมาแท็บสร้างโพสต์ | หัวข้อ/เนื้อหาเติมตามเมนูสุดท้าย · รูปเมนู **เพิ่มเข้าชุดทีละรูป (ไม่ทับของเดิม)** จนครบ 5 · ลบเตือน "มีภาพเจน = ใช้ภาพเจนรูปเดียว" (R44 ยกเลิก — ภาพเจน+เมนู+อัปโหลดผสมกันได้) | ✅ LIVE_VERIFIED |
+| **G-5** | Floating Ad ตั้งจากแอดมิน = โคลนข้อมูลตรง (R80 — เมนู) | /admin/products → แก้เมนู 1 ตัว → เปิด toggle "📌 Floating Ad" → บันทึก → hard reload /shop | การ์ดโฆษณาลอยโชว์ **เมนูที่เลือกพอดี** (badge "🍽️ เมนูแนะนำ") · title = ชื่อเมนู **ตรงๆ ไม่มี 🔥 นำหน้า** · description = คำอธิบายเมนู **เต็ม ไม่ตัด** · รูป = รูปเมนูจริง · ปุ่มบัตรในการ์ดมี badge "📌 Floating Ad" | ✅ LIVE_VERIFIED |
+| **G-6** | Floating Ad ตั้งจากโพสต์ (R80 — โพสต์) | โพสต์การตลาดที่ published แล้ว 1 ใบ → /admin/marketing คิวอนุมัติ (แถว linked) → เปิด toggle "📌 Floating Ad" → hard reload /shop | การ์ดโฆษณาลอยโชว์ **โพสต์นั้นพอดี** (badge "📝 โพสต์") · title = หัวข้อโพสต์ **ตรงๆ ไม่มี 📣 นำหน้า ไม่มี "ประกาศจากร้าน"** · description = เนื้อหาโพสต์ **เต็ม** · รูป = รูปแรกของโพสต์ · ปิด toggle = การ์ดหาย | ⏸️ LIVE_TEST_PENDING |
+| **G-7** | Floating Ad โปรโมชั่น (เดิม) ไม่พัง + สลับ 3 แหล่ง (R80) | ตั้ง is_banner=true ให้โปร 1 ตัว (มีรูป+มาสคอต) + เมนู 1 ตัว + โพสต์ 1 ใบ → ดู /shop | โชว์สูงสุด 3 การ์ด สลับชนิด โปร→เมนู→โพสต์ (R64) · การ์ดโปร = badge "🎁 โปรโมชั่น" + รูป banner + มาสคอต banner_mascot (R61 คงเดิม) · โค้ดคูปองแสดง + ปุ่ม "ดูดีลเลย" ไป /menu?coupon= · /admin/settings ช่อง floating_ad_enabled ปิด = ทุกการ์ดหาย · checkbox sources (3 แบบใหม่) บันทึกได้ | ⏸️ LIVE_TEST_PENDING |
 
 ---
 
-## 🔄 กลุ่ม F — R55 (Background Music + Mascot Badge Fix + OAuth/Passkey ALL READY)
+## 🔄 กลุ่ม F — R55 (Background Music + Mascot Badge Fix + OAuth/Passkey ALL READY) — ✅ LIVE_VERIFIED
 
 **เงื่อนไขก่อนเริ่ม:** push R55 รอ Cloudflare deploy 2-3 นาที · hard reload (Ctrl+Shift+R) 1 ครั้ง · ทำบน https://biteme-baby.com
 **Gates โค้ด:** lint ✅ 591 ไฟล์ · vitest 226 ไฟล์ / 2422 tests PASS (+42) · build ✅
+**ผลทดสอบ (2026-11-25): F-1, F-2, F-3, F-4, F-7 ผ่านหมด · F-5, F-6 legacy verified (not re-tested)**
 
 | Task ID | Test Case | Description | Pass Criteria | Status |
 |---------|-----------|-------------|---------------|--------|
-| **F-1** | มาสคอตลอยจริง + hover ไม่หลุดเฟรม (R55) | เปิดหน้าไหนก็ได้ → ดูน้อง Bite มุมขวาล่าง (light แล้ว dark) → เอาเมาส์ชี้/ชี้ค้างบนตัวมาสคอต → ลากไปวางที่อื่น → รีเฟรช | มาสคอตลอยขึ้นลงนุ่ม ๆ ตลอดเวลา · hover ขยาย 5% นุ่มไม่กระตุก ไม่หลุดกรอบ · ลากวางแล้วค้างตำแหน่งใหม่หลังรีเฟรช (ไม่สะดุ้งกลับที่เดิม) | LIVE_TEST_PENDING |
-| **F-2** | ออกจากระบบจริง (R55) | ล็อกอิน → กด "ออก" มุมขวาบน (เดสก์ท็อป) → ทำซ้ำกับเมนูมือถือ "🚪 ออกจากระบบ" | ไปที่ /login ทันที · กดเข้าสู่ระบบใหม่ = เปิดฟอร์มให้กรอก (ไม่ดีดไป /shop เอง) · ล็อกอินด้วยบัญชีเดิมได้ | LIVE_TEST_PENDING |
-| **F-3** | anon กดโหวต = UX ตรงสาเหตุ (R55) | **ไม่ล็อกอิน** → เปิด /vote → กดเลือกเมนูโหวต | toast "กรุณาเข้าสู่ระบบก่อนโหวตเมนูค่ะ" — **ห้ามขึ้น "ระบบโหวตขัดข้องชั่วคราว"** | LIVE_TEST_PENDING |
-| **F-4** | โหวตจริงหลังล็อกอิน (ยืนยันคงเดิม) | ล็อกอิน → /vote → โหวตเมนูที่ยังไม่เคยโหวต | โหวตสำเร็จ · ตัวเลข/เปอร์เซ็นต์เปลี่ยนจริง · ป้าย "โหวตแล้ว ✓" ขึ้น · โหวตเมนูเดิมซ้ำ = "คุณโหวตเมนูนี้ไว้แล้วค่ะ" | LIVE_TEST_PENDING |
-| **F-5** | ล็อกอินด้วยเบอร์โทร (R55 — ของเก่าเปิดใช้จริง) | /login → แท็บ "📱 เบอร์โทร" → กรอกเบอร์+รหัสผ่าน (บัญชีที่เคยตั้งรหัสผ่าน) | เข้าสู่ระบบได้ ไป /shop · เบอร์/รหัสผิด = "เบอร์โทรศัพท์หรือรหัสผ่านไม่ถูกต้อง…" | LIVE_TEST_PENDING |
-| **F-6** | OAuth ทั้ง 4 + Passkey (Owner ตั้งค่า Dashboard เสร็จแล้ว) | /login → hard reload → กดทีละปุ่ม: Google / Facebook / LINE / Passkey | เด้งไปหน้า provider → กลับมาล็อกอินสำเร็จ · LINE = Custom OIDC (Channel ID/Secret + Attribute Mapping sub/email/name/picture) · Passkey = RP ID + Origin | LIVE_TEST_PENDING |
-| **F-7** | เล่นเพลงพื้นหลัง (Background Music R55 + R105) | /admin/settings?tab=music → อัปโหลด 2-3 เพลง (MP3/WAV/OGG/WebM/AAC ≤20MB) → Enable toggle ON → กลับหน้าร้าน → กดปุ่ม ♪ (AmbientMusicToggle) | เพลงเล่นสุ่ม (shuffle queue) · กด ♪ อีกครั้ง = หยุด · Bite พูด (VoiceInterface) → เสียงลด 25% (ducking) → Bite จบพูด → คืนเสียง 0.6s · volume slider ปรับได้ · **bucket ว่าง/ปิด = UI แสดง "ไม่มีเพลงใน bucket" ไม่เล่น ไม่มี fallback synthetic** · Migration 196 APPLIED PROD ✓ · Master flag enabled ✓ · CORS OK ✓ | LIVE_TEST_PENDING |
+| **F-1** | มาสคอตลอยจริง + hover ไม่หลุดเฟรม (R55) | เปิดหน้าไหนก็ได้ → ดูน้อง Bite มุมขวาล่าง (light แล้ว dark) → เอาเมาส์ชี้/ชี้ค้างบนตัวมาสคอต → ลากไปวางที่อื่น → รีเฟรช | มาสคอตลอยขึ้นลงนุ่ม ๆ ตลอดเวลา · hover ขยาย 5% นุ่มไม่กระตุก ไม่หลุดกรอบ · ลากวางแล้วค้างตำแหน่งใหม่หลังรีเฟรช (ไม่สะดุ้งกลับที่เดิม) | ✅ LIVE_VERIFIED |
+| **F-2** | ออกจากระบบจริง (R55) | ล็อกอิน → กด "ออก" มุมขวาบน (เดสก์ท็อป) → ทำซ้ำกับเมนูมือถือ "🚪 ออกจากระบบ" | ไปที่ /login ทันที · กดเข้าสู่ระบบใหม่ = เปิดฟอร์มให้กรอก (ไม่ดีดไป /shop เอง) · ล็อกอินด้วยบัญชีเดิมได้ | ✅ LIVE_VERIFIED |
+| **F-3** | anon กดโหวต = UX ตรงสาเหตุ (R55) | **ไม่ล็อกอิน** → เปิด /vote → กดเลือกเมนูโหวต | toast "กรุณาเข้าสู่ระบบก่อนโหวตเมนูค่ะ" — **ห้ามขึ้น "ระบบโหวตขัดข้องชั่วคราว"** | ✅ LIVE_VERIFIED |
+| **F-4** | โหวตจริงหลังล็อกอิน (ยืนยันคงเดิม) | ล็อกอิน → /vote → โหวตเมนูที่ยังไม่เคยโหวต | โหวตสำเร็จ · ตัวเลข/เปอร์เซ็นต์เปลี่ยนจริง · ป้าย "โหวตแล้ว ✓" ขึ้น · โหวตเมนูเดิมซ้ำ = "คุณโหวตเมนูนี้ไว้แล้วค่ะ" | ✅ LIVE_VERIFIED |
+| **F-5** | ล็อกอินด้วยเบอร์โทร (R55 — ของเก่าเปิดใช้จริง) | /login → แท็บ "📱 เบอร์โทร" → กรอกเบอร์+รหัสผ่าน (บัญชีที่เคยตั้งรหัสผ่าน) | เข้าสู่ระบบได้ ไป /shop · เบอร์/รหัสผิด = "เบอร์โทรศัพท์หรือรหัสผ่านไม่ถูกต้อง…" | ✅ LEGACY VERIFIED (not re-tested) |
+| **F-6** | OAuth ทั้ง 4 + Passkey (Owner ตั้งค่า Dashboard เสร็จแล้ว) | /login → hard reload → กดทีละปุ่ม: Google / Facebook / LINE / Passkey | เด้งไปหน้า provider → กลับมาล็อกอินสำเร็จ · LINE = Custom OIDC (Channel ID/Secret + Attribute Mapping sub/email/name/picture) · Passkey = RP ID + Origin | ✅ LEGACY VERIFIED (not re-tested) |
+| **F-7** | เล่นเพลงพื้นหลัง (Background Music R55 + R105) | /admin/settings?tab=music → อัปโหลด 2-3 เพลง (MP3/WAV/OGG/WebM/AAC ≤20MB) → Enable toggle ON → กลับหน้าร้าน → กดปุ่ม ♪ (AmbientMusicToggle) | เพลงเล่นสุ่ม (shuffle queue) · กด ♪ อีกครั้ง = หยุด · Bite พูด (VoiceInterface) → เสียงลด 25% (ducking) → Bite จบพูด → คืนเสียง 0.6s · volume slider ปรับได้ · **bucket ว่าง/ปิด = UI แสดง "ไม่มีเพลงใน bucket" ไม่เล่น ไม่มี fallback synthetic** · Migration 196 APPLIED PROD ✓ · Master flag enabled ✓ · CORS OK ✓ | ✅ LIVE_VERIFIED |
 
 ---
 
-## 🔄 กลุ่ม E — R44–R48b (Rider History Tabs + Maps 3 Sides)
+## 🔄 กลุ่ม E — R44–R48b (Rider History Tabs + Maps 3 Sides) — ✅ LIVE_VERIFIED
 
 **เงื่อนไขก่อนเริ่ม:** m180 + m207 APPLIED PROD แล้ว (Owner ยืนยัน) · push `15b5fc0` รอ Cloudflare deploy 2-3 นาที · hard reload (Ctrl+Shift+R) หรือล้าง storage PWA 1 ครั้ง
 **หมายเหตุ:** Google Maps key ยังถูกปฏิเสธในเบราว์เซอร์ (รอเช็ค Google Cloud Console) — แผนที่ควรโชว์ผ่าน **OpenStreetMap (Leaflet)** ซึ่งถือว่า PASS ตามดีไซน์ · เมื่อแก้ key ผ่านแผนที่จะกลับเป็น Google เอง ไม่ต้อง retest
+**ผลทดสอบ (2026-11-25): E-1..E-6 ผ่านหมด · E-7 diagnostic only**
 
 | Task ID | Test Case | Description | Pass Criteria | Status |
 |---------|-----------|-------------|---------------|--------|
-| **E-1** | แท็บวันนี้/ย้อนหลัง (ไรเดอร์) | เปิด `/rider` (ล็อกอินไรเดอร์ พอล ไมท์ไดร์) → ดูแถบแท็บเหนือรายการงาน | แท็บ "📅 วันนี้" โชว์งานวันนี้เท่านั้น · กดแท็บเดือน (เช่น พฤศจิกายน 2569) = งานเดือนนั้นโผล่ · สลับ "วันส่ง/วันมอบหมาย" ผลเปลี่ยนตาม | LIVE_TEST_PENDING |
-| **E-2** | งานมอบหมายล่วงหน้าไม่ปนวันนี้ | มีงาน scheduled วันพรุ่งนี้ (แอดมินมอบหมายล่วงหน้า) → เปิด /rider แท็บวันนี้ | งานพรุ่งนี้ไม่โชว์ในแท็บ "วันนี้" · โผล่เมื่อสลับ anchor เป็น "วันมอบหมาย" (ถ้า assigned วันนี้) หรือในแท็บเดือนของวันส่ง | LIVE_TEST_PENDING |
-| **E-3** | แผนที่หน้าไรเดอร์ (งาน active) | เปิดงาน → ยืนยันส่ง (geo+POD) → ดูแผนที่จุดปัก | แผนที่โชว์ (OSM = มี © OpenStreetMap มุมล่าง) · จุดปลายทาง/GPS คุณ/ครัวครบ · ห้ามจอขาว + ข้อความเตือนค้าง | LIVE_TEST_PENDING |
-| **E-4** | แผนที่หน้าลูกค้า /track | เปิด `/track/BMB-...` ที่มีไรเดอร์กำลังส่ง | แผนที่โชว์ · จุดไรเดอร์ + ป้าย "ล่าสุด HH:MM" · ถ้าไรเดอร์ปิดหน้า >10 นาที = จุดจาง + ป้าย "ตำแหน่งเก่า — รอไรเดอร์เปิดหน้าส่งพิกัดใหม่" | LIVE_TEST_PENDING |
-| **E-5** | แผนที่ Dispatch หน้าแอดมิน | เปิด `/admin/delivery` | แผนที่โชว์ (OSM) · จุดไรเดอร์จริงเท่านั้น (ไม่มีจุด กทม. ปลอม) · จุดเก่าเทา/จาง + tooltip "ตำแหน่งเก่า" · polyline งานที่เลือกดูโชว์ | LIVE_TEST_PENDING |
-| **E-6** | ปุ่มนำทาง + เว็บแผนที่ (PWA) | ใน /rider กด "🧭 เปิดนำทาง" และ "🌐 เปิดเว็บแผนที่" | นำทางเปิด Google Maps app ตรง (มี app) · เว็บแผนที่เปิดแผนที่จริงในแท็บเดียว — **ไม่โดนหน้า "ติดตั้งแอป"** | LIVE_TEST_PENDING |
-| **E-7** | (diagnostic — ทำเฉพาะเมื่อแผนที่ไม่โชว์) | F12 → Console → คัดลอกบรรทัด `[GoogleMaps] loadGoogleMapsJS called, MAPS_KEY: …` + error แดงของ Google (ถ้ามี) | ส่งภาพ console กลับมา = ใช้ตัดสินว่าต้องแก้ที่ Google Cloud (Referer/Billing/Activated) จุดไหน — ไม่ใช่ FAIL ของระบบ | LIVE_TEST_PENDING |
+| **E-1** | แท็บวันนี้/ย้อนหลัง (ไรเดอร์) | เปิด `/rider` (ล็อกอินไรเดอร์ พอล ไมท์ไดร์) → ดูแถบแท็บเหนือรายการงาน | แท็บ "📅 วันนี้" โชว์งานวันนี้เท่านั้น · กดแท็บเดือน (เช่น พฤศจิกายน 2569) = งานเดือนนั้นโผล่ · สลับ "วันส่ง/วันมอบหมาย" ผลเปลี่ยนตาม | ✅ LIVE_VERIFIED |
+| **E-2** | งานมอบหมายล่วงหน้าไม่ปนวันนี้ | มีงาน scheduled วันพรุ่งนี้ (แอดมินมอบหมายล่วงหน้า) → เปิด /rider แท็บวันนี้ | งานพรุ่งนี้ไม่โชว์ในแท็บ "วันนี้" · โผล่เมื่อสลับ anchor เป็น "วันมอบหมาย" (ถ้า assigned วันนี้) หรือในแท็บเดือนของวันส่ง | ✅ LIVE_VERIFIED |
+| **E-3** | แผนที่หน้าไรเดอร์ (งาน active) | เปิดงาน → ยืนยันส่ง (geo+POD) → ดูแผนที่จุดปัก | แผนที่โชว์ (OSM = มี © OpenStreetMap มุมล่าง) · จุดปลายทาง/GPS คุณ/ครัวครบ · ห้ามจอขาว + ข้อความเตือนค้าง | ✅ LIVE_VERIFIED |
+| **E-4** | แผนที่หน้าลูกค้า /track | เปิด `/track/BMB-...` ที่มีไรเดอร์กำลังส่ง | แผนที่โชว์ · จุดไรเดอร์ + ป้าย "ล่าสุด HH:MM" · ถ้าไรเดอร์ปิดหน้า >10 นาที = จุดจาง + ป้าย "ตำแหน่งเก่า — รอไรเดอร์เปิดหน้าส่งพิกัดใหม่" | ✅ LIVE_VERIFIED |
+| **E-5** | แผนที่ Dispatch หน้าแอดมิน | เปิด `/admin/delivery` | แผนที่โชว์ (OSM) · จุดไรเดอร์จริงเท่านั้น (ไม่มีจุด กทม. ปลอม) · จุดเก่าเทา/จาง + tooltip "ตำแหน่งเก่า" · polyline งานที่เลือกดูโชว์ | ✅ LIVE_VERIFIED |
+| **E-6** | ปุ่มนำทาง + เว็บแผนที่ (PWA) | ใน /rider กด "🧭 เปิดนำทาง" และ "🌐 เปิดเว็บแผนที่" | นำทางเปิด Google Maps app ตรง (มี app) · เว็บแผนที่เปิดแผนที่จริงในแท็บเดียว — **ไม่โดนหน้า "ติดตั้งแอป"** | ✅ LIVE_VERIFIED |
+| **E-7** | (diagnostic — ทำเฉพาะเมื่อแผนที่ไม่โชว์) | F12 → Console → คัดลอกบรรทัด `[GoogleMaps] loadGoogleMapsJS called, MAPS_KEY: …` + error แดงของ Google (ถ้ามี) | ส่งภาพ console กลับมา = ใช้ตัดสินว่าต้องแก้ที่ Google Cloud (Referer/Billing/Activated) จุดไหน — ไม่ใช่ FAIL ของระบบ | ✅ DIAGNOSTIC ONLY |
 
 ---
 
-## ⚠️ BLOCKED: Requirement Conflicts (C-1..C-6)
+## ⚠️ RESOLVED: Requirement Conflicts (C-1..C-6) — Owner Decisions 2026-11-25
 
 **Source:** `docs/BMB_REQUIREMENT_RECONCILIATION.md` §3
 
-| Task ID | Conflict | Description | Status | Owner Decision Required |
-|---------|----------|-------------|--------|------------------------|
-| **C-1** | Pre-order cutoff vs Same-day overlap | กติกา cutoff pre-order ชน same-day window — ระบบไหนก่อน / ยังไงให้ไม่ชน | BLOCKED | Yes — ตัดสิน business rule |
-| **C-2** | Multi-branch delivery zone overlap | โซนจัดส่งสาขาต่างกันทับกัน — ลูกค้าอยู่ในโซนทับ → สาขาไหนรับ | BLOCKED | Yes — ตัดสิน assignment logic |
-| **C-3** | Coupon stacking rules | `stackable` flag มีแต่ business rule ระดับแอปยังไม่ชัด (min-order / max-discount / per-user limit) | BLOCKED | Yes — ตัดสิน stacking policy |
-| **C-4** | Points ledger vs Vote rewards | m208 `preorder_vote_cast` **ไม่แตะ points_ledger** แต่ Owner เคยคาดหวังให้มีแต้ม — ตัดสินจริง | BLOCKED | Yes — จะให้ vote ให้แต้มหรือไม่ |
-| **C-5** | CRM consent granularity | `customers.crm_consent` boolean เดียว — แยก winback/birthday/ช่องทางไม่ได้ | BLOCKED | Yes — จะเพิ่ม granularity หรือไม่ |
-| **C-6** | Floating ad priority vs Mascot | Floating ad (R80) + Mascot badge (R52) ทั้งคู่อยู่มุมขวาล่าง — z-index / layout conflict | BLOCKED | Yes — ตัดสิน UX priority |
+| Task ID | Conflict | Description | Decision | Implementation Note |
+|---------|----------|-------------|----------|---------------------|
+| **C-1** | Pre-order cutoff vs Same-day overlap | กติกา cutoff pre-order ชน same-day window | **ร้านเปิดรับออเดอร์ได้ 24 ชม** ใช้ร่วมได้ ร้านปิดรับออเดอร์ได้แค่ส่งไม่ได้ | Same-day = 24h ordering window; Pre-order cutoff applies only to delivery scheduling |
+| **C-2** | Multi-branch delivery zone overlap | โซนจัดส่งสาขาต่างกันทับกัน | **สาขาที่ลงทะเบียนก่อนรับ** (first-registered wins) | Deterministic assignment via branch registration timestamp |
+| **C-3** | Coupon stacking rules | `stackable` flag มีแต่ business rule ไม่ชัด | **อนุมัติ** — แนะนำ implement stacking policy | min-order / max-discount / per-user limit เพิ่มใน promotion schema |
+| **C-4** | Points ledger vs Vote rewards | m208 `preorder_vote_cast` ไม่แตะ points_ledger | **Vote ให้แต้ม** — update m208 to write points_ledger | Points awarded per vote event |
+| **C-5** | CRM consent granularity | `customers.crm_consent` boolean เดียว | **เพิ่ม granularity** — แยก winback/birthday/ช่องทาง | Schema migration needed for consent sub-fields |
+| **C-6** | Floating ad priority vs Mascot | Floating ad (R80) + Mascot badge (R52) z-index conflict | **แก้ไปแล้ว** — layout adjusted | Mascot repositioned; Floating ad z-index managed |
 
 ---
 
@@ -210,11 +214,11 @@
 
 ---
 
-## ⚠️ BLOCKED: Omise TEST Card
+## ✅ RESOLVED: Omise TEST Card — Role Changed
 
-| Task ID | Description | Status | Blocker |
-|---------|-------------|--------|---------|
-| **OMISE-TEST** | บัตร Omise TEST card บนเบราว์เซอร์จริง (ไม่ใช่ mock) | BLOCKED | รอ Owner ทดสอบจริงบน production · Stripe fallback ยังคงใช้งานได้ |
+| Task ID | Description | Status | Resolution |
+|---------|-------------|--------|------------|
+| **OMISE-TEST** | บัตร Omise TEST card บนเบราว์เซอร์จริง | **RESOLVED** | ไม่ถือเป็นบล็อกอีกต่อไป — QR code (Stripe) ใช้ได้เป็น primary, Omise เปลี่ยนเป็น fallback |
 
 ---
 
@@ -224,9 +228,12 @@
 
 | Task ID | Date | Device | Tester | PASS/FAIL | Evidence | Notes |
 |---------|------|--------|--------|-----------|----------|-------|
-| | | | | | | |
-| | | | | | | |
-| | | | | | | |
+| E-1..E-6 | 2026-11-25 | Desktop/Mobile | Owner | PASS | OSM maps verified, tabs working | E-7 diagnostic only |
+| F-1..F-4, F-7 | 2026-11-25 | Desktop/Mobile | Owner | PASS | Mascot, logout, vote, music all working | F-5, F-6 legacy verified |
+| G-1..G-5 | 2026-11-25 | Desktop | Owner | PASS | Marketing posts, studio, floating ad menu | G-6, G-7 pending |
+| H-3..H-6 | 2026-11-25 | Desktop | Owner | PASS | Cart UX, checkout, stickers | H-1, H-2 pending |
+| C-1..C-6 | 2026-11-25 | — | Owner | DECIDED | Decisions recorded in Work Queue | All resolved |
+| OMISE-TEST | 2026-11-25 | — | Owner | RESOLVED | Stripe QR primary, Omise fallback | Not a blocker |
 
 ---
 

@@ -7,7 +7,48 @@
 
 ---
 
-## R108 — 2026-11-25 r3 — CONTRACT AUDIT CLOSURE 124-213 COMPLETE (15 FILES, 311 TESTS ALL GREEN)
+## R109 — 2026-11-25 r4 — LIVE TEST RESULTS + OWNER DECISIONS (E/F LIVE_VERIFIED, G/H PARTIAL, C-1..C-6 RESOLVED, OMISE RESOLVED)
+
+**Status:** CODE_CLOSED + GATES PASS — All gates green: lint OK, tsc 0, vitest 2830 tests (245 files). Contract suite 67 files ALL GREEN.
+
+### Live Test Results (2026-11-25):
+
+| Group | Tests | Result | Details |
+|-------|-------|--------|---------|
+| **E** (Rider History + Maps) | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 PASS. OSM fallback verified. E-7 diagnostic. |
+| **F** (Background Music + Mascot + OAuth) | 7 | ✅ **LIVE_VERIFIED** | F-1..F-4, F-7 PASS. F-5, F-6 legacy verified. |
+| **G** (Marketing + Studio + Floating Ad) | 7 | ⏸️ **PARTIAL** | G-1..G-5 PASS (5 tests). G-6, G-7 pending. |
+| **H** (FB Cart Bridge) | 6 | ⏸️ **PARTIAL** | H-3..H-6 PASS (4 tests). H-1, H-2 pending. |
+| **I** (Server Cart + FB IAB + 1 Reply) | 8 | ⏸️ **PAUSED** | Critical path, awaiting Owner test. |
+
+### Owner Decisions — C-1..C-6 RESOLVED (2026-11-25):
+
+| Conflict | Decision | Implementation |
+|----------|----------|----------------|
+| **C-1** Pre-order cutoff vs Same-day | Same-day = 24h ordering; Pre-order cutoff for delivery only | Logic already supports both |
+| **C-2** Multi-branch zone overlap | First-registered branch wins | Deterministic assignment via registration timestamp |
+| **C-3** Coupon stacking | Approved — implement min-order/max-discount/per-user limits | Add to promotion schema |
+| **C-4** Vote rewards points | **Vote gives points** — update m208 to write points_ledger | Migration needed for points_ledger entry |
+| **C-5** CRM consent granularity | **Add granularity** — winback/birthday/channel sub-fields | Schema migration for consent sub-fields |
+| **C-6** Floating ad vs Mascot | **Already fixed** in layout | Mascot repositioned; Floating ad z-index managed |
+
+### Omise TEST Card — RESOLVED:
+- Not a blocker. Stripe QR = primary payment, Omise = fallback.
+
+### Verification:
+- `npx vitest run` — 2830 tests PASS (245 files)
+- `npm run lint` — OK
+- `npx tsc --noEmit` — 0 errors
+
+### Next Steps (per Owner order):
+1. Owner audit review of 67 contract files
+2. Complete Live Test Groups G-6, G-7, H-1, H-2, I-1..I-8
+3. Owner Gate Phase 1 → Phase 2
+4. Phase 1-6 all PAUSED per Owner order
+
+---
+
+### R108 — 2026-11-25 r3 — CONTRACT AUDIT CLOSURE 124-213 COMPLETE (15 FILES, 311 TESTS ALL GREEN)
 
 **Status:** CODE_CLOSED + GATES PASS — 15 new contract test files covering 28 remaining migrations (179, 181-189, 191-207, 211-213) all passing (311 tests). Combined with existing 52 contract files = 67 files ALL GREEN (0 FAIL) on fresh DB.
 

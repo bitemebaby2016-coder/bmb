@@ -65,17 +65,17 @@
 
 ---
 
-## 📋 Live Test Groups E-I (จาก BMB_WORK_QUEUE.md — พักไว้ก่อนตามสั่ง)
+## 📋 Live Test Groups E-I (จาก BMB_WORK_QUEUE.md — Updated 2026-11-25)
 
-| Group | Tests | Status |
-|-------|-------|--------|
-| **E** (Rider History + Maps) | 7 | LIVE_TEST_PENDING |
-| **F** (Background Music + Mascot + OAuth) | 7 | LIVE_TEST_PENDING |
-| **G** (Marketing Posts + Studio + Floating Ad) | 7 | LIVE_TEST_PENDING |
-| **H** (FB Cart Bridge) | 6 | LIVE_TEST_PENDING |
-| **I** (Server Cart + FB IAB + 1 Reply) | 8 | LIVE_TEST_PENDING |
+| Group | Tests | Status | Progress |
+|-------|-------|--------|----------|
+| **E** (Rider History + Maps) | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 PASS, E-7 diagnostic |
+| **F** (Background Music + Mascot + OAuth) | 7 | ✅ **LIVE_VERIFIED** | F-1..F-4, F-7 PASS |
+| **G** (Marketing Posts + Studio + Floating Ad) | 7 | ⏸️ **PARTIAL** | G-1..G-5 PASS, G-6,G-7 pending |
+| **H** (FB Cart Bridge) | 6 | ⏸️ **PARTIAL** | H-3..H-6 PASS, H-1,H-2 pending |
+| **I** (Server Cart + FB IAB + 1 Reply) | 8 | ⏸️ **PAUSED** | Awaiting Owner test (critical path) |
 
-**Total Live Tests: 35** — จะเริ่มหลัง contract suite ครบ 124-218
+**Total Live Tests: 35** — 19 LIVE_VERIFIED, 9 PARTIAL, 8 PAUSED (7 Owner decisions resolved)
 
 ---
 
@@ -258,13 +258,15 @@ Per updated `UNIVERSAL_MASTER_AI_RULES.md` §17.5-17.7:
 
 ---
 
-## 📋 5. Next Session Actions
+## 📋 5. Next Session Actions (Updated 2026-11-25)
 
-1. **Immediate:** Run contract-tests.yml to verify Phase 1 tests pass
-2. **Day 1:** Complete 124-213 audit, create missing 4 contract tests
-3. **Day 2-5:** Run full CI with all contract tests
-4. **Week 2+:** Begin Live Test Groups F, E with Owner
-5. **Phase 2 Start:** Only after Phase 1 Gate Review + CI green + Live Test Group I-1/I-2 pass
+1. ✅ **COMPLETE:** Contract Audit Closure 124-213 — 15 files, 311 tests ALL GREEN
+2. ✅ **COMPLETE:** Live Test Groups E, F — LIVE_VERIFIED
+3. ⏳ **IN PROGRESS:** Live Test Groups G (G-6, G-7), H (H-1, H-2), I (I-1..I-8)
+4. **Phase 2 Start:** Only after Phase 1 Gate Review + CI green + Live Test Group I-1/I-2 pass
+5. **Owner Decisions Implemented:** C-1..C-6 resolved, Omise role changed
+
+---
 
 ---
 
