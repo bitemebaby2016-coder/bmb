@@ -695,6 +695,26 @@ SECTION 17: STRICT CI & TESTING RULES (กฎเหล็กสำหรับ C
     - หรือแก้ Test Suite ให้รองรับ Schema ใหม่
     - ไม่ใช่การปิดการตรวจสอบ (disable checks) เพื่อให้ผ่าน
 
+17.5 NO SHIMS/MOCKS TO BYPASS SCHEMA FIXES
+    - ห้ามใช้ Shims, Mocks, Fixtures หรือ Workarounds ใน CI เพื่อให้ Migration ผ่านโดยไม่แก้ Schema/RLS/Functions จริง
+    - Shims ใน CI = สัญญาณเตือนว่า Migration มี Dependency ordering defect หรือขาด Prerequisite → ต้องแก้ที่แหล่ง (Migration ordering, Function definitions, RLS policies)
+    - ห้ามเพิ่ม `INSERT INTO auth.users/profiles` ใน shim เพื่อให้ RLS policy ผ่าน — ต้องมี Migration ที่สร้าง Function/Role/Profile fixture จริง
+
+17.6 EVERY NEW MIGRATION MUST HAVE CONTRACT TESTS
+    - **ทุก Migration ใหม่ (124+) ต้องมี Contract Test ไฟล์ `.sql` ใน `e2e/contracts_*.sql` ครอบคลุม:**
+      1. Schema creation (tables, columns, constraints, indexes)
+      2. RLS policies ทุก role (admin, inventory, kitchen, pos, finance, marketing, support, auditor, developer, rider, staff)
+      3. Functions/RPCs ใหม่ (input validation, output, error codes, permissions)
+      4. Triggers (insert/update/delete behavior)
+      5. Data integrity (FK, CHECK, UNIQUE, NOT NULL)
+      6. Migration idempotency (re-run ไม่พัง, probe marker บันทึก ledger)
+    - ห้ามอ้าง "Manual Test ทีหลัง" แทน Contract Test — Contract Test ต้องผ่านใน CI ก่อน Deploy
+    - Test ไฟล์ต้องรันได้บน Ephemeral DB (fresh PostgreSQL) โดยไม่ต้องพึ่ง Production data
+
+17.7 CONTRACT TEST COVERAGE FOR MIGRATIONS 124-213
+    - จัดทำรายการ Migration 124-213 ที่ยังไม่มี Contract Test
+    - วางแผนเขียน Test ให้ครบภายใน Phase 2-6 (ควบคู่กับงาน Feature)
+    - Priority: Migration ที่มี RLS/Function/Trigger ใหม่ → Migration ที่เพิ่ม Column/Table → Migration ที่แก้ Bug
 
     BUILD THE PRODUCT — DO NOT BUILD THE APPEARANCE OF COMPLETION.
 

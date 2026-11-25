@@ -187,6 +187,20 @@ jobs:
       - name: Widen business_settings.hours for CI (160 shop-hours gate)
         run: psql -v ON_ERROR_STOP=1 -c "UPDATE public.business_settings SET value = '{\"open\":\"00:00\",\"close\":\"23:59\"}'::jsonb WHERE key = 'hours'"
 
+      # Phase 1 Contract Tests (Migrations 214-218)
+      - name: Contract Phase 1 — Smart Ingredient & Cost (214-218)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_phase1_214_218.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_phase1_214_218.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
+          echo "Phase 1 Contract Tests PASS — Migrations 214-218 verified"
+
       - name: Contract 123 — menu publish enforcement (transaction ROLLBACK)
         run: |
           set +e
