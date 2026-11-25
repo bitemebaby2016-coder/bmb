@@ -39,7 +39,7 @@ jobs:
       - name: Prelude — Supabase stubs (roles/auth/storage)
         run: psql -v ON_ERROR_STOP=1 -f e2e/ci/00_prelude_supabase_stubs.sql
 
-      - name: Apply migrations 001-123 (inventory mode — collect ALL failures)
+- name: Apply all migrations (inventory mode — collect ALL failures)
         run: |
           set +e   # GitHub รันด้วย bash -e — inventory mode ต้องจัดการ exit เอง
           set -uo pipefail
@@ -88,9 +88,9 @@ jobs:
               echo "::error file=$1::shim SQL failed: $out"
             fi
           }
-for f in supabase/migrations/*.sql; do
+          for f in supabase/migrations/*.sql; do
              b=$(basename "$f")
-             case "$b" in PROPOSED_*|124_*|214_*|215_*|216_*|217_*|218_*) echo "== skip $b"; continue ;; esac
+             case "$b" in PROPOSED_*) echo "== skip $b"; continue ;; esac
             if [ "$b" = "035_m1_closure_p0_blockers.sql" ]; then
               echo "== shims for 035 (documented CI-only; history file untouched)"
               shim "supabase/migrations/$b" "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);"
@@ -149,7 +149,7 @@ for f in supabase/migrations/*.sql; do
             echo "::error::Migration inventory: $fail_count file(s) failed:$fail_sum"
             exit 1
           fi
-          echo "All migrations 001-123 applied cleanly on isolated DB"
+          echo "All migrations applied cleanly on isolated DB"
 
       # 160 (Owner 2026-10-26): enforce hours บน SAME_DAY → กัน contract insert order
       # ติด trigger ตามเวลาที่ runner รัน (seed 008 = 10:00-22:00) → ตั้งหน้าต่างกว้าง CI-only
