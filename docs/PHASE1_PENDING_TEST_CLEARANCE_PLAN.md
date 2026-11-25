@@ -1,7 +1,75 @@
 # Phase 1 Complete — Pending Test Clearance Plan
-**Date:** 2026-11-25  
-**Status:** Phase 1 COMPLETE — Contract Tests 214-218 created, Rules updated  
-**Next:** Clear migrations 124-213 gaps + Live Test Groups E-I
+**Date:** 2026-11-25 (อัปเดตหลัง audit round 1-3)  
+**Status:** Contract suite 124-180 ALL GREEN — เหลือ 28 migration (179, 181-189, 191-207, 211-213)  
+**Proof:** `e2e/w2-replay-full-2026-11-25.log` — 222 migrations OK / 0 FAIL + contract suite 124-213 ALL GREEN
+
+---
+
+## 📊 สถานะปัจจุบัน (จริง จาก replay ล่าสุด)
+
+### ครอบคลุมแล้ว (มีเทส + CI รันจริง — ALL GREEN บน fresh DB)
+| ช่วง | วิธีครอบ |
+|------|----------|
+| 124-149 | ไฟล์เดิม + **ใหม่ 126 / 134+145+150-152** + orphan steps (125, 132) |
+| 150-163 | **ใหม่ 150-152 / 157+158 / 159-162** + ไฟล์เดิม (153-156, 163) |
+| 164-168 | **ใหม่ contracts_164_168_rider_settings.sql** |
+| 170-174 | **ใหม่ contracts_170_171_174.sql** (172/173 = ครอบโดย contract 153 G2/G5/G8 ยืนยันแล้ว) |
+| 175-180 | **ใหม่ contracts_175_180.sql** (179 ยังไม่มี) |
+| 184, 185, 190, 208, 210 | ไฟล์เดิม + orphan step (185, 208) |
+| 214-218 | contracts_phase1_214_218.sql |
+
+### ยังขาด — 28 migration (ต้องเขียนต่อ ห้าม skip)
+179, 181, 182, 183, 186, 187, 188, 189, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 211, 212, 213
+
+**กลุ่มที่วางไว้ (ตามโดเมน):**
+1. `179` notification hub (channel_identities + notification_outbox) — แยกไฟล์เดี่ยว
+2. `181, 172-caps` addon margin — รวมกับ 186 (promotions BKK)
+3. `182, 183, 187, 188` order messages + notifications — ไฟล์เดียว
+4. `189, 197` rider claim fallback + loop fix — ไฟล์เดียว
+5. `191` kitchen BKK dates — รวมกับ 167-group ภายหลัง
+6. `192, 193` CRM automation + consent — ไฟล์เดียว
+7. `194, 195` payment void + close-on-cancel — ไฟล์เดียว
+8. `196, 206` media buckets (music/mascot) — ไฟล์เดียว
+9. `198, 199, 200` reviews moderation + verified rules — ไฟล์เดียว (มี anon read behavior)
+10. `201, 202` theater/carousel + approval_id — ไฟล์เดียว
+11. `203, 204` AI grounding + user_post_context + order memory — ไฟล์เดียว
+12. `205` social order actions (cancel_order_as_customer)
+13. `207, 211` rider history dates + my_deliveries v4 — ไฟล์เดียว
+14. `212` delivery sync preparing hop + admin_advance
+15. `213` cart_sessions payload + helpers — แยกไฟล์เดี่ยว
+
+---
+
+## 📋 กฎที่บังคับระหว่างทำ (จาก UNIVERSAL_MASTER_AI_RULES.md §17.5-17.7)
+- ทุกไฟล์เทส = BEGIN...ROLLBACK เดียว, รันได้บน fresh DB, ไม่มี shim ใหม่
+- fixture auth.users → trigger handle_new_user สร้าง profile 'customer' — ยก role ต้องทำ "ก่อน" ตั้ง JWT (guard 014 bootstrap path)
+- set_config(..., true) คงค่าทั้ง transaction ของไฟล์ (BEGIN..ROLLBACK)
+- `now()` = transaction timestamp — ทดสอบ trigger updated_at ต้องแยก DO block (สอง transaction)
+- PRE_ORDER orders ต้องมี dropoff_detail (037) + delivery_round_id ที่มีจริง (145)
+- เทียบค่า time จาก jsonb ด้วย LIKE 'HH:MM%' (format 15:00:00)
+- ห้ามเรียก bmb_tick_http จริง (ยิง production EF)
+
+---
+
+## 📋 Live Test Groups E-I (จาก BMB_WORK_QUEUE.md — พักไว้ก่อนตามสั่ง)
+
+| Group | Tests | Status |
+|-------|-------|--------|
+| **E** (Rider History + Maps) | 7 | LIVE_TEST_PENDING |
+| **F** (Background Music + Mascot + OAuth) | 7 | LIVE_TEST_PENDING |
+| **G** (Marketing Posts + Studio + Floating Ad) | 7 | LIVE_TEST_PENDING |
+| **H** (FB Cart Bridge) | 6 | LIVE_TEST_PENDING |
+| **I** (Server Cart + FB IAB + 1 Reply) | 8 | LIVE_TEST_PENDING |
+| **A-R2 / B-R2** (Retest) | 5 | LIVE_TEST_PENDING |
+
+**Total Live Tests: 40** — จะเริ่มหลัง contract suite ครบ 124-218
+
+---
+
+## 📋 Next Session Actions
+1. เขียน contract tests ตาม 15 กลุ่มข้างบน (28 migration) — ต่อจากจุด ALL GREEN นี้
+2. หลังครบ 124-218: รัน replay สุดท้าย → commit → Owner ตรวจรับ audit closure
+3. จึงเริ่ม Live Test Groups E-I และรอ Owner Gate Phase 1 → Phase 2
 
 ---
 
