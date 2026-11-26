@@ -32,6 +32,16 @@ export const MODEL_A_FALLBACK = 'xiaomi/mimo-v2.6-flash'
 export const MODEL_FB_PRIMARY = 'deepseek/deepseek-v4-flash'
 export const MODEL_FB_FALLBACK = 'qwen/qwen3.7-flash'
 
+// ============================================
+// OCR / Vision chain (Owner 2026-11-26 — Phase 2 Cost Intelligence):
+//   Primary  : GLM 5.3 Flash  (z-ai/glm-5.3-flash)  — vision
+//   Fallback : Qwen 3.7 Flash  (qwen/qwen3.7-flash)  — vision
+// Structured JSON output, reasoning OFF, temperature 0 (deterministic extract).
+// The model id is server-authoritative; the client can never override it.
+// ============================================
+export const MODEL_OCR_PRIMARY = 'z-ai/glm-5.3-flash'
+export const MODEL_OCR_FALLBACK = 'qwen/qwen3.7-flash'
+
 export type AiTask =
   | 'chat'
   | 'streaming'
@@ -41,6 +51,7 @@ export type AiTask =
   | 'content_automation'
   | 'admin_ai'
   | 'support'
+  | 'ocr_extract'
   // G5: RESERVED / POLICY-DEFINED — no social execution in G5 (D5-05)
   | 'social_comment_classify'
   | 'social_reply_draft'
@@ -70,6 +81,8 @@ export const TASK_POLICY: Record<AiTask, AiTaskPolicy> = {
   content_automation: { primary: MODEL_FB_PRIMARY, fallback: MODEL_FB_FALLBACK, maxTokens: 2200, timeoutMs: 60_000, status: 'ACTIVE' },
   admin_ai: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'ACTIVE' },
   support: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'ACTIVE' },
+  // OCR vision extract — GLM 5.3 Flash primary, Qwen fallback; structured JSON.
+  ocr_extract: { primary: MODEL_OCR_PRIMARY, fallback: MODEL_OCR_FALLBACK, maxTokens: 2000, timeoutMs: 60_000, status: 'ACTIVE' },
   social_comment_classify: { primary: MODEL_FB_PRIMARY, fallback: MODEL_FB_FALLBACK, maxTokens: 1500, timeoutMs: 30_000, status: 'RESERVED' },
   social_reply_draft: { primary: MODEL_FB_PRIMARY, fallback: MODEL_FB_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'RESERVED' },
   social_post_draft: { primary: MODEL_FB_PRIMARY, fallback: MODEL_FB_FALLBACK, maxTokens: 2200, timeoutMs: 60_000, status: 'ACTIVE' },

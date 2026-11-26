@@ -64,6 +64,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: 'จัดซื้อ',
     items: [
       { to: '/admin/purchase', label: 'ผู้ขายและการจับคู่', icon: '🏢' },
+      { to: '/admin/ocr', label: 'OCR เอกสารจัดซื้อ', icon: '📄' },
     ],
   },
 ]
@@ -102,7 +103,7 @@ export function isAdminCapableRole(role: string | null | undefined): boolean {
 const ROLE_NAV_ALLOW: Record<string, string[]> = {
   pos: ['/admin', '/admin/orders', '/admin/pos', '/admin/customers', '/admin/reports'],
   kitchen: ['/admin', '/admin/orders', '/admin/kitchen', '/admin/recipes', '/admin/delivery', '/admin/products'],
-  inventory: ['/admin', '/admin/inventory', '/admin/products', '/admin/purchase'],
+  inventory: ['/admin', '/admin/inventory', '/admin/products', '/admin/purchase', '/admin/ocr'],
   finance: ['/admin', '/admin/reports', '/admin/orders', '/admin/pos'],
   marketing: ['/admin', '/admin/marketing', '/admin/media-portfolio'],
   support: ['/admin', '/admin/orders', '/admin/customers', '/admin/notifications'],

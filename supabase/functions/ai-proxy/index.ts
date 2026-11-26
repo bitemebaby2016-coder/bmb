@@ -239,6 +239,100 @@ async function streamCompletion(req: Request, apiKey: string, model: string, saf
   })
   return new Response(body, { headers: sseHeaders() })
 }
+// ============================================
+// OCR / Vision extract (Owner 2026-11-26 — Phase 2 Cost Intelligence).
+// GLM 5.3 Flash primary → Qwen 3.7 Flash fallback (server policy ONLY).
+// Structured JSON output (response_format json_object), reasoning OFF,
+// temperature 0 (deterministic). Read-only inference — no business writes.
+// ============================================
+const OCR_PROMPT =
+  'You are a purchase-document data extractor for a restaurant procurement system. ' +
+  'Read the receipt/invoice/purchase document image and return ONLY a JSON object. ' +
+  'Schema: {"supplier_name":string|null,"document_date":string|null,"currency":string|null,' +
+  '"subtotal":number|null,"tax":number|null,"total":number|null,' +
+  '"lines":[{"description":string,"quantity":number|null,"unit":string|null,"unit_price":number|null,"line_total":number|null,"confidence":number}]}. ' +
+  'Rules: NEVER guess an unclear number — use null and set confidence < 0.6 for that field. ' +
+  'confidence is per-field (0..1). Do not invent line items. If the image is not a purchase document, return {"error":"not_a_purchase_document"}.'
+
+interface OcrPayload {
+  imageBase64?: string
+  mimeType?: string
+}
+
+async function ocrExtract(
+  req: Request,
+  apiKey: string,
+  policy: { primary: string; fallback: string; maxTokens: number; timeoutMs: number },
+  task: string,
+  callerKey: string,
+  p: OcrPayload
+): Promise<Response> {
+  const b64 = (p.imageBase64 || '').replace(/^data:[^,]+,/, '').replace(/\s/g, '')
+  if (!b64 || b64.length < 256) return json({ error: 'imageBase64 required' }, 400)
+  const mime = (p.mimeType || 'image/jpeg').toLowerCase()
+  const messages = [{
+    role: 'user',
+    content: [
+      { type: 'text', text: OCR_PROMPT },
+      { type: 'image_url', image_url: { url: `data:${mime};base64,${b64}` } },
+    ],
+  }]
+  const call = (model: string): Promise<Response> =>
+    fetchWithTimeout(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': req.headers.get('origin') || 'https://biteme-baby.com',
+        'X-Title': 'Bite Me Baby App',
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        max_tokens: Math.min(policy.maxTokens, 2000),
+        temperature: 0,
+        reasoning: REASONING_OFF,
+        response_format: { type: 'json_object' },
+      }),
+    }, policy.timeoutMs)
+
+  let modelUsed = policy.primary
+  let attempts = 0
+  try {
+    const primaryRes = await call(modelUsed)
+    attempts++
+    if (!primaryRes.ok) {
+      console.error(`ai-proxy: ocr primary ${modelUsed} failed (${primaryRes.status}) — fallback ${policy.fallback}`)
+      if (policy.fallback !== modelUsed) {
+        modelUsed = policy.fallback
+        const fb = await call(modelUsed)
+        attempts++
+        if (!fb.ok) {
+          const detail = await fb.json().catch(() => ({}))
+          console.log(JSON.stringify({ event: 'ai_usage', caller: callerKey, task, model: modelUsed, status: fb.status, attempts }))
+          return json({ error: 'upstream error', upstream_status: fb.status, detail }, 502)
+        }
+        const data = await fb.json().catch(() => ({}))
+        console.log(JSON.stringify({ event: 'ai_usage', caller: callerKey, task, model: modelUsed, status: 200, attempts }))
+        return json({ data, routing: { task, model: modelUsed, attempts, fallback_used: true } })
+      }
+      const detail = await primaryRes.json().catch(() => ({}))
+      console.log(JSON.stringify({ event: 'ai_usage', caller: callerKey, task, model: modelUsed, status: primaryRes.status, attempts }))
+      return json({ error: 'upstream error', upstream_status: primaryRes.status, detail }, 502)
+    }
+    const data = await primaryRes.json().catch(() => ({}))
+    console.log(JSON.stringify({ event: 'ai_usage', caller: callerKey, task, model: modelUsed, status: 200, attempts }))
+    return json({ data, routing: { task, model: modelUsed, attempts, fallback_used: false } })
+  } catch (err) {
+    if (err instanceof TimeoutError) {
+      console.log(JSON.stringify({ event: 'ai_usage', caller: callerKey, task, model: modelUsed, status: 'timeout', attempts }))
+      return json({ error: 'upstream timeout', timeout_ms: policy.timeoutMs }, 504)
+    }
+    console.error('ai-proxy ocr exception:', String(err).slice(0, 200))
+    return json({ error: 'upstream error' }, 502)
+  }
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders() })
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
@@ -288,7 +382,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const apiKey = Deno.env.get('BMB_OPENROUTER_API_KEY') || Deno.env.get('OPENROUTER_API_KEY') || ''
   if (!apiKey) return json({ error: 'AI proxy not configured (OPENROUTER_API_KEY missing)' }, 500)
 
-  let payload: { messages?: ChatMessage[]; model?: string; model_id?: string; provider?: string; endpoint?: string; task?: string; maxTokens?: number; stream?: boolean; mode?: 'transcribe'; audioBase64?: string; mimeType?: string }
+  let payload: { messages?: ChatMessage[]; model?: string; model_id?: string; provider?: string; endpoint?: string; task?: string; maxTokens?: number; stream?: boolean; mode?: 'transcribe'; audioBase64?: string; mimeType?: string; imageBase64?: string }
   try {
     payload = await req.json()
   } catch {
@@ -332,7 +426,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const messages: ChatMessage[] = Array.isArray(payload.messages) ? payload.messages : []
-  if (messages.length === 0) return json({ error: 'no messages' }, 400)
+  if (messages.length === 0 && resolved.task !== 'ocr_extract') return json({ error: 'no messages' }, 400)
+
+  // OCR vision path (task ocr_extract): image in, structured JSON out.
+  if (resolved.task === 'ocr_extract') {
+    return ocrExtract(req, apiKey, policy, resolved.task, callerKey, {
+      imageBase64: payload.imageBase64,
+      mimeType: payload.mimeType,
+    })
+  }
 
   // Inject the guardrail segment at the TOP of the system context (AI-02 base).
   // WS-3 fix: keep ALL client system messages (DB context / voice directive live

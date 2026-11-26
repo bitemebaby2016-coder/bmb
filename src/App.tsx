@@ -42,6 +42,7 @@ const PaymentConfirmationPage = lazy(() => import('./pages/PaymentConfirmationPa
 
 // Lazy loaded: Admin routes (12 pages)
 const InventoryPage = lazy(() => import('./pages/admin/InventoryPage').then(m => ({ default: m.InventoryPage })))
+const OcrDocumentsPage = lazy(() => import('./pages/admin/OcrDocumentsPage').then(m => ({ default: m.OcrDocumentsPage })))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 const AdminOrders = lazy(() => import('./pages/admin/AdminOrders').then(m => ({ default: m.AdminOrders })))
 const MenuScheduleRedirect = () => <Navigate to="/admin/products?tab=schedule" replace />
@@ -323,6 +324,7 @@ export default function App() {
         <Route path="/admin" element={<AdminPage><AdminDashboard /></AdminPage>} />
         <Route path="/admin/inventory" element={<AdminPage><InventoryPage /></AdminPage>} />
         <Route path="/admin/purchase" element={<AdminPage><PurchaseHub /></AdminPage>} />
+        <Route path="/admin/ocr" element={<AdminPage><OcrDocumentsPage /></AdminPage>} />
         <Route path="/admin/suppliers" element={<Navigate to="/admin/purchase?tab=suppliers" replace />} />
         <Route path="/admin/supplier-products" element={<Navigate to="/admin/purchase?tab=mappings" replace />} />
         <Route path="/admin/orders" element={<AdminPage><OrdersHub /></AdminPage>} />
