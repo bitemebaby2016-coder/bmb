@@ -19,7 +19,8 @@
 | **Phase 2 WP5 (GRN UI / E2E)** | UI + E2E spec | ✅ **CODE_CLOSED + PUSHED** | R114 — GoodsReceivingPage · E2E LIVE_TEST_PENDING |
 | **Phase 2 WP6 (WAVG posting/reversal)** | 1 migration + DB tests | ✅ **CODE_CLOSED + PUSHED** | R115 — `contracts_wp6_226.sql` 9 cases ALL PASS · replay 230 OK |
 | **Phase 2 WP7+WP8 (Read APIs + Dashboard)** | 2 migrations + API + UI | ✅ **CODE_CLOSED + PUSHED** | R116 — `contracts_wp7_wp8_227_228.sql` 6 cases ALL PASS · replay 232 OK · Dashboard tab |
-| **Phase 2 WP9-10** | 2 WP | ⏳ PENDING | WP9 (Full regression/security/perf) ถัดไป → WP10 (Readiness) |
+| **Phase 2 WP9-10** | 2 WP | ✅ **COMPLETE** | R117 — regression ALL GREEN + PHASE2_READINESS_WP10.md |
+| **Staging Verification (WP3/WP5 E2E)** | E2E + workflow | 🚫 **BLOCKED** | NO staging project exists (only prod ivkdfognyiwjcmrhcnwz). Awaiting Owner: create staging project or authorize non-prod DB. No deploy performed. |
 | **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 311 tests PASS |
 | **Phase 1 Contract Tests (214-218)** | 5 migration | ✅ **COMPLETE** | ALL GREEN in CI |
 | **Live Tests E** | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 ผ่านหมด (E-7 diagnostic) |
