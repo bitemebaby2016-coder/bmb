@@ -198,8 +198,11 @@ After all: run Section 9 smoke tests. **Do not declare success until smoke passe
 **Test data:** supplier `TEST-SUP`, inventory `TEST-ING`, supplier_product `TEST-SP` — all prefixed `TEST-`/`bmb-test-` for easy cleanup.
 
 **Cleanup plan (after verification):**
+> NOTE: `purchase_price_history` is append-only (trigger `trg_purchase_price_history_append_only`, m221:97-100) which **blocks DELETE**. To remove test rows you MUST disable that trigger first, then re-enable. All other deletes are normal.
 ```sql
--- delete test business data (only TEST- prefixed), then test auth users
+-- 0) allow cleanup of append-only test rows
+ALTER TABLE purchase_price_history DISABLE TRIGGER trg_purchase_price_history_append_only;
+-- 1) delete test business data (only TEST- prefixed)
 DELETE FROM purchase_price_history WHERE supplier_id LIKE 'TEST-%';
 DELETE FROM goods_receipt_lines WHERE ingredient_id LIKE 'TEST-%';
 DELETE FROM goods_receipts      WHERE supplier_id  LIKE 'TEST-%';
@@ -208,10 +211,12 @@ DELETE FROM purchase_orders      WHERE supplier_id  LIKE 'TEST-%';
 DELETE FROM supplier_products    WHERE id LIKE 'TEST-%';
 DELETE FROM inventory            WHERE id LIKE 'TEST-%';
 DELETE FROM suppliers            WHERE id LIKE 'TEST-%';
--- test auth users (cascade profiles via existing FK/on delete)
+-- 2) re-enable append-only guard
+ALTER TABLE purchase_price_history ENABLE TRIGGER trg_purchase_price_history_append_only;
+-- 3) test auth users (cascade profiles via existing FK/on delete)
 DELETE FROM auth.users WHERE email LIKE 'bmb-test-%@example.com';
 ```
-Never delete non-`TEST-` rows. Confirm counts are 0 before/after.
+Never delete non-`TEST-` rows. Confirm counts are 0 before/after. If the trigger re-enable fails, STOP and restore from backup.
 
 ---
 
