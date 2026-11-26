@@ -220,3 +220,8 @@
 {"file":"216_enrich_inventory_cost_yield.sql","version":"216","status":"OK"}
 {"file":"217_create_supplier_products.sql","version":"217","status":"OK"}
 {"file":"218_add_batch_yield_to_recipes.sql","version":"218","status":"OK"}
+{"file":"219_purchase_orders.sql","version":"219","status":"OK"}
+{"file":"220_goods_receipts.sql","version":"220","status":"OK"}
+{"file":"221_purchase_price_history.sql","version":"221","status":"OK"}
+{"file":"222_inventory_transaction_ext.sql","version":"222","status":"OK"}
+{"file":"223_po_grn_rls.sql","version":"223","status":"OK"}

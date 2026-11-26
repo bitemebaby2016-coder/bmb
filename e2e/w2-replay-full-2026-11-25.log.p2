@@ -1,0 +1,33 @@
+﻿psql:e2e/contracts_phase2_219_223.sql:103: NOTICE:  219.1 PASS: PO schema columns OK
+psql:e2e/contracts_phase2_219_223.sql:111: NOTICE:  219.2 PASS: po_number_seq OK
+psql:e2e/contracts_phase2_219_223.sql:124: NOTICE:  219.3 PASS: FK supplier enforced
+psql:e2e/contracts_phase2_219_223.sql:138: NOTICE:  219.4 PASS: CHECK ordered_qty > 0 enforced
+psql:e2e/contracts_phase2_219_223.sql:155: NOTICE:  219.5 PASS: ON DELETE CASCADE enforced
+psql:e2e/contracts_phase2_219_223.sql:169: NOTICE:  220.1 PASS: GRN header columns OK (idempotency + reversal linkage)
+psql:e2e/contracts_phase2_219_223.sql:178: NOTICE:  220.2 PASS: DEFECT-1 fixed â€” price_variance removed (variance = read-layer, WP7)
+psql:e2e/contracts_phase2_219_223.sql:186: NOTICE:  220.3 PASS: grn_number_seq OK
+psql:e2e/contracts_phase2_219_223.sql:203: NOTICE:  220.4 PASS: accepted+rejected=received enforced (à¸£à¸±à¸šà¸šà¸²à¸‡à¸ªà¹ˆà¸§à¸™/à¸›à¸à¸´à¹€à¸ªà¸˜)
+psql:e2e/contracts_phase2_219_223.sql:219: NOTICE:  220.5 PASS: negative received_qty rejected (DEFECT-2 â€” à¸«à¹‰à¸²à¸¡à¸›à¸£à¸´à¸¡à¸²à¸“à¸•à¸´à¸”à¸¥à¸š)
+psql:e2e/contracts_phase2_219_223.sql:234: NOTICE:  220.6 PASS: idempotency_key unique enforced (retry à¸‹à¹‰à¸³à¸£à¸°à¸”à¸±à¸š DB à¸–à¸¹à¸à¸à¸±à¸™)
+psql:e2e/contracts_phase2_219_223.sql:260: NOTICE:  220.7 PASS: reversal à¸—à¸³à¸‹à¹‰à¸³à¹„à¸¡à¹ˆà¹„à¸”à¹‰ (unique reversal_of)
+psql:e2e/contracts_phase2_219_223.sql:260: NOTICE:  220.8 PASS: reversal_of à¸«à¹‰à¸²à¸¡à¸Šà¸µà¹‰à¸•à¸±à¸§à¹€à¸­à¸‡
+psql:e2e/contracts_phase2_219_223.sql:273: NOTICE:  220.9 PASS: reversal row à¹„à¸¡à¹ˆà¸œà¸¹à¸ idempotency key
+psql:e2e/contracts_phase2_219_223.sql:285: NOTICE:  221.1 PASS: DEFECT-5 fixed â€” package_size removed
+psql:e2e/contracts_phase2_219_223.sql:295: NOTICE:  221.2 PASS: landed_cost (DEFECT-4 storage) + tenant/branch isolation columns OK
+psql:e2e/contracts_phase2_219_223.sql:320: NOTICE:  221.3 PASS: staff INSERT à¸–à¸¹à¸à¸›à¸à¸´à¹€à¸ªà¸˜ (à¹€à¸‚à¸µà¸¢à¸™à¹„à¸”à¹‰à¹€à¸‰à¸žà¸²à¸° WP6 service path)
+psql:e2e/contracts_phase2_219_223.sql:343: NOTICE:  221.4 PASS: UPDATE à¸–à¸¹à¸à¸šà¸¥à¹‡à¸­à¸ (append-only)
+psql:e2e/contracts_phase2_219_223.sql:343: NOTICE:  221.5 PASS: DELETE à¸–à¸¹à¸à¸šà¸¥à¹‡à¸­à¸ (append-only)
+psql:e2e/contracts_phase2_219_223.sql:363: NOTICE:  221.6 PASS: admin INSERT à¸œà¹ˆà¸²à¸™ policy + price_per_use_unit = 200/4=50
+psql:e2e/contracts_phase2_219_223.sql:376: NOTICE:  222.1 PASS: itx extension columns OK
+psql:e2e/contracts_phase2_219_223.sql:389: NOTICE:  222.2 PASS: itx.grn_id FK enforced
+psql:e2e/contracts_phase2_219_223.sql:400: NOTICE:  223.1 PASS: has_org_row_scope helper OK
+psql:e2e/contracts_phase2_219_223.sql:413: NOTICE:  223.2 PASS: invA à¹€à¸«à¹‡à¸™à¹€à¸‰à¸žà¸²à¸° branch A (cross-branch read denied)
+psql:e2e/contracts_phase2_219_223.sql:425: NOTICE:  223.3 PASS: invA à¹€à¸‚à¸µà¸¢à¸™ branch B à¸–à¸¹à¸à¸›à¸à¸´à¹€à¸ªà¸˜ (0 rows)
+psql:e2e/contracts_phase2_219_223.sql:443: NOTICE:  223.4 PASS: invA à¸ªà¸£à¹‰à¸²à¸‡ PO à¹ƒà¸™ branch B à¸–à¸¹à¸à¸›à¸à¸´à¹€à¸ªà¸˜ (WITH CHECK)
+psql:e2e/contracts_phase2_219_223.sql:465: NOTICE:  223.5 PASS: invA à¸ªà¸£à¹‰à¸²à¸‡ PO draft + line à¹ƒà¸™ branch à¸•à¸±à¸§à¹€à¸­à¸‡à¹„à¸”à¹‰
+psql:e2e/contracts_phase2_219_223.sql:478: NOTICE:  223.6 PASS: invB à¹€à¸«à¹‡à¸™à¹€à¸‰à¸žà¸²à¸° branch B (à¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡à¸—à¸´à¸¨à¸–à¸¹à¸à¸›à¸à¸´à¹€à¸ªà¸˜)
+psql:e2e/contracts_phase2_219_223.sql:489: NOTICE:  223.7 PASS: finance à¸£à¸°à¸”à¸±à¸š tenant à¹€à¸«à¹‡à¸™à¸—à¸¸à¸ branch à¸•à¸²à¸¡ model à¹€à¸”à¸´à¸¡
+psql:e2e/contracts_phase2_219_223.sql:501: NOTICE:  223.8 PASS: admin cross-branch write à¸•à¸²à¸¡ Permission Model à¹€à¸”à¸´à¸¡ (m088)
+psql:e2e/contracts_phase2_219_223.sql:512: NOTICE:  223.9 PASS: is_platform bypass à¸•à¸²à¸¡ m071/m088
+psql:e2e/contracts_phase2_219_223.sql:525: NOTICE:  223.10 PASS: price history cross-branch read denied
+psql:e2e/contracts_phase2_219_223.sql:536: NOTICE:  223.11 PASS: GRN cross-branch read denied

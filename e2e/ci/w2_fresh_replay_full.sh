@@ -156,7 +156,8 @@ psql -X -v ON_ERROR_STOP=1 -q -c "UPDATE public.business_settings SET value = '{
 echo "===== PHASE 1 CONTRACT TESTS (214-218) ====="
 out=$(psql -X -v ON_ERROR_STOP=1 -f e2e/contracts_phase1_214_218.sql 2>&1); rc=$?
 printf '%s\n' "$out"
-printf '%s\n' "$out" | grep -E '^(214|215|216|217|218)\.[0-9] PASS' >> "$LOG.p1"
+# NOTICE จาก psql มี prefix "psql:<file>:<line>:" — ห้าม anchor ^ ที่ต้นบรรทัด
+printf '%s\n' "$out" | grep -E '(214|215|216|217|218)\.[0-9]+ PASS' >> "$LOG.p1"
 if [ $rc -ne 0 ]; then
   echo "PHASE1_CONTRACT_FAIL"
   exit 1
@@ -189,5 +190,16 @@ if [ $c_fail -gt 0 ]; then
 fi
 echo "CONTRACT SUITE 124-213 ALL GREEN"
 
+# ---- Phase 2 WP1 contract (219-223) — schema + RLS + DEFECT regression ----
+echo "===== PHASE 2 CONTRACT TESTS (219-223) ====="
+out=$(psql -X -v ON_ERROR_STOP=1 -f e2e/contracts_phase2_219_223.sql 2>&1); rc=$?
+printf '%s\n' "$out"
+printf '%s\n' "$out" | grep -E '(219|220|221|222|223)\.[0-9]+ PASS' >> "$LOG.p2"
+if [ $rc -ne 0 ]; then
+  echo "PHASE2_CONTRACT_FAIL"
+  exit 1
+fi
+echo "PHASE 2 CONTRACTS 219-223 ALL GREEN"
+
 echo "===== FINAL ====="
-echo "REPLAY_ALL_GREEN migrations=$ok_count + phase1_contracts PASS"
+echo "REPLAY_ALL_GREEN migrations=$ok_count + phase1_contracts PASS + phase2_contracts PASS"

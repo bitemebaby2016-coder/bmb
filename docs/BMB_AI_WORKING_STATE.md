@@ -90,7 +90,9 @@ Before ending every development task or session:
 ---
 
 
-**HANDOFF 2026-11-25 r4 — NEXT SESSION: Complete Live Test Groups G-6/G-7, H-1/H-2, I-1..I-8. Owner decisions: C-1..C-6 resolved, Omise resolved. CI green (commit 38d72f4): lint OK, tsc 0, vitest 2830 tests. Contract suite 124-213 = 67 files ALL GREEN. Phase 1-6 paused per Owner order. RULE: write .md files via Node fs (never PowerShell Set-Content - BOM).**
+**HANDOFF 2026-11-26 r6 — WP1 REMEDIATED (Owner "WP1 REMEDIATION & SCOPE CORRECTION" executed). DEFECT-1..5 fixed in migrations 219-223 (schema-only, restructured) + workflow RPCs moved to supabase/staged_workflows/ (WP2/WP4/WP6/WP7/WP8 reference SQL, NOT applied). RLS org/branch isolation via has_org_row_scope (Phase 1 pattern m065/071/088/090/146). Proof: Docker replay fresh DB — 227 migrations OK/0 FAIL + Phase 1 contracts + regression 124-213 ALL GREEN + NEW e2e/contracts_phase2_219_223.sql (36 cases) ALL PASS; static tests 6 files/132 PASS; lint+tsc 0. NOTHING COMMITTED/PUSHED. WP2 NOT STARTED — awaiting Owner WP1 acceptance (report §G 10 items).**
+
+**HANDOFF 2026-11-25 r5 — Phase 2 Design Report Complete. Owner decisions: C-1..C-6 resolved, Omise resolved. CI green (commit 38d72f4): lint OK, tsc 0, vitest 2831 tests. Contract suite 124-213 = 67 files ALL GREEN. Phase 1-6 paused per Owner order. Phase 2 Design Report delivered — awaiting Owner review for Stage 2 authorization.**
 
 ## 1. CURRENT ACTIVE TASK (2026-11-25 — HANDOFF TO NEXT SESSION)
 
@@ -99,6 +101,42 @@ Before ending every development task or session:
 - Final DONE: full Docker replay **67 contract files ALL GREEN (0 FAIL)** (container bmb_replay_w2, migrations 001-218 applied)
 - Fixed during audit: 033 allowlist + suppliers/supplier_products; 036 G4 accepts ERR_KITCHEN_NOT_READY
 - Next: Owner audit review -> Live Test Groups E-I (35 cases). Phase 1-6 paused per Owner order.
+
+**DONE 2026-11-25 - PHASE 2 DESIGN REPORT COMPLETE:**
+- Design Report: `docs/PHASE2_DESIGN_REPORT.md` delivered
+- All 13 design deliverables complete (data flow, schema, state machine, cost, conversion, WAVG, API, RLS, UI, tests, migration, rollback, open questions)
+- Owner Stage 1 Authorization granted; Stage 2 Implementation pending Owner Design Review + Phase 1 Gate Pass
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PHASE2-DESIGN-2026-11-25 |
+| **Type** | Phase 2 Design & Dependency Audit (Stage 1) |
+| **Status** | **COMPLETE** — Report delivered, awaiting Owner review |
+| **Objective** | Produce complete Phase 2 Design Report per Owner authorization (PO+GRN+Price History) |
+| **Owner Order** | 2026-11-25: "Stage 1 authorized now. Stage 2 conditional on Phase 1 Gate + Design approval" |
+| **Started** | 2026-11-25 |
+| **Deliverable** | `docs/PHASE2_DESIGN_REPORT.md` |
+| **Dependencies** | Phase 1 migrations 214-218 applied, Role Foundation (m146) deployed |
+
+### 1.1 Progress Checklist
+- [x] **Phase 1 Audit:** All migrations 214-218 verified in production
+- [x] **Existing Data Flow:** Verified order→deduct_inventory→restore_inventory flow
+- [x] **Database Schema:** 4 new tables + inventory_transactions extensions
+- [x] **State Machine:** PO (8 states) + GRN (7 states) with role matrix
+- [x] **Cost/Conversion/WAVG:** Owner Decisions B1-B4 implemented in spec
+- [x] **API/RPC/RLS:** 9 RPCs, TypeScript APIs, 10 RLS policies
+- [x] **UI Spec:** 6 PurchaseHub tabs with detailed screens
+- [x] **Test Matrix:** J1 (30 DB), J2 (18 E2E), J3 (10 regression)
+- [x] **Migration Plan:** 7 migrations (219-225) in dependency order
+- [x] **Rollback Plan:** Per-failure recovery + emergency scripts
+- [x] **Open Questions:** 7 items for Owner decision
+
+### 1.2 Next Actions (After Owner Review)
+- [ ] Owner reviews Design Report → Approves/Requests Changes
+- [ ] Phase 1 Live Verification completes (Owner Gate)
+- [ ] Owner authorizes Stage 2 Implementation
+- [ ] Begin Migration 219 (purchase_orders) with contract tests
+- [ ] Update WORK_QUEUE with Phase 2 Implementation tasks
 
 
 | Field | Value |

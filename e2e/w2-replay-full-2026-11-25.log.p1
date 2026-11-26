@@ -1,0 +1,27 @@
+﻿psql:e2e/contracts_phase1_214_218.sql:29: NOTICE:  214.1 PASS: suppliers table schema OK
+psql:e2e/contracts_phase1_214_218.sql:44: NOTICE:  214.2 PASS: suppliers indexes OK
+psql:e2e/contracts_phase1_214_218.sql:55: NOTICE:  214.3 PASS: RLS enabled on suppliers
+psql:e2e/contracts_phase1_214_218.sql:67: NOTICE:  214.4 PASS: suppliers has 2 policies
+psql:e2e/contracts_phase1_214_218.sql:94: NOTICE:  214.5 PASS: Admin CRUD works
+psql:e2e/contracts_phase1_214_218.sql:125: NOTICE:  214.6 PASS: is_inventory() function exists
+psql:e2e/contracts_phase1_214_218.sql:125: NOTICE:  214.6 PASS: is_kitchen() function exists
+psql:e2e/contracts_phase1_214_218.sql:125: NOTICE:  214.6 PASS: is_pos() function exists
+psql:e2e/contracts_phase1_214_218.sql:125: NOTICE:  214.6 PASS: is_finance() function exists
+psql:e2e/contracts_phase1_214_218.sql:159: NOTICE:  214.7 PASS: updated_at trigger works
+psql:e2e/contracts_phase1_214_218.sql:185: NOTICE:  215.1 PASS: inventory.supplier_id FK exists
+psql:e2e/contracts_phase1_214_218.sql:194: NOTICE:  215.2 PASS: inventory.supplier_id index exists
+psql:e2e/contracts_phase1_214_218.sql:236: NOTICE:  215.3 PASS: Backfill correctly links supplier_id
+psql:e2e/contracts_phase1_214_218.sql:274: NOTICE:  216.1 PASS: All 11 new inventory columns exist
+psql:e2e/contracts_phase1_214_218.sql:315: NOTICE:  216.2 PASS: Defaults and constraints OK
+psql:e2e/contracts_phase1_214_218.sql:349: NOTICE:  216.3 PASS: unit consistency constraint enforces both-set or both-null
+psql:e2e/contracts_phase1_214_218.sql:361: NOTICE:  216.4 PASS: Cost column indexes exist
+psql:e2e/contracts_phase1_214_218.sql:393: NOTICE:  217.1 PASS: supplier_products schema OK
+psql:e2e/contracts_phase1_214_218.sql:409: NOTICE:  217.2 PASS: FK constraints exist
+psql:e2e/contracts_phase1_214_218.sql:424: NOTICE:  217.3 PASS: Three price state columns exist
+psql:e2e/contracts_phase1_214_218.sql:435: NOTICE:  217.4 PASS: RLS enabled on supplier_products
+psql:e2e/contracts_phase1_214_218.sql:447: NOTICE:  217.5 PASS: supplier_products has 2 policies
+psql:e2e/contracts_phase1_214_218.sql:494: NOTICE:  217.6 PASS: updated_at trigger works
+psql:e2e/contracts_phase1_214_218.sql:515: NOTICE:  217.7 PASS: All supplier_products indexes exist
+psql:e2e/contracts_phase1_214_218.sql:538: NOTICE:  218.1 PASS: All 4 new recipes columns exist
+psql:e2e/contracts_phase1_214_218.sql:562: NOTICE:  218.2 PASS: Defaults OK
+psql:e2e/contracts_phase1_214_218.sql:571: NOTICE:  218.3 PASS: idx_recipes_cost_per_unit exists

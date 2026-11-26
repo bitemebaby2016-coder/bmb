@@ -30,6 +30,35 @@
 
 
 
+## 🔨 กลุ่มใหม่ — Phase 2 WP1 Remediation (2026-11-26 — PENDING OWNER ACCEPTANCE)
+
+> คำสั่ง Owner: "WP1 REMEDIATION & SCOPE CORRECTION" — แก้ DEFECT-1..5 + จัดขอบเขต WP ใหม่
+> สถานะ: แก้ครบ + พิสูจน์ด้วย Docker replay จริง (ALL GREEN) — **ห้ามเริ่ม WP2 จน Owner ตรวจรับ**
+> ห้าม Commit/Push จนกว่า Owner ตรวจ Diff รอบนี้
+
+| งาน | สถานะ | หลักฐาน |
+|---|---|---|
+| DEFECT-1..5 แก้ครบ (m219-223 + staged) | ✅ DONE | Defect Matrix §15.1 ใน `docs/PHASE2_DESIGN_REPORT.md` |
+| จัดขอบเขต WP: ย้าย RPCs → staged_workflows (WP2/WP4/WP6/WP7/WP8) | ✅ DONE | `supabase/staged_workflows/` 5 ไฟล์ + README |
+| RLS org/branch isolation (has_org_row_scope) ทั้ง 5 ตาราง | ✅ DONE | m223 + integration T223 (11 เคส) PASS |
+| PostgreSQL replay: apply 001→223 | ✅ ALL GREEN 227/0 FAIL | `e2e/w2-replay-full-2026-11-25.log` (รันใหม่ 2026-11-26) |
+| Phase 2 integration contracts (36 เคส) | ✅ ALL PASS | `e2e/contracts_phase2_219_223.sql` |
+| Static contract tests (source-contract) | ✅ 132 tests PASS | 6 files: 219/220/221/222/223-RLS/225-staged |
+| Regression 124-213 (รวม Order Deduct/Cancel Restore) | ✅ ALL GREEN | replay log |
+| **งานต่อไป (BLOCKED รอ Owner)** | ⏸ รอตรวจรับ | Owner ตรวจ Defect Matrix + Diff → อนุมัติ WP2 แยก |
+
+**งาน staged ที่รอ WP เจ้าของ (ห้าม apply ใน WP1):**
+
+| ไฟล์ staged | WP | หมายเหตุ |
+|---|---|---|
+| `supabase/staged_workflows/wp2_po_workflow_rpc.sql` | WP2 | PO workflow RPC (org scope ในตัว) |
+| `supabase/staged_workflows/wp4_grn_workflow_rpc.sql` | WP4 | GRN workflow RPC (สืบทอด org จาก PO) |
+| `supabase/staged_workflows/wp6_wavg_posting_reversal.sql` | WP6 | WAVG post + reversal ใหม่ (DEFECT-2/3/4 แก้แล้ว) — integration test ของ WP6 ต้องครอบ idempotency-retry/concurrent/rollback/reversal |
+| `supabase/staged_workflows/wp7_price_history_read_api.sql` | WP7 | Read API — SECURITY INVOKER |
+| `supabase/staged_workflows/wp8_po_dashboard_read_api.sql` | WP8 | Read API — SECURITY INVOKER |
+
+---
+
 **DONE 2026-11-25 r3 - Contract Audit Closure 124-213 COMPLETE: 67 files ALL GREEN (0 FAIL) in Docker replay (bmb_replay_w2, migrations 001-218 applied). 15 new contract files for 28 migrations (179-213) written + fixed until every case passes (311 tests). See BMB_MASTER_STATUS.md for the full fix list. Next: Owner audit review -> Live Test Groups E, F, G, H, I (35 cases).**
 
 ## 🔨 กลุ่มปัจจุบัน — Contract Audit Closure 124-213 (COMPLETE — 2026-11-25 r3)
@@ -94,6 +123,33 @@
 - `npm run build` PASS (PWA v1.3.0)
 
 **Next:** Owner Phase 1 Gate Review → Phase 2 Authorization
+
+---
+
+## ✅ Phase 2 — Design & Dependency Audit (2026-11-25)
+
+**Owner Authorization:** Stage 1 (Design) authorized 2026-11-25 | **Status:** DESIGN COMPLETE — Report delivered
+
+| Deliverable | Status | Notes |
+|-------------|--------|-------|
+| Existing Data Flow Analysis | ✅ Complete | Verified from code: order flow, inventory deductions, Phase 1 schema |
+| Database Schema Proposal | ✅ Complete | 4 new tables (PO, PO Lines, GRN, Price History) + inventory_tx extensions |
+| PO/GRN State Machine | ✅ Complete | 8 PO states, 7 GRN states, transition rules, role matrix |
+| Cost Calculation Specification | ✅ Complete | 5 price types, landed cost formula, allocation methods |
+| Unit Conversion Specification | ✅ Complete | Conversion factor rules, GRN-time snapshot, edge cases |
+| Stock Valuation Impact (WAVG) | ✅ Complete | Atomic GRN post, WAVG formula, race condition prevention |
+| API/RPC Design | ✅ Complete | 9 new RPCs, TypeScript API layer |
+| RLS/Permission Matrix | ✅ Complete | 10 policies using existing role functions (m146) |
+| UI Screen/Workflow Spec | ✅ Complete | 6 PurchaseHub tabs with detailed screen specs |
+| Test Matrix (J1/J2/J3) | ✅ Complete | 30+ DB tests, 18 E2E tests, 10 regression tests |
+| Migration Plan | ✅ Complete | 7 migrations in sequence (219-225) |
+| Rollback/Recovery Plan | ✅ Complete | Per-failure-point procedures + emergency scripts |
+
+**Report File:** `docs/PHASE2_DESIGN_REPORT.md`
+
+**Open Questions for Owner Decision:** 7 items (PO number format, approval workflow, variance tolerance, allocation method, WAVG correction, reversal window, backorder handling)
+
+**Next:** Owner reviews Design Report → Approves/Requests Changes → Authorizes Stage 2 Implementation
 
 ---
 
