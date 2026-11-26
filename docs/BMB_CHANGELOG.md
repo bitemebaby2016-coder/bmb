@@ -9,6 +9,17 @@
 
 ## R111 â€” 2026-11-26 â€” PHASE 2 WP2: PO WORKFLOW RPC (MIGRATION 224) + API + DB INTEGRATION TESTS
 
+## R113 — 2026-11-26 — PHASE 2 WP4: GRN WORKFLOW RPC (MIGRATION 225) + API + DB INTEGRATION TESTS
+
+- **Task:** PHASE2-WP4 (Owner Master Directive continuous execution)
+- **Scope:** GRN Backend — promote staged wp4 to migration 225 + API + DB tests (UI = WP5)
+- **Migration 225 (TEST DB only):** generate_grn_number (grn_number_seq + BKK) + create_grn_draft (partial/multi, over-receive guard cumulative committed, accepted+rejected=received, conversion/price/lot snapshot, inherited org, audit) + approve_grn (inventory/admin + draft gate) + has_org_row_scope in-body
+- **WP4 REMEDIATION:** removed non-existent has_staff_branch_scope; Asia/Bangkok date (m190); create gate = is_staff OR is_inventory
+- **API:** src/lib/bmbAdminApi_goodsReceipts.ts + types GoodsReceipt/Line/Form + GRNStatus
+- **Tests:** DB e2e/contracts_wp4_225.sql 8 cases ALL PASS · static 8 · wired replay
+- **Gates:** replay 001-225 migrations=229 OK/0 FAIL + phase1+phase2+wp2+wp4 ALL GREEN · vitest 254/2,993 · lint 0 · tsc 0 · build PASS · production untouched (218)
+- **Next:** WP5 (GRN UI / E2E)
+
 - **Task:** PHASE2-WP2 (Owner Master Directive 2026-11-26: "WP2 APPROVED TO START AFTER WP1 PUSH VERIFIED" â†’ continuous execution)
 - **Scope:** PO Backend à¸ˆà¸£à¸´à¸‡ â€” promote staged `wp2_po_workflow_rpc.sql` à¹€à¸›à¹‡à¸™ migration 224 + TypeScript API + DB integration tests (UI = WP3)
 - **Migration 224_purchase_order_rpcs.sql (applied to TEST DB only â€” production ledger stays 218):**

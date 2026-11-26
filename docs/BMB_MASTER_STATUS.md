@@ -5,6 +5,17 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-26 r10 (PHASE 2 WP4 — GRN WORKFLOW RPC 225 + API + DB INTEGRATION TESTS — CODE_CLOSED + PUSHED)**
+
+- **Phase 2 WP4 (GRN Backend):** ✅ **CODE_CLOSED + PUSHED** (R113)
+  - **Migration 225_grn_workflow_rpcs.sql (TEST DB only):** generate_grn_number (grn_number_seq + BKK) + create_grn_draft (partial/multi-receipt, over-receive guard via cumulative committed qty, accepted/rejected balance, conversion/price/lot snapshot, inherited org) + approve_grn (inventory/admin + draft gate) + audit; SECURITY DEFINER role + has_org_row_scope gates
+  - **WP4 REMEDIATION:** removed non-existent has_staff_branch_scope; Asia/Bangkok date (m190); create gate = is_staff OR is_inventory (receiver = inventory)
+  - **API:** `src/lib/bmbAdminApi_goodsReceipts.ts` + types GoodsReceipt/Line/Form + GRNStatus
+  - **DB integration:** `e2e/contracts_wp4_225.sql` — **8 cases ALL PASS** · static 8 tests
+  - **Gates:** Docker replay 001→225 `migrations=229 OK / 0 FAIL` + phase1+phase2+wp2+wp4 contracts ALL GREEN · vitest 254 files/2,993 · lint 0 · tsc 0 · build PASS
+  - **Production:** NOT touched (ledger 218)
+- **Next:** WP5 (GRN UI / E2E) — Goods Receiving tab in PurchaseHub
+
 **SESSION CLOSE 2026-11-26 r9 (PHASE 2 WP3 — PO UI in PurchaseHub + E2E SPEC — CODE_CLOSED + PUSHED)**
 
 - **Phase 2 WP3 (PO UI):** ✅ **CODE_CLOSED + PUSHED** (R112)
