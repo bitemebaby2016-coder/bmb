@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest'
 import { validateOcrFields, needsReview, validateLine } from '../lib/ocr/validate'
 import { scoreMatch, matchSupplier, matchIngredient, normalizeName } from '../lib/ocr/match'
-import { parseCsv, parseCsvToLines, matrixToLines } from '../lib/ocr/import'
+import { parseCsv, parseCsvToLines, matrixToLines, hashText, parseSupplierFile } from '../lib/ocr/import'
 import { TASK_POLICY, MODEL_OCR_PRIMARY, MODEL_OCR_FALLBACK } from '../../supabase/functions/_shared/aiPolicy.ts'
 
 describe('OCR validation (Owner §4)', () => {
@@ -71,6 +71,23 @@ describe('CSV / Excel import', () => {
     const lines = matrixToLines([['Milk', '1', 'carton', '50', '50']])
     expect(lines[0].description).toBe('Milk')
     expect(lines[0].unit_price).toBe(50)
+  })
+})
+
+describe('Import hashing (duplicate detection parity)', () => {
+  it('hashText is deterministic 64-hex and differs by content', async () => {
+    const a = await hashText('a,b,c')
+    const b = await hashText('a,b,c')
+    const c = await hashText('a,b,d')
+    expect(a).toBe(b)
+    expect(a).toHaveLength(64)
+    expect(a).not.toBe(c)
+  })
+  it('parseSupplierFile returns lines + contentHash for CSV', async () => {
+    const file = new File(['description,qty,unit,unit_price,line_total\nRice,2,bag,100,200'], 'x.csv', { type: 'text/csv' })
+    const r = await parseSupplierFile(file)
+    expect(r.lines[0].description).toBe('Rice')
+    expect(r.contentHash).toHaveLength(64)
   })
 })
 

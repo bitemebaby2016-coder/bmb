@@ -50,8 +50,10 @@ CREATE TABLE IF NOT EXISTS public.ocr_documents (
 CREATE INDEX IF NOT EXISTS idx_ocr_documents_status ON public.ocr_documents(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ocr_documents_hash ON public.ocr_documents(content_hash);
 CREATE INDEX IF NOT EXISTS idx_ocr_documents_tenant ON public.ocr_documents(tenant_id, branch_id);
-CREATE UNIQUE INDEX IF NOT EXISTS uq_ocr_documents_hash_live
-  ON public.ocr_documents(content_hash) WHERE content_hash IS NOT NULL AND status <> 'rejected';
+-- Prevent TWO APPROVED docs with the same hash (double price-history write).
+-- Pending duplicates are allowed (flagged via duplicate_of) so upload never errors.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_ocr_documents_hash_approved
+  ON public.ocr_documents(content_hash) WHERE content_hash IS NOT NULL AND status = 'approved';
 
 DROP TRIGGER IF EXISTS ocr_documents_updated_at ON public.ocr_documents;
 CREATE TRIGGER ocr_documents_updated_at
@@ -223,6 +225,26 @@ BEGIN
   END IF;
   IF v_doc.status = 'approved' THEN RAISE EXCEPTION 'ERR_ALREADY_APPROVED'; END IF;
   IF v_doc.status = 'rejected' THEN RAISE EXCEPTION 'ERR_REJECTED'; END IF;
+
+  -- Duplicate guard (parity): a flagged duplicate must be rejected/merged first —
+  -- approving it would double-write price history.
+  IF v_doc.duplicate_of IS NOT NULL THEN
+    RAISE EXCEPTION 'ERR_DUPLICATE_NEEDS_REVIEW';
+  END IF;
+
+  -- Server-side validation parity (Owner §4) — totals + per-line reconciliation.
+  IF v_doc.subtotal IS NOT NULL AND v_doc.tax IS NOT NULL AND v_doc.total IS NOT NULL THEN
+    IF abs(v_doc.subtotal + v_doc.tax - v_doc.total) > 0.02 THEN
+      RAISE EXCEPTION 'ERR_TOTALS_INVALID';
+    END IF;
+  END IF;
+  FOR v_line IN SELECT * FROM jsonb_array_elements(COALESCE(v_doc.ocr_fields->'lines', '[]'::jsonb)) LOOP
+    IF (v_line->>'quantity') IS NOT NULL AND (v_line->>'unit_price') IS NOT NULL AND (v_line->>'line_total') IS NOT NULL THEN
+      IF abs((v_line->>'quantity')::numeric * (v_line->>'unit_price')::numeric - (v_line->>'line_total')::numeric) > 0.02 THEN
+        RAISE EXCEPTION 'ERR_LINE_INVALID';
+      END IF;
+    END IF;
+  END LOOP;
 
   -- price history rows (approved) — append-only ledger
   IF p_lines IS NOT NULL AND jsonb_typeof(p_lines) = 'array' THEN

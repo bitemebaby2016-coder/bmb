@@ -114,7 +114,7 @@ export function OcrDocumentsPage() {
     if (!file) return
     setBusy(true)
     try {
-      const lines = await parseSupplierFile(file)
+      const { lines, contentHash } = await parseSupplierFile(file)
       if (lines.length === 0) { showToast('ไม่พบรายการในไฟล์นำเข้า', 'error'); return }
       const created = await createOcrDocument({
         docType: 'supplier_quote',
@@ -124,7 +124,7 @@ export function OcrDocumentsPage() {
         ocrFields: { lines } as OcrFields,
         modelUsed: null,
         promptVersion: 'import-v1',
-        contentHash: null,
+        contentHash,
         tenantId: null,
         branchId: null,
       })
@@ -135,6 +135,30 @@ export function OcrDocumentsPage() {
     } catch (err) {
       console.error('[OcrDocumentsPage] import failed', err)
       showToast('นำเข้าไม่สำเร็จ (รองรับ .csv / .xlsx)', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function onCreateManual() {
+    setBusy(true)
+    try {
+      const created = await createOcrDocument({
+        docType: 'other',
+        storagePath: null,
+        imageMime: null,
+        ocrRaw: { source: 'manual' },
+        ocrFields: { lines: [] } as OcrFields,
+        modelUsed: null,
+        promptVersion: 'manual-v1',
+        contentHash: null,
+        tenantId: null,
+        branchId: null,
+      })
+      if (!created) { showToast('สร้างเอกสารด้วยมือไม่สำเร็จ', 'error'); return }
+      showToast('สร้างเอกสารด้วยมือ — เพิ่มรายการแล้วตรวจทาน', 'success')
+      await load()
+      select(created)
     } finally {
       setBusy(false)
     }
@@ -219,6 +243,7 @@ export function OcrDocumentsPage() {
           </button>
           <input ref={importRef} type="file" accept=".csv,.xlsx" className="hidden" onChange={onImport} data-testid="ocr-import-input" />
           <button className="btn btn-outline" disabled={busy} onClick={() => importRef.current?.click()} data-testid="ocr-import-btn">📊 นำเข้า CSV/Excel</button>
+          <button className="btn btn-outline" disabled={busy} onClick={() => void onCreateManual()} data-testid="ocr-manual-btn">✍️ กรอกด้วยมือ</button>
         </div>
       </div>
 

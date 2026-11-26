@@ -152,10 +152,29 @@ export async function parseXlsx(buf: ArrayBuffer): Promise<string[][]> {
   return rows
 }
 
-/** Dispatch by file extension → purchase lines. */
-export async function parseSupplierFile(file: File): Promise<PurchaseLineInput[]> {
+/** SHA-256 hex of raw bytes (duplicate detection for Excel). */
+export async function hashBytes(buf: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', buf)
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+/** SHA-256 hex of text (duplicate detection for CSV / manual). */
+export async function hashText(text: string): Promise<string> {
+  return hashBytes(new TextEncoder().encode(text).buffer as ArrayBuffer)
+}
+
+/** Dispatch by file extension → purchase lines + content hash (for duplicate detection). */
+export async function parseSupplierFile(file: File): Promise<{ lines: PurchaseLineInput[]; contentHash: string | null }> {
   const name = file.name.toLowerCase()
-  if (name.endsWith('.xlsx')) return matrixToLines(await parseXlsx(await file.arrayBuffer()))
-  if (name.endsWith('.csv')) return parseCsvToLines(await file.text())
+  if (name.endsWith('.xlsx')) {
+    const buf = await file.arrayBuffer()
+    const lines = matrixToLines(await parseXlsx(buf))
+    return { lines, contentHash: await hashBytes(buf) }
+  }
+  if (name.endsWith('.csv')) {
+    const text = await file.text()
+    const lines = parseCsvToLines(text)
+    return { lines, contentHash: await hashText(text) }
+  }
   throw new Error('unsupported_format_use_csv_or_xlsx')
 }
