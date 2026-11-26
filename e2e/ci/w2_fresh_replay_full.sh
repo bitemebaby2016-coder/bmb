@@ -223,5 +223,16 @@ if [ $rc -ne 0 ]; then
 fi
 echo "PHASE 2 WP4 CONTRACTS 225 ALL GREEN"
 
+# ---- Phase 2 WP6 contract (226) — WAVG posting + reversal runtime ----
+echo "===== PHASE 2 WP6 CONTRACT TESTS (226) ====="
+out=$(psql -X -v ON_ERROR_STOP=1 -f e2e/contracts_wp6_226.sql 2>&1); rc=$?
+printf '%s\n' "$out"
+printf '%s\n' "$out" | grep -E '226\.[0-9]+ PASS' >> "$LOG.p2"
+if [ $rc -ne 0 ]; then
+  echo "WP6_CONTRACT_FAIL"
+  exit 1
+fi
+echo "PHASE 2 WP6 CONTRACTS 226 ALL GREEN"
+
 echo "===== FINAL ====="
-echo "REPLAY_ALL_GREEN migrations=$ok_count + phase1_contracts PASS + phase2_contracts PASS + wp2_contracts PASS + wp4_contracts PASS"
+echo "REPLAY_ALL_GREEN migrations=$ok_count + phase1_contracts PASS + phase2_contracts PASS + wp2_contracts PASS + wp4_contracts PASS + wp6_contracts PASS"
