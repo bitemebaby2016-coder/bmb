@@ -649,6 +649,92 @@ export interface PurchaseOrderItem {
 }
 
 // ============================================
+// Purchase Order Types (Phase 2 WP2 — DB-backed, migration 219/224)
+// Named distinctly from the legacy PurchaseOrder/PurchaseOrderItem above
+// (legacy UI types kept for backward compat; WP2 uses the schema 219 shape).
+// ============================================
+
+export type POStatus =
+  | 'draft'
+  | 'submitted'
+  | 'approved'
+  | 'ordered'
+  | 'partially_received'
+  | 'completed'
+  | 'cancelled'
+  | 'rejected'
+  | 'closed';
+
+export interface PurchaseOrderHeader {
+  id: string;
+  po_number: string;
+  supplier_id: string;
+  status: POStatus;
+  order_date: string;
+  expected_date?: string | null;
+  requested_by?: string | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  subtotal: number;
+  discount_amount: number;
+  shipping_amount: number;
+  tax_amount: number;
+  total_amount: number;
+  notes?: string | null;
+  attachments?: unknown;
+  tenant_id?: string | null;
+  branch_id?: string | null;
+  version: number;
+  parent_po_id?: string | null;
+  revision_reason?: string | null;
+  revision_number?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PurchaseOrderLine {
+  id: string;
+  po_id: string;
+  supplier_product_id: string;
+  ingredient_id: string;
+  ordered_qty: number;
+  received_qty: number;
+  purchase_unit: string;
+  use_unit: string;
+  conversion_factor: number;
+  unit_price: number;
+  line_discount: number;
+  line_total: number;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PurchaseOrderLineForm {
+  supplier_product_id: string;
+  ordered_qty: number;
+  unit_price?: number;
+  line_discount?: number;
+  notes?: string;
+}
+
+export interface PurchaseOrderForm {
+  supplier_id: string;
+  lines: PurchaseOrderLineForm[];
+  expected_date?: string | null;
+  shipping_amount?: number;
+  discount_amount?: number;
+  tax_amount?: number;
+  notes?: string | null;
+  tenant_id?: string | null;
+  branch_id?: string | null;
+}
+
+export interface PurchaseOrderWithLines extends PurchaseOrderHeader {
+  lines: PurchaseOrderLine[];
+}
+
+// ============================================
 // Notification Types
 // ============================================
 
