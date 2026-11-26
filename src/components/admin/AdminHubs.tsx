@@ -30,6 +30,7 @@ import { SupplierPage } from '@/pages/admin/SupplierPage'
 import { SupplierProductMappingPage } from '@/pages/admin/SupplierProductMappingPage'
 import { PurchaseOrderPage } from '@/pages/admin/PurchaseOrderPage'
 import { GoodsReceivingPage } from '@/pages/admin/GoodsReceivingPage'
+import { PurchaseDashboardPage } from '@/pages/admin/PurchaseDashboardPage'
 
 interface HubTab {
   key: string
@@ -171,6 +172,7 @@ export function PurchaseHub() {
       title="จัดซื้อและผู้ขาย"
       storageKey="bmb-hub-purchase"
       tabs={[
+        { key: 'dashboard', label: 'Dashboard', icon: '📊', render: () => <PurchaseDashboardPage /> },
         { key: 'suppliers', label: 'ผู้ขาย (Supplier Master)', icon: '🏢', render: () => <SupplierPage /> },
         { key: 'mappings', label: 'จับคู่สินค้า (Mapping)', icon: '🔗', render: () => <SupplierProductMappingPage /> },
         { key: 'purchase_orders', label: 'ใบสั่งซื้อ (Purchase Order)', icon: '📝', render: () => <PurchaseOrderPage /> },

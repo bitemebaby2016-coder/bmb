@@ -814,6 +814,69 @@ export interface GoodsReceiptWithLines extends GoodsReceipt {
 }
 
 // ============================================
+// Price History + Dashboard Types (Phase 2 WP7/WP8 — read APIs, migration 227/228)
+// ============================================
+
+export type PriceType = 'quoted' | 'committed' | 'realized' | 'landed' | 'approved' | 'correction';
+
+export interface PurchasePriceHistory {
+  id: number;
+  supplier_id: string;
+  supplier_product_id: string;
+  ingredient_id: string;
+  po_id?: string | null;
+  po_line_id?: string | null;
+  grn_id?: string | null;
+  grn_line_id?: string | null;
+  price_type: PriceType;
+  purchase_unit: string;
+  use_unit: string;
+  conversion_factor: number;
+  ordered_qty?: number | null;
+  received_qty?: number | null;
+  unit_price: number;
+  price_per_use_unit: number;
+  discount_allocated?: number | null;
+  shipping_allocated?: number | null;
+  tax_treatment?: 'recoverable' | 'non_recoverable' | 'exempt' | null;
+  landed_cost?: number | null;
+  effective_date: string;
+  approval_status?: 'pending' | 'approved' | 'rejected' | null;
+  source_user?: string | null;
+  source_document?: string | null;
+  tenant_id?: string | null;
+  branch_id?: string | null;
+  created_at: string;
+}
+
+export interface PODashboard {
+  po_counts: Record<string, number> | null;
+  grn_pending: number;
+  total_spend: number;
+  outstanding_qty: number;
+  pos_needing_action: Array<{
+    po_id: string;
+    po_number: string;
+    supplier: string;
+    status: string;
+    expected_date?: string | null;
+    outstanding: number;
+  }> | null;
+  grns_awaiting_approval: Array<{
+    grn_id: string;
+    grn_number: string;
+    po_number: string;
+    supplier: string;
+    receipt_date: string;
+  }> | null;
+  top_suppliers: Array<{
+    supplier_id: string;
+    supplier_name: string;
+    total_spend: number;
+  }> | null;
+}
+
+// ============================================
 // Notification Types
 // ============================================
 
