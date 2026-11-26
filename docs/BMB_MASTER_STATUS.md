@@ -5,6 +5,16 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-26 r11 (PHASE 2 WP5 — GOODS RECEIVING UI + E2E SPEC — CODE_CLOSED + PUSHED)**
+
+- **Phase 2 WP5 (GRN UI):** ✅ **CODE_CLOSED + PUSHED** (R114)
+  - `src/pages/admin/GoodsReceivingPage.tsx` — select receivable PO → enter actual qty → auto good/rejected split → save draft → approve (inventory/admin) + detail modal; real WP4 API (225); responsive; no mock
+  - `src/components/admin/AdminHubs.tsx` — new "รับสินค้า (Goods Receiving)" tab in PurchaseHub
+  - `src/__tests__/goodsReceiptsApi.test.ts` — 3 API-wiring tests PASS
+  - `e2e/goodsReceiving.spec.ts` — Playwright E2E create→approve — **LIVE_TEST_PENDING** (staging + DB 225 + inventory/admin auth)
+  - Gates: tsc 0 · lint 0 · vitest 255 files/2,996 · build PASS · production untouched
+- **Next:** WP6 (WAVG posting/reversal + idempotency — promote staged wp6)
+
 **SESSION CLOSE 2026-11-26 r10 (PHASE 2 WP4 — GRN WORKFLOW RPC 225 + API + DB INTEGRATION TESTS — CODE_CLOSED + PUSHED)**
 
 - **Phase 2 WP4 (GRN Backend):** ✅ **CODE_CLOSED + PUSHED** (R113)

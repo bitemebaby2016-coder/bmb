@@ -9,6 +9,16 @@
 
 ## R111 â€” 2026-11-26 â€” PHASE 2 WP2: PO WORKFLOW RPC (MIGRATION 224) + API + DB INTEGRATION TESTS
 
+## R114 — 2026-11-26 — PHASE 2 WP5: GOODS RECEIVING UI + E2E SPEC
+
+- **Task:** PHASE2-WP5 (Owner Master Directive continuous execution)
+- **Scope:** GRN UI in existing PurchaseHub (no duplicate hub) — real WP4 API (migration 225), no mock
+- **UI:** src/pages/admin/GoodsReceivingPage.tsx — select receivable PO → enter actual qty → auto good/rejected split → save draft → approve (inventory/admin) + detail modal; responsive
+- **Nav:** AdminHubs.tsx — new "รับสินค้า (Goods Receiving)" tab
+- **Tests:** src/__tests__/goodsReceiptsApi.test.ts 3 API-wiring tests PASS · e2e/goodsReceiving.spec.ts Playwright create→approve — LIVE_TEST_PENDING (staging + DB 225 + auth)
+- **Gates:** tsc 0 · lint 0 · vitest 255/2,996 · build PASS · production untouched (218)
+- **Next:** WP6 (WAVG posting/reversal + idempotency)
+
 ## R113 — 2026-11-26 — PHASE 2 WP4: GRN WORKFLOW RPC (MIGRATION 225) + API + DB INTEGRATION TESTS
 
 - **Task:** PHASE2-WP4 (Owner Master Directive continuous execution)
