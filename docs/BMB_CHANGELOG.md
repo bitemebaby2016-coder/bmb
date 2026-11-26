@@ -9,6 +9,13 @@
 
 ## R111 â€” 2026-11-26 â€” PHASE 2 WP2: PO WORKFLOW RPC (MIGRATION 224) + API + DB INTEGRATION TESTS
 
+## R117 — 2026-11-26 — PHASE 2 WP9+WP10: FULL REGRESSION + READINESS/HANDOFF
+
+- **WP9 Full regression:** Docker replay 001→228 `migrations=232 OK / 0 FAIL` + Phase 1 (124-213, 214-218) + Phase 2 (219-223, 224, 225, 226, 227/228) contracts ALL GREEN · vitest 256/3,014 · lint 0 · tsc 0 · build PASS
+- **WP10 Readiness:** docs/PHASE2_READINESS_WP10.md (scope table, test evidence, security posture, remediations, known limitations, next steps) · WORKING_STATE handoff r14
+- **Production:** NOT deployed (ledger 218) — separate Owner approval required
+- **Known limitations:** WP3/WP5 E2E specs LIVE_TEST_PENDING (need staging + DB 219-228 + auth)
+
 ## R116 — 2026-11-26 — PHASE 2 WP7+WP8: PRICE HISTORY + PO DASHBOARD READ APIs (227/228) + DASHBOARD UI
 
 - **Task:** PHASE2-WP7/WP8 (Owner Master Directive continuous execution)

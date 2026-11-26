@@ -5,6 +5,13 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-26 r14 (PHASE 2 WP9+WP10 — FULL REGRESSION ALL GREEN + READINESS/HANDOFF — PUSHED)**
+
+- **WP9 Full regression:** Docker replay 001→228 `migrations=232 OK / 0 FAIL` + Phase 1 (124-213, 214-218) + Phase 2 (219-223, 224, 225, 226, 227/228) contracts ALL GREEN · vitest 256/3,014 · lint 0 · tsc 0 · build PASS
+- **WP10 Readiness:** `docs/PHASE2_READINESS_WP10.md` (scope, evidence, security, remediations, limitations, next) · WORKING_STATE handoff r14
+- **Phase 2 (WP2-WP9) COMPLETE + PUSHED** · Production NOT deployed (ledger 218) — Owner approval required
+- **Next:** Owner review → staging deploy 219-228 → run E2E (WP3/WP5) → production approval
+
 **SESSION CLOSE 2026-11-26 r13 (PHASE 2 WP7+WP8 — PRICE HISTORY + PO DASHBOARD READ APIs 227/228 + DASHBOARD UI — CODE_CLOSED + PUSHED)**
 
 - **Phase 2 WP7 (Price History Read) + WP8 (PO Dashboard Read + Hub integration):** ✅ **CODE_CLOSED + PUSHED** (R116)
