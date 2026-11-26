@@ -6,7 +6,7 @@
 // + list_drivers() ไม่กรอง tenant → แผนที่ Dispatch โชว์ไรเดอร์ข้ามแบรนด์ได้
 // + UI ไม่ตัดสินตำแหน่งเก่า → พิกัดค้างถูกอวดเป็น live
 import { describe, it, expect } from 'vitest'
-import mig180Src from '../../supabase/migrations/180_real_position_shared_3_sides.sql?raw'
+import mig180Src from '../../supabase/migrations/229_real_position_shared_3_sides.sql?raw'
 import liveMapSrc from '../components/admin/AdminLiveMap.tsx?raw'
 import deliveryMgmtSrc from '../pages/admin/DeliveryManagement.tsx?raw'
 import driverServiceSrc from '../lib/driverService.ts?raw'

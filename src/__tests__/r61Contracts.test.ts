@@ -15,7 +15,7 @@ import layoutSrc from '../components/layout/Layout.tsx?raw'
 import imageGenSrc from '../../supabase/functions/image-gen/index.ts?raw'
 import cssSrc from '../index.css?raw'
 
-const mig = fs.readFileSync(path.resolve(__dirname, '../../supabase/migrations/183_promo_banner_mascot.sql'), 'utf8')
+const mig = fs.readFileSync(path.resolve(__dirname, '../../supabase/migrations/230_promo_banner_mascot.sql'), 'utf8')
 
 describe('R61 · /admin/promotions — ภาพ+มาสคอต แนบเอง/ประกอบเอง', () => {
   it(' PromotionRow + migration มี banner_mascot (คอลัมน์เดียวที่ต้องมีบน production)', () => {

@@ -1,5 +1,7 @@
 # BMB — AI WORKING STATE (สถานะปฏิบัติการของ AI Dev)
 
+> **HANDOFF 2026-11-26 (Recovery / Migration Drift):** Repo-side Recovery COMPLETE & CI-green. Duplicate versions 180/183/203/204 renumbered → 229–232 (231 made idempotent); Fresh Replay 001→232 ALL GREEN; tsc/lint/vitest(258/3014)/build all pass. Production UNCHANGED (schema 218 / ledger 210; 219–228 pending). **Next session:** execute prod runbook in `docs/RECOVERY_PACKAGE_2026-11-26.md` (repair 211–218 → db push 219–228 via postgres role) after Owner approval + backup. Permanent rules: `docs/BMB_MIGRATION_RULES.md`.
+
 > **Canonical AI operating state** ตาม protocol §2.2 — เอกสารนี้คือสถานะปัจจุบันของ AI development session
 > - รวม: Active Task, Current Context, Architecture Constraints, **Mandatory Documentation Synchronization Protocol**
 > - อัปเดตทุก session ตาม protocol §3.7: "Update AI_WORKING_STATE when architecture, development rules, project constraints, or important working context changes."

@@ -6,9 +6,9 @@
 
 import { describe, it, expect } from 'vitest'
 import mig203GroundingSrc from '../../supabase/migrations/203_ai_grounding.sql?raw'
-import mig203UserPostCtxSrc from '../../supabase/migrations/203_user_post_context.sql?raw'
+import mig203UserPostCtxSrc from '../../supabase/migrations/231_user_post_context.sql?raw'
 import mig204OrderMemorySrc from '../../supabase/migrations/204_order_memory.sql?raw'
-import mig204SyncApprovalSrc from '../../supabase/migrations/204_sync_approval_to_marketing_post.sql?raw'
+import mig204SyncApprovalSrc from '../../supabase/migrations/232_sync_approval_to_marketing_post.sql?raw'
 
 describe('R203/R204 — Migration 203: AI Grounding + user_post_context, Migration 204: order_memory + sync approval', () => {
   // ============================================
@@ -38,7 +38,7 @@ describe('R203/R204 — Migration 203: AI Grounding + user_post_context, Migrati
   // ============================================
   describe('Migration 203: user_post_context table', () => {
     it('มี CREATE TABLE user_post_context พร้อม column ครบ', () => {
-      expect(mig203UserPostCtxSrc).toContain('CREATE TABLE user_post_context')
+      expect(mig203UserPostCtxSrc).toContain('CREATE TABLE IF NOT EXISTS user_post_context')
       expect(mig203UserPostCtxSrc).toContain('user_id TEXT NOT NULL')
       expect(mig203UserPostCtxSrc).toContain('page_id TEXT NOT NULL')
       expect(mig203UserPostCtxSrc).toContain('post_id TEXT NOT NULL')
@@ -49,7 +49,7 @@ describe('R203/R204 — Migration 203: AI Grounding + user_post_context, Migrati
     })
 
     it('มี index idx_user_post_context_updated', () => {
-      expect(mig203UserPostCtxSrc).toContain('CREATE INDEX idx_user_post_context_updated ON user_post_context(updated_at)')
+      expect(mig203UserPostCtxSrc).toContain('CREATE INDEX IF NOT EXISTS idx_user_post_context_updated ON user_post_context(updated_at)')
     })
 
     it('มี RLS ENABLE + policy service_role_full_access', () => {
