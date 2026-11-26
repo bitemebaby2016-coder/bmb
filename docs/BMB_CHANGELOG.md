@@ -1,4 +1,4 @@
-﻿# BMB â€” CHANGELOG (à¸à¸²à¸£à¹Œà¸”/à¸•à¸²à¸¡à¹€à¸§à¸¥à¸²/à¸¢à¸à¹€à¸¥à¸´à¸/à¸„à¸±à¸”à¸à¸£à¸­à¸‡); RAISE only inside DO blocks; UPDATE has no ON CONFLICT (INSERT only)
+# BMB â€” CHANGELOG (à¸à¸²à¸£à¹Œà¸”/à¸•à¸²à¸¡à¹€à¸§à¸¥à¸²/à¸¢à¸à¹€à¸¥à¸´à¸/à¸„à¸±à¸”à¸à¸£à¸­à¸‡); RAISE only inside DO blocks; UPDATE has no ON CONFLICT (INSERT only)
 - business_settings rows need upsert (INSERT ... ON CONFLICT (key)) not bare UPDATE when the row may not exist
 - cancel_order_as_customer: service_role only + RAISES exception -> tests must catch with nested block and clear JWT claims before service_role calls
 - create_production_batch/get_kitchen_summary defaults fire only when params are OMITTED (passing NULL is NOT the default)

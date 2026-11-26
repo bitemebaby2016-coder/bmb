@@ -28,6 +28,7 @@ import { DeliveryZonesPanel } from '@/components/admin/DeliveryZonesPanel'
 import { TransportAvailabilityBoard } from '@/components/admin/TransportAvailabilityBoard'
 import { SupplierPage } from '@/pages/admin/SupplierPage'
 import { SupplierProductMappingPage } from '@/pages/admin/SupplierProductMappingPage'
+import { PurchaseOrderPage } from '@/pages/admin/PurchaseOrderPage'
 
 interface HubTab {
   key: string
@@ -171,6 +172,7 @@ export function PurchaseHub() {
       tabs={[
         { key: 'suppliers', label: 'ผู้ขาย (Supplier Master)', icon: '🏢', render: () => <SupplierPage /> },
         { key: 'mappings', label: 'จับคู่สินค้า (Mapping)', icon: '🔗', render: () => <SupplierProductMappingPage /> },
+        { key: 'purchase_orders', label: 'ใบสั่งซื้อ (Purchase Order)', icon: '📝', render: () => <PurchaseOrderPage /> },
       ]}
     />
   )
