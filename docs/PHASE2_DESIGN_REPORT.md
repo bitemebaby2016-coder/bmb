@@ -1,4 +1,4 @@
-# Phase 2 Design Report â€” Purchase Orders + Goods Receiving + Purchase Price History
+# Phase 2 Design Report — Purchase Orders + Goods Receiving + Purchase Price History
 ## BMB Smart Ingredient & Cost Management
 
 **Status:** STAGE 2 IMPLEMENTATION AUTHORIZED  
@@ -13,39 +13,39 @@
 ### 1.1 Current Inventory Flow (Verified from Code)
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚                         CURRENT INVENTORY FLOW (Phase 1 Complete)           â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         CURRENT INVENTORY FLOW (Phase 1 Complete)           │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-ORDER CONFIRM (transition_order_status â†’ 'confirmed')
-    â”‚
-    â–¼
+ORDER CONFIRM (transition_order_status → 'confirmed')
+    │
+    ▼
 deduct_inventory_for_order(p_order_number)
-    â”‚
-    â”œâ”€â–º For each order_item â†’ recipes â†’ ingredient
-    â”‚     â€¢ current_stock = GREATEST(current_stock - qty Ã— qty_per_unit, 0)
-    â”‚     â€¢ INSERT inventory_transactions (type='out', notes='auto-deduct')
-    â”‚
-    â””â”€â–º INV-02: If ingredient < min_stock â†’ products.is_available = false
+    │
+    ├─► For each order_item → recipes → ingredient
+    │     • current_stock = GREATEST(current_stock - qty × qty_per_unit, 0)
+    │     • INSERT inventory_transactions (type='out', notes='auto-deduct')
+    │
+    └─► INV-02: If ingredient < min_stock → products.is_available = false
           INSERT inventory_transactions (type='adjustment', notes='auto sold-out')
 
-ORDER CANCEL/FAIL (transition_order_status â†’ 'cancelled'/'failed')
-    â”‚
-    â–¼
+ORDER CANCEL/FAIL (transition_order_status → 'cancelled'/'failed')
+    │
+    ▼
 restore_inventory_for_order(p_order_number)
-    â”‚
-    â”œâ”€â–º Find 'auto-deduct' transactions for order
-    â”‚     â€¢ current_stock = current_stock + quantity
-    â”‚     â€¢ DELETE 'auto-deduct' transactions
-    â”‚
-    â””â”€â–º If ingredient â‰¥ min_stock â†’ Recover products.is_available = true
+    │
+    ├─► Find 'auto-deduct' transactions for order
+    │     • current_stock = current_stock + quantity
+    │     • DELETE 'auto-deduct' transactions
+    │
+    └─► If ingredient ≥ min_stock → Recover products.is_available = true
           DELETE 'sold_out_auto' transactions
 ```
 
 **Key RPCs (Production Verified):**
-- `deduct_inventory_for_order` â€” Idempotent, admin-guarded, SECURITY DEFINER
-- `restore_inventory_for_order` â€” Idempotent, admin-guarded, SECURITY DEFINER
-- `transition_order_status` â€” State machine with guard, hooks INV-01 at confirm/cancel
+- `deduct_inventory_for_order` — Idempotent, admin-guarded, SECURITY DEFINER
+- `restore_inventory_for_order` — Idempotent, admin-guarded, SECURITY DEFINER
+- `transition_order_status` — State machine with guard, hooks INV-01 at confirm/cancel
 
 ### 1.2 Phase 1 Schema Additions (Migrations 214-218 Applied)
 
@@ -53,7 +53,7 @@ restore_inventory_for_order(p_order_number)
 |-------|-------------|---------|
 | `suppliers` | id, name, code, contact_name, phone, email, address, payment_terms_days, lead_time_days, is_active | Supplier Master |
 | `inventory` (enriched) | supplier_id FK, prep_yield_factor, prep_waste_pct, purchase_unit, use_unit, conversion_factor, package_size, gross_weight, net_weight, wavg_cost, last_purchase_price, last_approved_price | Ingredient Master |
-| `supplier_products` | supplier_id, ingredient_id, supplier_sku, supplier_name, purchase_unit, use_unit, conversion_factor, last_committed_price, last_realized_price, last_approved_price, min_order_qty, lead_time_days, is_preferred, is_active | Supplier â†” Ingredient Mapping (3 Price States) |
+| `supplier_products` | supplier_id, ingredient_id, supplier_sku, supplier_name, purchase_unit, use_unit, conversion_factor, last_committed_price, last_realized_price, last_approved_price, min_order_qty, lead_time_days, is_preferred, is_active | Supplier ↔ Ingredient Mapping (3 Price States) |
 | `recipes` (enriched) | batch_yield_factor, batch_waste_pct, cost_per_unit, last_cost_calculated_at | Recipe/BOM Batch Yield |
 
 ### 1.3 Current Gaps for Phase 2
@@ -64,7 +64,7 @@ restore_inventory_for_order(p_order_number)
 | No price history append-only | Cannot audit price changes |
 | No landed cost calculation | Cannot compute true cost per use unit |
 | No WAVG atomic update on GRN | WAVG columns exist but no trigger |
-| No POâ†’GRNâ†’Inventory transaction linkage | Traceability broken |
+| No PO→GRN→Inventory transaction linkage | Traceability broken |
 | No partial/over/under receiving logic | Business rules undefined |
 
 ---
@@ -115,7 +115,7 @@ CREATE TABLE purchase_order_lines (
   conversion_factor     NUMERIC(10,4) NOT NULL DEFAULT 1 CHECK (conversion_factor > 0),
   unit_price            NUMERIC(12,4) NOT NULL CHECK (unit_price >= 0),  -- per purchase_unit
   line_discount         NUMERIC(12,2) NOT NULL DEFAULT 0,
-  line_total            NUMERIC(12,2) NOT NULL DEFAULT 0,  -- (ordered_qty Ã— unit_price) - discount
+  line_total            NUMERIC(12,2) NOT NULL DEFAULT 0,  -- (ordered_qty × unit_price) - discount
   notes                 TEXT,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -128,7 +128,7 @@ CREATE INDEX idx_po_supplier ON purchase_orders(supplier_id);
 CREATE INDEX idx_po_number ON purchase_orders(po_number);
 
 -- ============================================
--- Phase 2: Goods Receipt Notes (GRN) â€” Header + Lines
+-- Phase 2: Goods Receipt Notes (GRN) — Header + Lines
 -- ============================================
 CREATE TABLE goods_receipts (
   id                    TEXT PRIMARY KEY,           -- grn-{timestamp}-{rand}
@@ -260,71 +260,71 @@ CREATE INDEX IF NOT EXISTS idx_sp_approved ON supplier_products(last_approved_pr
 ### 3.1 Purchase Order States
 
 ```
-DRAFT â”€â”€(submit)â”€â”€â–º SUBMITTED â”€â”€(approve)â”€â”€â–º APPROVED â”€â”€(send to supplier)â”€â”€â–º ORDERED
-                                                                     â”‚
-                                                                     â–¼
-                                                          PARTIALLY_RECEIVED â”€â”€(full receipt)â”€â”€â–º COMPLETED
-                                                                     â”‚
-                                                                     â”œâ”€(cancel outstanding)â”€â”€â–º CLOSED
-                                                                     â”‚
-                                                                     â””â”€(reject)â”€â”€â–º REJECTED
+DRAFT ──(submit)──► SUBMITTED ──(approve)──► APPROVED ──(send to supplier)──► ORDERED
+                                                                     │
+                                                                     ▼
+                                                          PARTIALLY_RECEIVED ──(full receipt)──► COMPLETED
+                                                                     │
+                                                                     ├─(cancel outstanding)──► CLOSED
+                                                                     │
+                                                                     └─(reject)──► REJECTED
                                                                    
-DRAFT â”€â”€(cancel)â”€â”€â–º CANCELLED
-SUBMITTED â”€â”€(reject)â”€â”€â–º REJECTED
-APPROVED â”€â”€(cancel)â”€â”€â–º CANCELLED
-ORDERED â”€â”€(cancel)â”€â”€â–º CANCELLED (if no receipts)
+DRAFT ──(cancel)──► CANCELLED
+SUBMITTED ──(reject)──► REJECTED
+APPROVED ──(cancel)──► CANCELLED
+ORDERED ──(cancel)──► CANCELLED (if no receipts)
 ```
 
 ### 3.2 GRN States
 
 ```
-DRAFT â”€â”€(submit)â”€â”€â–º SUBMITTED â”€â”€(approve)â”€â”€â–º APPROVED â”€â”€(post)â”€â”€â–º POSTED
-                                                              â”‚
-                                                              â”œâ”€(reverse)â”€â”€â–º REVERSED
-                                                              â”‚
-                                                              â””â”€(reject)â”€â”€â–º REJECTED
+DRAFT ──(submit)──► SUBMITTED ──(approve)──► APPROVED ──(post)──► POSTED
+                                                              │
+                                                              ├─(reverse)──► REVERSED
+                                                              │
+                                                              └─(reject)──► REJECTED
 
-DRAFT â”€â”€(cancel)â”€â”€â–º CANCELLED
-SUBMITTED â”€â”€(reject)â”€â”€â–º REJECTED
-APPROVED â”€â”€(cancel)â”€â”€â–º CANCELLED
+DRAFT ──(cancel)──► CANCELLED
+SUBMITTED ──(reject)──► REJECTED
+APPROVED ──(cancel)──► CANCELLED
 ```
 
 ### 3.3 State Transition Rules
 
-| From â†’ To | Actor | Conditions | Side Effects |
+| From → To | Actor | Conditions | Side Effects |
 |-----------|-------|------------|--------------|
-| draft â†’ submitted | Creator | All lines have qty > 0, supplier active | Audit log |
-| submitted â†’ approved | Approver (finance/inventory role) | Budget check, supplier terms | PO number assigned, notify supplier |
-| approved â†’ ordered | Inventory/Procurement | Supplier confirmation | Status change only |
-| ordered â†’ partially_received | Receiver | GRN posted with qty < ordered | Stock +WAVG update |
-| partially_received â†’ completed | Receiver | All lines fully received | PO closed |
-| partially_received â†’ closed | Manager | Business decision, outstanding qty > 0 | Outstanding recorded |
-| posted â†’ reversed | Finance/Inventory | Within 30 days, qty â‰¤ received | Stock -WAVG reversal |
+| draft → submitted | Creator | All lines have qty > 0, supplier active | Audit log |
+| submitted → approved | Approver (finance/inventory role) | Budget check, supplier terms | PO number assigned, notify supplier |
+| approved → ordered | Inventory/Procurement | Supplier confirmation | Status change only |
+| ordered → partially_received | Receiver | GRN posted with qty < ordered | Stock +WAVG update |
+| partially_received → completed | Receiver | All lines fully received | PO closed |
+| partially_received → closed | Manager | Business decision, outstanding qty > 0 | Outstanding recorded |
+| posted → reversed | Finance/Inventory | Within 30 days, qty ≤ received | Stock -WAVG reversal |
 
 ### 3.4 Role Permissions Matrix
 
 | Action | Creator | Approver (finance) | Inventory Staff | Receiver | Admin |
 |--------|---------|-------------------|-----------------|----------|-------|
-| Create PO (draft) | âœ… | âœ… | âœ… | âŒ | âœ… |
-| Submit PO | âœ… | âœ… | âœ… | âŒ | âœ… |
-| Approve PO | âŒ | âœ… | âŒ | âŒ | âœ… |
-| Create GRN (draft) | âŒ | âŒ | âœ… | âœ… | âœ… |
-| Approve GRN | âŒ | âœ… | âœ… | âŒ | âœ… |
-| Post GRN | âŒ | âŒ | âœ… | âœ… | âœ… |
-| Reverse GRN | âŒ | âœ… | âŒ | âŒ | âœ… |
-| Cancel PO/GRN | âœ… (own) | âœ… | âœ… | âŒ | âœ… |
+| Create PO (draft) | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Submit PO | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Approve PO | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Create GRN (draft) | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Approve GRN | ❌ | ✅ | ✅ | ❌ | ✅ |
+| Post GRN | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Reverse GRN | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Cancel PO/GRN | ✅ (own) | ✅ | ✅ | ❌ | ✅ |
 
 **RLS Policies Required:**
-- `po_admin_all` â€” admin full access
-- `po_creator_rw` â€” creator can read/write own drafts
-- `po_approver_rw` â€” finance role can read/write submitted/approved
-- `po_inventory_rw` â€” inventory role can read/write ordered/receiving
-- `po_receiver_r` â€” receiver can read ordered POs
-- `grn_admin_all` â€” admin full access
-- `grn_creator_rw` â€” creator can read/write own drafts
-- `grn_approver_rw` â€” approver can read/write submitted/approved
-- `grn_inventory_rw` â€” inventory can read/write posted
-- `grn_receiver_rw` â€” receiver can read/write drafts/posted
+- `po_admin_all` — admin full access
+- `po_creator_rw` — creator can read/write own drafts
+- `po_approver_rw` — finance role can read/write submitted/approved
+- `po_inventory_rw` — inventory role can read/write ordered/receiving
+- `po_receiver_r` — receiver can read ordered POs
+- `grn_admin_all` — admin full access
+- `grn_creator_rw` — creator can read/write own drafts
+- `grn_approver_rw` — approver can read/write submitted/approved
+- `grn_inventory_rw` — inventory can read/write posted
+- `grn_receiver_rw` — receiver can read/write drafts/posted
 
 ---
 
@@ -343,16 +343,16 @@ APPROVED â”€â”€(cancel)â”€â”€â–º CANCELLED
 ### 4.2 Unit Conversion (Owner Decision B2)
 
 ```
-purchase_unit â†’ use_unit conversion:
+purchase_unit → use_unit conversion:
   conversion_factor = use_units per 1 purchase_unit
   
 Examples:
-  carton (24 bottles) â†’ bottle: conversion_factor = 24
-  kg â†’ g: conversion_factor = 1000
-  pack (10 pieces) â†’ piece: conversion_factor = 10
+  carton (24 bottles) → bottle: conversion_factor = 24
+  kg → g: conversion_factor = 1000
+  pack (10 pieces) → piece: conversion_factor = 10
 
 Formula:
-  use_qty = purchase_qty Ã— conversion_factor
+  use_qty = purchase_qty × conversion_factor
   price_per_use_unit = price_per_purchase_unit / conversion_factor
 ```
 
@@ -365,9 +365,9 @@ Landed Cost per Purchase Unit =
   / Received Quantity
 
 Allocation Methods:
-  â€¢ Shipping: by value (line_subtotal / po_subtotal Ã— total_shipping)
-  â€¢ Order Discount: by value (line_subtotal / po_subtotal Ã— order_discount)
-  â€¢ Non-recoverable Tax: by value or by quantity (configurable per tax type)
+  • Shipping: by value (line_subtotal / po_subtotal × total_shipping)
+  • Order Discount: by value (line_subtotal / po_subtotal × order_discount)
+  • Non-recoverable Tax: by value or by quantity (configurable per tax type)
 
 Recoverable Tax (VAT): EXCLUDED from landed cost, tracked separately
 ```
@@ -379,8 +379,8 @@ For Supplier Product Mapping comparison:
   price_per_use_unit = unit_price / conversion_factor
   
 Where:
-  â€¢ unit_price = last_approved_price (for costing) OR last_realized_price (for actuals)
-  â€¢ conversion_factor from supplier_products table
+  • unit_price = last_approved_price (for costing) OR last_realized_price (for actuals)
+  • conversion_factor from supplier_products table
   
 This enables apples-to-apples comparison across suppliers with different package sizes.
 ```
@@ -406,13 +406,13 @@ GRN Input (purchase_unit):
   received_qty_purchase = received_qty (user input)
   
 Convert to Use Unit for Inventory:
-  received_qty_use = received_qty_purchase Ã— conversion_factor_snapshot
+  received_qty_use = received_qty_purchase × conversion_factor_snapshot
   
 Update Inventory:
   inventory.current_stock += received_qty_use
   
 WAVG Calculation:
-  new_wavg = (old_stock Ã— old_wavg + received_qty_use Ã— landed_cost_per_use_unit) 
+  new_wavg = (old_stock × old_wavg + received_qty_use × landed_cost_per_use_unit) 
              / (old_stock + received_qty_use)
 ```
 
@@ -421,9 +421,9 @@ WAVG Calculation:
 | Scenario | Handling |
 |----------|----------|
 | conversion_factor changes after PO but before GRN | Use GRN-time snapshot (stored in GRN line) |
-| Supplier Product conversion â‰  Ingredient conversion | Block GRN post, require alignment |
+| Supplier Product conversion ≠ Ingredient conversion | Block GRN post, require alignment |
 | conversion_factor = 0 or NULL | Block (CHECK constraint) |
-| Package size â‰  conversion_factor | Package size is informational; conversion_factor is authoritative |
+| Package size ≠ conversion_factor | Package size is informational; conversion_factor is authoritative |
 
 ---
 
@@ -432,13 +432,13 @@ WAVG Calculation:
 ### 6.1 WAVG Formula (Owner Direction: Perpetual Moving Weighted Average)
 
 ```
-New WAVG = (Old_Stock_Qty Ã— Old_WAVG + Received_Qty_Use_Unit Ã— Landed_Cost_Per_Use_Unit)
+New WAVG = (Old_Stock_Qty × Old_WAVG + Received_Qty_Use_Unit × Landed_Cost_Per_Use_Unit)
            / (Old_Stock_Qty + Received_Qty_Use_Unit)
 
 Where:
-  â€¢ Old_Stock_Qty = inventory.current_stock BEFORE GRN post (in use_unit)
-  â€¢ Received_Qty_Use_Unit = grn.received_qty Ã— conversion_factor (in use_unit)
-  â€¢ Landed_Cost_Per_Use_Unit = grn.landed_cost / conversion_factor
+  • Old_Stock_Qty = inventory.current_stock BEFORE GRN post (in use_unit)
+  • Received_Qty_Use_Unit = grn.received_qty × conversion_factor (in use_unit)
+  • Landed_Cost_Per_Use_Unit = grn.landed_cost / conversion_factor
 ```
 
 ### 6.2 Atomic GRN Post Transaction
@@ -586,12 +586,12 @@ $$;
 |-----|---------|------------|---------|
 | `create_purchase_order` | Create PO draft | supplier_id, lines[], dates, amounts | po_id, po_number |
 | `update_purchase_order` | Edit PO draft | po_id, fields, version | updated PO |
-| `submit_purchase_order` | Draft â†’ Submitted | po_id | status |
-| `approve_purchase_order` | Submitted â†’ Approved | po_id, approver_id | po_number, status |
+| `submit_purchase_order` | Draft → Submitted | po_id | status |
+| `approve_purchase_order` | Submitted → Approved | po_id, approver_id | po_number, status |
 | `create_grn_draft` | Create GRN draft (header + lines) | po_id, lines[{po_line_id, received_qty, accepted_qty, rejected_qty, actual_unit_price, lot_number, expiry_date, line_discount, shipping_allocated, tax_treatment, tax_amount}], receipt_date, received_by | grn_id |
-| `approve_grn` | Draft â†’ Approved | grn_id, approver_id | status |
-| `post_goods_receipt` | Approved â†’ Posted (atomic, per GRN line) | grn_id, idempotency_key | {posted_lines: [{grn_line_id, new_stock, new_wavg}]} |
-| `reverse_grn` | Posted â†’ Reversed | grn_id, reason | reversal_grn_id |
+| `approve_grn` | Draft → Approved | grn_id, approver_id | status |
+| `post_goods_receipt` | Approved → Posted (atomic, per GRN line) | grn_id, idempotency_key | {posted_lines: [{grn_line_id, new_stock, new_wavg}]} |
+| `reverse_grn` | Posted → Reversed | grn_id, reason | reversal_grn_id |
 | `get_purchase_price_history` | Query price history | ingredient_id, supplier_id?, date_range | price_history[] |
 | `get_po_dashboard` | Dashboard data | date_range, supplier_id? | aggregated metrics |
 | `calculate_landed_cost` | Compute landed cost per GRN line | po_id, grn_lines[] | allocations[] |
@@ -742,7 +742,7 @@ CREATE POLICY pph_staff_read ON purchase_price_history FOR SELECT TO authenticat
 
 ### 8.2 Role Function Dependencies
 
-Requires `public.is_inventory()`, `public.is_finance()`, `public.is_kitchen()`, `public.is_pos()` from Migration 146 (Role Foundation) â€” already deployed.
+Requires `public.is_inventory()`, `public.is_finance()`, `public.is_kitchen()`, `public.is_pos()` from Migration 146 (Role Foundation) — already deployed.
 
 ---
 
@@ -752,12 +752,12 @@ Requires `public.is_inventory()`, `public.is_finance()`, `public.is_kitchen()`, 
 
 ```
 /admin/purchase
-â”œâ”€â”€ /dashboard          â†’ Purchase Dashboard (B1)
-â”œâ”€â”€ /suppliers          â†’ Supplier Master (existing)
-â”œâ”€â”€ /mappings           â†’ Supplier Product Mapping (existing)
-â”œâ”€â”€ /purchase-orders    â†’ PO List + Create/Edit (B2, B3)
-â”œâ”€â”€ /goods-receipts     â†’ GRN List + Create/Edit (D1)
-â””â”€â”€ /price-history      â†’ Purchase Price History (F)
+├── /dashboard          → Purchase Dashboard (B1)
+├── /suppliers          → Supplier Master (existing)
+├── /mappings           → Supplier Product Mapping (existing)
+├── /purchase-orders    → PO List + Create/Edit (B2, B3)
+├── /goods-receipts     → GRN List + Create/Edit (D1)
+└── /price-history      → Purchase Price History (F)
 ```
 
 ### 9.2 Screen Specifications
@@ -772,7 +772,7 @@ Requires `public.is_inventory()`, `public.is_finance()`, `public.is_kitchen()`, 
 - **Supplier Picker**: Searchable dropdown (active suppliers only)
 - **Product Grid**: From `supplier_products` where supplier_id = selected
 - **Columns**: SKU, Supplier Name, Ingredient (linked), Purchase Unit, Use Unit, Conversion, 3 Prices
-- **Actions**: Checkbox select â†’ "Add to PO"
+- **Actions**: Checkbox select → "Add to PO"
 - **Warnings**: Highlight mappings missing conversion_factor or prices
 
 #### B3. Create/Edit PO
@@ -784,7 +784,7 @@ Requires `public.is_inventory()`, `public.is_finance()`, `public.is_kitchen()`, 
   - Ordered Qty (editable)
   - Unit Price (editable, defaults from mapping.last_approved_price)
   - Line Discount (editable)
-  - Line Total (computed: qty Ã— price - discount)
+  - Line Total (computed: qty × price - discount)
 - **Footer**: Subtotal, Discount Total, Shipping, Tax, Grand Total (all computed)
 - **Actions**: Save Draft, Submit for Approval
 
@@ -805,7 +805,7 @@ Requires `public.is_inventory()`, `public.is_finance()`, `public.is_kitchen()`, 
 #### F. Price History
 - **Table**: Date, Supplier, Ingredient, PO/GRN, Price Type, Purchase Unit, Use Unit, Price/Purchase, Price/Use Unit, Landed Cost
 - **Filters**: Ingredient, Supplier, Price Type, Date Range
-- **Comparison View**: Group by Ingredient â†’ show all suppliers' approved prices per use unit
+- **Comparison View**: Group by Ingredient → show all suppliers' approved prices per use unit
 
 ---
 
@@ -816,8 +816,8 @@ Requires `public.is_inventory()`, `public.is_finance()`, `public.is_kitchen()`, 
 | Test ID | Scenario | Expected |
 |---------|----------|----------|
 | DB-PO-01 | Create PO draft with valid lines | PO created, version=1 |
-| DB-PO-02 | Submit PO â†’ status=submitted | Status changed, audit log |
-| DB-PO-03 | Approve PO â†’ status=approved, po_number assigned | PO number unique, notified |
+| DB-PO-02 | Submit PO → status=submitted | Status changed, audit log |
+| DB-PO-03 | Approve PO → status=approved, po_number assigned | PO number unique, notified |
 | DB-PO-04 | Duplicate PO number rejected | Unique constraint |
 | DB-PO-05 | Edit approved PO blocked | RLS/Business rule |
 | DB-PO-06 | PO revision creates new version | parent_po_id set, revision_number++ |
@@ -835,7 +835,7 @@ Requires `public.is_inventory()`, `public.is_finance()`, `public.is_kitchen()`, 
 | DB-PRICE-01 | Price history append-only (no UPDATE) | Trigger blocks UPDATE |
 | DB-PRICE-02 | 3 price states recorded per GRN line | committed, realized, landed |
 | DB-CONV-01 | Conversion factor snapshot at GRN line | Stored in inventory_tx |
-| DB-CONV-02 | Supplier product conv â‰  ingredient conv â†’ block | Validation error |
+| DB-CONV-02 | Supplier product conv ≠ ingredient conv → block | Validation error |
 | DB-WAVG-01 | WAVG formula correct (zero stock edge) | new_wavg = landed_cost |
 | DB-WAVG-02 | WAVG formula correct (existing stock) | Weighted average |
 | DB-WAVG-03 | Return/reversal recalculates WAVG | Reverse formula |
@@ -845,31 +845,31 @@ Requires `public.is_inventory()`, `public.is_finance()`, `public.is_kitchen()`, 
 
 | Test ID | Workflow | Pass Criteria |
 |---------|----------|---------------|
-| E2E-01 | Open PurchaseHub â†’ navigate all tabs | No 404, all load |
-| E2E-02 | Create PO: select supplier â†’ add lines â†’ save draft | Draft persists, reload shows data |
-| E2E-03 | Submit PO â†’ approve â†’ verify status | Approved, PO number assigned |
-| E2E-04 | Create GRN from PO â†’ partial receive | Outstanding qty correct |
-| E2E-05 | Second GRN for same PO â†’ complete | PO status=completed |
-| E2E-06 | GRN post â†’ verify stock increased | Inventory.current_stock += qtyÃ—conv |
-| E2E-07 | GRN post â†’ verify WAVG updated | WAVG = weighted average |
-| E2E-08 | GRN post â†’ verify price history | 3 rows appended |
+| E2E-01 | Open PurchaseHub → navigate all tabs | No 404, all load |
+| E2E-02 | Create PO: select supplier → add lines → save draft | Draft persists, reload shows data |
+| E2E-03 | Submit PO → approve → verify status | Approved, PO number assigned |
+| E2E-04 | Create GRN from PO → partial receive | Outstanding qty correct |
+| E2E-05 | Second GRN for same PO → complete | PO status=completed |
+| E2E-06 | GRN post → verify stock increased | Inventory.current_stock += qty×conv |
+| E2E-07 | GRN post → verify WAVG updated | WAVG = weighted average |
+| E2E-08 | GRN post → verify price history | 3 rows appended |
 | E2E-09 | Duplicate GRN post (same idempotency) | No duplicate stock/history |
-| E2E-10 | Reject goods in GRN â†’ rejected_qty recorded | Rejected tracked, not stocked |
-| E2E-11 | GRN reversal â†’ stock restored | Stock -= qty, WAVG recalculated |
+| E2E-10 | Reject goods in GRN → rejected_qty recorded | Rejected tracked, not stocked |
+| E2E-11 | GRN reversal → stock restored | Stock -= qty, WAVG recalculated |
 | E2E-12 | Price history comparison view | All suppliers per ingredient per use unit |
 | E2E-13 | Permission: non-approver cannot approve | 403/RLS block |
 | E2E-14 | Responsive: mobile PO create works | Form usable on 375px |
 | E2E-15 | Validation: negative qty blocked | Toast error in Thai |
 | E2E-16 | Validation: price variance warning | Toast warning if >5% |
-| E2E-17 | Attachments upload â†’ linked to PO/GRN | Files accessible |
+| E2E-17 | Attachments upload → linked to PO/GRN | Files accessible |
 | E2E-18 | Audit trail visible on PO/GRN detail | All transitions logged |
 
 ### 10.3 J3: Integration / Regression Tests
 
 | Test ID | Scenario | Must Not Break |
 |---------|----------|----------------|
-| REG-01 | Existing order flow (cartâ†’checkoutâ†’confirm) | Stock deduction works |
-| REG-02 | Order cancel â†’ restore_inventory | Stock restored correctly |
+| REG-01 | Existing order flow (cart→checkout→confirm) | Stock deduction works |
+| REG-02 | Order cancel → restore_inventory | Stock restored correctly |
 | REG-03 | Recipe cost calculation | Uses wavg_cost |
 | REG-04 | Inventory CRUD (Phase 1) | All fields work |
 | REG-05 | Supplier Master CRUD | All fields work |
@@ -934,7 +934,7 @@ SELECT * FROM verify_price_history_integrity();
 
 ## 13. PHASE GATE CHECKLIST
 
-### Stage 1: Design & Dependency Audit âœ… COMPLETE
+### Stage 1: Design & Dependency Audit ✅ COMPLETE
 - [x] Existing Data Flow documented
 - [x] Database Schema Proposal complete (GRN Header + Lines corrected)
 - [x] PO/GRN State Machine defined
@@ -948,7 +948,7 @@ SELECT * FROM verify_price_history_integrity();
 - [x] Migration Plan defined
 - [x] Rollback/Recovery Plan defined
 
-### Stage 2: Implementation âœ… AUTHORIZED (Owner 2026-11-25)
+### Stage 2: Implementation ✅ AUTHORIZED (Owner 2026-11-25)
 - [x] Phase 1 Dependency Verification PASSED
 - [x] Owner approves Design Report (with GRN Header+Lines correction)
 - [x] Migration Plan reviewed for production safety
@@ -971,13 +971,13 @@ SELECT * FROM verify_price_history_integrity();
 - [ ] Production smoke test (read-only)
 
 ### Stage 4: Owner Acceptance
-- [ ] Owner live test POâ†’GRNâ†’Stockâ†’Price History workflow
+- [ ] Owner live test PO→GRN→Stock→Price History workflow
 - [ ] Evidence documented
 - [ ] Phase 2 Gate PASSED
 
 ---
 
-## 14. OWNER DECISIONS â€” 7 OPEN QUESTIONS RESOLVED
+## 14. OWNER DECISIONS — 7 OPEN QUESTIONS RESOLVED
 
 | # | Question | Owner Decision | Implementation Impact |
 |---|----------|----------------|----------------------|
@@ -991,66 +991,66 @@ SELECT * FROM verify_price_history_integrity();
 
 ---
 
-**Report Status:** DESIGN COMPLETE + OWNER DECISIONS RESOLVED â€” **STAGE 2 IMPLEMENTATION AUTHORIZED**  
-**Next Action:** Begin WP1 â€” Database Schema / Migrations / Contract Tests (Migration 219)The system cannot find the file specified.
+**Report Status:** DESIGN COMPLETE + OWNER DECISIONS RESOLVED — **STAGE 2 IMPLEMENTATION AUTHORIZED**  
+**Next Action:** Begin WP1 — Database Schema / Migrations / Contract Tests (Migration 219)
 
 
 ---
 
-## 15. WP1 REMEDIATION RECORD (Owner Review Round â€” 2026-11-26)
+## 15. WP1 REMEDIATION RECORD (Owner Review Round — 2026-11-26)
 
-> à¸ªà¸–à¸²à¸™à¸°à¹€à¸­à¸à¸ªà¸²à¸£à¸ªà¹ˆà¸§à¸™à¸™à¸µà¹‰: à¸œà¸¥à¸à¸²à¸£à¹à¸à¹‰à¹„à¸‚ WP1 à¸•à¸²à¸¡à¸„à¸³à¸ªà¸±à¹ˆà¸‡ Owner "WP1 REMEDIATION &
-> SCOPE CORRECTION" à¸„à¸£à¸šà¸—à¸¸à¸à¸‚à¹‰à¸­ A-G à¸£à¸­ Owner à¸•à¸£à¸§à¸ˆà¸£à¸±à¸š
+> สถานะเอกสารส่วนนี้: ผลการแก้ไข WP1 ตามคำสั่ง Owner "WP1 REMEDIATION &
+> SCOPE CORRECTION" ครบทุกข้อ A-G รอ Owner ตรวจรับ
 
-### 15.1 Defect Matrix â€” à¸à¹ˆà¸­à¸™à¹à¸à¹‰ / à¸«à¸¥à¸±à¸‡à¹à¸à¹‰
+### 15.1 Defect Matrix — ก่อนแก้ / หลังแก้
 
-| # | Defect (à¸à¹ˆà¸­à¸™à¹à¸à¹‰) | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸à¹ˆà¸­à¸™à¹à¸à¹‰ | à¸à¸²à¸£à¹à¸à¹‰ (à¸«à¸¥à¸±à¸‡) | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸«à¸¥à¸±à¸‡à¹à¸à¹‰ |
+| # | Defect (ก่อนแก้) | หลักฐานก่อนแก้ | การแก้ (หลัง) | หลักฐานหลังแก้ |
 |---|---|---|---|---|
-| 1 | `goods_receipt_lines.price_variance` à¹€à¸›à¹‡à¸™ GENERATED column à¸—à¸µà¹ˆà¸¡à¸µ subquery â†’ PostgreSQL à¸«à¹‰à¸²à¸¡ â†’ apply à¸•à¸²à¸£à¸²à¸‡à¸žà¸±à¸‡ | 220 à¹€à¸”à¸´à¸¡ à¸šà¸£à¸£à¸—à¸±à¸” 50-52 | à¸¥à¸š column à¸—à¸´à¹‰à¸‡ â€” variance à¸„à¸³à¸™à¸§à¸“à¹ƒà¸™ read layer (WP7 view/RPC): `actual_unit_price âˆ’ po_line.unit_price` | m220 à¹ƒà¸«à¸¡à¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ token price_variance/GENERATED à¹ƒà¸™ DDL Â· integration test 220.2 PASS à¸šà¸™ DB à¸ˆà¸£à¸´à¸‡ |
-| 2 | `reverse_grn` insert à¸›à¸£à¸´à¸¡à¸²à¸“/à¸£à¸²à¸„à¸²à¸•à¸´à¸”à¸¥à¸šà¸¥à¸‡ `goods_receipt_lines` â†’ à¸Šà¸™ CHECK received_qty>0 / price>=0 â†’ reversal à¸žà¸±à¸‡à¸—à¸¸à¸à¸„à¸£à¸±à¹‰à¸‡ | 223 à¹€à¸”à¸´à¸¡ à¸šà¸£à¸£à¸—à¸±à¸” 392-406 | Reversal model à¹ƒà¸«à¸¡à¹ˆ: positive-quantity mirror + reversal_of linkage + partial UNIQUE uq_grn_reversal_once (à¸—à¸³à¸‹à¹‰à¸³à¹„à¸¡à¹ˆà¹„à¸”à¹‰) + stock à¸¢à¹‰à¸­à¸™à¸”à¹‰à¸§à¸¢ itx type='out' qty à¸šà¸§à¸ (convention m019/m026) + WAVG à¸¢à¹‰à¸­à¸™à¸”à¹‰à¸§à¸¢ landed cost à¸—à¸µà¹ˆà¹€à¸à¹‡à¸šà¹„à¸§à¹‰ | m220 CHECK à¹€à¸”à¸´à¸¡à¸„à¸‡à¸­à¸¢à¸¹à¹ˆ (à¹„à¸¡à¹ˆà¸¥à¸”à¸„à¸§à¸²à¸¡à¹€à¸‚à¹‰à¸¡à¸‡à¸§à¸”) Â· integration 220.5/220.7/220.8 PASS Â· staged WP6 à¹„à¸¡à¹ˆà¸¡à¸µà¸„à¹ˆà¸²à¸¥à¸šà¸¥à¸‡ lines |
-| 3 | à¸­à¹ˆà¸²à¸™/à¹€à¸‚à¸µà¸¢à¸™ `goods_receipts.idempotency_key` à¸—à¸±à¹‰à¸‡à¸—à¸µà¹ˆ 220 à¹€à¸”à¸´à¸¡à¹„à¸¡à¹ˆà¸¡à¸µà¸„à¸­à¸¥à¸±à¸¡à¸™à¹Œ â†’ post à¸„à¸£à¸±à¹‰à¸‡à¹à¸£à¸ error | 223 à¹€à¸”à¸´à¸¡ à¸šà¸£à¸£à¸—à¸±à¸” 78, 253 | à¹€à¸žà¸´à¹ˆà¸¡ idempotency_key + idempotency_payload_hash à¹ƒà¸™ m220 + partial UNIQUE uq_grn_idempotency_key + CHECK reversal à¹„à¸¡à¹ˆà¸¡à¸µ key + WP6: same key+hash â†’ à¸„à¸·à¸™à¸œà¸¥à¹€à¸”à¸´à¸¡ / hash à¸•à¹ˆà¸²à¸‡ â†’ ERR_IDEMPOTENCY_CONFLICT / line double-post guard | integration 220.6 PASS (unique à¸£à¸°à¸”à¸±à¸š DB) Â· staged WP6 à¸•à¸£à¸§à¸ˆ hash à¸à¹ˆà¸­à¸™ post |
-| 4 | à¸­à¹ˆà¸²à¸™ `goods_receipt_lines.landed_cost` à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸¡à¸µà¹ƒà¸™ schema â†’ reversal error | 223 à¹€à¸”à¸´à¸¡ à¸šà¸£à¸£à¸—à¸±à¸” 339, 362 | à¸™à¸´à¸¢à¸²à¸¡ landed cost à¸Šà¸±à¸”à¹ƒà¸™ m221 COMMENT: à¸•à¹ˆà¸­ line à¸•à¹ˆà¸­à¸«à¸™à¹ˆà¸§à¸¢à¸‹à¸·à¹‰à¸­ = (receivedÃ—price âˆ’ discount + shipping + à¸ à¸²à¸©à¸µ non_recoverable)/received Â· à¸ˆà¸¸à¸”à¸ˆà¸±à¸”à¹€à¸à¹‡à¸š: purchase_price_history.landed_cost (append-only) + inventory_transactions.unit_cost (à¸•à¹ˆà¸­ use_unit) + inventory.wavg_cost â€” reversal à¸­à¹ˆà¸²à¸™à¸ˆà¸²à¸ pph row price_type='landed' | integration 221.2 PASS Â· staged WP6 à¸­à¹ˆà¸²à¸™à¸ˆà¸²à¸ pph (à¹„à¸¡à¹ˆà¸¡à¸µ v_grl.landed_cost) |
-| 5 | à¸­à¹ˆà¸²à¸™ `supplier_products.package_size` à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ (m217) â†’ post error | 223 à¹€à¸”à¸´à¸¡ à¸šà¸£à¸£à¸—à¸±à¸” 161/168/176/386 | à¸¥à¸š package_size à¸­à¸­à¸à¸ˆà¸²à¸ 221 â€” à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸«à¸™à¹ˆà¸§à¸¢à¸„à¸£à¸­à¸šà¸„à¸¥à¸¸à¸¡à¸”à¹‰à¸§à¸¢ purchase_unit + use_unit + conversion_factor + price_per_use_unit (generated) à¸—à¸µà¹ˆà¸¡à¸µà¸­à¸¢à¸¹à¹ˆà¹à¸¥à¹‰à¸§ Â· à¹„à¸Ÿà¸¥à¹Œ WP à¸—à¸¸à¸à¹„à¸Ÿà¸¥à¹Œà¹„à¸¡à¹ˆà¸­à¹‰à¸²à¸‡ package_size | integration 221.1 PASS Â· static test à¸à¸±à¸™ regression à¸—à¸¸à¸ staged à¹„à¸Ÿà¸¥à¹Œ |
+| 1 | `goods_receipt_lines.price_variance` เป็น GENERATED column ที่มี subquery → PostgreSQL ห้าม → apply ตารางพัง | 220 เดิม บรรทัด 50-52 | ลบ column ทิ้ง — variance คำนวณใน read layer (WP7 view/RPC): `actual_unit_price − po_line.unit_price` | m220 ใหม่ไม่มี token price_variance/GENERATED ใน DDL · integration test 220.2 PASS บน DB จริง |
+| 2 | `reverse_grn` insert ปริมาณ/ราคาติดลบลง `goods_receipt_lines` → ชน CHECK received_qty>0 / price>=0 → reversal พังทุกครั้ง | 223 เดิม บรรทัด 392-406 | Reversal model ใหม่: positive-quantity mirror + reversal_of linkage + partial UNIQUE uq_grn_reversal_once (ทำซ้ำไม่ได้) + stock ย้อนด้วย itx type='out' qty บวก (convention m019/m026) + WAVG ย้อนด้วย landed cost ที่เก็บไว้ | m220 CHECK เดิมคงอยู่ (ไม่ลดความเข้มงวด) · integration 220.5/220.7/220.8 PASS · staged WP6 ไม่มีค่าลบลง lines |
+| 3 | อ่าน/เขียน `goods_receipts.idempotency_key` ทั้งที่ 220 เดิมไม่มีคอลัมน์ → post ครั้งแรก error | 223 เดิม บรรทัด 78, 253 | เพิ่ม idempotency_key + idempotency_payload_hash ใน m220 + partial UNIQUE uq_grn_idempotency_key + CHECK reversal ไม่มี key + WP6: same key+hash → คืนผลเดิม / hash ต่าง → ERR_IDEMPOTENCY_CONFLICT / line double-post guard | integration 220.6 PASS (unique ระดับ DB) · staged WP6 ตรวจ hash ก่อน post |
+| 4 | อ่าน `goods_receipt_lines.landed_cost` ที่ไม่มีใน schema → reversal error | 223 เดิม บรรทัด 339, 362 | นิยาม landed cost ชัดใน m221 COMMENT: ต่อ line ต่อหน่วยซื้อ = (received×price − discount + shipping + ภาษี non_recoverable)/received · จุดจัดเก็บ: purchase_price_history.landed_cost (append-only) + inventory_transactions.unit_cost (ต่อ use_unit) + inventory.wavg_cost — reversal อ่านจาก pph row price_type='landed' | integration 221.2 PASS · staged WP6 อ่านจาก pph (ไม่มี v_grl.landed_cost) |
+| 5 | อ่าน `supplier_products.package_size` ที่ไม่มี (m217) → post error | 223 เดิม บรรทัด 161/168/176/386 | ลบ package_size ออกจาก 221 — ข้อมูลหน่วยครอบคลุมด้วย purchase_unit + use_unit + conversion_factor + price_per_use_unit (generated) ที่มีอยู่แล้ว · ไฟล์ WP ทุกไฟล์ไม่อ้าง package_size | integration 221.1 PASS · static test กัน regression ทุก staged ไฟล์ |
 
-### 15.2 à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¹„à¸Ÿà¸¥à¹Œà¸«à¸¥à¸±à¸‡à¸ˆà¸±à¸”à¸‚à¸­à¸šà¹€à¸‚à¸• (Owner Â§D)
+### 15.2 โครงสร้างไฟล์หลังจัดขอบเขต (Owner §D)
 
-| à¹„à¸Ÿà¸¥à¹Œ | à¸›à¸£à¸°à¹€à¸ à¸— | à¸ªà¸–à¸²à¸™à¸° |
+| ไฟล์ | ประเภท | สถานะ |
 |---|---|---|
-| `supabase/migrations/219_purchase_orders.sql` | Migration â€” Schema + po_number_seq contract | âœ… à¹à¸à¹‰ (à¹€à¸žà¸´à¹ˆà¸¡ sequence/comment) |
-| `supabase/migrations/220_goods_receipts.sql` | Migration â€” Schema + idempotency + reversal linkage | âœ… à¸£à¸µà¹€à¸‚à¸µà¸¢à¸™ |
-| `supabase/migrations/221_purchase_price_history.sql` | Migration â€” Schema append-only + tenant/branch | âœ… à¸£à¸µà¹€à¸‚à¸µà¸¢à¸™ |
-| `supabase/migrations/222_inventory_transaction_ext.sql` | Migration â€” additive columns + COMMENT | âœ… à¹€à¸žà¸´à¹ˆà¸¡ COMMENT |
-| `supabase/migrations/223_po_grn_rls.sql` | Migration â€” RLS org/branch (renumbered à¸ˆà¸²à¸ 224) | âœ… à¸£à¸µà¹€à¸‚à¸µà¸¢à¸™ |
-| `supabase/staged_workflows/wp2_po_workflow_rpc.sql` | REFERENCE â€” WP2 à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡ | à¹ƒà¸«à¸¡à¹ˆ (à¸¢à¹‰à¸²à¸¢à¸ˆà¸²à¸ 225) |
-| `supabase/staged_workflows/wp4_grn_workflow_rpc.sql` | REFERENCE â€” WP4 à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡ | à¹ƒà¸«à¸¡à¹ˆ (à¸¢à¹‰à¸²à¸¢à¸ˆà¸²à¸ 225) |
-| `supabase/staged_workflows/wp6_wavg_posting_reversal.sql` | REFERENCE â€” WP6 à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡ | à¹ƒà¸«à¸¡à¹ˆ (à¸¢à¹‰à¸²à¸¢+à¹à¸à¹‰à¸ˆà¸²à¸ 223 à¹€à¸”à¸´à¸¡) |
-| `supabase/staged_workflows/wp7_price_history_read_api.sql` | REFERENCE â€” WP7 à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡ | à¹ƒà¸«à¸¡à¹ˆ (SECURITY INVOKER) |
-| `supabase/staged_workflows/wp8_po_dashboard_read_api.sql` | REFERENCE â€” WP8 à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡ | à¹ƒà¸«à¸¡à¹ˆ (SECURITY INVOKER) |
-| 223_wavg_trigger.sql / 224_po_grn_rls.sql / 225_po_grn_rpcs.sql (à¹€à¸”à¸´à¸¡) | â€” | à¸¥à¸š/à¹à¸—à¸™à¸—à¸µà¹ˆà¸•à¸²à¸¡ scope à¹ƒà¸«à¸¡à¹ˆ |
+| `supabase/migrations/219_purchase_orders.sql` | Migration — Schema + po_number_seq contract | ✅ แก้ (เพิ่ม sequence/comment) |
+| `supabase/migrations/220_goods_receipts.sql` | Migration — Schema + idempotency + reversal linkage | ✅ รีเขียน |
+| `supabase/migrations/221_purchase_price_history.sql` | Migration — Schema append-only + tenant/branch | ✅ รีเขียน |
+| `supabase/migrations/222_inventory_transaction_ext.sql` | Migration — additive columns + COMMENT | ✅ เพิ่ม COMMENT |
+| `supabase/migrations/223_po_grn_rls.sql` | Migration — RLS org/branch (renumbered จาก 224) | ✅ รีเขียน |
+| `supabase/staged_workflows/wp2_po_workflow_rpc.sql` | REFERENCE — WP2 เจ้าของ | ใหม่ (ย้ายจาก 225) |
+| `supabase/staged_workflows/wp4_grn_workflow_rpc.sql` | REFERENCE — WP4 เจ้าของ | ใหม่ (ย้ายจาก 225) |
+| `supabase/staged_workflows/wp6_wavg_posting_reversal.sql` | REFERENCE — WP6 เจ้าของ | ใหม่ (ย้าย+แก้จาก 223 เดิม) |
+| `supabase/staged_workflows/wp7_price_history_read_api.sql` | REFERENCE — WP7 เจ้าของ | ใหม่ (SECURITY INVOKER) |
+| `supabase/staged_workflows/wp8_po_dashboard_read_api.sql` | REFERENCE — WP8 เจ้าของ | ใหม่ (SECURITY INVOKER) |
+| 223_wavg_trigger.sql / 224_po_grn_rls.sql / 225_po_grn_rpcs.sql (เดิม) | — | ลบ/แทนที่ตาม scope ใหม่ |
 
-à¹€à¸«à¸•à¸¸à¸œà¸¥à¸—à¸µà¹ˆà¹€à¸à¹‡à¸š schema-object à¸šà¸²à¸‡à¸ªà¹ˆà¸§à¸™à¹„à¸§à¹‰à¹ƒà¸™ WP1 (à¸•à¸²à¸¡à¸‚à¹‰à¸­ "Referential Integrity" à¸‚à¸­à¸‡ Owner Â§D):
-- po_number_seq / grn_number_seq = schema objects + contract definitions à¸‚à¸­à¸‡à¹€à¸¥à¸‚à¹€à¸­à¸à¸ªà¸²à¸£ (UNIQUE + format) â€” generators (functions) à¸­à¸¢à¸¹à¹ˆ WP2/WP4
-- enforce_purchase_price_history_append_only trigger = referential integrity à¸‚à¸­à¸‡ ledger â€” à¸•à¹‰à¸­à¸‡à¸­à¸¢à¸¹à¹ˆà¸à¸±à¸š schema
+เหตุผลที่เก็บ schema-object บางส่วนไว้ใน WP1 (ตามข้อ "Referential Integrity" ของ Owner §D):
+- po_number_seq / grn_number_seq = schema objects + contract definitions ของเลขเอกสาร (UNIQUE + format) — generators (functions) อยู่ WP2/WP4
+- enforce_purchase_price_history_append_only trigger = referential integrity ของ ledger — ต้องอยู่กับ schema
 
-### 15.3 Branch Isolation (Owner Â§C) â€” à¸ªà¸£à¸¸à¸›à¸à¸²à¸£à¸­à¸­à¸à¹à¸šà¸š
+### 15.3 Branch Isolation (Owner §C) — สรุปการออกแบบ
 
-- à¸•à¸£à¸§à¸ˆ pattern à¹€à¸”à¸´à¸¡à¹à¸¥à¹‰à¸§: m065/m071 (tenant + is_platform), m088/m090 (profiles.branch_id + is_branch_admin), m146 (role predicates) â€” Phase 1 à¸•à¸²à¸£à¸²à¸‡ suppliers/supplier_products à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ branch predicate à¹ƒà¸” à¹†
-- à¹à¸à¹‰: helper à¹€à¸”à¸µà¸¢à¸§ has_org_row_scope(tenant, branch) à¸„à¸£à¸­à¸š platform bypass + tenant match (COALESCE 'tenant-bmb-001') + admin/owner cross-branch + staff à¸•à¸²à¸¡ assignment â€” à¸£à¸§à¸¡à¸à¸±à¸š role predicate à¸‚à¸­à¸‡ m146 à¸—à¸¸à¸ policy
-- à¹€à¸žà¸´à¹ˆà¸¡ tenant_id/branch_id à¹ƒà¸«à¹‰ purchase_price_history (row à¸ªà¸·à¸šà¸—à¸­à¸”à¸ˆà¸²à¸ PO/GRN à¹€à¸‚à¸µà¸¢à¸™à¹‚à¸”à¸¢ WP6) â€” lines tables à¹ƒà¸Šà¹‰ EXISTS parent scope
-- à¸—à¸”à¸ªà¸­à¸š: integration T223 11 à¹€à¸„à¸ª â€” cross-branch read/write deny à¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡à¸—à¸´à¸¨, WITH CHECK deny, admin/owner à¸•à¸²à¸¡ model à¹€à¸”à¸´à¸¡, platform bypass, GRN/PPH cross-branch â€” ALL PASS à¸šà¸™ DB à¸ˆà¸£à¸´à¸‡
+- ตรวจ pattern เดิมแล้ว: m065/m071 (tenant + is_platform), m088/m090 (profiles.branch_id + is_branch_admin), m146 (role predicates) — Phase 1 ตาราง suppliers/supplier_products ยังไม่มี branch predicate ใด ๆ
+- แก้: helper เดียว has_org_row_scope(tenant, branch) ครอบ platform bypass + tenant match (COALESCE 'tenant-bmb-001') + admin/owner cross-branch + staff ตาม assignment — รวมกับ role predicate ของ m146 ทุก policy
+- เพิ่ม tenant_id/branch_id ให้ purchase_price_history (row สืบทอดจาก PO/GRN เขียนโดย WP6) — lines tables ใช้ EXISTS parent scope
+- ทดสอบ: integration T223 11 เคส — cross-branch read/write deny ทั้งสองทิศ, WITH CHECK deny, admin/owner ตาม model เดิม, platform bypass, GRN/PPH cross-branch — ALL PASS บน DB จริง
 
-### 15.4 Test Evidence à¸«à¸¥à¸±à¸‡à¹à¸à¹‰
+### 15.4 Test Evidence หลังแก้
 
-| à¸›à¸£à¸°à¹€à¸ à¸— | à¸Šà¸¸à¸” | à¸œà¸¥ |
+| ประเภท | ชุด | ผล |
 |---|---|---|
-| PostgreSQL à¸ˆà¸£à¸´à¸‡ (Docker replay, fresh DB) | migrations 001â†’223 apply | 227 OK / 0 FAIL |
-| PostgreSQL à¸ˆà¸£à¸´à¸‡ | Phase 1 contracts (214-218) | ALL PASS |
-| PostgreSQL à¸ˆà¸£à¸´à¸‡ | Regression suite 124-213 (à¸£à¸§à¸¡ Order Deduct / Cancel Restore) | ALL GREEN |
-| PostgreSQL à¸ˆà¸£à¸´à¸‡ | Phase 2 contracts e2e/contracts_phase2_219_223.sql (36 à¹€à¸„à¸ª) | ALL PASS |
+| PostgreSQL จริง (Docker replay, fresh DB) | migrations 001→223 apply | 227 OK / 0 FAIL |
+| PostgreSQL จริง | Phase 1 contracts (214-218) | ALL PASS |
+| PostgreSQL จริง | Regression suite 124-213 (รวม Order Deduct / Cancel Restore) | ALL GREEN |
+| PostgreSQL จริง | Phase 2 contracts e2e/contracts_phase2_219_223.sql (36 เคส) | ALL PASS |
 | Static source-contract | 6 test files (219/220/221/222/223-RLS/staged) | 132 tests PASS |
 | Gates | lint + brandNameGuard + languageSanity + tsc | PASS / 0 errors |
 
-à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸¢à¸±à¸‡ UNVERIFIED à¹‚à¸”à¸¢à¸•à¸±à¹‰à¸‡à¹ƒà¸ˆ (à¸•à¸²à¸¡à¸‚à¸­à¸šà¹€à¸‚à¸• Â§D): runtime à¸‚à¸­à¸‡ posting/reversal/idempotency-retry/concurrent (WP6), workflow RPC (WP2/WP4), read API (WP7/WP8) â€” SQL à¸­à¸­à¸à¹à¸šà¸š+à¹à¸à¹‰à¹à¸¥à¹‰à¸§à¹ƒà¸™ staged_workflows à¹à¸•à¹ˆà¸ˆà¸°à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸”à¹‰à¸§à¸¢ integration test à¸‚à¸­à¸‡ WP à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡à¸à¹ˆà¸­à¸™ merge
+สิ่งที่ยัง UNVERIFIED โดยตั้งใจ (ตามขอบเขต §D): runtime ของ posting/reversal/idempotency-retry/concurrent (WP6), workflow RPC (WP2/WP4), read API (WP7/WP8) — SQL ออกแบบ+แก้แล้วใน staged_workflows แต่จะพิสูจน์ด้วย integration test ของ WP เจ้าของก่อน merge
 
-**Report Status:** WP1 REMEDIATED PER OWNER DIRECTIVE â€” **PENDING OWNER ACCEPTANCE (WP2 NOT STARTED)**
+**Report Status:** WP1 REMEDIATED PER OWNER DIRECTIVE — **PENDING OWNER ACCEPTANCE (WP2 NOT STARTED)**
 

@@ -70,3 +70,12 @@ Scope: close Migration Recovery (ledger reconciliation) + deploy 219–228 + rea
 ## 10. Owner Live Testing Checklist
 - Supplier create/edit; Purchase Order create→approve; Goods Receiving (GRN) post; Inventory update; WAVG cost posting/reversal/idempotency; Cost/Profit calc; Price History; PO Dashboard; user permissions + tenant isolation; regression of storefront/orders/recipe/rider/delivery.
 - Boundary: no test data / write-path E2E by agent until separately approved.
+
+---
+
+## 11. Final Result (2026-11-26 — apply + repair)
+- **Backup:** `supabase db dump --linked` → `D:\A PROJECT\backups\backup_pre233_2026-11-26.sql` (708,421 B · SHA-256 `36209070…FF736`) · restore-tested on Docker postgres:16 (77 public tables) · PITR still disabled (Owner accepted manual dump).
+- **Apply:** Owner ran `supabase db push --include-all` → schema of 219–228 + 233 created (verified present in a fresh remote dump: purchase_orders, goods_receipts, purchase_price_history, ocr_documents, get_po_dashboard, get_purchase_price_history, OCR RPCs, RLS, triggers, indexes, FKs).
+- **Drift found + fixed:** ledger `schema_migrations` was blank for 219–228 + 233 (schema applied, ledger not recorded) → `supabase migration repair --status applied 219 220 221 222 223 224 225 226 227 228 233` → **Repaired … => applied**.
+- **Verified:** `supabase migration list --linked` = **001–233 Local=Remote, no gaps/dups**.
+- **Status:** Deploy Complete (DB) · **Smoke/Owner live tests PENDING** (OCR/PO/GRN/regression) · PITR disabled (Owner).

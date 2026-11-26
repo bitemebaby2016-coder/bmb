@@ -5,6 +5,13 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION 2026-11-26 (PRODUCTION BACKUP GATE PASSED + MIGRATION 219–228+233 APPLIED — ledger repaired; 001–233 all applied)**
+- **Existing backup (Management API, read-only):** `pitr_enabled=false`, `backups=[]`, `physical_backup_data={}` → **no restorable backup existed** before this session. On-demand API backup = 404 (not supported).
+- **Backup created:** `supabase db dump --linked` (login role, no DB password) → `D:\A PROJECT\backups\backup_pre233_2026-11-26.sql` (708,421 B · SHA-256 `36209070…FF736` · 75 tables + data · pre-219 state confirmed).
+- **Restore test (Docker postgres:16, non-prod):** 77 public tables restored; key tables present; only environmental errors (auth schema / PG17 `maintain` / supabase_realtime). Public schema clean.
+- **APPLIED (Owner push) + ledger repaired:** fresh dump confirmed schema of 219–228+233 present; ledger was blank (drift) → `supabase migration repair --status applied 219 220 221 222 223 224 225 226 227 228 233` → `migration list` now **001–233 all applied, no gaps/dups**. PITR still DISABLED (Owner decision).
+- **Remaining:** live OCR/PO/GRN + regression = LIVE_TEST_PENDING (Owner). Evidence: `docs/BACKUP_GATE_RECORD_2026-11-26.md`, `docs/PROD_DEPLOYMENT_RECORD_2026-11-26.md`.
+
 **SESSION CLOSE 2026-11-26 r14 (PHASE 2 WP9+WP10 — FULL REGRESSION ALL GREEN + READINESS/HANDOFF — PUSHED)**
 
 - **WP9 Full regression:** Docker replay 001→228 `migrations=232 OK / 0 FAIL` + Phase 1 (124-213, 214-218) + Phase 2 (219-223, 224, 225, 226, 227/228) contracts ALL GREEN · vitest 256/3,014 · lint 0 · tsc 0 · build PASS

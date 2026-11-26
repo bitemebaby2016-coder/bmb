@@ -36,6 +36,8 @@ Before doing ANY project work:
    - `docs/BMB_AI_WORKING_STATE.md` — when architecture/rules/context changes
    - `docs/BMB_MASTER_PRODUCT_SPEC.md` — ONLY when Owner explicitly approves requirement change
 19. **DO NOT RE-ISSUE OLD REPORTS AS NEW WORK.** Any `docs/*.md` with a date in the name is a point-in-time report/handoff. Before planning, check `docs/BMB_MASTER_STATUS.md` (canonical) — if a report disagrees with it or with the code, flag `DOC DRIFT` and follow the Source of Truth hierarchy instead of restarting an audit from zero.
+20. **MIGRATION LEDGER INTEGRITY (UNIVERSAL_MASTER_AI_RULES §18):** After ANY migration apply (CLI `db push`, manual SQL, or repair), immediately run `supabase migration list --linked` and confirm every version ≤ max has a Remote value (blank Remote = LEDGER DRIFT). Schema present but Remote blank ⇒ fix with `supabase migration repair --status applied <versions>` (ledger-only, no SQL re-run). Never edit migration history to hide drift. No Evidence = Not Done — never trust a verbal "applied" without ledger + schema proof.
+21. **ENCODING / MOJIBAKE (UNIVERSAL_MASTER_AI_RULES §19):** Write all text files as UTF-8 (no BOM) via the Write/Edit tools — never PowerShell 5.1 redirection/`Set-Content` for .md/.txt (defaults to ANSI, corrupts Thai/emoji). If text shows as `à¸…`/`â€”`/`â†'`/`ðŸ`, it is double-encoded mojibake → repair with a cp1252→UTF-8 round-trip on the affected lines only, then re-grep to confirm. Never re-encode data dumps/backups.
 
 ===============================================================================
 CANONICAL DOCUMENTS (5 ไฟล์หลัก — ห้ามสร้างซ้ำ)

@@ -1,6 +1,6 @@
 // ============================================
-// Bite Me Baby â€” Admin Goods Receiving (Phase 2 WP5)
-// à¹€à¸¥à¸·à¸­à¸ PO à¸—à¸µà¹ˆà¸£à¸­à¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸² â†’ à¸à¸£à¸­à¸à¸ˆà¸³à¸™à¸§à¸™à¸£à¸±à¸šà¸ˆà¸£à¸´à¸‡ â†’ à¹à¸¢à¸à¸‚à¸­à¸‡à¸”à¸µ/à¹€à¸ªà¸µà¸¢/à¸›à¸à¸´à¹€à¸ªà¸˜
+// Bite Me Baby — Admin Goods Receiving (Phase 2 WP5)
+// เลือก PO ที่รอรับสินค้า → กรอกจำนวนรับจริง → แยกของดี/เสีย/ปฏิเสธ
 // → บันทึก Draft → อนุมัติ (inventory/admin) · ใช้ API จริง (migration 225)
 // ============================================
 
@@ -38,13 +38,13 @@ interface GRNLineDraft {
 
 const RECEIVABLE = ['approved', 'ordered', 'partially_received']
 const STATUS_META: Record<GRNStatus, { bg: string; text: string; label: string }> = {
-  draft: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'à¸‰à¸šà¸±à¸šà¸£à¹ˆà¸²à¸‡' },
-  submitted: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'à¸£à¸­à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´' },
-  approved: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´à¹à¸¥à¹‰à¸§' },
-  posted: { bg: 'bg-green-100', text: 'text-green-800', label: 'à¸›à¹‰à¸­à¸™à¹€à¸‚à¹‰à¸²à¸„à¸¥à¸±à¸‡à¹à¸¥à¹‰à¸§' },
-  rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'à¸›à¸à¸´à¹€à¸ªà¸˜' },
-  cancelled: { bg: 'bg-gray-200', text: 'text-gray-600', label: 'à¸¢à¸à¹€à¸¥à¸´à¸' },
-  reversed: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'à¸¢à¹‰à¸­à¸™à¸à¸¥à¸±à¸š' },
+  draft: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'ฉบับร่าง' },
+  submitted: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'รออนุมัติ' },
+  approved: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'อนุมัติแล้ว' },
+  posted: { bg: 'bg-green-100', text: 'text-green-800', label: 'ป้อนเข้าคลังแล้ว' },
+  rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'ปฏิเสธ' },
+  cancelled: { bg: 'bg-gray-200', text: 'text-gray-600', label: 'ยกเลิก' },
+  reversed: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'ย้อนกลับ' },
 }
 
 export function GoodsReceivingPage() {
@@ -77,7 +77,7 @@ export function GoodsReceivingPage() {
       setReceivablePOs(allPOs.filter(p => RECEIVABLE.includes(p.status)))
     } catch (e) {
       console.error('[GoodsReceivingPage] load failed:', e)
-      setLoadError('à¹‚à¸«à¸¥à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹ƒà¸šà¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²à¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ â€” à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸à¸²à¸£à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­à¹à¸¥à¹‰à¸§à¸à¸” "à¸¥à¸­à¸‡à¹ƒà¸«à¸¡à¹ˆ"')
+      setLoadError('โหลดข้อมูลใบรับสินค้าไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
     } finally {
       setLoading(false)
     }
@@ -110,7 +110,7 @@ export function GoodsReceivingPage() {
     setPoLoadError('')
     try {
       const full = await getPurchaseOrderById(id)
-      if (!full) { setPoLoadError('à¹„à¸¡à¹ˆà¸žà¸šà¹ƒà¸šà¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­'); return }
+      if (!full) { setPoLoadError('ไม่พบใบสั่งซื้อ'); return }
       setPoLines(full.lines)
       setLines(full.lines.map(l => ({
         key: l.id,
@@ -126,7 +126,7 @@ export function GoodsReceivingPage() {
       })))
     } catch (e) {
       console.error('[GoodsReceivingPage] load PO lines failed:', e)
-      setPoLoadError('à¹‚à¸«à¸¥à¸”à¸£à¸²à¸¢à¸à¸²à¸£à¸ªà¸´à¸™à¸„à¹‰à¸²à¸‚à¸­à¸‡ PO à¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ')
+      setPoLoadError('โหลดรายการสินค้าของ PO ไม่สำเร็จ')
     }
   }
 
@@ -144,9 +144,9 @@ export function GoodsReceivingPage() {
 
   async function handleSave() {
     setFormError('')
-    if (!poId) { setFormError('à¸à¸£à¸¸à¸“à¸²à¹€à¸¥à¸·à¸­à¸à¹ƒà¸šà¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­'); return }
+    if (!poId) { setFormError('กรุณาเลือกใบสั่งซื้อ'); return }
     const clean = lines.filter(l => l.received_qty && l.received_qty > 0)
-    if (clean.length === 0) { setFormError('à¸à¸£à¸¸à¸“à¸²à¸à¸£à¸­à¸à¸ˆà¸³à¸™à¸§à¸™à¸£à¸±à¸šà¸­à¸¢à¹ˆà¸²à¸‡à¸™à¹‰à¸­à¸¢ 1 à¸£à¸²à¸¢à¸à¸²à¸£'); return }
+    if (clean.length === 0) { setFormError('กรุณากรอกจำนวนรับอย่างน้อย 1 รายการ'); return }
     setSaving(true)
     try {
       const res = await createGrnDraft({
@@ -160,28 +160,28 @@ export function GoodsReceivingPage() {
         })),
         notes: notes || null,
       })
-      if (!res.ok || !res.grn_id) { setFormError('à¸šà¸±à¸™à¸—à¸¶à¸à¹ƒà¸šà¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²à¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ'); return }
-      showToast(`à¸ªà¸£à¹‰à¸²à¸‡à¹ƒà¸šà¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸² ${res.grn_number || ''} à¸ªà¸³à¹€à¸£à¹‡à¸ˆ`, 'success')
+      if (!res.ok || !res.grn_id) { setFormError('บันทึกใบรับสินค้าไม่สำเร็จ'); return }
+      showToast(`สร้างใบรับสินค้า ${res.grn_number || ''} สำเร็จ`, 'success')
       resetForm()
       await loadAll()
     } catch (e) {
       console.error('[GoodsReceivingPage] save failed:', e)
-      setFormError('à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”à¹ƒà¸™à¸à¸²à¸£à¸šà¸±à¸™à¸—à¸¶à¸ (à¸­à¸²à¸ˆà¹€à¸à¸´à¸™à¸ˆà¸³à¸™à¸§à¸™à¸—à¸µà¹ˆà¸ªà¸±à¹ˆà¸‡)')
+      setFormError('เกิดข้อผิดพลาดในการบันทึก (อาจเกินจำนวนที่สั่ง)')
     } finally {
       setSaving(false)
     }
   }
 
   async function handleApprove(id: string) {
-    if (!confirm('à¸¢à¸·à¸™à¸¢à¸±à¸™à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´à¹ƒà¸šà¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²à¸™à¸µà¹‰? (à¸ªà¸´à¸—à¸˜à¸´à¹Œ inventory/admin)')) return
+    if (!confirm('ยืนยันอนุมัติใบรับสินค้านี้? (สิทธิ์ inventory/admin)')) return
     try {
       const res = await approveGrn(id)
-      if (!res.ok) { showToast('à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´à¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ (à¸•à¹‰à¸­à¸‡à¸¡à¸µà¸ªà¸´à¸—à¸˜à¸´à¹Œ inventory/admin + à¸ªà¸–à¸²à¸™à¸°à¸‰à¸šà¸±à¸šà¸£à¹ˆà¸²à¸‡)', 'error'); return }
-      showToast('à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´à¹ƒà¸šà¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²à¸ªà¸³à¹€à¸£à¹‡à¸ˆ', 'success')
+      if (!res.ok) { showToast('อนุมัติไม่สำเร็จ (ต้องมีสิทธิ์ inventory/admin + สถานะฉบับร่าง)', 'error'); return }
+      showToast('อนุมัติใบรับสินค้าสำเร็จ', 'success')
       await loadAll()
     } catch (e) {
       console.error('[GoodsReceivingPage] approve failed:', e)
-      showToast('à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”', 'error')
+      showToast('เกิดข้อผิดพลาด', 'error')
     }
   }
 
@@ -191,55 +191,55 @@ export function GoodsReceivingPage() {
       if (full) setDetail({ header: full, lines: full.lines })
     } catch (e) {
       console.error('[GoodsReceivingPage] detail failed:', e)
-      showToast('à¹‚à¸«à¸¥à¸”à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ', 'error')
+      showToast('โหลดรายละเอียดไม่สำเร็จ', 'error')
     }
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-        <h1 className="text-3xl font-bold text-brand-accent">ðŸ“¦ à¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸² (Goods Receiving)</h1>
+        <h1 className="text-3xl font-bold text-brand-accent">📦 รับสินค้า (Goods Receiving)</h1>
         <div className="flex gap-2">
-          <button onClick={loadAll} className="btn btn-outline text-sm" disabled={loading}>à¸£à¸µà¹€à¸Ÿà¸£à¸Š</button>
-          <button onClick={() => { resetForm(); setShowForm(true) }} className="btn btn-primary">+ à¸ªà¸£à¹‰à¸²à¸‡à¹ƒà¸šà¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²</button>
+          <button onClick={loadAll} className="btn btn-outline text-sm" disabled={loading}>รีเฟรช</button>
+          <button onClick={() => { resetForm(); setShowForm(true) }} className="btn btn-primary">+ สร้างใบรับสินค้า</button>
         </div>
       </div>
 
-      {loading && <div className="card text-center py-8"><p className="text-brand-muted">à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥...</p></div>}
+      {loading && <div className="card text-center py-8"><p className="text-brand-muted">กำลังโหลดข้อมูล...</p></div>}
       {loadError && <div className="mb-4"><LoadErrorBanner message={loadError} onRetry={loadAll} testId="grn-load-error" /></div>}
 
       {showForm && (
         <div className="card mb-6 bg-brand-bg">
-          <h3 className="font-bold text-brand-accent mb-4">âž• à¸ªà¸£à¹‰à¸²à¸‡à¹ƒà¸šà¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²à¹ƒà¸«à¸¡à¹ˆ</h3>
+          <h3 className="font-bold text-brand-accent mb-4">➕ สร้างใบรับสินค้าใหม่</h3>
           {formError && <div className="mb-3 text-red-600 text-sm">{formError}</div>}
           {poLoadError && <div className="mb-3 text-red-600 text-sm">{poLoadError}</div>}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-brand-muted mb-1">à¹ƒà¸šà¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­à¸—à¸µà¹ˆà¸£à¸­à¸£à¸±à¸š <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-brand-muted mb-1">ใบสั่งซื้อที่รอรับ <span className="text-red-500">*</span></label>
               <select value={poId} onChange={e => onSelectPO(e.target.value)} className="input">
-                <option value="">â€” à¹€à¸¥à¸·à¸­à¸ PO à¸—à¸µà¹ˆà¸£à¸­à¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸² â€”</option>
+                <option value="">— เลือก PO ที่รอรับสินค้า —</option>
                 {receivablePOs.map(p => <option key={p.id} value={p.id}>{p.po_number}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-brand-muted mb-1">à¹‚à¸™à¹‰à¸•</label>
-              <input type="text" value={notes} onChange={e => setNotes(e.target.value)} className="input" placeholder="à¹€à¸Šà¹ˆà¸™ à¹à¸™à¸šà¹ƒà¸šà¸ªà¹ˆà¸‡à¸‚à¸­à¸‡" />
+              <label className="block text-sm font-medium text-brand-muted mb-1">โน้ต</label>
+              <input type="text" value={notes} onChange={e => setNotes(e.target.value)} className="input" placeholder="เช่น แนบใบส่งของ" />
             </div>
           </div>
 
           {poId && (
             <>
-              <h4 className="font-semibold text-brand-accent mb-2">à¸£à¸²à¸¢à¸à¸²à¸£à¸—à¸µà¹ˆà¸£à¸±à¸š</h4>
+              <h4 className="font-semibold text-brand-accent mb-2">รายการที่รับ</h4>
               <div className="overflow-x-auto mb-3">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-brand-bg">
                     <tr>
-                      <th className="p-2">à¸§à¸±à¸•à¸–à¸¸à¸”à¸´à¸š</th>
-                      <th className="p-2">à¸ªà¸±à¹ˆà¸‡à¹„à¸§à¹‰</th>
-                      <th className="p-2">à¸£à¸±à¸šà¸ˆà¸£à¸´à¸‡</th>
-                      <th className="p-2">à¸›à¸à¸´à¹€à¸ªà¸˜/à¹€à¸ªà¸µà¸¢</th>
-                      <th className="p-2">à¸‚à¸­à¸‡à¸”à¸µ (auto)</th>
-                      <th className="p-2">à¸£à¸²à¸„à¸²à¸ˆà¸£à¸´à¸‡/à¸«à¸™à¹ˆà¸§à¸¢</th>
+                      <th className="p-2">วัตถุดิบ</th>
+                      <th className="p-2">สั่งไว้</th>
+                      <th className="p-2">รับจริง</th>
+                      <th className="p-2">ปฏิเสธ/เสีย</th>
+                      <th className="p-2">ของดี (auto)</th>
+                      <th className="p-2">ราคาจริง/หน่วย</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -257,8 +257,8 @@ export function GoodsReceivingPage() {
                 </table>
               </div>
               <div className="flex gap-3">
-                <button onClick={handleSave} className="btn btn-primary" disabled={saving}>{saving ? 'à¸à¸³à¸¥à¸±à¸‡à¸šà¸±à¸™à¸—à¸¶à¸...' : 'à¸šà¸±à¸™à¸—à¸¶à¸ (à¸‰à¸šà¸±à¸šà¸£à¹ˆà¸²à¸‡)'}</button>
-                <button onClick={resetForm} className="btn btn-outline">à¸¢à¸à¹€à¸¥à¸´à¸</button>
+                <button onClick={handleSave} className="btn btn-primary" disabled={saving}>{saving ? 'กำลังบันทึก...' : 'บันทึก (ฉบับร่าง)'}</button>
+                <button onClick={resetForm} className="btn btn-outline">ยกเลิก</button>
               </div>
             </>
           )}
@@ -269,17 +269,17 @@ export function GoodsReceivingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setDetail(null)}>
           <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-bold text-brand-accent text-lg">ðŸ“‹ {detail.header.grn_number}</h3>
-              <button onClick={() => setDetail(null)} className="p-2 rounded-lg hover:bg-brand-bg">âœ•</button>
+              <h3 className="font-bold text-brand-accent text-lg">📋 {detail.header.grn_number}</h3>
+              <button onClick={() => setDetail(null)} className="p-2 rounded-lg hover:bg-brand-bg">✕</button>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 text-sm">
-                <div><span className="text-brand-muted">à¸ªà¸–à¸²à¸™à¸°</span><div><span className={`badge ${STATUS_META[detail.header.status].bg} ${STATUS_META[detail.header.status].text}`}>{STATUS_META[detail.header.status].label}</span></div></div>
-                <div><span className="text-brand-muted">à¸§à¸±à¸™à¸—à¸µà¹ˆà¸£à¸±à¸š</span><div>{detail.header.receipt_date}</div></div>
+                <div><span className="text-brand-muted">สถานะ</span><div><span className={`badge ${STATUS_META[detail.header.status].bg} ${STATUS_META[detail.header.status].text}`}>{STATUS_META[detail.header.status].label}</span></div></div>
+                <div><span className="text-brand-muted">วันที่รับ</span><div>{detail.header.receipt_date}</div></div>
                 <div><span className="text-brand-muted">PO</span><div>{detail.header.po_id}</div></div>
               </div>
               <table className="w-full text-left text-sm">
-                <thead className="bg-brand-bg"><tr><th className="p-2">à¸§à¸±à¸•à¸–à¸¸à¸”à¸´à¸š</th><th className="p-2">à¸£à¸±à¸š</th><th className="p-2">à¸”à¸µ</th><th className="p-2">à¸›à¸à¸´à¹€à¸ªà¸˜</th><th className="p-2">à¸£à¸²à¸„à¸²à¸ˆà¸£à¸´à¸‡</th></tr></thead>
+                <thead className="bg-brand-bg"><tr><th className="p-2">วัตถุดิบ</th><th className="p-2">รับ</th><th className="p-2">ดี</th><th className="p-2">ปฏิเสธ</th><th className="p-2">ราคาจริง</th></tr></thead>
                 <tbody>
                   {detail.lines.map((l: any) => (
                     <tr key={l.id} className="border-b border-brand-border">
@@ -300,14 +300,14 @@ export function GoodsReceivingPage() {
       <div className="card mb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-brand-bg rounded-lg">
           <div>
-            <label className="block text-xs text-brand-muted mb-1">à¸ªà¸–à¸²à¸™à¸°</label>
+            <label className="block text-xs text-brand-muted mb-1">สถานะ</label>
             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} className="input text-sm">
-              <option value="all">à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”</option>
+              <option value="all">ทั้งหมด</option>
               {(Object.keys(STATUS_META) as GRNStatus[]).map(s => <option key={s} value={s}>{STATUS_META[s].label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs text-brand-muted mb-1">à¸ˆà¸³à¸™à¸§à¸™à¸£à¸²à¸¢à¸à¸²à¸£</label>
+            <label className="block text-xs text-brand-muted mb-1">จำนวนรายการ</label>
             <div className="text-sm font-bold text-brand-accent">{filtered.length} / {receipts.length}</div>
           </div>
         </div>
@@ -317,12 +317,12 @@ export function GoodsReceivingPage() {
         <table className="w-full text-left">
           <thead className="bg-brand-bg">
             <tr>
-              <th className="p-3">à¹€à¸¥à¸‚à¸—à¸µà¹ˆ GRN</th>
+              <th className="p-3">เลขที่ GRN</th>
               <th className="p-3">PO</th>
-              <th className="p-3">à¸œà¸¹à¹‰à¸‚à¸²à¸¢</th>
-              <th className="p-3">à¸§à¸±à¸™à¸—à¸µà¹ˆà¸£à¸±à¸š</th>
-              <th className="p-3">à¸ªà¸–à¸²à¸™à¸°</th>
-              <th className="p-3">à¸ˆà¸±à¸”à¸à¸²à¸£</th>
+              <th className="p-3">ผู้ขาย</th>
+              <th className="p-3">วันที่รับ</th>
+              <th className="p-3">สถานะ</th>
+              <th className="p-3">จัดการ</th>
             </tr>
           </thead>
           <tbody>
@@ -338,8 +338,8 @@ export function GoodsReceivingPage() {
                   <td className="p-3"><span className={`badge ${meta.bg} ${meta.text}`}>{meta.label}</span></td>
                   <td className="p-3">
                     <div className="flex gap-1">
-                      <button onClick={() => openDetail(g.id)} className="btn btn-outline text-xs">à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”</button>
-                      {g.status === 'draft' && <button onClick={() => handleApprove(g.id)} className="btn btn-primary text-xs">à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´</button>}
+                      <button onClick={() => openDetail(g.id)} className="btn btn-outline text-xs">รายละเอียด</button>
+                      {g.status === 'draft' && <button onClick={() => handleApprove(g.id)} className="btn btn-primary text-xs">อนุมัติ</button>}
                     </div>
                   </td>
                 </tr>
@@ -349,9 +349,9 @@ export function GoodsReceivingPage() {
         </table>
         {filtered.length === 0 && !loadError && !loading && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">ðŸ“¦</div>
-            <h3 className="text-xl font-bold text-brand-accent mb-2">à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¹ƒà¸šà¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²</h3>
-            <p className="text-brand-muted mb-4">à¸à¸” "+ à¸ªà¸£à¹‰à¸²à¸‡à¹ƒà¸šà¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²" à¹€à¸žà¸·à¹ˆà¸­à¹€à¸£à¸´à¹ˆà¸¡</p>
+            <div className="text-6xl mb-4">📦</div>
+            <h3 className="text-xl font-bold text-brand-accent mb-2">ยังไม่มีใบรับสินค้า</h3>
+            <p className="text-brand-muted mb-4">กด "+ สร้างใบรับสินค้า" เพื่อเริ่ม</p>
           </div>
         )}
       </div>

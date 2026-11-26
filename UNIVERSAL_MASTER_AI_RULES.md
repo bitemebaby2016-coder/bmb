@@ -722,5 +722,87 @@ SECTION 17: STRICT CI & TESTING RULES (กฎเหล็กสำหรับ C
     Implementation outranks documentation.
     Requirements outrank convenience.
     Verified state outranks assumptions.
-    New evidence outranks old context.
-    A blocker must be reported, not hidden.
+New evidence outranks old context.
+A blocker must be reported, not hidden.
+
+
+===============================================================================
+SECTION 18: MIGRATION LEDGER INTEGRITY (ป้องกัน + แก้ LEDGER DRIFT)
+===============================================================================
+18.1 DEFINITION — LEDGER DRIFT
+    - The migration ledger is `supabase_migrations.schema_migrations` (version PK).
+    - LEDGER DRIFT = a migration's SCHEMA objects exist in the DB, but its version
+      row is MISSING from the ledger (Remote blank in `supabase migration list`).
+    - Cause: schema applied out-of-band (SQL editor / ad-hoc script / interrupted
+      push) without recording the version. The DB is ahead of the ledger.
+    - This is NOT a failed migration; the SQL ran. Only the bookkeeping is missing.
+
+18.2 PREVENTION (ป้องกัน)
+    - ALWAYS apply migrations through `supabase db push` (records the ledger in the
+      same transaction as the file). Do NOT apply migration SQL by hand without
+      recording the version.
+    - After EVERY apply (CLI, manual, or repair) run `supabase migration list --linked`
+      and confirm: every version <= max has a Remote value; no blank Remote rows;
+      no duplicate versions.
+    - If a migration must be applied manually (Rule 16.3): probe marker -> apply ->
+      immediately `supabase migration repair --status applied <version>`.
+    - Never modify already-applied migration history to conceal drift (Rule 6.3).
+    - Keep schema-vs-ledger parity: for each migration know one marker object
+      (table/column/function/policy) to prove it is live.
+
+18.3 DIAGNOSIS (วินิจฉัย) — do this BEFORE any repair
+    - Symptom: `migration list` shows Local present, Remote BLANK, for version V.
+    - Confirm the schema is REALLY applied (do not repair a not-applied version):
+      `supabase db dump --linked -f check.sql` then search for V's marker object.
+    - If marker PRESENT -> ledger drift -> repair (18.4).
+    - If marker ABSENT  -> not applied   -> apply via `db push` (Owner approval + DB password).
+    - No Evidence = Not Done: never trust a verbal "applied" claim; verify ledger + schema.
+
+18.4 FIX (แก้) — ledger-only repair (no SQL re-run, no schema/data change)
+    - `supabase migration repair --status applied <v1> <v2> ... <vN>`
+      (uses the Management-API login role; no DB password required; only INSERTs
+      the missing ledger rows).
+    - Re-verify: `supabase migration list --linked` => all applied, no gaps/dups.
+    - Record the repair (versions, before/after, evidence) in
+      `docs/PROD_DEPLOYMENT_RECORD_*.md` + `docs/BMB_MASTER_STATUS.md`.
+
+18.5 HARD RULES
+    - Repair ONLY versions whose schema is proven present. Repairing a not-applied
+      version would falsely mark it applied (hides a real gap).
+    - `migration repair` is ledger-only; it is NOT a substitute for applying SQL.
+    - Max 2 attempts (Rule 1.1). If repair + verify still shows drift, STOP and
+      produce the Mandatory Halt Report.
+    - Production repair/apply requires Owner authorization (Rule 6.3).
+
+
+===============================================================================
+SECTION 19: ENCODING & MOJIBAKE INTEGRITY (อักขระเพี้ย)
+===============================================================================
+19.1 DEFINITION
+    - Mojibake = UTF-8 text mis-decoded as cp1252/Latin1 then re-saved as UTF-8
+      (e.g., Thai "การ" -> "à¸…à¸²", em dash "—" -> "â€”", "→" -> "â†'",
+      "✓" -> "âœ…", emoji "📦" -> "ðŸ“¦", box "┌─►" -> "âââ").
+    - Root cause: a tool/agent wrote a file with the wrong encoding, or read a
+      UTF-8 file as cp1252 and wrote it back. Repo standard = UTF-8 (no BOM).
+19.2 PREVENTION (ป้องกัน)
+    - ALWAYS write text files as UTF-8 without BOM (the Read/Edit/Write tools do
+      this). For scripts use Node `fs.writeFileSync(path, s, 'utf8')`.
+    - NEVER use PowerShell 5.1 redirection (`>`/`>>`) or `Set-Content`/`Out-File`
+      for .md/.txt — PS 5.1 defaults to ANSI/cp1252 and corrupts Thai/emoji.
+    - After any script/CI step that writes text files, spot-check Thai/emoji.
+    - Keep one encoding (UTF-8) repo-wide; do not mix cp1252.
+19.3 DIAGNOSIS (วินิจฉัย)
+    - Symptom: Thai -> "à¸…", dash -> "â€”", arrow -> "â†'", check -> "âœ…",
+      emoji -> "ðŸ", box -> "âââ".
+    - Confirm: grep for markers  [ÃÂ]|â€|à¸|ðŸ|âœ|â„|â†|â”|â– .
+19.4 FIX (แก้)
+    - Repair = cp1252->UTF-8 round-trip on AFFECTED LINES ONLY: read file as UTF-8;
+      for each line containing a mojibake marker, map chars (<=0xFF plus cp1252
+      specials 0x80-0x9F) to bytes, then `Buffer.from(bytes).toString('utf8')`;
+      write back UTF-8 no BOM.
+    - Do NOT touch data dumps/backups (*.sql) or lines already correct Thai/ASCII.
+    - After fix: re-grep (expect no markers) + run tsc/tests for code files.
+19.5 HARD RULES
+    - Never claim "fixed" without re-grep evidence.
+    - Backups (*.sql dumps) are data, not docs — do not re-encode them.
+    - Max 2 attempts (Rule 1.1); then Halt Report.

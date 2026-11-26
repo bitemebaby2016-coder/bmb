@@ -1,6 +1,6 @@
 # BMB — AI WORKING STATE (สถานะปฏิบัติการของ AI Dev)
 
-> **HANDOFF 2026-11-26 (Recovery / Migration Drift):** Repo-side Recovery COMPLETE & CI-green. LIVE 2026-11-26: ledger REPAIRED (211–218 + 229–232 => applied); 219–228 still PENDING (await Owner backup confirmation + `db push --include-all`). See docs/PROD_DEPLOYMENT_RECORD_2026-11-26.md. Duplicate versions 180/183/203/204 renumbered → 229–232 (231 made idempotent); Fresh Replay 001→232 ALL GREEN; tsc/lint/vitest(258/3014)/build all pass. Production UNCHANGED (schema 218 / ledger 210; 219–228 pending). **Next session:** execute prod runbook in `docs/RECOVERY_PACKAGE_2026-11-26.md` (repair 211–218 → db push 219–228 via postgres role) after Owner approval + backup. Permanent rules: `docs/BMB_MIGRATION_RULES.md`.
+> **HANDOFF 2026-11-26 (Recovery / Migration Drift):** Repo-side Recovery COMPLETE & CI-green. LIVE 2026-11-26: ledger REPAIRED (211–218 + 229–232 => applied); 219–228 + 233 now APPLIED (Owner `db push` + ledger repair; `migration list` 001–233 all applied, no gaps/dups). Backup created + restore-tested (`docs/BACKUP_GATE_RECORD_2026-11-26.md`). Remaining: live OCR/PO/GRN + regression (Owner). See docs/PROD_DEPLOYMENT_RECORD_2026-11-26.md. Duplicate versions 180/183/203/204 renumbered → 229–232 (231 made idempotent); Fresh Replay 001→232 ALL GREEN; tsc/lint/vitest(258/3014)/build all pass. Production UNCHANGED (schema 218 / ledger 210; 219–228 pending). **Next session:** execute prod runbook in `docs/RECOVERY_PACKAGE_2026-11-26.md` (repair 211–218 → db push 219–228 via postgres role) after Owner approval + backup. Permanent rules: `docs/BMB_MIGRATION_RULES.md`.
 
 > **Canonical AI operating state** ตาม protocol §2.2 — เอกสารนี้คือสถานะปัจจุบันของ AI development session
 > - รวม: Active Task, Current Context, Architecture Constraints, **Mandatory Documentation Synchronization Protocol**
@@ -284,6 +284,20 @@ G. Duplicate/regression review
 H. **Documentation reconciliation** (NEW: per protocol §0.3)
 I. Exact-scope Git review + authorized commit/push
 J. Final evidence-backed closure report
+
+### 3.6 Migration Ledger Integrity (Rule 18 — ป้องกัน/แก้ ledger drift)
+- **Drift =** schema applied แต่ version หายจาก `schema_migrations` (Remote ว่างใน `migration list`) — ไม่ใช่ migration พัง แต่ ledger ไม่ถูกบันทึก (DB นำหน้า ledger)
+- **ป้องกัน:** apply ผ่าน `db push` เท่านั้น (บันทึก ledger ใน tx เดียวกัน) · หลัง apply ทุกอันรัน `migration list --linked` เช็ค Remote ไม่ว่าง/ไม่ซ้ำ · manual apply ต้องบันทึกด้วย `migration repair` ทันที (Rule 16.3) · ห้ามแก้ history ปิดบัง
+- **วินิจฉัย:** Remote ว่าง → `db dump` เช็ค marker object ของ version นั้น (มี = drift → repair / ไม่มี = ยังไม่ apply → push)
+- **แก้ (ledger-only):** `supabase migration repair --status applied <versions>` (ไม่รัน SQL ซ้ำ ไม่แตะ data ใช้ login role ไม่ต้อง DB password) → ตรวจ `migration list` ครบ ไม่มี gap/dup → บันทึกผลใน PROD_DEPLOYMENT_RECORD + MASTER_STATUS
+- **ห้าม:** repair เวอร์ชันที่ schema ยังไม่มี (ปิดบังช่องว่างจริง) · No Evidence = Not Done (ไม่ยึดคำกล่าว "applied" ต้องมี ledger+schema)
+
+### 3.7 Encoding / Mojibake (Rule 19 — อักขระเพี้ย)
+- **สาเหตุ:** เขียนไฟล์ด้วย encoding ผิด (UTF-8 ถูกอ่านเป็น cp1252 แล้วเขียนซ้ำ) — มักเกิดจาก PowerShell 5.1 redirection / `Set-Content` ที่ค่าเริ่มต้นเป็น ANSI
+- **ป้องกัน:** เขียนทุกไฟล์เป็น UTF-8 ไม่มี BOM ผ่าน Write/Edit หรือ Node `fs` utf8 · ห้ามใช้ PS redirection/`Set-Content` กับ .md/.txt
+- **วินิจฉัย:** ไทยเป็น `à¸…`, dash `â€”`, arrow `â†'`, check `âœ…`, emoji `ðŸ` → grep marker `[ÃÂ]|â€|à¸|ðŸ`
+- **แก้:** cp1252→UTF-8 round-trip เฉพาะบรรทัดที่มี marker (char≤0xFF + specials 0x80-0x9F → bytes → utf8) เขียนกลับ UTF-8 no BOM · ห้ามแตะ data dump/backup · หลังแก้ re-grep + tsc
+- **ห้าม:** รายงาน fixed โดยไม่ re-grep · แปลงไฟล์ backup
 
 ---
 

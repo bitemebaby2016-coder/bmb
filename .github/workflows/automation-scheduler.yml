@@ -1,13 +1,13 @@
 # ============================================
-# BMB â€” automation-scheduler (G8-S5 CUTOVER)
+# BMB — automation-scheduler (G8-S5 CUTOVER)
 #
 # SINGLE-PATH queue architecture (Owner-authorized G8-S5):
 #   GitHub Actions (this workflow)
-#     â†’ queue-enqueue  (secure enqueue transport: verify_jwt + x-automation-token,
+#     → queue-enqueue  (secure enqueue transport: verify_jwt + x-automation-token,
 #                       allowlisted jobs, server-side payload templates, DB idempotency)
-#     â†’ automation_queue (deterministic identity 'sched-<job>-<ref>')
-#     â†’ queue-dispatcher (atomic claim FOR UPDATE SKIP LOCKED â†’ canonical worker
-#                         automation-worker UNCHANGED â†’ complete/fail RPC)
+#     → automation_queue (deterministic identity 'sched-<job>-<ref>')
+#     → queue-dispatcher (atomic claim FOR UPDATE SKIP LOCKED → canonical worker
+#                         automation-worker UNCHANGED → complete/fail RPC)
 #
 # LEGACY DIRECT WORKER INVOCATION REMOVED in this commit (single-commit toggle).
 # No dual path: each schedule event = ONE enqueue + ONE dispatch.
@@ -18,7 +18,7 @@
 # (same cadence granularity as the legacy eventId scheme).
 #
 # Failure behavior: the step FAILS if enqueue result is neither ENQUEUED nor
-# DUPLICATE, or any dispatch result is not queue-final 'SUCCEEDED' â€” visible in
+# DUPLICATE, or any dispatch result is not queue-final 'SUCCEEDED' — visible in
 # Actions history. Token is never echoed.
 # G6/G7 remain NOT REGISTERED (separate gate).
 # ============================================

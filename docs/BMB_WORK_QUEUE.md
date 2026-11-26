@@ -21,7 +21,7 @@
 | **Phase 2 WP7+WP8 (Read APIs + Dashboard)** | 2 migrations + API + UI | ✅ **CODE_CLOSED + PUSHED** | R116 — `contracts_wp7_wp8_227_228.sql` 6 cases ALL PASS · replay 232 OK · Dashboard tab |
 | **Phase 2 WP9-10** | 2 WP | ✅ **COMPLETE** | R117 — regression ALL GREEN + PHASE2_READINESS_WP10.md |
 | **Staging Verification (WP3/WP5 E2E)** | E2E + workflow | ⏸️ **NOT PROVEN (Production-First)** | No staging (by policy). E2E NOT run. Will run on production ONLY after Owner deploy approval + test-data authorization. Specs ready (purchaseOrder/goodsReceiving). |
-| **Production Deploy 219-228** | migration deploy | 🔒 **AWAITING OWNER AUTHORIZATION** | Migration Ready (Docker-replay 232 OK). Not deployed. Needs backup/rollback/impact plan + Owner approval. |
+| **Production Deploy 219-228 + 233** | migration deploy | ✅ **DEPLOYED** | Applied by Owner + ledger repaired (`migration list` 001–233 all applied, no gaps/dups). Schema verified via fresh dump. Backup created+restore-tested. PITR still disabled (Owner). Live OCR/PO/GRN + regression = LIVE_TEST_PENDING. |
 | **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 311 tests PASS |
 | **Phase 1 Contract Tests (214-218)** | 5 migration | ✅ **COMPLETE** | ALL GREEN in CI |
 | **Live Tests E** | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 ผ่านหมด (E-7 diagnostic) |
