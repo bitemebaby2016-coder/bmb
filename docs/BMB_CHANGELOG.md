@@ -9,6 +9,16 @@
 
 ## R111 â€” 2026-11-26 â€” PHASE 2 WP2: PO WORKFLOW RPC (MIGRATION 224) + API + DB INTEGRATION TESTS
 
+## R115 — 2026-11-26 — PHASE 2 WP6: WAVG POSTING + REVERSAL (MIGRATION 226) + DB INTEGRATION TESTS
+
+- **Task:** PHASE2-WP6 (Owner Master Directive continuous execution)
+- **Scope:** Inventory integration — promote staged wp6 to migration 226 + DB tests (no new UI)
+- **Migration 226 (TEST DB only):** calculate_grn_line_landed_cost + compute_grn_payload_hash + post_goods_receipt_line + post_goods_receipt + reverse_grn — FOR UPDATE lock order, WAVG from accepted_qty + landed cost, idempotency (key+payload hash / ERR_IDEMPOTENCY_CONFLICT / ERR_ALREADY_POSTED), line double-post guard, reversal positive-mirror + reversal_of (unique once) + itx type=out + correction entry, PO received/status transitions, audit
+- **WP6 REMEDIATION:** removed non-existent has_staff_branch_scope; Asia/Bangkok date (m190 gate)
+- **Tests:** DB e2e/contracts_wp6_226.sql 9 cases ALL PASS (post+WAVG stock24/wavg11, idempotent retry no double, hash conflict, already posted, staff role gate, reversal stock0/out/correction/orig reversed, double-reversal reject, line double-post guard) · static 10 · wired replay
+- **Gates:** replay 001-226 migrations=230 OK/0 FAIL + phase1+phase2+wp2+wp4+wp6 ALL GREEN · vitest 256/3,006 · lint 0 · tsc 0 · build PASS · production untouched (218)
+- **Next:** WP7 (Price History read API)
+
 ## R114 — 2026-11-26 — PHASE 2 WP5: GOODS RECEIVING UI + E2E SPEC
 
 - **Task:** PHASE2-WP5 (Owner Master Directive continuous execution)

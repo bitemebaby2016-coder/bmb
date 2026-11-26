@@ -16,8 +16,9 @@
 | **Phase 2 WP2 (PO RPC 224 + API)** | 1 migration + API | ✅ **CODE_CLOSED + PUSHED** | R111 — `contracts_wp2_224.sql` 10 cases ALL PASS · replay 228 OK |
 | **Phase 2 WP3 (PO UI / E2E)** | UI + E2E spec | ✅ **CODE_CLOSED + PUSHED** | R112 — PurchaseOrderPage in PurchaseHub (real API) · API 5 tests · E2E spec LIVE_TEST_PENDING |
 | **Phase 2 WP4 (GRN DB/RPC/API)** | 1 migration + API | ✅ **CODE_CLOSED + PUSHED** | R113 — `contracts_wp4_225.sql` 8 cases ALL PASS · replay 229 OK |
-| **Phase 2 WP5 (GRN UI / E2E)** | UI + E2E spec | ✅ **CODE_CLOSED + PUSHED** | R114 — GoodsReceivingPage in PurchaseHub (real API) · API 3 tests · E2E spec LIVE_TEST_PENDING |
-| **Phase 2 WP6-10** | 5 WP | ⏳ PENDING | WP6 (WAVG posting/reversal) ถัดไป → WP7 → WP8 → WP9 → WP10 |
+| **Phase 2 WP5 (GRN UI / E2E)** | UI + E2E spec | ✅ **CODE_CLOSED + PUSHED** | R114 — GoodsReceivingPage · E2E LIVE_TEST_PENDING |
+| **Phase 2 WP6 (WAVG posting/reversal)** | 1 migration + DB tests | ✅ **CODE_CLOSED + PUSHED** | R115 — `contracts_wp6_226.sql` 9 cases ALL PASS · replay 230 OK |
+| **Phase 2 WP7-10** | 4 WP | ⏳ PENDING | WP7 (Price History read) ถัดไป → WP8 → WP9 → WP10 |
 | **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 311 tests PASS |
 | **Phase 1 Contract Tests (214-218)** | 5 migration | ✅ **COMPLETE** | ALL GREEN in CI |
 | **Live Tests E** | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 ผ่านหมด (E-7 diagnostic) |

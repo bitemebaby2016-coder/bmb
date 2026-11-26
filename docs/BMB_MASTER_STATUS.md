@@ -5,6 +5,16 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-26 r12 (PHASE 2 WP6 — WAVG POSTING + REVERSAL 226 + DB INTEGRATION TESTS — CODE_CLOSED + PUSHED)**
+
+- **Phase 2 WP6 (Inventory Integration):** ✅ **CODE_CLOSED + PUSHED** (R115)
+  - **Migration 226_wavg_posting_reversal.sql (TEST DB only):** calculate_grn_line_landed_cost + compute_grn_payload_hash + post_goods_receipt_line + post_goods_receipt + reverse_grn — FOR UPDATE lock order, WAVG from accepted_qty + landed cost, idempotency (key+hash/conflict/already-posted), line double-post guard, reversal positive-mirror + reversal_of (unique once) + itx type=out + correction, PO received/status transitions, audit
+  - **WP6 REMEDIATION:** removed non-existent has_staff_branch_scope; Asia/Bangkok date (m190)
+  - **DB integration:** `e2e/contracts_wp6_226.sql` — **9 cases ALL PASS** (post+WAVG stock24/wavg11, idempotent retry, hash conflict, already posted, role gate, reversal stock0/out/correction, double-reversal reject, line double-post) · static 10 tests
+  - **Gates:** Docker replay 001→226 `migrations=230 OK / 0 FAIL` + phase1+phase2+wp2+wp4+wp6 contracts ALL GREEN · vitest 256 files/3,006 · lint 0 · tsc 0 · build PASS
+  - **Production:** NOT touched (ledger 218)
+- **Next:** WP7 (Price History read API — promote staged wp7)
+
 **SESSION CLOSE 2026-11-26 r11 (PHASE 2 WP5 — GOODS RECEIVING UI + E2E SPEC — CODE_CLOSED + PUSHED)**
 
 - **Phase 2 WP5 (GRN UI):** ✅ **CODE_CLOSED + PUSHED** (R114)
