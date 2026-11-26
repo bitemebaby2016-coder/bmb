@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- Bite Me Baby â€” Migration 233 OCR Documents Contract (PostgreSQL à¸ˆà¸£à¸´à¸‡)
 -- Proves PARITY across OCR / CSV-Excel / Manual (same create RPC) for:
 --   Duplicate Â· Validation Â· Audit Â· Approval â€” and that approval NEVER
