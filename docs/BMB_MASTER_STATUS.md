@@ -5,6 +5,17 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-26 r13 (PHASE 2 WP7+WP8 — PRICE HISTORY + PO DASHBOARD READ APIs 227/228 + DASHBOARD UI — CODE_CLOSED + PUSHED)**
+
+- **Phase 2 WP7 (Price History Read) + WP8 (PO Dashboard Read + Hub integration):** ✅ **CODE_CLOSED + PUSHED** (R116)
+  - **227_price_history_read_api.sql:** get_purchase_price_history (SECURITY INVOKER — RLS m223 enforced; filters + pagination)
+  - **228_po_dashboard_read_api.sql:** get_po_dashboard (SECURITY INVOKER aggregates; RLS branch-scoped). REMEDIATION: wrapped jsonb_agg subqueries (staged nested-aggregate/GROUP BY bug)
+  - **API + UI:** `src/lib/bmbAdminApi_purchaseAnalytics.ts` + types; `src/pages/admin/PurchaseDashboardPage.tsx` (KPI + action lists, real RPC) as first PurchaseHub tab
+  - **DB integration:** `e2e/contracts_wp7_wp8_227_228.sql` — **6 cases ALL PASS** (INVOKER + RLS branch isolation price history + dashboard, admin cross-branch, filters) · static 5 + API 3
+  - **Gates:** Docker replay 001→228 `migrations=232 OK / 0 FAIL` + all contracts ALL GREEN · vitest 3,014 · lint 0 · tsc 0 · build PASS
+  - **Production:** NOT touched (ledger 218)
+- **Next:** WP9 (Full regression / security / performance)
+
 **SESSION CLOSE 2026-11-26 r12 (PHASE 2 WP6 — WAVG POSTING + REVERSAL 226 + DB INTEGRATION TESTS — CODE_CLOSED + PUSHED)**
 
 - **Phase 2 WP6 (Inventory Integration):** ✅ **CODE_CLOSED + PUSHED** (R115)

@@ -9,6 +9,15 @@
 
 ## R111 â€” 2026-11-26 â€” PHASE 2 WP2: PO WORKFLOW RPC (MIGRATION 224) + API + DB INTEGRATION TESTS
 
+## R116 — 2026-11-26 — PHASE 2 WP7+WP8: PRICE HISTORY + PO DASHBOARD READ APIs (227/228) + DASHBOARD UI
+
+- **Task:** PHASE2-WP7/WP8 (Owner Master Directive continuous execution)
+- **Migrations 227/228 (TEST DB only):** get_purchase_price_history + get_po_dashboard — both SECURITY INVOKER (RLS m223 enforced, branch/tenant scoped). REMEDIATION: wrapped jsonb_agg subqueries (staged nested-aggregate/GROUP BY bug)
+- **API + UI:** src/lib/bmbAdminApi_purchaseAnalytics.ts + types PurchasePriceHistory/PODashboard; src/pages/admin/PurchaseDashboardPage.tsx (KPI + action lists, real RPC) as first PurchaseHub tab
+- **Tests:** DB e2e/contracts_wp7_wp8_227_228.sql 6 cases ALL PASS (INVOKER + RLS branch isolation price history + dashboard, admin cross-branch, filters) · static 5 + API 3 · wired replay
+- **Gates:** replay 001-228 migrations=232 OK/0 FAIL + all contracts ALL GREEN · vitest 3,014 · lint 0 · tsc 0 · build PASS · production untouched (218)
+- **Next:** WP9 (Full regression / security / performance)
+
 ## R115 — 2026-11-26 — PHASE 2 WP6: WAVG POSTING + REVERSAL (MIGRATION 226) + DB INTEGRATION TESTS
 
 - **Task:** PHASE2-WP6 (Owner Master Directive continuous execution)
