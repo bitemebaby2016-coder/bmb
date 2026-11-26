@@ -14,7 +14,8 @@
 |------|----------|-------|-----------|
 | **Phase 2 WP1 (Schema 219-223)** | 5 migration | ✅ **ACCEPTED + PUSHED** | 1cd696a — RLS org/branch + 33 integration IDs ALL PASS |
 | **Phase 2 WP2 (PO RPC 224 + API)** | 1 migration + API | ✅ **CODE_CLOSED + PUSHED** | R111 — `contracts_wp2_224.sql` 10 cases ALL PASS · replay 228 OK |
-| **Phase 2 WP3-10** | 8 WP | ⏳ IN PROGRESS | WP3 (PO UI) ถัดไป → WP4 GRN → WP5 → WP6 WAVG → WP7 → WP8 → WP9 → WP10 |
+| **Phase 2 WP3 (PO UI / E2E)** | UI + E2E spec | ✅ **CODE_CLOSED + PUSHED** | R112 — PurchaseOrderPage in PurchaseHub (real API) · API 5 tests · E2E spec LIVE_TEST_PENDING (รอ staging) |
+| **Phase 2 WP4-10** | 7 WP | ⏳ PENDING | WP4 (GRN DB) ถัดไป → WP5 → WP6 WAVG → WP7 → WP8 → WP9 → WP10 |
 | **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 311 tests PASS |
 | **Phase 1 Contract Tests (214-218)** | 5 migration | ✅ **COMPLETE** | ALL GREEN in CI |
 | **Live Tests E** | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 ผ่านหมด (E-7 diagnostic) |

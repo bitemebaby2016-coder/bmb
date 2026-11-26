@@ -5,6 +5,16 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-26 r9 (PHASE 2 WP3 — PO UI in PurchaseHub + E2E SPEC — CODE_CLOSED + PUSHED)**
+
+- **Phase 2 WP3 (PO UI):** ✅ **CODE_CLOSED + PUSHED** (R112)
+  - `src/pages/admin/PurchaseOrderPage.tsx` — PO list + create/edit (draft/submitted) + submit + approve (finance/admin) + detail modal; real WP2 API (migration 224) via supabase.rpc; responsive; no mock
+  - `src/components/admin/AdminHubs.tsx` — new "ใบสั่งซื้อ (Purchase Order)" tab in existing PurchaseHub (no duplicate hub)
+  - `src/__tests__/purchaseOrdersApi.test.ts` — 5 API-wiring tests PASS
+  - `e2e/purchaseOrder.spec.ts` — Playwright E2E create→submit→approve — **LIVE_TEST_PENDING** (needs staging server + DB 219-224 + admin auth)
+  - Gates: tsc 0 · lint 0 · vitest 253 files/2,985 · build PASS · production untouched
+- **Next:** WP4 (GRN DB/RPC/API — promote staged wp4)
+
 **SESSION CLOSE 2026-11-26 r8 (PHASE 2 WP2 — PO WORKFLOW RPC 224 + API + DB INTEGRATION TESTS — CODE_CLOSED + PUSHED)**
 
 - **Phase 2 WP2 (PO Backend):** ✅ **CODE_CLOSED + PUSHED** (R111) — Master Directive 2026-11-26 continuous execution
