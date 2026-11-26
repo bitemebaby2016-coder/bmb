@@ -7,6 +7,21 @@
 
 ---
 
+## R110 — 2026-11-26 — PHASE 2 WP1: SCHEMA MIGRATIONS 219-223 (REMEDIATED + OWNER ACCEPTED + COMMIT)
+
+- **Task:** PHASE2-WP1-SCHEMA (Owner directive 2026-11-26: "WP1 REMEDIATION & SCOPE CORRECTION" → Final Reconciliation → "คอมมิทพุชให้ ผ่านเขียวหมด")
+- **Scope:** WP1 = Schema/Constraints/Indexes/RLS/Contract เท่านั้น — Workflow RPCs ย้ายไป `supabase/staged_workflows/` (wp2/w4/w6/w7/w8, ไม่ apply)
+- **Migrations 219-223 (additive, idempotent, NOT applied to production):**
+  - 219 purchase_orders + purchase_order_lines + po_number_seq (contract PO-YYYYMMDD-{seq})
+  - 220 goods_receipts + lines — idempotency_key + payload_hash (uq), reversal_of linkage (uq once, no-idem CHECK, no self-link), grl_acceptance_balance CHECK, ลบ price_variance generated col (DEFECT-1)
+  - 221 purchase_price_history append-only (trigger + SELECT/INSERT grants), ลบ package_size (DEFECT-5), landed_cost นิยามใน COMMENT (DEFECT-4), +tenant_id/branch_id
+  - 222 inventory_transactions ext (po_id/grn_id/grn_line_id/unit_cost/conversion_snapshot + COMMENT)
+  - 223 RLS org/branch isolation — has_org_row_scope (platform/tenant/branch ตาม m065/071/088/090/146) + 17 policies
+- **DEFECT-1..5 fixed & proven on real Postgres** (ตาม matrix §15.1 ใน `docs/PHASE2_DESIGN_REPORT.md`)
+- **Gates (all green):** Docker replay fresh DB `OK=227 FAIL=0` (ledger 223 versions) + Phase 1 contracts (214-218) + regression 124-213 ALL GREEN · NEW `e2e/contracts_phase2_219_223.sql` 33 test IDs ALL PASS · static 6 files/132 tests (full suite 251 files/2,963 tests) · lint 0 · tsc 0
+- **Fix during session:** replay grep extraction (NOTICE prefix) · test-count reconciliation 36→33
+- **Blocked/next:** WP2 (ต้องได้ Owner อนุมัติแยก) — ดู `supabase/staged_workflows/README.md`
+
 ## R109 — 2026-11-25 r4 — LIVE TEST RESULTS + OWNER DECISIONS (E/F LIVE_VERIFIED, G/H PARTIAL, C-1..C-6 RESOLVED, OMISE RESOLVED)
 
 **Status:** CODE_CLOSED + GATES PASS — All gates green: lint OK, tsc 0, vitest 2830 tests (245 files). Contract suite 67 files ALL GREEN.

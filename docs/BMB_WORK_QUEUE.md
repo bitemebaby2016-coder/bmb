@@ -42,7 +42,7 @@
 | จัดขอบเขต WP: ย้าย RPCs → staged_workflows (WP2/WP4/WP6/WP7/WP8) | ✅ DONE | `supabase/staged_workflows/` 5 ไฟล์ + README |
 | RLS org/branch isolation (has_org_row_scope) ทั้ง 5 ตาราง | ✅ DONE | m223 + integration T223 (11 เคส) PASS |
 | PostgreSQL replay: apply 001→223 | ✅ ALL GREEN 227/0 FAIL | `e2e/w2-replay-full-2026-11-25.log` (รันใหม่ 2026-11-26) |
-| Phase 2 integration contracts (36 เคส) | ✅ ALL PASS | `e2e/contracts_phase2_219_223.sql` |
+| Phase 2 integration contracts (33 test IDs) | ✅ ALL PASS | `e2e/contracts_phase2_219_223.sql` — ตัวเลขจริง 33 (รายงานรอบแรกระบุ 36 = ผิดพลาดการนับ, แก้แล้วตาม Reconciliation 2026-11-26) |
 | Static contract tests (source-contract) | ✅ 132 tests PASS | 6 files: 219/220/221/222/223-RLS/225-staged |
 | Regression 124-213 (รวม Order Deduct/Cancel Restore) | ✅ ALL GREEN | replay log |
 | **งานต่อไป (BLOCKED รอ Owner)** | ⏸ รอตรวจรับ | Owner ตรวจ Defect Matrix + Diff → อนุมัติ WP2 แยก |

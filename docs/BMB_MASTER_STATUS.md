@@ -5,6 +5,18 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-26 r7 (PHASE 2 WP1 ACCEPTED BY OWNER + COMMIT/PUSH — ALL GREEN)**
+
+- **Phase 2 WP1 (Schema / Migrations / Contract Tests):** ✅ **ACCEPTED by Owner 2026-11-26** after Remediation + Final Reconciliation
+  - **Migrations 219-223 (schema-only, remediated):** 219 purchase_orders(+po_number_seq) · 220 goods_receipts(+idempotency key/hash + reversal linkage, −price_variance generated col) · 221 purchase_price_history(append-only, −package_size, +tenant/branch) · 222 itx ext(+COMMENT) · 223 RLS org/branch isolation (has_org_row_scope, 17 policies) — **NOT applied to Production** (production ledger still 218)
+  - **Workflow RPCs re-scoped to staged reference (NOT applied):** `supabase/staged_workflows/` wp2 (PO), wp4 (GRN), wp6 (WAVG posting+reversal — DEFECT-2/3/4/5 fixed design), wp7/wp8 (read APIs, SECURITY INVOKER)
+  - **DEFECT-1..5 all fixed + proven on real Postgres:** Docker replay fresh DB `OK=227 FAIL=0` (ledger 223 versions; 227 = files incl. 4 legacy duplicate-version pairs 180/183/203/204 untouched) + Phase 1 contracts + regression 124-213 ALL GREEN
+  - **New integration contracts:** `e2e/contracts_phase2_219_223.sql` — **33 test IDs ALL PASS** (count corrected from wrong "36"; Final Reconciliation 2026-11-26)
+  - **Static contracts:** 6 new Vitest files, 132 tests PASS (full suite 251 files / 2,963 tests) · lint + tsc 0
+  - **RLS proof:** 5-account cross-branch matrix (read/write denial both directions, admin/owner per m088 model, platform bypass) — ALL PASS
+  - **Evidence:** `e2e/w2-replay-full-2026-11-25.log(+jsonl,+p1,+p2)` (run 2026-11-26) · `docs/PHASE2_DESIGN_REPORT.md` §15
+- **Next (BLOCKED — ต้องได้ Owner อนุมัติแยก):** WP2 (PO workflow RPC จาก staged) → WP4 → WP6 → WP7 → WP8 ตามแผน §15 ของ design report
+
 **SESSION CLOSE 2026-11-25 r4 (LIVE TEST RESULTS + OWNER DECISIONS — E/F LIVE_VERIFIED, G/H PARTIAL, C-1..C-6 RESOLVED, OMISE RESOLVED)**
 
 - **Live Test Groups Results:**
