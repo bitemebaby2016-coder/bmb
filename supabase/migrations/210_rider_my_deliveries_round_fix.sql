@@ -603,82 +603,20 @@ DECLARE
   v_driver_id text;
   v_sched date;
 BEGIN
-  -- สร้าง fixture ชั่วคราว (rollback ท้ายบล็อก = ไม่ค้างใน DB)
-  -- 0. tenant (tenant-bmb-001 ควรมีอยู่แล้วใน prod/CI — ถ้าไม่มีก็สร้าง)
-  INSERT INTO public.tenants (id, name, slug, status, created_at, updated_at)
-  VALUES ('tenant-bmb-001', 'Bite Me Baby Test', 'bmb-test', 'active', NOW(), NOW())
-  ON CONFLICT (id) DO NOTHING;
-
-  -- 0b. ensure store is OPEN for fixture test (CI may run outside 10:00-22:00 Bangkok)
-  -- enforce_shop_hours (m160) reads key='hours' with {open, close} format
-  INSERT INTO public.business_settings (key, value, created_at, updated_at)
-  VALUES ('hours', '{"open": "00:00", "close": "23:59"}'::jsonb, NOW(), NOW())
-  ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
-
-  -- 1. branch fixture (จำเป็นสำหรับ delivery_rounds.branch_id FK)
-  DECLARE
-    v_fixture_branch_id text := 'branch-fix-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '99999999999');
+  -- NON-MUTATING runtime check (no fixture writes on production): assert the
+  -- 5-arg my_deliveries no longer raises 42703 (o.round_id JOIN bug). Read-only.
   BEGIN
-    INSERT INTO public.branches (id, tenant_id, code, name, slug, address_line1, city, province, country, latitude, longitude, status, is_default, created_at, updated_at)
-    VALUES (v_fixture_branch_id, 'tenant-bmb-001', 'fix', 'Fixture Branch', 'fixture', '123 Test St', 'Bangkok', 'Bangkok', 'TH', 13.7563, 100.5018, 'active', false, NOW(), NOW())
-    ON CONFLICT (tenant_id, code) DO UPDATE SET id = EXCLUDED.id RETURNING id INTO v_fixture_branch_id;
-    
-    -- 2. driver (ต้องมี user_id เพื่อผ่าน my_deliveries auth.uid() — ใช้ service_role seed ใน CI)
-    v_fixture_driver_id := 'drv-fix-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '99999999999');
-    INSERT INTO public.drivers (id, name, phone, vehicle_label, status, created_at, updated_at)
-    VALUES (v_fixture_driver_id, 'Fixture Rider', '0800000000', 'มอเตอร์ไซค์', 'available', NOW(), NOW());
-
-    -- 3. delivery_round มี scheduled_date
-    v_fixture_round_id := 'rnd-fix-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '99999999999');
-    INSERT INTO public.delivery_rounds (id, name, round_key, display_name, cutoff_time, delivery_start, delivery_end, scheduled_date, status, branch_id, tenant_id, created_at, updated_at)
-    VALUES (v_fixture_round_id, 'Fixture Round', 'morning', 'Fixture Round', '08:00', '06:00', '09:00', CURRENT_DATE, 'active', v_fixture_branch_id, 'tenant-bmb-001', NOW(), NOW());
-
-    -- 4. order ผูก round
-    v_fixture_order_number := 'ORD-FIX-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '999999');
-    INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref,
-                               delivery_round_id, status, delivery_method,
-                               dropoff_detail, dropoff_latitude, dropoff_longitude,
-                               subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
-                               payment_status, payment_method, special_instructions, created_at, updated_at)
-    VALUES ('ord-fix-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '99999999999'),
-            v_fixture_order_number, 'fix-cust', 'Fixture Customer', '0800000000', NULL,
-            v_fixture_round_id, 'ready_for_dispatch', 'self_delivery',
-            'Fixture Address', 10.7016, 102.1429,
-            100, 25, 0, 0, 7, 132,
-            'paid', 'promptpay_qr', '', NOW(), NOW());
-
-    -- 5. delivery_assignment
-    v_fixture_assignment_id := 'das-fix-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '99999999999');
-    INSERT INTO public.delivery_assignments (id, order_number, driver_id, status, branch_id, assigned_at, notes, created_at, updated_at)
-    VALUES (v_fixture_assignment_id, v_fixture_order_number, v_fixture_driver_id, 'assigned', v_fixture_branch_id, NOW(), 'fixture', NOW(), NOW());
-
-    -- เรียก my_deliveries 5-arg จริง (auth.uid() จะเป็น NULL ใน DO block → จะได้ ERR_NOT_AUTHENTICATED)
-    -- วิธีนี้: ใช้ PERFORM พร้อม catch เพื่อ assert ว่าไม่ได้ 42703 (column o.round_id does not exist)
-    -- ถ้าผ่าน 42703 แล้ว จะคืน ERR_NOT_AUTHENTICATED (เพราะ auth.uid() = NULL ใน DO block)
-    -- ซึ่งเป็นพฤติกรรมที่ถูกต้อง → assert ว่า error message ไม่ใช่ 42703
-    BEGIN
-      PERFORM public.my_deliveries('', NULL, NULL, NULL, NULL);
-      -- ถ้ารันถึงบรรทัดนี้ = ไม่มี error = ผิดปกติ (ควรเจอ ERR_NOT_AUTHENTICATED)
-      RAISE EXCEPTION 'ERR_VERIFY_UNEXPECTED_OK: my_deliveries 5-arg should require auth';
-    EXCEPTION
-      WHEN sqlstate 'P0001' THEN -- RAISE EXCEPTION
-        IF SQLERRM LIKE '%ERR_NOT_AUTHENTICATED%' THEN
-          -- ถูกต้อง: ผ่าน JOIN ได้ (ไม่เจอ 42703) แล้วถูกบังคับ auth
-          RAISE NOTICE 'RUNTIME VERIFY PASS: my_deliveries 5-arg executes without 42703 (got expected ERR_NOT_AUTHENTICATED)';
-        ELSIF SQLERRM LIKE '%42703%' OR SQLERRM LIKE '%column o.round_id does not exist%' THEN
-          RAISE EXCEPTION 'RUNTIME VERIFY FAIL: 42703 column o.round_id does not exist still present in JOIN';
-        ELSE
-          RAISE NOTICE 'RUNTIME VERIFY: other expected error: %', SQLERRM;
-        END IF;
-    END;
-
-    -- ทำความสะอาด fixture (rollback ทั้ง tx)
-    DELETE FROM public.delivery_assignments WHERE id = v_fixture_assignment_id;
-    DELETE FROM public.orders WHERE order_number = v_fixture_order_number;
-    DELETE FROM public.delivery_rounds WHERE id = v_fixture_round_id;
-    DELETE FROM public.drivers WHERE id = v_fixture_driver_id;
-    DELETE FROM public.branches WHERE id = v_fixture_branch_id;
-    DELETE FROM public.tenants WHERE id = 'tenant-bmb-001' AND name = 'Bite Me Baby Test';
+    PERFORM public.my_deliveries('', NULL, NULL, NULL, NULL);
+    RAISE EXCEPTION 'ERR_VERIFY_UNEXPECTED_OK: my_deliveries 5-arg should require auth';
+  EXCEPTION
+    WHEN sqlstate 'P0001' THEN
+      IF SQLERRM LIKE '%ERR_NOT_AUTHENTICATED%' THEN
+        RAISE NOTICE 'RUNTIME VERIFY PASS: my_deliveries 5-arg executes without 42703 (got expected ERR_NOT_AUTHENTICATED)';
+      ELSIF SQLERRM LIKE '%42703%' OR SQLERRM LIKE '%column o.round_id does not exist%' THEN
+        RAISE EXCEPTION 'RUNTIME VERIFY FAIL: 42703 column o.round_id does not exist still present in JOIN';
+      ELSE
+        RAISE NOTICE 'RUNTIME VERIFY: other expected error: %', SQLERRM;
+      END IF;
   END;
 END;
 $verify_runtime$;
