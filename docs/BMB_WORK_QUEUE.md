@@ -8,22 +8,22 @@
 
 ---
 
-## 📊 สรุปสถานะ Work Queue (2026-11-25 r4 — LIVE TEST RESULTS + OWNER DECISIONS)
+## 📊 สรุปสถานะ Work Queue (2026-11-26 r5 — WP2 CODE_CLOSED + PUSHED)
 
 | กลุ่ม | จำนวนข้อ | สถานะ | รายละเอียด |
 |------|----------|-------|-----------|
-| **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 15 ไฟล์เทสครอบ 28 migration (179-213) ALL GREEN — 311 tests PASS |
-| **Phase 1 Contract Tests (214-218)** | 5 migration | ✅ **COMPLETE** | 1 SQL file `e2e/contracts_phase1_214_218.sql` — suppliers, inventory enrichment, supplier_products, recipes batch yield — runs in CI |
-| **Phase 1 Gate Review** | 1 | ⏸️ PAUSED — รอ Owner | Phase 1 (migrations 214-218 + APIs) applied prod — Owner ตรวจรับก่อน Phase 2 |
-| **Phase 2-6** | 5 Phase | ⏸️ PAUSED — Approved roadmap, รอ Gate ทีละ Phase | PO+GRN → Recipe Costing → OCR+CSV → Admin Nav → Analytics — **ห้ามเริ่มเอง** |
-| **Live Tests E** | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 ผ่านหมด (E-7 diagnostic) — OSM fallback verified |
-| **Live Tests F** | 7 | ✅ **LIVE_VERIFIED** | F-1..F-4, F-7 ผ่านหมด (F-5, F-6 legacy verified) |
+| **Phase 2 WP1 (Schema 219-223)** | 5 migration | ✅ **ACCEPTED + PUSHED** | 1cd696a — RLS org/branch + 33 integration IDs ALL PASS |
+| **Phase 2 WP2 (PO RPC 224 + API)** | 1 migration + API | ✅ **CODE_CLOSED + PUSHED** | R111 — `contracts_wp2_224.sql` 10 cases ALL PASS · replay 228 OK |
+| **Phase 2 WP3-10** | 8 WP | ⏳ IN PROGRESS | WP3 (PO UI) ถัดไป → WP4 GRN → WP5 → WP6 WAVG → WP7 → WP8 → WP9 → WP10 |
+| **Contract Audit Closure** | 28 migration | ✅ **COMPLETE** | 311 tests PASS |
+| **Phase 1 Contract Tests (214-218)** | 5 migration | ✅ **COMPLETE** | ALL GREEN in CI |
+| **Live Tests E** | 7 | ✅ **LIVE_VERIFIED** | E-1..E-6 ผ่านหมด (E-7 diagnostic) |
+| **Live Tests F** | 7 | ✅ **LIVE_VERIFIED** | F-1..F-4, F-7 ผ่านหมด (F-5, F-6 legacy) |
 | **Live Tests G** | 7 | ⏸️ PARTIAL | G-1..G-5 ผ่าน · G-6, G-7 รอทดสอบ |
-| **Live Tests H** | 6 | ⏸️ PARTIAL | H-3, H-4, H-5, H-6 ผ่าน · H-1, H-2 รอทดสอบ |
+| **Live Tests H** | 6 | ⏸️ PARTIAL | H-3..H-6 ผ่าน · H-1, H-2 รอทดสอบ |
 | **Live Tests I** | 8 | ⏸️ PAUSED | รอ Owner ทดสอบ (critical path) |
-| **C-1..C-6** | 6 | ✅ **RESOLVED** | Owner decisions recorded below — ไม่ใช่ BLOCKED แล้ว |
+| **C-1..C-6** | 6 | ✅ **RESOLVED** | Owner decisions recorded |
 | **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
-| **Omise TEST Card** | 1 | ✅ **RESOLVED** | ไม่ถือเป็นบล็อก — QR code (Stripe) ใช้ได้, Omise fallback เปลี่ยน role |
 | **รวม** | **90+** | | |
 
 ---
@@ -33,29 +33,29 @@
 ## 🔨 กลุ่มใหม่ — Phase 2 WP1 Remediation (2026-11-26 — PENDING OWNER ACCEPTANCE)
 
 > คำสั่ง Owner: "WP1 REMEDIATION & SCOPE CORRECTION" — แก้ DEFECT-1..5 + จัดขอบเขต WP ใหม่
-> สถานะ: แก้ครบ + พิสูจน์ด้วย Docker replay จริง (ALL GREEN) — **ห้ามเริ่ม WP2 จน Owner ตรวจรับ**
-> ห้าม Commit/Push จนกว่า Owner ตรวจ Diff รอบนี้
+> สถานะ: ✅ ACCEPTED + COMMITTED/PUSHED (1cd696a) — WP2 STARTED (Master Directive 2026-11-26)
 
 | งาน | สถานะ | หลักฐาน |
 |---|---|---|
 | DEFECT-1..5 แก้ครบ (m219-223 + staged) | ✅ DONE | Defect Matrix §15.1 ใน `docs/PHASE2_DESIGN_REPORT.md` |
 | จัดขอบเขต WP: ย้าย RPCs → staged_workflows (WP2/WP4/WP6/WP7/WP8) | ✅ DONE | `supabase/staged_workflows/` 5 ไฟล์ + README |
 | RLS org/branch isolation (has_org_row_scope) ทั้ง 5 ตาราง | ✅ DONE | m223 + integration T223 (11 เคส) PASS |
-| PostgreSQL replay: apply 001→223 | ✅ ALL GREEN 227/0 FAIL | `e2e/w2-replay-full-2026-11-25.log` (รันใหม่ 2026-11-26) |
-| Phase 2 integration contracts (33 test IDs) | ✅ ALL PASS | `e2e/contracts_phase2_219_223.sql` — ตัวเลขจริง 33 (รายงานรอบแรกระบุ 36 = ผิดพลาดการนับ, แก้แล้วตาม Reconciliation 2026-11-26) |
-| Static contract tests (source-contract) | ✅ 132 tests PASS | 6 files: 219/220/221/222/223-RLS/225-staged |
-| Regression 124-213 (รวม Order Deduct/Cancel Restore) | ✅ ALL GREEN | replay log |
-| **งานต่อไป (BLOCKED รอ Owner)** | ⏸ รอตรวจรับ | Owner ตรวจ Defect Matrix + Diff → อนุมัติ WP2 แยก |
+| PostgreSQL replay: apply 001→223 | ✅ ALL GREEN 227/0 FAIL | `e2e/w2-replay-full-2026-11-25.log` |
+| Phase 2 integration contracts (33 test IDs) | ✅ ALL PASS | `e2e/contracts_phase2_219_223.sql` |
+| WP1 ACCEPTED + COMMIT/PUSH | ✅ DONE (1cd696a) | HEAD=origin/main ตรวจแล้ว |
+| **WP2 (PO Workflow RPC 224 + API + tests)** | ✅ CODE_CLOSED + PUSHED | R111 · `e2e/contracts_wp2_224.sql` 10 cases ALL PASS · migration 224 |
 
-**งาน staged ที่รอ WP เจ้าของ (ห้าม apply ใน WP1):**
+**งาน staged ที่รอ WP เจ้าของ (ห้าม apply ก่อน WP นั้น):**
 
 | ไฟล์ staged | WP | หมายเหตุ |
 |---|---|---|
-| `supabase/staged_workflows/wp2_po_workflow_rpc.sql` | WP2 | PO workflow RPC (org scope ในตัว) |
-| `supabase/staged_workflows/wp4_grn_workflow_rpc.sql` | WP4 | GRN workflow RPC (สืบทอด org จาก PO) |
-| `supabase/staged_workflows/wp6_wavg_posting_reversal.sql` | WP6 | WAVG post + reversal ใหม่ (DEFECT-2/3/4 แก้แล้ว) — integration test ของ WP6 ต้องครอบ idempotency-retry/concurrent/rollback/reversal |
+| ~~`wp2_po_workflow_rpc.sql`~~ | ~~WP2~~ | ✅ PROMOTED → migration 224 (R111) |
+| `supabase/staged_workflows/wp4_grn_workflow_rpc.sql` | WP4 | GRN workflow RPC (สืบทอด org จาก PO) — งานถัดไปหลัง WP3 |
+| `supabase/staged_workflows/wp6_wavg_posting_reversal.sql` | WP6 | WAVG post + reversal ใหม่ (DEFECT-2/3/4 แก้แล้ว) |
 | `supabase/staged_workflows/wp7_price_history_read_api.sql` | WP7 | Read API — SECURITY INVOKER |
 | `supabase/staged_workflows/wp8_po_dashboard_read_api.sql` | WP8 | Read API — SECURITY INVOKER |
+
+**ลำดับถัดไป (Master Directive):** WP3 (PO UI/E2E) → WP4 (GRN DB) → WP5 (GRN UI) → WP6 (WAVG) → WP7 (Price History) → WP8 (PurchaseHub) → WP9 (Regression) → WP10 (Readiness)
 
 ---
 

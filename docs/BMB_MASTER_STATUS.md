@@ -5,6 +5,18 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**SESSION CLOSE 2026-11-26 r8 (PHASE 2 WP2 — PO WORKFLOW RPC 224 + API + DB INTEGRATION TESTS — CODE_CLOSED + PUSHED)**
+
+- **Phase 2 WP2 (PO Backend):** ✅ **CODE_CLOSED + PUSHED** (R111) — Master Directive 2026-11-26 continuous execution
+  - **Migration 224_purchase_order_rpcs.sql (TEST DB only — production ledger still 218):** generate_po_number (po_number_seq + Asia/Bangkok) + create/update/submit/approve_purchase_order — SECURITY DEFINER role + has_org_row_scope gates, optimistic lock (version), status gates, validation, audit (append_audit_log), grants
+  - **WP2 REMEDIATION:** removed non-existent `has_staff_branch_scope()` (staged runtime defect; redundant with has_org_row_scope) + Asia/Bangkok date (no CURRENT_DATE per m190 gate)
+  - **API:** `src/lib/bmbAdminApi_purchaseOrders.ts` (real supabase.rpc) + types PurchaseOrderHeader/Line/Form + POStatus
+  - **DB integration:** `e2e/contracts_wp2_224.sql` — **10 cases ALL PASS** (number-gen, validation, optimistic lock, duplicate submit, invalid transition, role gate, branch scope, audit)
+  - **Static:** `src/__tests__/contracts_224_po_rpcs.test.ts` — 17 tests PASS
+  - **Gates (all green):** Docker replay 001→224 `migrations=228 OK / 0 FAIL` + phase1 + phase2(219-223) + wp2(224) contracts ALL GREEN · vitest 252 files/2,980 tests · lint 0 · tsc 0 · build PASS
+  - **Production:** NOT touched (ledger 218) · 219-223 unchanged
+- **Next:** WP3 (PurchaseHub PO UI / E2E) — extend existing PurchaseHub (AdminHubs.tsx), real API, no mock
+
 **SESSION CLOSE 2026-11-26 r7 (PHASE 2 WP1 ACCEPTED BY OWNER + COMMIT/PUSH — ALL GREEN)**
 
 - **Phase 2 WP1 (Schema / Migrations / Contract Tests):** ✅ **ACCEPTED by Owner 2026-11-26** after Remediation + Final Reconciliation
