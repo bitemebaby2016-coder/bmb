@@ -735,6 +735,85 @@ export interface PurchaseOrderWithLines extends PurchaseOrderHeader {
 }
 
 // ============================================
+// Goods Receipt (GRN) Types (Phase 2 WP4 — DB-backed, migration 220/225)
+// ============================================
+
+export type GRNStatus = 'draft' | 'submitted' | 'approved' | 'posted' | 'rejected' | 'cancelled' | 'reversed';
+
+export interface GoodsReceipt {
+  id: string;
+  grn_number: string;
+  po_id: string;
+  supplier_id: string;
+  status: GRNStatus;
+  receipt_date: string;
+  received_by?: string | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  posted_by?: string | null;
+  posted_at?: string | null;
+  reversal_of?: string | null;
+  idempotency_key?: string | null;
+  idempotency_payload_hash?: string | null;
+  notes?: string | null;
+  attachments?: unknown;
+  tenant_id?: string | null;
+  branch_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GoodsReceiptLine {
+  id: string;
+  grn_id: string;
+  po_line_id: string;
+  supplier_product_id: string;
+  ingredient_id: string;
+  received_qty: number;
+  accepted_qty: number;
+  rejected_qty: number;
+  purchase_unit: string;
+  use_unit: string;
+  conversion_factor: number;
+  actual_unit_price: number;
+  line_discount: number;
+  shipping_allocated: number;
+  tax_treatment?: 'recoverable' | 'non_recoverable' | 'exempt' | null;
+  tax_amount: number;
+  lot_number?: string | null;
+  expiry_date?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GRNLineForm {
+  po_line_id: string;
+  received_qty: number;
+  accepted_qty?: number;
+  rejected_qty?: number;
+  actual_unit_price?: number;
+  line_discount?: number;
+  shipping_allocated?: number;
+  tax_treatment?: 'recoverable' | 'non_recoverable' | 'exempt';
+  tax_amount?: number;
+  lot_number?: string;
+  expiry_date?: string;
+  notes?: string;
+}
+
+export interface GRNForm {
+  po_id: string;
+  lines: GRNLineForm[];
+  receipt_date?: string | null;
+  notes?: string | null;
+}
+
+export interface GoodsReceiptWithLines extends GoodsReceipt {
+  lines: GoodsReceiptLine[];
+}
+
+// ============================================
 // Notification Types
 // ============================================
 

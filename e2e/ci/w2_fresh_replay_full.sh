@@ -212,5 +212,16 @@ if [ $rc -ne 0 ]; then
 fi
 echo "PHASE 2 WP2 CONTRACTS 224 ALL GREEN"
 
+# ---- Phase 2 WP4 contract (225) — GRN workflow RPC runtime ----
+echo "===== PHASE 2 WP4 CONTRACT TESTS (225) ====="
+out=$(psql -X -v ON_ERROR_STOP=1 -f e2e/contracts_wp4_225.sql 2>&1); rc=$?
+printf '%s\n' "$out"
+printf '%s\n' "$out" | grep -E '225\.[0-9]+ PASS' >> "$LOG.p2"
+if [ $rc -ne 0 ]; then
+  echo "WP4_CONTRACT_FAIL"
+  exit 1
+fi
+echo "PHASE 2 WP4 CONTRACTS 225 ALL GREEN"
+
 echo "===== FINAL ====="
-echo "REPLAY_ALL_GREEN migrations=$ok_count + phase1_contracts PASS + phase2_contracts PASS + wp2_contracts PASS"
+echo "REPLAY_ALL_GREEN migrations=$ok_count + phase1_contracts PASS + phase2_contracts PASS + wp2_contracts PASS + wp4_contracts PASS"
