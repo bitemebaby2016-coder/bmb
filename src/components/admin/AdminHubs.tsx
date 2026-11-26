@@ -29,6 +29,7 @@ import { TransportAvailabilityBoard } from '@/components/admin/TransportAvailabi
 import { SupplierPage } from '@/pages/admin/SupplierPage'
 import { SupplierProductMappingPage } from '@/pages/admin/SupplierProductMappingPage'
 import { PurchaseOrderPage } from '@/pages/admin/PurchaseOrderPage'
+import { GoodsReceivingPage } from '@/pages/admin/GoodsReceivingPage'
 
 interface HubTab {
   key: string
@@ -173,6 +174,7 @@ export function PurchaseHub() {
         { key: 'suppliers', label: 'ผู้ขาย (Supplier Master)', icon: '🏢', render: () => <SupplierPage /> },
         { key: 'mappings', label: 'จับคู่สินค้า (Mapping)', icon: '🔗', render: () => <SupplierProductMappingPage /> },
         { key: 'purchase_orders', label: 'ใบสั่งซื้อ (Purchase Order)', icon: '📝', render: () => <PurchaseOrderPage /> },
+        { key: 'goods_receiving', label: 'รับสินค้า (Goods Receiving)', icon: '📦', render: () => <GoodsReceivingPage /> },
       ]}
     />
   )
