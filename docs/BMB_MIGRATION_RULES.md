@@ -29,4 +29,4 @@ These rules are permanent. They exist because Production drifted (schema 218 vs 
 - Fresh Replay (001→232) = Production parity (both members of each former pair applied).
 
 ## Recovery Procedure (summary; full runbook in RECOVERY_PACKAGE_2026-11-26.md)
-1. Backup. 2. Archive/renumber duplicates (done in repo). 3. `migration repair --status applied 211..218` (ledger-only). 4. `db push` 219–228 (postgres role). 5. Verify ledger + read-only smoke.
+1. Backup. 2. Archive/renumber duplicates (done in repo). 3. `migration repair --status applied 211..218` (ledger-only). **[DONE 2026-11-26]** 4. `db push --include-all` 219–228 (postgres role; 229–232 already applied → not re-run). 5. Verify ledger + read-only smoke.

@@ -104,4 +104,4 @@ No deploy/write, no repair, no file move/delete, no permission change, no featur
 - **WP-R3/R4/R6:** runbooks below are ready; **not executed** (require Owner approval + DB password + backup).
 - **WP-R7:** `docs/BMB_MIGRATION_RULES.md` (8 permanent rules) added.
 
-**Prod steps (R2 repair, R3 connect, R4 apply 219–228) remain PENDING Owner execution.** Repo is consistent and CI-green; Production is unchanged by this Recovery (still schema 218 / ledger 210, 219–228 pending).
+**Prod steps (R2 repair, R3 connect, R4 apply 219–228) remain PENDING Owner execution. **[LIVE 2026-11-26] Ledger repair 211–218 + 229–232 DONE (=> applied, verified 001–218 applied / 219–228 pending / 229–232 applied, no dups). 219–228 push still PENDING Owner backup + `db push --include-all`. Full evidence: docs/PROD_DEPLOYMENT_RECORD_2026-11-26.md.**** Repo is consistent and CI-green; Production is unchanged by this Recovery (still schema 218 / ledger 218 (post-repair 2026-11-26), 219–228 pending).
