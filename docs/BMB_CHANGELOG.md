@@ -7,6 +7,18 @@
 
 ---
 
+## R128 — 2026-11-27 — THEATER MODE BADGES: ประเภทเมนู + ปฏิทินมุมรูป + "ยังไม่ลงปฏิทิน" (ของแอดมินก็ขึ้นครบ)
+
+- **Root Cause:** การ์ดเธียเตอร์มีของพร้อมใช้อยู่แล้ว (R48 `ScheduleDateBadge` มุมขวาบน + pill "📅 สั่งล่วงหน้า") แต่ **ไม่ทำงานกับของแอดมินเลือก** เพราะ (1) `FoodTheater` ป้อน `scheduledDate = undefined` ตลอด (`_theaterItem ? undefined : schedule[p.id]`) และ (2) synthetic product ไม่สืบทอด `available_preorder/available_same_day/is_preorder` → pill ประเภทไม่ขึ้น · logic "ยังไม่ลงปฏิทิน" มีแค่ใน toast ตอน add() ไม่ได้แสดงบนการ์ด
+- **Fix (3 ไฟล์):**
+  1. `src/components/theater/FoodTheater.tsx` — picks mapping resolve เมนูจริงจาก `product_id` แล้วสืบทอด `available_preorder/available_same_day/is_preorder` + เก็บ `_realProduct` (title/caption/image ยังเป็นโทนแอดมิน) · render ป้อน `scheduledDate = schedule[_realProduct.id]` (ตัด hack เดิม) — เมนูที่ผูกจริงและลงปฏิทินแล้วจึงได้ปฏิทิน
+  2. `src/components/theater/TheaterCards.tsx` — helper ใหม่ `ModeCornerBadge` (export) มุมเดิมของทั้งสองการ์ด: มีวัน → `ScheduleDateBadge` (มาตรฐาน /menu) · พรีออเดอร์ไม่มีวัน → pill "📅 ยังไม่ลงปฏิทิน" (โทนเทา) · เซมเดย์ → pill "⚡ ส่งวันนี้" (เขียว) · mode null → ไม่ป้าย — ใช้ `deriveOrderMode` canonical (OD-3/OD-5) ส่วนปุ่ม R44 คงเดิมทุก assertion
+  3. `src/__tests__/r128TheaterModeBadges.test.ts` (ใหม่, 7 tests) — render test ผ่าน `React.createElement` (vitest include ไม่รับ .tsx) + source guards: mapping สืบทอดสิทธิ์, scheduledDate จากปฏิทินจริง, การ์ดทั้งสองใช้ ModeCornerBadge
+- **Gates:** tsc 0 · lint OK · vitest 263 files/3,050 tests PASS · build PASS (CSS `index-qVRAxP80.css`) · PUSHED
+- **Note:** ของแอดมินที่ไม่ผูก product_id ยังไม่มี badge (โครงสร้างยังไม่รู้ประเภท) · LIVE_TEST_PENDING (Owner visual บน /shop)
+
+---
+
 ## R127 — 2026-11-27 — TOGGLE TRACK HEIGHT 14px → 20px (Owner visual tune หลัง R126 ขึ้นจอจริง)
 
 - **Context:** R126 ทำให้ค่า height มีผลจริงครั้งแรก (หลัง exempt 48px touch target) — Owner เห็นของจริงบน production แล้วสั่ง "เตี้ยไป ใช้ 40×20 + จุด 10×10"

@@ -125,18 +125,27 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
 
   const picks = useMemo(() => {
     if (theaterItems.length > 0) {
-      return theaterItems.map((item) => ({
-        id: item.id,
-        name: item.title,
-        description: item.theater_caption || item.description || '',
-        image_url: item.image_url,
-        price: 0,
-        category_id: '',
-        is_available: true,
-        _theaterItem: item,
-      })) as (Product & { _theaterItem: TheaterCarouselItem })[]
+      return theaterItems.map((item) => {
+        // R128: resolve เมนูจริงจาก product_id เพื่อสืบทอดสิทธิ์โหมดขาย (พรีออเดอร์/เซมเดย์)
+        // + ดึงวันจากปฏิทินจริง — title/caption/image ยังเป็นโทนของแอดมินตามเดิม
+        const real = item.product_id ? products.find((p) => p.id === item.product_id) : undefined
+        return {
+          id: item.id,
+          name: item.title,
+          description: item.theater_caption || item.description || '',
+          image_url: item.image_url,
+          price: 0,
+          category_id: '',
+          is_available: true,
+          available_preorder: real?.available_preorder,
+          available_same_day: real?.available_same_day,
+          is_preorder: real?.is_preorder,
+          _theaterItem: item,
+          _realProduct: real,
+        }
+      }) as (Product & { _theaterItem: TheaterCarouselItem; _realProduct?: Product })[]
     }
-    return getDailyTheaterPicks(products, schedule, PICK_COUNT) as (Product & { _theaterItem?: TheaterCarouselItem })[]
+    return getDailyTheaterPicks(products, schedule, PICK_COUNT) as (Product & { _theaterItem?: TheaterCarouselItem; _realProduct?: Product })[]
   }, [theaterItems, products, schedule])
 
   const defaultHeadline = 'Bite เลือกเมนูมาให้แล้ววันนี้'
@@ -312,9 +321,9 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
             {picks.map((p, i) => (
               <div key={p.id} data-slide data-pos={theaterPosFor(i, index, picks.length)} role='listitem' className={'theater-slide' + (i === index ? ' theater-slide--active' : '')} aria-hidden={i === index ? undefined : true}>
                 {i === index ? (
-                  <TheaterHeroCard product={p} reason={reasonFor(p)} scheduledDate={p._theaterItem ? undefined : schedule[p.id]} onAdd={add} onCustomize={customize} />
+                  <TheaterHeroCard product={p} reason={reasonFor(p)} scheduledDate={p._realProduct ? schedule[p._realProduct.id] : schedule[p.id]} onAdd={add} onCustomize={customize} />
                 ) : (
-                  <RecommendationCard product={p} reason={reasonFor(p)} scheduledDate={p._theaterItem ? undefined : schedule[p.id]} onAdd={(prod) => add(prod, 1)} />
+                  <RecommendationCard product={p} reason={reasonFor(p)} scheduledDate={p._realProduct ? schedule[p._realProduct.id] : schedule[p.id]} onAdd={(prod) => add(prod, 1)} />
                 )}
               </div>
             ))}

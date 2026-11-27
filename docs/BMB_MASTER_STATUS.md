@@ -5,6 +5,11 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R128 2026-11-27 (THEATER MODE BADGES — ประเภท + ปฏิทิน + ยังไม่ลงปฏิทิน)**
+- **Root Cause:** ของแอดมินเลือกได้ปฏิทิน/pill ไม่ขึ้นเพราะ FoodTheater ป้อน `scheduledDate=undefined` ตลอด + synthetic product ไม่สืบทอด `available_preorder/available_same_day/is_preorder`
+- **Fix:** FoodTheater resolve เมนูจริงจาก `product_id` สืบทอดสิทธิ์โหมด + `_realProduct` ป้อน `schedule[real.id]` · TheaterCards helper `ModeCornerBadge` มุมเดิมทั้งสองการ์ด (ปฏิทิน / "📅 ยังไม่ลงปฏิทิน" / "⚡ ส่งวันนี้" ตาม `deriveOrderMode`) · เทสใหม่ `r128TheaterModeBadges.test.ts` (7 tests)
+- **Gates:** tsc 0 · lint OK · vitest 263 files/3,050 tests PASS · build PASS · PUSHED
+
 **R127 2026-11-27 (TOGGLE TRACK HEIGHT 14px → 20px — Owner visual tune)**
 - **Context:** R126 ขึ้นจอจริงครั้งแรก (exempt 48px แล้ว) — Owner: "เตี้ยไป ใช้ 40×20 + จุด 10×10"
 - **Fix:** `.bmb-toggle-track` height `14px → 20px` (knob 10×10 / translateX 26px / carve-out คงเดิม) · test assertion `20px`

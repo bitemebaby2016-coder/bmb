@@ -14,11 +14,50 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Product } from '@/types'
 import type { TheaterReason } from '@/lib/theaterReasons'
+import { deriveOrderMode } from '@/lib/talkToBite'
 import { ScheduleDateBadge } from '@/components/home/ScheduleDateBadge'
 
 // R44 (Owner 2026-11-01): เมนูที่เอามาแสดงต้อง "ลิงก์จริง" ไปหน้าเมนู +
 // ปุ่มตามโหมดขายจริง — พรีออเดอร์ = "จองล่วงหน้า" · เซมเดย์ = "เพิ่มลงตะกร้า"
 const isPreOrderOnly = (p: Product) => !!(p.available_preorder && !p.available_same_day)
+
+// R128 (Owner 2026-11-27): มุมรูปขวาบนของการ์ดเธียเตอร์ — รูปแบบเดียวกันทุกการ์ด/ทุกโหมด:
+//   มีวันจัดส่งจริง → ปฏิทินลอยมาตรฐาน (ScheduleDateBadge เดียวกับหน้า /menu)
+//   พรีออเดอร์แต่ยังไม่ลงปฏิทิน → ป้าย "📅 ยังไม่ลงปฏิทิน" มุมเดิม
+//   เซมเดย์ → ป้าย "⚡ ส่งวันนี้" มุมเดิม
+export function ModeCornerBadge({ mode, scheduledDate, className, testId }: {
+  mode: 'SAME_DAY' | 'PRE_ORDER' | null
+  scheduledDate?: string
+  className: string
+  testId: string
+}) {
+  if (scheduledDate) {
+    return (
+      <div className={className} data-testid={`${testId}-cal`}>
+        <ScheduleDateBadge date={scheduledDate} />
+      </div>
+    )
+  }
+  if (mode === 'PRE_ORDER') {
+    return (
+      <div className={className} data-testid={`${testId}-unscheduled`}>
+        <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-stone-500/30 border border-stone-400/50 text-stone-100">
+          📅 ยังไม่ลงปฏิทิน
+        </span>
+      </div>
+    )
+  }
+  if (mode === 'SAME_DAY') {
+    return (
+      <div className={className} data-testid={`${testId}-sameday`}>
+        <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-100">
+          ⚡ ส่งวันนี้
+        </span>
+      </div>
+    )
+  }
+  return null
+}
 
 function ReasonChip({ reason }: { reason?: TheaterReason | null }) {
   if (!reason) return null
@@ -44,6 +83,7 @@ interface RecommendationCardProps {
 export function RecommendationCard({ product, reason, scheduledDate, onAdd }: RecommendationCardProps) {
   const denied = !product.is_available || !!product.archived
   const preorderOnly = isPreOrderOnly(product)
+  const mode = deriveOrderMode(product)
   return (
     <article data-testid="theater-rec-card" className="theater-rec-card">
       <div className="theater-rec-media" style={{ position: 'relative' }}>
@@ -55,12 +95,8 @@ export function RecommendationCard({ product, reason, scheduledDate, onAdd }: Re
             <span role="img" aria-label={product.name} className="theater-img-fallback" />
           )}
         </Link>
-        {/* R48: ปฏิทินมุมบนขวา — วันที่มาจากตารางเมนูจริง (schedule[p.id]) แสดงวันถูกต้องเสมอ */}
-        {scheduledDate && (
-          <div className="absolute top-1 right-1 z-10" data-testid="theater-rec-cal">
-            <ScheduleDateBadge date={scheduledDate} />
-          </div>
-        )}
+        {/* R48/R128: มุมบนขวา — ปฏิทินวันจัดส่งจริง / ยังไม่ลงปฏิทิน / ส่งวันนี้ */}
+        <ModeCornerBadge mode={mode} scheduledDate={scheduledDate} className="absolute top-1 right-1 z-10" testId="theater-rec" />
         <div className="theater-rec-media-glow" aria-hidden="true" />
       </div>
       <div className="theater-rec-body">
@@ -103,6 +139,7 @@ export function TheaterHeroCard({ product, reason, scheduledDate, onAdd, onCusto
   const [qty, setQty] = useState(1)
   const denied = !product.is_available || !!product.archived
   const preorderOnly = !!(product.available_preorder && !product.available_same_day)
+  const mode = deriveOrderMode(product)
 
   return (
     <article className="theater-hero" data-testid="theater-hero">
@@ -115,12 +152,8 @@ export function TheaterHeroCard({ product, reason, scheduledDate, onAdd, onCusto
             <span role="img" aria-label={product.name} className="theater-img-fallback theater-img-fallback--lg" />
           )}
         </Link>
-        {/* R48: ปฏิทินมุมบนขวาของ hero — วันที่จริงจากตารางเมนู (ไม่เดา · ไม่มีแถว = ไม่แสดง) */}
-        {scheduledDate && (
-          <div className="absolute top-2 right-2 z-20" data-testid="theater-hero-cal">
-            <ScheduleDateBadge date={scheduledDate} />
-          </div>
-        )}
+        {/* R48/R128: มุมขวาของ hero — ปฏิทินวันจัดส่งจริง / ยังไม่ลงปฏิทิน / ส่งวันนี้ */}
+        <ModeCornerBadge mode={mode} scheduledDate={scheduledDate} className="absolute top-2 right-2 z-20" testId="theater-hero" />
         <div className="theater-hero-shade" aria-hidden="true" />
         <div className="theater-hero-badges">
           <ReasonChip reason={reason} />
