@@ -26,6 +26,7 @@ import {
 import { publishDeliveryRounds } from '@/lib/storeStatus'
 import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
 import { FloatingAdBanners } from '@/components/home/FloatingAdBanners'
+import { TheaterMenuControl } from '@/components/home/TheaterMenuControl'
 import { getBusinessSettings, getFloatingAdConfig } from '@/lib/bmbAdminApi_settings'
 import type { FloatingAdConfig } from '@/types'
 import { resolveFloatingAdCards } from '@/lib/floatingAdResolver'
@@ -533,6 +534,9 @@ const [rows, cats, rounds, promos] = await Promise.all([
 
       {/* 2d. เดิม = แบนเนอร์ CTA พรีออเดอร์ลอยเหนือหน้า — Owner (2026-10-25): ย้ายไปแสดง
           "เฉพาะตอนเปิดแท็บ 📅 พรีออเดอร์" ในหมวดพรีออเดอร์ (ด้านล่าง) — แท็บ/หน้าอื่นไม่แสดง */}
+      {/* 2e. กล่องควบคุมเมนูในเธียเตอร์ (แอดมินเท่านั้น) — เหนือเซกชัน 🔥 เมนูยอดนิยม */}
+      <TheaterMenuControl products={products} />
+
       {/* 3. เมนูแนะนำ (แนะนำ/ยอดนิยม) — ลำดับ 1 ของเมนู (Feature B 2026-10-25) */}
       <section id="home-sec-recommended" className="mb-10 scroll-mt-20" aria-labelledby="home-popular-heading">
         <div className="flex items-center justify-between mb-2">

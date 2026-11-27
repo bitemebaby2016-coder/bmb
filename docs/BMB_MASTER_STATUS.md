@@ -5,6 +5,11 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R122 2026-11-27 (FLAT RECTANGLE TOGGLE + THEATER MENU CONTROL BOX)**
+- **Toggle:** `.bmb-toggle-track` 40×18px radius 3px, `.bmb-toggle-knob` 14×14px radius 2px, `translateX(22px)` — เป็นสี่เหลี่ยมผืนผ้า เตี้ยที่สุด ไม่ใช่วงกลม/แคปซูล (`index.css`)
+- **Theater control:** สร้าง `src/components/home/TheaterMenuControl.tsx` (admin-only: admin/owner/manager) วางเหนือเซกชัน 🔥 เมนูยอดนิยม — เปิด/ปิดเมนูใน FoodTheater โดยเขียน canonical `admin_portfolio_items.is_theater_carousel` (ไม่สร้าง source ใหม่)
+- **Gates:** tsc 0 · lint OK · vitest 262 files/3,042 tests PASS · build PASS · PUSHED
+
 **R121 2026-11-27 (DARK THEME READABILITY FIX — MARKETING SAVE + HOME REVIEWS)**
 - **Bug 1 (Marketing/Floating Ad):** ปุ่ม "💾 บันทึกการตั้งค่าทั้งหมด" ใช้ `bg-brand-accent text-white` → dark theme `--color-brand-accent=#FAFAFA` (ขาว) = ตัวอักษรขาวบนพื้นขาว อ่านไม่ออก → เปลี่ยนเป็น `bg-brand-primary text-white` (`FloatingAdTab.tsx`)
 - **Bug 2 (Home reviews):** `.review-comment`/`.review-name` ใช้ `--color-brand-accent` (=#FAFAFA ขาวใน dark) บน glass สว่าง (rgba 255,251,245) = ขาวบนขาว → เพิ่ม dark/graphite override ให้ `.review-comment`/`.review-name` = `#1C1917` และ `.review-food`/`.review-date` = `#57534E` (`index.css`)
