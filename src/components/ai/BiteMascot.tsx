@@ -195,8 +195,6 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   useEffect(() => {
     let active = true
-    // R123: pose เปลี่ยน → reset ก่อน (กัน overrideUrl เก่าถูกใช้กับ pose ใหม่ = กระพริบ)
-    setOverrideSettled(false)
     void loadMascotOverrides().then(() => {
       if (!active) return
       const pool = floatingPosePool(storeClosed, MASCOT_POSES)
@@ -208,11 +206,9 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   }, [currentPoseIndex, storeClosed])
 
   // R206: admin บันทึก override ใหม่ → mascot ลอยที่แสดงอยู่เปลี่ยนทันที (ไม่ต้อง deploy)
-    // R123: reset overrideSettled ก่อนโหลดใหม่ (กันแฟลชรูปเก่า)
     useEffect(() => {
       let active = true
       const onChanged = () => {
-        setOverrideSettled(false)
         void loadMascotOverrides(true).then(() => {
           if (!active) return
           const pool = floatingPosePool(storeClosed, MASCOT_POSES)
