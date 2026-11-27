@@ -33,11 +33,13 @@ describe('Theater Menu Control (admin box บน /admin/products เหนือ
 describe('Toggle — rectangle (ไม่ใช่วงกลม/แคปซูล) + เตี้ยที่สุด', () => {
   it('track/knob เป็นมุมโค้งแทบเหลี่ยม ไม่ใช่ 50%/999px และสูงเตี้ย', () => {
     expect(cssSrc).toContain('.bmb-toggle-track {')
-    expect(cssSrc).toMatch(/\.bmb-toggle-track\s*\{[^}]*height:\s*4\.5px/s)
+    expect(cssSrc).toMatch(/\.bmb-toggle-track\s*\{[^}]*height:\s*14px/s)
     expect(cssSrc).toMatch(/\.bmb-toggle-track\s*\{[^}]*border-radius:\s*3px/s)
     expect(cssSrc).toMatch(/\.bmb-toggle-knob\s*\{[^}]*border-radius:\s*2px/s)
-    expect(cssSrc).toMatch(/\.bmb-toggle-knob\s*\{[^}]*width:\s*7\.5px/s)
-    expect(cssSrc).toMatch(/\.bmb-toggle-knob\s*\{[^}]*height:\s*7\.5px/s)
+    expect(cssSrc).toMatch(/\.bmb-toggle-knob\s*\{[^}]*width:\s*10px/s)
+    expect(cssSrc).toMatch(/\.bmb-toggle-knob\s*\{[^}]*height:\s*10px/s)
+    // Root-cause lock: track ต้อง exempt จาก global 48px touch target (index.css Phase 3.3)
+    expect(cssSrc).toMatch(/\.bmb-toggle-track\s*\{[^}]*min-height:\s*0/s)
     expect(cssSrc).not.toMatch(/\.bmb-toggle-knob\s*\{[^}]*border-radius:\s*50%/s)
     expect(cssSrc).not.toMatch(/\.bmb-toggle-track\s*\{[^}]*border-radius:\s*999px/s)
   })

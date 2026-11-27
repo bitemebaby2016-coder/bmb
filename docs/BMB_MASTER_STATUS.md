@@ -5,6 +5,11 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R126 2026-11-27 (TOGGLE HEIGHT FIX — EXEMPT GLOBAL 48px TOUCH TARGET)**
+- **Root Cause:** global touch-target `button {min-height:48px}` (Phase 3.3, `index.css:2212`) ทับ track height ทุกครั้ง (18→9→4.5 render เป็น 40×48 เสมอ) — knob เปลี่ยนจริงเพราะเป็น `<span>` · ยืนยันด้วย console production: `track 40×48 · knob 7.5`
+- **Fix:** carve-out `.bmb-toggle-track {min-height:0; min-width:0}` หลัง block touch-target + ค่าสุดท้าย track **40×14** · knob **10×10** · `translateX(26px)` · test เพิ่ม root-cause lock (`min-height: 0`)
+- **Gates:** tsc 0 · lint OK · vitest 262 files/3,043 tests PASS · build PASS · PUSHED
+
 **R125 2026-11-27 (TOGGLE: KNOB +50% / TRACK HEIGHT −50%)**
 - **Toggle (ทุก `.bmb-toggle` ทั้งแอป):** `.bmb-toggle-knob` `5×5 → 7.5×7.5px` (+50%) จัดกึ่งกลาง (`top:50%` + `translateY(-50%)`) · `.bmb-toggle-track` `height 9 → 4.5px` (−50%) · `translateX(31 → 28.5px)` — คงมุม 3px/2px
 - **Test:** `theaterMenuControl.test.ts` — `height: 4.5px` + knob `7.5px`

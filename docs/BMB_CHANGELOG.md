@@ -7,6 +7,17 @@
 
 ---
 
+## R126 — 2026-11-27 — TOGGLE HEIGHT FIX: EXEMPT FROM GLOBAL 48px TOUCH TARGET (root cause ของ "แก้แล้วไม่เปลี่ยน" ตลอดวัน)
+
+- **Root Cause:** `index.css` Phase 3.3 global touch-target rule `button, .btn, [role="button"] { min-height: 48px; min-width: 48px }` (บรรทัด ~2212) clamp ความสูง track ที่เป็น `<button role="switch">` → **height ที่แก้ทุกครั้ง (R122 18px → R124 9px → R125 4.5px) ถูก min-height 48px ทับจนกรอบ render เป็น 40×48 ตลอด** ส่วน knob เป็น `<span>` ไม่ตรง selector จึงเปลี่ยนจริง (14→5→7.5) — อธิบายภาพหน้าจอทั้งหมด (ก้อน 40×48 + จุดเล็ก) และ "hard refresh เท่าไรก็เหมือนเดิม" (CSS ใหม่มาถึงตลอด ปัญหาคือ cascade ไม่ใช่ cache/deploy) · test เดิมอ่าน source ไฟล์ (`index.css?raw`) จึงผ่านทั้งที่ computed ≠ 4.5
+- **Fix (2 ไฟล์):**
+  1. `src/index.css` — (a) carve-out หลัง block touch-target: `.bmb-toggle-track { min-height: 0; min-width: 0 }` (specificity class ชนะ `button` element; `[role="button"]` ไม่ match เพราะ role="switch") → ค่า height ที่แต่งมีผลจริง (b) ค่าสุดท้าย: track `40×14px`, knob `10×10px` (`top:50%` จัดกึ่งกลาง), `translateX(26px)` = 40−10−2−2
+  2. `src/__tests__/theaterMenuControl.test.ts` — อัปเดต assertion: `height: 14px`, knob `10×10px` + เพิ่ม **root-cause lock** `min-height: 0` (กันกฎ 48px กลับมาทับ)
+- **Gates:** tsc 0 · lint OK · vitest 262 files/3,043 tests PASS · build PASS (CSS `index-014Ka3If.css`) · PUSHED
+- **Note:** diagnostics ยืนยันด้วย console ฝั่ง production: `track 40×48 · knob 7.5` ตรงกับ root cause เป๊ะ · LIVE_TEST_PENDING (Owner visual — toggle 40×14 + knob 10×10 จะขึ้นจอจริงหลัง deploy)
+
+---
+
 ## R125 — 2026-11-27 — TOGGLE: KNOB +50% / TRACK HEIGHT −50% (ทุกตัวที่มี)
 
 - **Root Cause:** หลัง R124 ลด toggle เตี้ยลง (track 9px, knob 5px) → knob เล็กเกินไป ต้องการ knob ใหญ่ขึ้น + กรอบ (track) บางลง
