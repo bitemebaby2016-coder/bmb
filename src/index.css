@@ -264,7 +264,7 @@ html[data-theme='dark'] .bg-black\/90, html[data-theme='graphite'] .bg-black\/90
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-22px); }
+  50% { transform: translateY(-8px); }
 }
 
 /* R54 (Owner 2026-11-20): .animate-float เคยเป็น dead class (ไม่มีนิยาม) —
@@ -1169,13 +1169,13 @@ html[data-theme='graphite'] .review-album-close:hover {
 }
 
 /* Floating mascot accent on section headings (drinks / snacks / etc.)
-   R120: position:absolute + container:relative → badge floats OUT of heading frame
-   (was: in-flow inside line-box → clipped at top by heading boundary).
+   R120b: position:absolute + container:relative → badge floats OUT of heading frame
+   top:100% = anchor below heading text; float amplitude -8px = subtle rise, never clips top.
    float amplitude -10px → -22px so mascot visibly rises above heading text. */
 .section-float-mascot {
   position: absolute;
   right: 0;
-  top: 50%;
+  top: 100%;
   transform: translateY(-50%);
   width: 34px;
   height: 34px;
