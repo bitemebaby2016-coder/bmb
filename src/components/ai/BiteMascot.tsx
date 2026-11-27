@@ -292,10 +292,11 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   useEffect(() => setChatVisible(chatOpen), [chatOpen])
 
+  // R123: ยังไม่ settle = ไม่วาดอะไรเลย (กัน empty span → ภาพ → empty span = กระพริบ)
+  if (!overrideSettled) return null
+
   const currentPose = posePool[Math.min(currentPoseIndex, posePool.length - 1)] as (typeof MASCOT_POSES)[number]
-  // R207b: override อยู่ → ใช้ override ตั้งแต่เฟรมแรก · ไม่มี override → ภาพนิ่งหลังโหลดจบเท่านั้น
-  // (ยังไม่ settle = ไม่วาดอะไร — ห้ามโชว์ภาพนิ่งเก่าแล้วสลับทีหลัง)
-  const mascotUrl: string | null = overrideUrl ?? (overrideSettled ? (getOverrideUrl(currentPose) ?? null) : null)
+  const mascotUrl: string | null = overrideUrl ?? (getOverrideUrl(currentPose) ?? null)
   // R44: คำนวณเงื่อนไขรอบเดียว (กัน TS narrowing error จากการเช็ค stage ซ้ำใน JSX)
   const showBubble = Boolean(bubble) && stage !== 'fullchat' && section !== 'checkout'
   const showUpsell = Boolean(delivery.freeShippingEnforced && upsell && upsell.remaining > 0 && stage === 'personalization')
@@ -321,7 +322,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
               (พิสูจน์จากภาพ Owner) */}
           {showBubble || showUpsell ? (
             <div
-              className="absolute bottom-full right-0 mb-1 flex flex-col items-end gap-1 w-max max-w-[min(220px,calc(100vw-56px))]"
+              className="absolute right-full top-1/2 -translate-y-1/2 mr-1 flex flex-col items-end gap-1 w-max max-w-[min(220px,calc(100vw-56px))]"
               data-testid="bite-bubble-stack"
             >
               {showBubble && (
