@@ -199,7 +199,9 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
       if (!active) return
       const pool = floatingPosePool(storeClosed, MASCOT_POSES)
       const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
-      setOverrideUrl(getOverrideUrl(p))
+      // R123d: เก็บรูปล่าสุดที่มีอยู่ — ห้าม clear เป็น undefined (pose ใหม่ไม่มี override = มาสคอตหาย = กระพริบ)
+      const url = getOverrideUrl(p)
+      if (url) setOverrideUrl(url)
       setOverrideSettled(true)
     })
     return () => { active = false }
@@ -213,7 +215,9 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
           if (!active) return
           const pool = floatingPosePool(storeClosed, MASCOT_POSES)
           const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
-          setOverrideUrl(getOverrideUrl(p))
+          // R123d: เก็บรูปล่าสุด — ห้าม clear เป็น undefined
+          const url = getOverrideUrl(p)
+          if (url) setOverrideUrl(url)
           setOverrideSettled(true)
         })
       }
