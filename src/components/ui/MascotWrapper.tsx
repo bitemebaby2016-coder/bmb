@@ -22,7 +22,7 @@ export interface MascotWrapperProps {
 
 const POSITION_CLASS: Record<NonNullable<MascotWrapperProps['position']>, string> = {
   'top-right': 'top-4 right-4',
-  'bottom-right': 'bottom-24 right-4',
+  'bottom-right': 'bottom-14 right-4',
   'bottom-left': 'bottom-24 left-4',
   'top-left': 'top-4 left-4',
 }
