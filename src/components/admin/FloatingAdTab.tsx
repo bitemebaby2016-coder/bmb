@@ -9,15 +9,23 @@ import { getFloatingAdConfig, setFloatingAdConfig } from '@/lib/bmbAdminApi_sett
 import { getPromotionsAdmin, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
 import { listMarketingPosts, type MarketingPostRow } from '@/lib/adminMarketing'
 import { getProducts } from '@/lib/bmbAdminApi_products'
+import { listAiAlbumFiles } from '@/lib/bmbAdminApi_media'
 import type { Product } from '@/types'
 import { ToggleSwitch } from './ToggleSwitch'
+import { FloatingAdCard, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
 import type { FloatingAdConfig, FloatingAdItem, FloatingAdSourceType, FloatingAdSourceConfig } from '@/types'
 
 export interface FloatingAdTabProps {
   load: () => Promise<void>
 }
 
-type SourceItem = { id: string; title: string; description: string; image: string; type: FloatingAdSourceType }
+type SourceItem = { id: string; title: string; description: string; image: string; type: FloatingAdSourceType; meta?: string }
+
+function promoMeta(p: PromotionRow): string {
+  const disc = p.discount_type === 'percentage' ? `ลด ${p.discount_value}%` : `ลด ฿${p.discount_value}`
+  const range = `เริ่ม: ${p.start_date || 'ทันที'} → ถึง: ${p.end_date || 'ไม่กำหนด'}`
+  return `${disc} • ขั้นต่ำ ฿${p.min_order_amount} • ${range}`
+}
 
 function toSourceItem(p: PromotionRow): SourceItem {
   return {
@@ -26,6 +34,7 @@ function toSourceItem(p: PromotionRow): SourceItem {
     description: p.description || '',
     image: p.banner_image || '',
     type: 'promotion',
+    meta: promoMeta(p),
   }
 }
 
@@ -36,6 +45,7 @@ function toSourceItemPost(p: MarketingPostRow): SourceItem {
     description: p.body || '',
     image: p.image_urls?.[0] || '',
     type: 'post',
+    meta: `สถานะ: ${p.status}`,
   }
 }
 
@@ -46,6 +56,18 @@ function toSourceItemProduct(p: Product): SourceItem {
     description: p.description || '',
     image: p.image_url || '',
     type: 'product',
+    meta: `฿${p.price}`,
+  }
+}
+
+function toSourceItemMenu(f: { name: string; url: string }): SourceItem {
+  return {
+    id: f.name,
+    title: f.name,
+    description: '',
+    image: f.url,
+    type: 'menu',
+    meta: 'ภาพเมนู AI',
   }
 }
 
@@ -63,6 +85,7 @@ export function FloatingAdTab({ load }: FloatingAdTabProps) {
     promotion: [],
     post: [],
     product: [],
+    menu: [],
   })
   const [editingItem, setEditingItem] = useState<FloatingAdItem | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -73,17 +96,19 @@ export function FloatingAdTab({ load }: FloatingAdTabProps) {
     void (async () => {
       setIsLoading(true)
       try {
-        const [cfg, promos, posts, products] = await Promise.all([
+        const [cfg, promos, posts, products, menuFiles] = await Promise.all([
           getFloatingAdConfig(),
           getPromotionsAdmin(),
           listMarketingPosts(),
           getProducts(),
+          listAiAlbumFiles(),
         ])
         setConfig(cfg)
         setAvailable({
           promotion: promos.filter((p) => p.is_banner && p.is_active !== false && p.banner_image).map(toSourceItem),
           post: posts.filter((p) => p.is_floating_ad && p.status === 'published').map(toSourceItemPost),
           product: products.filter((p) => p.is_floating_ad && p.is_available && !p.archived).map(toSourceItemProduct),
+          menu: menuFiles.filter((f) => f.path.startsWith('ai-generated/menu/')).map(toSourceItemMenu),
         })
       } catch (e) {
         console.error('[FloatingAdTab] Load error:', e)
@@ -209,8 +234,21 @@ export function FloatingAdTab({ load }: FloatingAdTabProps) {
   if (isLoading) return <div className="text-center py-8 text-brand-muted">กำลังโหลดข้อมูลโฆษณาลอย…</div>
 
   const displayItems = getDisplayItems()
-  const typeLabels: Record<FloatingAdSourceType, string> = { promotion: 'โปรโมชั่น', post: 'กิจกรรม', product: 'เมนูแนะนำ' }
-  const typeIcons: Record<FloatingAdSourceType, string> = { promotion: '🎁', post: '📝', product: '🍽️' }
+  const typeLabels: Record<FloatingAdSourceType, string> = { promotion: 'โปรโมชั่น', post: 'กิจกรรม', product: 'เมนูแนะนำ', menu: 'ภาพเมนู AI' }
+  const typeIcons: Record<FloatingAdSourceType, string> = { promotion: '🎁', post: '📝', product: '🍽️', menu: '🍳' }
+
+  // Preview ใช้การ์ดจริงตัวเดียวกับ overlay (FloatingAdCard) — ไม่เรนเดอร์ HTML เองอีก
+  const previewPromos: FloatingBannerPromo[] = displayItems
+    .filter((i) => i.enabled)
+    .slice(0, config.maxCount)
+    .map((item) => ({
+      id: `${item.type === 'promotion' ? 'promo' : item.type === 'product' ? 'prod' : item.type === 'menu' ? 'menu' : 'post'}-${item.id}`,
+      title: item.title ?? item.sourceItem?.title ?? 'Untitled',
+      description: item.description ?? item.sourceItem?.description ?? '',
+      image: item.image ?? item.sourceItem?.image ?? '',
+      sourceType: item.type,
+      href: item.type === 'product' || item.type === 'menu' ? '/menu' : '/promotions',
+    }))
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -288,7 +326,7 @@ export function FloatingAdTab({ load }: FloatingAdTabProps) {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="w-full md:w-auto px-6 py-3 bg-brand-accent text-white rounded-lg font-medium hover:bg-brand-accent/90 disabled:opacity-50 transition-colors"
+            className="w-full md:w-auto px-6 py-3 bg-brand-primary text-white rounded-lg font-medium hover:bg-brand-primary/90 disabled:opacity-50 transition-colors"
           >
             {isSaving ? 'กำลังบันทึก…' : '💾 บันทึกการตั้งค่าทั้งหมด'}
           </button>
@@ -396,9 +434,7 @@ export function FloatingAdTab({ load }: FloatingAdTabProps) {
         <div className="pt-4 border-t border-brand-border">
           <h4 className="font-medium text-brand-text mb-3">รายการว่าง (เพิ่มเข้าไปได้)</h4>
           <div className="grid gap-4 md:grid-cols-3">
-            {(['promotion', 'post', 'product'] as FloatingAdSourceType[]).map((source) => {
-              const sourceKey = source === 'promotion' ? 'promotions' : source === 'post' ? 'posts' : 'products'
-              const sourceCfg = config.sources[sourceKey as keyof typeof config.sources]
+            {(['promotion', 'post', 'product', 'menu'] as FloatingAdSourceType[]).map((source) => {
               const pool = getAvailablePool(source)
               return (
                 <div key={source} className="card p-3 max-h-80 overflow-y-auto">
@@ -423,6 +459,7 @@ export function FloatingAdTab({ load }: FloatingAdTabProps) {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-brand-text truncate">{src.title}</p>
                             <p className="text-xs text-brand-muted truncate">{src.description || 'ไม่มีคำอธิบาย'}</p>
+                            {src.meta && <p className="text-[11px] text-brand-muted/80 truncate">{src.meta}</p>}
                           </div>
                           <span className="text-xs text-brand-accent">+ เพิ่ม</span>
                         </button>
@@ -436,17 +473,23 @@ export function FloatingAdTab({ load }: FloatingAdTabProps) {
         </div>
       </div>
 
-      {/* Section C: Preview */}
+      {/* Section C: Preview — ใช้การ์ดจริง (pointer-events: none) */}
       <div className="card space-y-4">
         <h3 className="font-bold text-brand-accent text-lg">👁️ ตัวอย่าง (Preview)</h3>
-        <p className="text-sm text-brand-muted">แสดงผลลัพธ์ตามการตั้งค่าปัจจุบัน (pointer-events: none — ไม่สามารถคลิกได้ในโหมด Preview)</p>
-        <div className="relative">
-          <iframe
-            srcDoc={generatePreviewHtml(config, displayItems.filter((i) => i.enabled))}
-            className="w-full h-80 md:h-96 border border-brand-border rounded"
-            sandbox="allow-scripts allow-same-origin"
-            title="Floating Ad Preview"
-          />
+        <p className="text-sm text-brand-muted">แสดงผลด้วยการ์ดตัวเดียวกับหน้าจริง (pointer-events: none — คลิกไม่ได้ในโหมด Preview)</p>
+        <div
+          className="relative border border-brand-border rounded overflow-hidden"
+          style={config.backgroundImage ? { backgroundImage: `url(${config.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+        >
+          <div className="flad-stack p-4" style={{ pointerEvents: 'none' }}>
+            {previewPromos.length === 0 ? (
+              <p className="text-center py-8 text-brand-muted">ไม่มีการ์ดที่จะแสดง (enabled=false หรือยังไม่ได้เพิ่ม)</p>
+            ) : (
+              previewPromos.map((promo, idx) => (
+                <FloatingAdCard key={promo.id} promo={promo} pos={idx} />
+              ))
+            )}
+          </div>
         </div>
       </div>
 
@@ -516,57 +559,4 @@ export function FloatingAdTab({ load }: FloatingAdTabProps) {
       )}
     </div>
   )
-}
-
-// Generate preview HTML for iframe
-function generatePreviewHtml(config: FloatingAdConfig, items: Array<FloatingAdItem & { sourceItem?: SourceItem }>): string {
-  const cardsHtml = items
-    .slice(0, config.maxCount)
-    .map((item) => {
-      const img = item.image ?? item.sourceItem?.image ?? ''
-      const title = item.title ?? item.sourceItem?.title ?? 'Untitled'
-      const desc = item.description ?? item.sourceItem?.description ?? ''
-      const typeLabel = { promotion: 'โปรโมชั่น', post: 'กิจกรรม', product: 'เมนูแนะนำ' }[item.type]
-      return `
-        <div style="
-          background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px;
-          font-family: 'Nunito', sans-serif; max-width: 100%;
-        ">
-          ${img ? `<img src="${img}" alt="${title}" style="width: 56px; height: 56px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">` : ''}
-          <div style="flex: 1; min-width: 0;">
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-              <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #FFEDD5; color: #C2410C; font-weight: 600; border: 1px solid #FED7AA;">${typeLabel}</span>
-              <span style="font-weight: 700; font-size: 14px; color: #1C1917; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</span>
-            </div>
-            <p style="font-size: 12px; color: #78716C; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${desc || '—'}</p>
-          </div>
-        </div>
-      `
-    })
-    .join('')
-
-  const bgStyle = config.backgroundImage
-    ? `background-image: url("${config.backgroundImage}"); background-size: cover; background-position: center;`
-    : 'background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);'
-
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        body { margin: 0; padding: 16px; ${bgStyle} min-height: 100vh; font-family: 'Nunito', sans-serif; }
-        .container { max-width: 360px; margin: 0 auto; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        ${cardsHtml || '<p style="color: #78716C; text-align: center; padding: 20px;">ไม่มีการ์ดที่จะแสดง (enabled=false หรือยังไม่ได้เพิ่ม)</p>'}
-      </div>
-    </body>
-    </html>
-  `
 }

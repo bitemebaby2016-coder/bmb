@@ -651,6 +651,22 @@ html[data-theme='dark'] .bg-black\/90, html[data-theme='graphite'] .bg-black\/90
   text-overflow: ellipsis;
 }
 
+/* Dark/graphite: การ์ดรีวิวใช้ glass สีสว่าง (rgba 255,251,245) อยู่แล้ว
+   แต่ --color-brand-accent ในธี�นเข้ม = #FAFAFA (ขาว) → ชื่อ/ข้อความขาวบนพื้นสว่าง = อ่านไม่ออก
+   → บังคับตัวอักษรบนการ์ดเป็นสีเข้ม ให้อ่านชัดบนพื้นสว่างเดิม */
+html[data-theme='dark'] .review-comment,
+html[data-theme='graphite'] .review-comment,
+html[data-theme='dark'] .review-name,
+html[data-theme='graphite'] .review-name {
+  color: #1C1917;
+}
+html[data-theme='dark'] .review-food,
+html[data-theme='graphite'] .review-food,
+html[data-theme='dark'] .review-date,
+html[data-theme='graphite'] .review-date {
+  color: #57534E;
+}
+
 .review-soldout {
   margin-left: auto;
   font-size: 0.7rem;
@@ -1783,7 +1799,7 @@ html[data-theme='dark'] .sched-cal-corner, html[data-theme='graphite'] .sched-ca
   position: relative;
   width: 46px;
   height: 26px;
-  border-radius: 999px;
+  border-radius: 8px;
   background: #D6D3D1;
   border: none;
   cursor: pointer;
@@ -1798,7 +1814,7 @@ html[data-theme='dark'] .sched-cal-corner, html[data-theme='graphite'] .sched-ca
   left: 3px;
   width: 20px;
   height: 20px;
-  border-radius: 50%;
+  border-radius: 6px;
   background: #fff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: transform 0.2s ease;

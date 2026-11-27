@@ -1372,7 +1372,7 @@ export interface HomepageConfig {
 }
 
 /** Floating Ad configuration (admin-configurable overlay cards on /shop) */
-export type FloatingAdSourceType = 'promotion' | 'post' | 'product'
+export type FloatingAdSourceType = 'promotion' | 'post' | 'product' | 'menu'
 
 export interface FloatingAdSourceConfig {
   enabled: boolean

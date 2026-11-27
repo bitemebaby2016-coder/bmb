@@ -536,11 +536,11 @@ async function handleDeleteProduct(id: string) {
                 testId="product-featured-toggle"
               />
 
-              {/* R80: Floating Ad flag — โคลนข้อมูลเมนูนี้ขึ้นหน้าแรง */}
+              {/* R80: Floating Ad flag = วัตถุดิบสำหรับคลัง Floating Ad (กดเพิ่มในแท็บ 🫘 Floating Ad) */}
               <ToggleSwitch
                 checked={formData.is_floating_ad}
                 onChange={(v) => setFormData({ ...formData, is_floating_ad: v })}
-                label="📌 Floating Ad"
+                label="📌 ใส่คลัง Floating Ad"
                 testId="product-floating-ad-toggle"
               />
 

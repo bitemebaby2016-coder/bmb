@@ -13,6 +13,7 @@ import linksSrc from '@/lib/notificationLinks.ts?raw'
 import bellSrc from '@/components/notification/NotificationDropdown.tsx?raw'
 import panelSrc from '@/components/messages/OrderChatPanel.tsx?raw'
 import homeSrc from '@/pages/HomePage.tsx?raw'
+import resolverSrc from '@/lib/floatingAdResolver.ts?raw'
 import kitchenSrc from '@/pages/admin/AdminKitchen.tsx?raw'
 
 describe('R72 m188 — แจ้งเตือนออเดอร์ห้ามซ้ำ (trigger กับ worker ต้องใช้ id เดียวกัน)', () => {
@@ -65,8 +66,9 @@ describe('R72 คูปองเช็คเอาท์ + คิวครัว
   it('การ์ดโปรหน้าร้านเคารพช่วงวันที่ (คูปองหมดอายุห้ามโฆษณา) + ใช้ bangkokDateKey เดียวกับ dropdown', () => {
     expect(homeSrc).toContain("import { bangkokDateKey } from '@/lib/promotionClient'")
     expect(homeSrc).toContain('const todayKey = bangkokDateKey()')
-    expect(homeSrc).toContain('if (e && todayKey > e) return false')
-    expect(homeSrc).toContain('if (s && todayKey < s) return false')
+    // ช่วงวันที่ถูก resolve ที่ floatingAdResolver (canonical = config.items)
+    expect(resolverSrc).toContain('if (e && todayKey > e) return false')
+    expect(resolverSrc).toContain('if (s && todayKey < s) return false')
   })
 
   it('คิวครัวโชว์พรีออเดอร์ที่รอเข้าครัวทุกวันที่ (สถานะหลังยืนยันรอบต้องเดินต่อได้)', () => {

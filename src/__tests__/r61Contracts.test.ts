@@ -11,6 +11,7 @@ import promoSrc from '../pages/admin/AdminPromotions.tsx?raw'
 import promoApiSrc from '../lib/bmbAdminApi_promotions.ts?raw'
 import fladSrc from '../components/home/FloatingAdBanners.tsx?raw'
 import homeSrc from '../pages/HomePage.tsx?raw'
+import resolverSrc from '../lib/floatingAdResolver.ts?raw'
 import layoutSrc from '../components/layout/Layout.tsx?raw'
 import imageGenSrc from '../../supabase/functions/image-gen/index.ts?raw'
 import cssSrc from '../index.css?raw'
@@ -55,7 +56,9 @@ describe('R61 · /admin/promotions — ภาพ+มาสคอต แนบเ
   })
 
   it('หน้าแรกส่งต่อ + FloatingAdBanners ใช้มาสคอตของโปรโมชั่น (ว่าง = สลับตามเดิม)', () => {
-    expect(homeSrc).toContain('mascot: r.banner_mascot')
+    // R80 consolidation: mascot ถูก resolve ที่ floatingAdResolver (canonical = config.items)
+    expect(resolverSrc).toContain('mascot: p.banner_mascot')
+    expect(homeSrc).toContain('resolveFloatingAdCards')
     expect(fladSrc).toContain('mascot?: string')
     expect(fladSrc).toContain('const promoMascot = promo.mascot || mascotSrc')
     // wm-* ข้าม overlay ตามเดิม เว้นแต่แอดมินประกอบเอง

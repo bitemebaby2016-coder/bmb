@@ -39,6 +39,8 @@ const DEFAULT_FLOATING_AD_CONFIG: FloatingAdConfig = {
   },
 }
 
+// CANONICAL = floating_ad_config.items (FloatingAdTab). legacy keys (enabled/sources/image)
+// เก็บไว้เป็น default เท่านั้น — items ว่าง = แสดงอะไรเลย (ไม่มี seed จาก flag อัตโนมัติ)
 function migrateLegacyFloatingAd(settings: Record<string, any>): FloatingAdConfig {
   const legacyEnabled = settings.floating_ad_enabled ?? true
   const legacySources = settings.floating_ad_sources ?? []

@@ -5,6 +5,11 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R121 2026-11-27 (DARK THEME READABILITY FIX — MARKETING SAVE + HOME REVIEWS)**
+- **Bug 1 (Marketing/Floating Ad):** ปุ่ม "💾 บันทึกการตั้งค่าทั้งหมด" ใช้ `bg-brand-accent text-white` → dark theme `--color-brand-accent=#FAFAFA` (ขาว) = ตัวอักษรขาวบนพื้นขาว อ่านไม่ออก → เปลี่ยนเป็น `bg-brand-primary text-white` (`FloatingAdTab.tsx`)
+- **Bug 2 (Home reviews):** `.review-comment`/`.review-name` ใช้ `--color-brand-accent` (=#FAFAFA ขาวใน dark) บน glass สว่าง (rgba 255,251,245) = ขาวบนขาว → เพิ่ม dark/graphite override ให้ `.review-comment`/`.review-name` = `#1C1917` และ `.review-food`/`.review-date` = `#57534E` (`index.css`)
+- **Gates:** tsc 0 · lint OK · vitest 261 files/3,039 tests PASS · build PASS · PUSHED
+
 **R120 2026-11-27 (SECTION-FLOAT-MASCOT POSITION:ABSOLUTE + FLOAT AMPLITUDE FIX)**
 - **Root Cause:** `.section-float-mascot` อยู่ใน normal flow ของกล่องหัวข้อ → float translateY(-10px) แกว่งในบรรทัดหัวข้อเท่านั้น → ส่วนบนของ badge ชนขอบหัวข้อแล้วถูกตัด ไม่สามารถ "ลอยออกนอกเฟรม" ได้
 - **Fix:** index.css — `.section-float-mascot` เป็น `position: absolute; right: 0; top: 50%` (ออกจาก normal flow) + `@keyframes float` amplitude -10px→-22px + ลบ duplicate keyframes; 8 heading containers เพิ่ม `relative` + `pr-10`

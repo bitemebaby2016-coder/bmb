@@ -42,7 +42,7 @@ export interface MarketingRules {
   stop_conditions: Record<string, unknown>
 }
 
-const POST_FIELDS = 'id,approval_id,title,body,content_type,image_urls,objective,status,scheduled_for,provider_post_id,error,publish_attempts,created_at,published_at'
+const POST_FIELDS = 'id,approval_id,title,body,content_type,image_urls,objective,status,scheduled_for,provider_post_id,error,publish_attempts,created_at,published_at,is_floating_ad'
 
 export async function listMarketingPosts(): Promise<MarketingPostRow[]> {
   // R39 (Owner: "ตั้งเวลาโพสแล้วไม่ขึ้น"): promote scheduled ที่ถึงเวลา "ก่อน" ดึงรายการ —

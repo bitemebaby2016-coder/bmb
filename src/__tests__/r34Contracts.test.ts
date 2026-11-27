@@ -102,7 +102,7 @@ describe('R34 → R47 — รูปเมนูใช้ภาพจริงเ
     expect(marketingSrc).toContain('addImages([p.image_url])')
     // R47: ยกเลิกกฎห้าม — เมนู/อาหารกลับเป็นตัวเลือก + genKind menu ไม่ return อีก (แค่ info เมื่อไม่มีรูปต้นแบบ)
     expect(marketingSrc).toContain('<option value="menu">')
-    expect(marketingSrc).toContain("genKind === 'menu' && !reference")
+    expect(marketingSrc).toContain("genKind === 'menu' || genKind === 'studio'")
     expect(marketingSrc).not.toContain('สร้างภาพ AI เฉพาะป้ายโปรโมต/เทศกาลเท่านั้น')
     expect(imageGenSrc).toContain('IMAGE_MODEL_CANDIDATES')
     // R61 (Owner 2026-11-03): default = สลับลำดับ — qwen-image-2.1-pro หลัก (ใช้ก่อน) · seedream-5-0-flash รอง

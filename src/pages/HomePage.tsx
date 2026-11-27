@@ -25,9 +25,10 @@ import {
 } from '@/lib/homeProviders'
 import { publishDeliveryRounds } from '@/lib/storeStatus'
 import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
-import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
+import { FloatingAdBanners } from '@/components/home/FloatingAdBanners'
 import { getBusinessSettings, getFloatingAdConfig } from '@/lib/bmbAdminApi_settings'
 import type { FloatingAdConfig } from '@/types'
+import { resolveFloatingAdCards } from '@/lib/floatingAdResolver'
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
@@ -109,6 +110,8 @@ export function HomePage() {
   // R80: Floating Ad explicit sources data
   const [floatingProducts, setFloatingProducts] = useState<Product[]>([])
   const [floatingPosts, setFloatingPosts] = useState<any[]>([])
+  // IMG: ภาพเมนู AI (ai-generated/menu/) สำหรับการ์ด floating ประเภท menu
+  const [floatingMenuImages, setFloatingMenuImages] = useState<Array<{ id: string; name: string; url: string }>>([])
   // R21 Phase 3: โหลดล้มเหลว ≠ ร้านไม่มีเมนู + key สำหรับกด "ลองใหม่"
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -150,11 +153,21 @@ const [rows, cats, rounds, promos] = await Promise.all([
             // floating_posts: is_floating_ad + status='published'
             const { data: floatPosts } = await supabase
               .from('marketing_posts')
-              .select('id,title,body,image_urls,approval_id')
+              .select('id,title,body,image_urls,approval_id,is_floating_ad,status')
               .eq('is_floating_ad', true)
               .eq('status', 'published')
               .order('created_at', { ascending: false })
             if (floatPosts) setFloatingPosts(floatPosts)
+            // IMG: ภาพเมนู AI สำหรับการ์ด floating ประเภท menu
+            try {
+              const { listAiAlbumFiles } = await import('@/lib/bmbAdminApi_media')
+              const files = await listAiAlbumFiles()
+              setFloatingMenuImages(
+                files
+                  .filter((f) => f.path.startsWith('ai-generated/menu/'))
+                  .map((f) => ({ id: f.name, name: f.name, url: f.url })),
+              )
+            } catch { /* zero-fake — ไม่ขวางหน้า */ }
           } catch { /* zero-fake — ไม่ขวางหน้า */ }
         })()
         // ค่าตั้งเว็บ (เมนูยอดนิยม/ข้อความ) — โหลดแบบไม่ขวางการวาดหน้า (fire-and-forget)
@@ -251,110 +264,14 @@ const [rows, cats, rounds, promos] = await Promise.all([
   // ต้องเคารพช่วงวันที่แบบเดียวกับ dropdown คูปอง (เดิมไม่เช็ก = คูปองหมดอายุยังถูกโฆษณา
   // แต่กดใช้ที่เช็คเอาท์ไม่ได้) — เพิ่มโปรภายหลัง = ขึ้นอัตโนมัติทั้งการ์ดและคูปอง
   const todayKey = bangkokDateKey()
-  // Floating Ad config (new: from admin FloatingAdTab)
-  const { enabled: floatAdEnabled, maxCount, sources, items: configItems } = floatingAdConfig
-  const showPromotions = sources.promotions.enabled
-  const showProducts = sources.products.enabled
-  const showPosts = sources.posts.enabled
-  const promoMaxItems = sources.promotions.maxItems
-  const productMaxItems = sources.products.maxItems
-  const postMaxItems = sources.posts.maxItems
-  
-  // Build base promos from each source
-  // 1) floating_promotions: promotions.is_banner=true + active dates + approved
-  const promoBanners: FloatingBannerPromo[] = showPromotions ? (promoRows || [])
-    .filter((r) => r.is_banner === true && r.is_active !== false)
-    .filter((r) => {
-      const s = String(r.start_date || '').slice(0, 10)
-      const e = String(r.end_date || '').slice(0, 10)
-      if (s && todayKey < s) return false
-      if (e && todayKey > e) return false
-      return true
-    })
-    .filter((r) => {
-      if (r.approval_id) {
-        if (r.banner_image && !approvedFloatAdImages.has(r.banner_image)) {
-          return false
-        }
-      }
-      return true
-    })
-    .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
-    .slice(0, promoMaxItems)
-    .map((r) => ({
-      id: `promo-${String(r.id)}`,
-      title: String(r.name || 'Promotion'),
-      description: String(r.description || ''),
-      coupon: r.code,
-      image: r.banner_image,
-      href: r.code ? `/menu?coupon=${encodeURIComponent(r.code)}` : '/menu',
-      mascot: r.banner_mascot || undefined,
-      sourceType: 'promotion' as const,
-    })) : []
-
-  // 2) floating_products: products.is_floating_ad=true + is_available + not archived
-  const productBanners: FloatingBannerPromo[] = showProducts ? floatingProducts
-    .slice(0, productMaxItems)
-    .map((p) => ({
-      id: `prod-${String(p.id)}`,
-      title: String(p.name || 'Menu'),
-      description: String(p.description || ''),
-      image: p.image_url,
-      href: `/menu?product=${encodeURIComponent(p.id)}`,
-      mascot: undefined,
-      sourceType: 'product' as const,
-    })) : []
-
-  // 3) floating_posts: marketing_posts.is_floating_ad=true + status='published'
-  const postBanners: FloatingBannerPromo[] = showPosts ? floatingPosts
-    .slice(0, postMaxItems)
-    .map((p) => ({
-      id: `post-${String(p.id)}`,
-      title: String(p.title || 'Post'),
-      description: String(p.body || ''),
-      image: Array.isArray(p.image_urls) && p.image_urls.length > 0 ? p.image_urls[0] : undefined,
-      href: `/promotions`,
-      mascot: undefined,
-      sourceType: 'post' as const,
-    })) : []
-
-  // Merge promos: if configItems exist, use them (with overrides); else interleave sources
-  let mergedBannerPromos: FloatingBannerPromo[] = []
-  if (configItems && configItems.length > 0) {
-    // Use explicit items from config (with overrides)
-    const sourceItems: Record<string, FloatingBannerPromo> = {}
-    for (const item of [...promoBanners, ...productBanners, ...postBanners]) {
-      sourceItems[item.id] = item
-    }
-    mergedBannerPromos = configItems
-      .filter((item) => item.enabled)
-      .sort((a, b) => a.order - b.order)
-      .map((item) => {
-        const base = sourceItems[`${item.type === 'promotion' ? 'promo' : item.type === 'product' ? 'prod' : 'post'}-${item.id}`]
-        return {
-          id: `${item.type === 'promotion' ? 'promo' : item.type === 'product' ? 'prod' : 'post'}-${item.id}`,
-          title: item.title ?? base?.title ?? 'Untitled',
-          description: item.description ?? base?.description ?? '',
-          image: item.image ?? base?.image ?? undefined,
-          href: base?.href ?? '/menu',
-          mascot: base?.mascot ?? undefined,
-          coupon: base?.coupon ?? undefined,
-          sourceType: item.type,
-        }
-      })
-      .slice(0, maxCount)
-  } else {
-    // R64: สลับชนิด — promo, product, post ตามลำดับ
-    const maxLen = Math.max(promoBanners.length, productBanners.length, postBanners.length)
-    const bannerPromos: FloatingBannerPromo[] = []
-    for (let i = 0; i < maxLen; i++) {
-      if (promoBanners[i]) bannerPromos.push(promoBanners[i])
-      if (productBanners[i]) bannerPromos.push(productBanners[i])
-      if (postBanners[i]) bannerPromos.push(postBanners[i])
-    }
-    // Cap total at maxCount for floating ad display
-    mergedBannerPromos = bannerPromos.slice(0, maxCount)
-  }
+  // Floating Ad — CANONICAL = config.items (FloatingAdTab); flags (is_banner/is_floating_ad)
+  // เป็นเพียง "คลังวัตถุดิบ" สำหรับกดเพิ่มในแอดมิน — resolver เดียวตัดสิน eligibility/override/maxCount
+  const mergedBannerPromos = resolveFloatingAdCards({
+    config: floatingAdConfig,
+    catalog: { promotions: promoRows || [], products: floatingProducts, posts: floatingPosts, menu: floatingMenuImages },
+    todayKey,
+    approvedImages: approvedFloatAdImages,
+  })
   const storeStatus = getStoreStatusFromRounds(rounds, new Date(), {
     shopHoursMs: hoursToMs(shopHours),
     operatingHours,
@@ -609,9 +526,9 @@ const [rows, cats, rounds, promos] = await Promise.all([
           </div>
       </section>
 
-      {/* 2c. Floating ad banners — max 3 overlay cards, dismissible per promo (sessionStorage, D03) */}
+      {/* 2c. Floating ad banners — การ์ดถูก resolve ที่ resolver เดียว (config.items เป็น canonical) */}
       {masterOpen !== false && floatingAdConfig.enabled && mergedBannerPromos.length > 0 && (
-        <FloatingAdBanners promos={mergedBannerPromos} notice={siteCopy.adNotice} config={floatingAdConfig} />
+        <FloatingAdBanners promos={mergedBannerPromos} notice={siteCopy.adNotice} />
       )}
 
       {/* 2d. เดิม = แบนเนอร์ CTA พรีออเดอร์ลอยเหนือหน้า — Owner (2026-10-25): ย้ายไปแสดง

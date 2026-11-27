@@ -11,18 +11,16 @@ import { PromotionsTab as PromotionsTabComponent } from '@/components/admin/Prom
 import { MarketingOverviewTab } from '@/components/admin/MarketingOverviewTab'
 import { PlannerTab } from '@/components/admin/PlannerTab'
 import { SocialTab } from '@/components/admin/SocialTab'
-import { BannersTab as BannersTabComponent } from '@/components/admin/BannersTab'
 import { SettingsTab } from '@/components/admin/SettingsTab'
 import { ApprovalHistoryTab } from '@/components/admin/ApprovalHistoryTab'
 import { ContentTab } from '@/components/admin/ContentTab'
 
-type Tab = 'overview' | 'promotions' | 'banners' | 'planner' | 'social' | 'settings' | 'approvals' | 'content'
+type Tab = 'overview' | 'promotions' | 'planner' | 'social' | 'settings' | 'approvals' | 'content'
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'overview', label: '📈 ภาพรวม' },
   { id: 'content', label: '📝 สร้างเนื้อหา' },
   { id: 'promotions', label: '🎁 โปรโมชั่น/ส่วนลด' },
-  { id: 'banners', label: '🏠 แบนเนอร์/โปรโมท' },
   { id: 'planner', label: '🗓️ Planner' },
   { id: 'social', label: '📱 โซเชียล/ตารางโพสต์' },
   { id: 'approvals', label: '🛡️ อนุมัติ/ประวัติ' },
@@ -95,12 +93,6 @@ export function AdminMarketingPromotions() {
         <PromotionsTabComponent
           promotions={promotions}
           setPromotions={setPromotions}
-        />
-      )}
-
-      {tab === 'banners' && (
-        <BannersTabComponent
-          promotions={promotions}
         />
       )}
 

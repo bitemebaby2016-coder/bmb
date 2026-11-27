@@ -9,12 +9,14 @@
 import { describe, it, expect } from 'vitest'
 import { autoMascotForKind } from '@/pages/admin/AdminMarketing'
 import marketingSrc from '../pages/admin/AdminMarketing.tsx?raw'
+import studioSrc from '../lib/aiImageStudio.ts?raw'
 import imageGenSrc from '../../supabase/functions/image-gen/index.ts?raw'
 
-describe('R47 — ยกเลิกกฎห้ามเจนอาหาร + ข้อความโปรโมตตรงเนื้อหาโพสต์', () => {
+describe('R47 — ยกเลิกกฎห้ามเจนภาพอาหาร + ข้อความโปรโมตตรงเนื้อหาโพสต์', () => {
   it('UI เสนอภาพเมนู/อาหาร + ไม่บล็อก return + EF prompt ใช้รูปต้นแบบ/ข้อความตามรายละเอียด', () => {
     expect(marketingSrc).toContain('<option value="menu">')
-    expect(marketingSrc).toContain("genKind === 'menu' && !reference")
+    expect(marketingSrc).toContain('<option value="studio">')
+    expect(marketingSrc).toContain("genKind === 'menu' || genKind === 'studio'")
     expect(marketingSrc).toContain('ต้นแบบไดคัท')
     // EF presets: เมนูใช้ภาพต้นแบบ · promo/festival เขียนอักษรตาม note ที่ให้มา (ไม่ใช่ "ไม่มีตัวอักษร")
     expect(imageGenSrc).toContain('ภาพเมนูตัวอย่างแนบมาให้ใช้เป็นต้นแบบไดคัท')
@@ -42,17 +44,25 @@ describe('R47 — ยุบสองเซคชั่นเป็นใบเ�
 
 describe('R47 — ลายน้ำโลโก้จริง + มาสคอตอัตโนมัติ + จำค่า', () => {
   it('applyBrandWatermark ใช้ Logo_Sticker_Circle + mascot จาก Admin Override + เลือกตาม kind + จำ localStorage', () => {
+    // applyBrandWatermark ย้ายไปแหล่งเดียว src/lib/aiImageStudio.ts
+    expect(studioSrc).toContain("fetchBitmap('/Logo_Sticker_Circle.webp')")
+    expect(studioSrc).toContain('getOverrideUrl(mascotKey)')
+    expect(studioSrc).toContain('compressGeneratedToWeb')
+    expect(studioSrc).toContain("'Bite Me Baby'")
+    expect(studioSrc).toContain("mascotChoice === 'none'")
+    expect(studioSrc).toContain("key: 'none'")
+    // UI เรียก applyBrandWatermark + จำค่าใน localStorage
     expect(marketingSrc).toContain('applyBrandWatermark(data.url, genKind, wmMascot)')
-    expect(marketingSrc).toContain("fetchBitmap('/Logo_Sticker_Circle.webp')")
-    expect(marketingSrc).toContain('getOverrideUrl(mascotKey)')
     expect(marketingSrc).toContain("localStorage.getItem('bmb:wm-mascot') || 'auto'")
     expect(marketingSrc).toContain("localStorage.setItem('bmb:wm-mascot', v)")
     expect(marketingSrc).toContain('data-testid="mk-wm-mascot"')
-    expect(marketingSrc).toContain("'Bite Me Baby'")
+    // ป้ายมาสคอตตัด (R47 — ทุกภาพเจน) ออกแล้ว
+    expect(marketingSrc).not.toContain('มาสคอตลายน้ำ (R47 — ทุกภาพเจน)')
   })
 
-  it('autoMascotForKind: menu→menu · festival→award · อื่น ๆ →recommend', () => {
+  it('autoMascotForKind: menu/studio→menu · festival→award · อื่น ๆ →recommend', () => {
     expect(autoMascotForKind('menu')).toBe('menu')
+    expect(autoMascotForKind('studio')).toBe('menu')
     expect(autoMascotForKind('festival')).toBe('award')
     expect(autoMascotForKind('promo')).toBe('recommend')
   })

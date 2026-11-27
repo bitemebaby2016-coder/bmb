@@ -345,7 +345,7 @@ export async function listAiAlbumFiles(): Promise<AiAlbumFile[]> {
   try {
     const s = supabase.storage.from(MEDIA_BUCKET)
     const out: AiAlbumFile[] = []
-    for (const kind of ['menu', 'promo', 'festival']) {
+    for (const kind of ['menu', 'studio', 'promo', 'festival']) {
       const { data, error } = await s.list(`ai-generated/${kind}`, {
         limit: 60,
         sortBy: { column: 'created_at', order: 'desc' },

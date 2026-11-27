@@ -39,8 +39,8 @@ describe('R59 ① — หน้าเพิ่ม/แก้เมนู: เล�
     // คืนไฟล์เดิมเมื่อเล็กรอบแล้ว (ไม่ย่อฟรี) — decode ไม่ได้/ctx ไม่พร้อม = zero-fake คืนเดิม
     expect(mediaSrc).toContain('if (longest <= maxSide && file.size <= PRODUCT_IMAGE_ALREADY_OK_BYTES) return file')
     expect(mediaSrc).toContain('if (!bmp) return file')
-    // คลัง: ai-generated/{menu,promo,festival} + ไฟล์รูต (id=null = โฟลเดอร์ → ข้าม)
-    expect(mediaSrc).toContain("for (const kind of ['menu', 'promo', 'festival'])")
+    // คลัง: ai-generated/{menu,studio,promo,festival} + ไฟล์รูต (id=null = โฟลเดอร์ → ข้าม)
+    expect(mediaSrc).toContain("for (const kind of ['menu', 'studio', 'promo', 'festival'])")
     expect(mediaSrc).toContain('ai-generated/${kind}')
     expect(mediaSrc).toContain('f.id == null')
     expect(mediaSrc).not.toContain('ai-generated/_disabled')

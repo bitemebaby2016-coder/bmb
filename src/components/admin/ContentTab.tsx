@@ -16,36 +16,17 @@ import { type Product } from '@/types'
 import { flashTo } from '@/lib/uiFlash'
 import { PostForm, PostFormImperativeHandle } from './PostForm'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
+import {
+  applyBrandWatermark, checkGenQuality, WM_MASCOTS,
+  AI_ALBUM_KINDS, type GenKind, type GenQa,
+} from '@/lib/aiImageStudio'
 
 // R44: URL ภาพที่ AI สร้าง (bmb-images/ai-generated/) — กติกา "มีภาพเจน = ใช้ภาพเจนรูปเดียว"
 const isGenImage = (u: string) => u.includes('/ai-generated/')
 
-// R47: เลือกมาสคอตลายน้ำอัตโนมัติตามประเภทภาพที่เจน
-export type GenQa = { ok: boolean; warn?: string; w: number; h: number }
-export const KIND_PRESETS_KEYS = ['menu', 'promo', 'festival'] as const
-export const MENU_ASPECTS = [1, 4 / 3, 3 / 4]
-
-export async function checkGenQuality(url: string, kind: string): Promise<GenQa> {
-  try {
-    const res = await fetch(url)
-    if (!res.ok) return { ok: true, w: 0, h: 0 }
-    const bmp = await createImageBitmap(await res.blob())
-    const w = bmp.width; const h = bmp.height; bmp.close?.()
-    if (Math.min(w, h) < 512) return { ok: false, w, h, warn: `ความละเอียด ${w}×${h} ต่ำเกินไป` }
-    if (kind === 'menu') {
-      const ar = w / h
-      const fits = MENU_ASPECTS.some((t) => Math.abs(ar - t) / t <= 0.12)
-      if (!fits) return { ok: false, w, h, warn: `สัดส่วน ${w}×${h} ไม่ตรงกรอบเมนู (1:1 หรือ 4:3) — เบี้ยว/ขนาดไม่ตรง` }
-    }
-    return { ok: true, w, h }
-  } catch { return { ok: true, w: 0, h: 0 } }
-}
-
-export function autoMascotForKind(kind: string): string {
-  if (kind === 'menu') return 'menu'
-  if (kind === 'festival') return 'award'
-  return 'recommend'
-}
+// R47/R55 + IMG: ฟังก์ชันเจนภาพ/ลายน้ำ/บีบขนาดอยู่ที่แหล่งเดียว src/lib/aiImageStudio.ts
+export { autoMascotForKind } from '@/lib/aiImageStudio'
+export type { GenQa } from '@/lib/aiImageStudio'
 
 // Mascot poses from Admin Override (bucket Bite_Mascot)
 const MASCOT_POSES = ['recommend', 'menu', 'eating', 'cooking', 'award'] as const
@@ -55,7 +36,7 @@ export interface ContentTabProps {
 }
 
 export function ContentTab({ load }: ContentTabProps) {
-  const [genKind, setGenKind] = useState<'menu' | 'promo' | 'festival'>('promo')
+  const [genKind, setGenKind] = useState<GenKind>('promo')
   const [genStyle, setGenStyle] = useState<'realistic' | 'illustration' | 'poster'>('realistic')
   const [genSubject, setGenSubject] = useState('')
   const [genNote, setGenNote] = useState('')
@@ -65,10 +46,9 @@ export function ContentTab({ load }: ContentTabProps) {
   const [genBusy, setGenBusy] = useState(false)
   const [genStatus, setGenStatus] = useState<{ phase: 'idle' | 'running' | 'ok' | 'fail'; detail?: string; url?: string; model?: string; qa?: GenQa }>({ phase: 'idle' })
 
-  const AI_ALBUM_KINDS = ['menu', 'promo', 'festival'] as const
   type AiAlbumItem = { name: string; url: string; path: string; kind: string; disabled: boolean }
   const [aiAlbum, setAiAlbum] = useState<AiAlbumItem[]>([])
-  const [aiAlbumTab, setAiAlbumTab] = useState<'all' | 'menu' | 'promo' | 'festival' | 'disabled' | 'legacy'>('all')
+  const [aiAlbumTab, setAiAlbumTab] = useState<'all' | 'menu' | 'studio' | 'promo' | 'festival' | 'disabled' | 'legacy'>('all')
   const [albumLoading, setAlbumLoading] = useState(false)
 
   const [contentType, setContentType] = useState<'post' | 'promotion' | 'banner' | 'announcement'>('post')
@@ -287,61 +267,14 @@ export function ContentTab({ load }: ContentTabProps) {
   )
 
   // ===== Image Generation =====
-  async function applyBrandWatermark(srcUrl: string, kind: string, mascotChoice: string): Promise<string> {
-    try {
-      const mascotKey = mascotChoice === 'auto' ? autoMascotForKind(kind) : mascotChoice
-      // ใช้ getOverrideUrl จาก Admin Override (bucket Bite_Mascot) แทนไฟล์ local
-      const mascotUrl = getOverrideUrl(mascotKey)
-      const [img, logo, mascot] = await Promise.all([
-        fetchBitmap(srcUrl),
-        fetchBitmap('/Logo_Sticker_Circle.webp'),
-        mascotUrl ? fetchBitmap(mascotUrl) : Promise.resolve(null)
-      ])
-      if (!img) return srcUrl
-      const w = img.width, h = img.height
-      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h
-      const ctx = canvas.getContext('2d'); if (!ctx) return srcUrl
-      ctx.drawImage(img, 0, 0)
-      const minSide = Math.min(w, h)
-      const pad = Math.round(minSide * 0.03)
-      const pillH = Math.round(minSide * 0.13)
-      const pillW = Math.round(pillH * 4.6)
-      const px = w - pad - pillW; const py = h - pad - pillH
-      ctx.save(); ctx.globalAlpha = 0.88; ctx.fillStyle = '#FFFFFF'
-      if (typeof (ctx as CanvasRenderingContext2D & { roundRect?: unknown }).roundRect === 'function') {
-        ctx.beginPath(); (ctx as CanvasRenderingContext2D & { roundRect: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect(px, py, pillW, pillH, pillH / 2); ctx.fill()
-      } else { ctx.fillRect(px, py, pillW, pillH) }
-      ctx.globalAlpha = 1
-      const logoSize = Math.round(pillH * 0.78)
-      if (logo) ctx.drawImage(logo, px + pillH * 0.11, py + (pillH - logoSize) / 2, logoSize, logoSize)
-      ctx.fillStyle = '#92400E'; ctx.font = `bold ${Math.round(pillH * 0.42)}px Quicksand, sans-serif`; ctx.textBaseline = 'middle'
-      ctx.fillText('Bite Me Baby', px + logoSize + pillH * 0.3, py + pillH * 0.54)
-      if (mascot) {
-        const mH = Math.round(pillH * 1.7); const mW = Math.round(mascot.width * (mH / mascot.height))
-        ctx.drawImage(mascot, px + pillW - mW - pillH * 0.15, py - mH + pillH * 0.35, mW, mH)
-      }
-      ctx.restore()
-      const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'))
-      if (!blob) return srcUrl
-      const wmFile = new File([blob], `wm-${Date.now().toString(36)}.png`, { type: 'image/png', lastModified: Date.now() })
-      const sized = await compressToWebLimits(wmFile)
-      const path = `ai-generated/${(KIND_PRESETS_KEYS as readonly string[]).includes(kind) ? kind : 'menu'}/wm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}${sized.name.endsWith('.jpg') ? '.jpg' : '.png'}`
-      const { error } = await supabase.storage.from('bmb-images').upload(path, sized, { contentType: sized.type, upsert: false })
-      if (error) return srcUrl
-      return supabase.storage.from('bmb-images').getPublicUrl(path).data.publicUrl
-    } catch { return srcUrl }
-  }
-
-  async function fetchBitmap(url: string): Promise<ImageBitmap | null> {
-    try { const res = await fetch(url); if (!res.ok) return null; return await createImageBitmap(await res.blob()) } catch { return null }
-  }
+  // applyBrandWatermark/fetchBitmap/WM_MASCOTS/บีบขนาดอยู่ที่แหล่งเดียว src/lib/aiImageStudio.ts
 
   async function handleGenerateImage() {
     const subject = genSubject.trim() || postTitle.trim()
     if (!subject) { showToast('ใส่โจทย์/หัวข้อ (ช่องภาพ หรือหัวข้อโพสต์) ก่อนสร้างภาพ', 'error'); return }
     const note = [genNote.trim(), postBody.trim().slice(0, 160)].filter(Boolean).join(' · ')
     const reference = postImages.length > 0 ? postImages[postImages.length - 1] : undefined
-    if (genKind === 'menu' && !reference) {
+    if ((genKind === 'menu' || genKind === 'studio') && !reference) {
       showToast('ยังไม่มีรูปเมนูตัวอย่างในชุดภาพ — จิ้มเมนูใน Planner หรือ browse ไฟล์เพื่อใช้เป็นต้นแบบไดคัท (ไม่แนบก็เจนจากโจทย์ข้อความได้)', 'info')
     }
     // Promo kind: require discount detail in note to prevent AI from inventing discounts
@@ -600,14 +533,7 @@ export function ContentTab({ load }: ContentTabProps) {
     }
   }
 
-  const WM_MASCOTS: Array<{ key: string; label: string }> = [
-    { key: 'auto', label: '🤖 อัตโนมัติ (เลือกตามประเภทภาพ — จำไว้ใช้ทุกครั้ง)' },
-    { key: 'bite_recommend', label: '👉 น้อง Bite แนะนำ' },
-    { key: 'bite_menu', label: '🍽️ น้อง Bite นำเสนอเมนู' },
-    { key: 'bite_eating', label: '😋 น้อง Bite ทานของอร่อย' },
-    { key: 'bite_cooking', label: '👨‍🍳 น้อง Bite ทีมครัว' },
-    { key: 'bite_award', label: '🏆 น้อง Bite ฉลองรางวัล' },
-  ]
+  // WM_MASCOTS อยู่ที่แหล่งเดียว src/lib/aiImageStudio.ts
 
   // ===== Unified Submit =====
   async function handleSubmitAll() {
@@ -871,13 +797,14 @@ export function ContentTab({ load }: ContentTabProps) {
 
       {/* Section 1: Image Generation */}
       <div className="card p-4">
-        <h2 className="font-bold text-brand-accent mb-4">✨ สร้างภาพด้วย AI (E5/E6)</h2>
+        <h2 className="font-bold text-brand-accent mb-4">✨ สร้างภาพ</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
           <label className="text-sm">ประเภทภาพ
             <select className="input w-full" value={genKind} onChange={(e) => setGenKind(e.target.value as typeof genKind)}>
-              <option value="promo">ป้ายโปรโมต</option>
-              <option value="festival">ภาพเทศกาล</option>
-              <option value="menu">ภาพเมนู/อาหาร (ใช้รูปต้นแบบเป็นต้นแบบไดคัท)</option>
+              <option value="promo">ป้ายโปรโมท/โปรโมชั่น/โค้ดลด</option>
+              <option value="festival">ภาพเทศกาล/กิจกรรม</option>
+              <option value="menu">ภาพเมนู/อาหารแนะนำ (ผูกกับ Floating Ad)</option>
+              <option value="studio">ภาพเมนูอาหาร (Studio)</option>
             </select>
           </label>
           <label className="text-sm">สไตล์ (E6 — 3 แนวจากโจทย์เดียวกัน)
@@ -898,7 +825,7 @@ export function ContentTab({ load }: ContentTabProps) {
               </p>
             )}
           </label>
-          <label className="text-sm">มาสคอตลายน้ำ (R47 — ทุกภาพเจน)
+          <label className="text-sm">มาสคอตลายน้ำ
             <select className="input w-full" value={wmMascot} onChange={(e) => { setWmMascot(e.target.value); try { localStorage.setItem('bmb:wm-mascot', e.target.value); showToast('จำมาสคอตลายน้ำไว้ใช้กับทุกรูปที่เจนจากนี้แล้ว', 'success') } catch {} }} data-testid="mk-wm-mascot">
               {WM_MASCOTS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
             </select>
@@ -948,8 +875,8 @@ export function ContentTab({ load }: ContentTabProps) {
         <div className="mt-4" data-testid="mk-ai-album">
           <p className="text-xs font-semibold text-brand-accent mb-2">🗂️ อัลบั้มภาพที่ AI สร้าง (<code>{`bmb-images/ai-generated/<หมวด>/`}</code>) — เลือกหมวด แล้วกดปุ่มบนรูปได้เอง</p>
           <div className="flex flex-wrap gap-1 mb-2" data-testid="mk-ai-album-tabs">
-            {(['all', 'menu', 'promo', 'festival', 'disabled', 'legacy'] as Array<'all' | 'menu' | 'promo' | 'festival' | 'disabled' | 'legacy'>).map((k) => {
-              const labels: Record<string, string> = { all: '🟢 ใช้งานได้', menu: '🍽️ เมนู', promo: '📣 โปรโมต', festival: '🎉 เทศกาล', disabled: '⚪ ปิดใช้งาน', legacy: '📁 รุ่นก่อน' }
+            {(['all', 'menu', 'studio', 'promo', 'festival', 'disabled', 'legacy'] as Array<'all' | 'menu' | 'studio' | 'promo' | 'festival' | 'disabled' | 'legacy'>).map((k) => {
+              const labels: Record<string, string> = { all: '🟢 ใช้งานได้', menu: '🍽️ เมนู', studio: '🍳 สตูดิโอ', promo: '📣 โปรโมต', festival: '🎉 เทศกาล', disabled: '⚪ ปิดใช้งาน', legacy: '📁 รุ่นก่อน' }
               return <button key={k} type="button" onClick={() => setAiAlbumTab(k)} className={`px-2 py-1 rounded-lg text-xs font-medium border ${aiAlbumTab === k ? 'bg-brand-primary text-white border-brand-primary' : 'bg-brand-surface border-brand-border text-brand-accent'}`} data-testid={`mk-ai-tab-${k}`}>{labels[k]}</button>
             })}
           </div>
@@ -1051,7 +978,7 @@ export function ContentTab({ load }: ContentTabProps) {
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={promoForm.is_banner} onChange={(e) => setPromoForm({ ...promoForm, is_banner: e.target.checked })} />
-                🏠 แสดงเป็นแบนเนอร์หน้าแรก (ลูกค้าปิดได้)
+                🏠 ใส่เป็นแบนเนอร์/วัตถุดิบ Floating Ad (ลูกค้าปิดได้)
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={promoForm.stackable} onChange={(e) => setPromoForm({ ...promoForm, stackable: e.target.checked })} data-testid="promo-stackable" />

@@ -24,6 +24,10 @@ import { getBusinessSettings, setBusinessSetting, getFloatingAdConfig, setFloati
 import { FloatingAdTab } from '@/components/admin/FloatingAdTab'
 import { compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE, POST_IMAGE_MAX_SIDE, POST_IMAGE_MAX_BYTES } from '@/lib/bmbAdminApi_media'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
+import {
+  applyBrandWatermark, checkGenQuality, WM_MASCOTS,
+  AI_ALBUM_KINDS, type GenKind, type GenQa,
+} from '@/lib/aiImageStudio'
 import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
 import { buildHeadingGroups } from '@/lib/catalogStructure'
 import type { Product, ProductCategory } from '@/types'
@@ -49,39 +53,10 @@ const STATUS_CLS: Record<string, string> = {
 // กติกา "มีภาพเจน = ใช้ภาพเจนรูปเดียว ห้ามแนบรูปต้นแบบ+ภาพเจนคู่กันตอนสร้างโพสต์"
 const isGenImage = (u: string) => u.includes('/ai-generated/')
 
-// R47 (Owner): เลือกมาสคอตลายน้ำอัตโนมัติตามประเภทภาพที่เจน (pure — test เรียกตรง)
-// R55 (Owner 2026-11-02): ตรวจคุณภาพภาพเจนก่อนใช้ — "เบี้ยวเละเทะ ขนาดไม่ตรง" ห้ามใช้แทนอัตโนมัติ
-export type GenQa = { ok: boolean; warn?: string; w: number; h: number }
-/** หมวดภาพที่ AI Studio เจนได้ (แยกอัลบั้มตามหมวด — Owner R55) */
-export const KIND_PRESETS_KEYS = ['menu', 'promo', 'festival']
-/** ขนาดกรอบเมนูที่ใช้ได้จริง = 1:1 (โมเดลมักออกสี่เหลี่ยม) หรือ 4:3 (กรอบการ์ดเมนู) · tolerance 12%
- *  ค่าอื่น (แนวตั้งยาว/ผิดรูป) = "ขนาดไม่ตรง" → ห้ามใช้แทนอัตโนมัติ (Owner R55) · ความละเอียดขั้นต่ำ 512px */
-export const MENU_ASPECTS = [1, 4 / 3, 3 / 4]
-export async function checkGenQuality(url: string, kind: string): Promise<GenQa> {
-  try {
-    const res = await fetch(url)
-    if (!res.ok) return { ok: true, w: 0, h: 0 } // อ่านไม่ได้ = ไม่ฟันธง (คงสิทธิ์แอดมินตัดสินเอง)
-    const bmp = await createImageBitmap(await res.blob())
-    const w = bmp.width
-    const h = bmp.height
-    bmp.close?.()
-    if (Math.min(w, h) < 512) return { ok: false, w, h, warn: `ความละเอียด ${w}×${h} ต่ำเกินไป` }
-    if (kind === 'menu') {
-      const ar = w / h
-      const fits = MENU_ASPECTS.some((t) => Math.abs(ar - t) / t <= 0.12)
-      if (!fits) return { ok: false, w, h, warn: `สัดส่วน ${w}×${h} ไม่ตรงกรอบเมนู (1:1 หรือ 4:3) — เบี้ยว/ขนาดไม่ตรง` }
-    }
-    return { ok: true, w, h }
-  } catch {
-    return { ok: true, w: 0, h: 0 }
-  }
-}
-
-export function autoMascotForKind(kind: string): string {
-  if (kind === 'menu') return 'menu'
-  if (kind === 'festival') return 'award'
-  return 'recommend'
-}
+// R47/R55 + IMG: ฟังก์ชันเจนภาพ/ลายน้ำ/บีบขนาดอยู่ที่แหล่งเดียว src/lib/aiImageStudio.ts
+// re-export เพื่อความเข้ากัน-friendly กับผู้ใช้เดิม (เช่น test ที่ import autoMascotForKind จากหน้านี้)
+export { autoMascotForKind } from '@/lib/aiImageStudio'
+export type { GenQa } from '@/lib/aiImageStudio'
 
 // ==== Multi-image selection (max 5) ====
 export const MAX_POST_IMAGES = 5
@@ -114,7 +89,7 @@ export function AdminMarketing() {
   const [browseBusy, setBrowseBusy] = useState(false)
   const browseRef = useRef<HTMLInputElement | null>(null)
 
-  const [genKind, setGenKind] = useState<'menu' | 'promo' | 'festival'>('promo')
+  const [genKind, setGenKind] = useState<GenKind>('promo')
   const [genStyle, setGenStyle] = useState<'realistic' | 'illustration' | 'poster'>('realistic')
   const [genSubject, setGenSubject] = useState('')
   const [genNote, setGenNote] = useState('')
@@ -151,10 +126,9 @@ export function AdminMarketing() {
   const [genStatus, setGenStatus] = useState<{ phase: 'idle' | 'running' | 'ok' | 'fail'; detail?: string; url?: string; model?: string; qa?: GenQa }>({ phase: 'idle' })
   // R55 (Owner: "แยกภาพที่เจนออกมาเป็นคนละอัลบั้มตามหมวดหมู่ที่ให้เจน")
   // = โฟลเดอร์ ai-generated/<kind>/ · ปิดใช้งาน = ย้ายไป ai-generated/_disabled/<kind>/ (ย้ายกลับได้)
-  const AI_ALBUM_KINDS = ['menu', 'promo', 'festival'] as const
   type AiAlbumItem = { name: string; url: string; path: string; kind: string; disabled: boolean }
   const [aiAlbum, setAiAlbum] = useState<AiAlbumItem[]>([])
-  const [aiAlbumTab, setAiAlbumTab] = useState<'all' | 'menu' | 'promo' | 'festival' | 'disabled' | 'legacy'>('all')
+  const [aiAlbumTab, setAiAlbumTab] = useState<'all' | 'menu' | 'studio' | 'promo' | 'festival' | 'disabled' | 'legacy'>('all')
   const loadAiAlbum = useCallback(async () => {
     try {
       const s = supabase.storage.from('bmb-images')
@@ -502,7 +476,7 @@ export function AdminMarketing() {
     const reference = images.length > 0 ? images[images.length - 1] : undefined
     // R47 (Owner 2026-11-01): "ยกเลิกกฏเจนภาพอาหาร" — เจนเมนู/อาหารได้เลย ·
     // รูปเมนูตัวอย่างที่แนบไว้ (Planner จิ้มเมนู / browse) = ต้นแบบไดคัทผ่าน reference_image_url อัตโนมัติ
-    if (genKind === 'menu' && !reference) {
+    if ((genKind === 'menu' || genKind === 'studio') && !reference) {
       showToast('ยังไม่มีรูปเมนูตัวอย่างในชุดภาพ — จิ้มเมนูใน Planner หรือ browse ไฟล์เพื่อใช้เป็นต้นแบบไดคัท (ไม่แนบก็เจนจากโจทย์ข้อความได้)', 'info')
     }
     setGenBusy(true)
@@ -636,86 +610,8 @@ export function AdminMarketing() {
     }
   }
 
-  // ================= R47 ลายน้ำแบรนด์บนทุกภาพที่เจน =================
-  // Owner: "เจนภาพ ต้องประกบลายน้ำของ brand เอง ใช้โลโก้แบรนด์จริง + มาสคอตโพสที่เหมาะสม
-  //          อัตโนมัติ · ให้จำพร้อมสำหรับเจนทุกภาพ"
-  // ทำฝั่ง client ด้วย canvas (บันทึกจริงลง bmb-images/ai-generated/ · ไม่พึ่ง EF ฝั่งเดียว)
-  const WM_MASCOTS: Array<{ key: string; label: string }> = [
-    { key: 'auto', label: '🤖 อัตโนมัติ (เลือกตามประเภทภาพ — จำไว้ใช้ทุกครั้ง)' },
-    { key: 'bite_recommend', label: '👉 น้อง Bite แนะนำ' },
-    { key: 'bite_menu', label: '🍽️ น้อง Bite นำเสนอเมนู' },
-    { key: 'bite_eating', label: '😋 น้อง Bite ทานของอร่อย' },
-    { key: 'bite_cooking', label: '👨‍🍳 น้อง Bite ทีมครัว' },
-    { key: 'bite_award', label: '🏆 น้อง Bite ฉลองรางวัล' },
-  ]
-  async function fetchBitmap(url: string): Promise<ImageBitmap | null> {
-    try {
-      const res = await fetch(url)
-      if (!res.ok) return null
-      return await createImageBitmap(await res.blob())
-    } catch { return null }
-  }
-  async function applyBrandWatermark(srcUrl: string, kind: string, mascotChoice: string): Promise<string> {
-    try {
-      const mascotKey = mascotChoice === 'auto' ? autoMascotForKind(kind) : mascotChoice
-      // ใช้ getOverrideUrl จาก Admin Override (bucket Bite_Mascot) แทนไฟล์ local
-      const mascotUrl = getOverrideUrl(mascotKey)
-      const [img, logo, mascot] = await Promise.all([
-        fetchBitmap(srcUrl),
-        fetchBitmap('/Logo_Sticker_Circle.webp'),
-        mascotUrl ? fetchBitmap(mascotUrl) : Promise.resolve(null)
-      ])
-      if (!img) return srcUrl
-      const w = img.width, h = img.height
-      const canvas = document.createElement('canvas')
-      canvas.width = w; canvas.height = h
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return srcUrl
-      ctx.drawImage(img, 0, 0)
-      // แถบลายน้ำมุมล่างขวา: pill ขาวโปร่ง + โลโก้จริง + ชื่อร้าน + มาสคอตยืนบน pill
-      const minSide = Math.min(w, h)
-      const pad = Math.round(minSide * 0.03)
-      const pillH = Math.round(minSide * 0.13)
-      const pillW = Math.round(pillH * 4.6)
-      const px = w - pad - pillW
-      const py = h - pad - pillH
-      ctx.save()
-      ctx.globalAlpha = 0.88
-      ctx.fillStyle = '#FFFFFF'
-      if (typeof (ctx as CanvasRenderingContext2D & { roundRect?: unknown }).roundRect === 'function') {
-        ctx.beginPath()
-        ;(ctx as CanvasRenderingContext2D & { roundRect: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect(px, py, pillW, pillH, pillH / 2)
-        ctx.fill()
-      } else {
-        ctx.fillRect(px, py, pillW, pillH)
-      }
-      ctx.globalAlpha = 1
-      const logoSize = Math.round(pillH * 0.78)
-      if (logo) ctx.drawImage(logo, px + pillH * 0.11, py + (pillH - logoSize) / 2, logoSize, logoSize)
-      ctx.fillStyle = '#92400E'
-      ctx.font = `bold ${Math.round(pillH * 0.42)}px Quicksand, sans-serif`
-      ctx.textBaseline = 'middle'
-      ctx.fillText('Bite Me Baby', px + logoSize + pillH * 0.3, py + pillH * 0.54)
-      if (mascot) {
-        const mH = Math.round(pillH * 1.7)
-        const mW = Math.round(mascot.width * (mH / mascot.height))
-        ctx.drawImage(mascot, px + pillW - mW - pillH * 0.15, py - mH + pillH * 0.35, mW, mH)
-      }
-      ctx.restore()
-      const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'))
-      if (!blob) return srcUrl
-      // R92 (Owner 2026-11-09): บังคับ 300×300 + ≤100KB ก่อนเก็บลง supabase (ภาพเจนหลังประกบลายน้ำ)
-      const wmFile = new File([blob], `wm-${Date.now().toString(36)}.png`, { type: 'image/png', lastModified: Date.now() })
-      const sized = await compressToWebLimits(wmFile)
-      // R55: wm ลงโฟลเดอร์หมวดเดียวกับไฟล์ต้นฉบับ (แยกอัลบั้มตามหมวดหมู่)
-      const path = `ai-generated/${KIND_PRESETS_KEYS.includes(kind) ? kind : 'menu'}/wm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}${sized.name.endsWith('.jpg') ? '.jpg' : '.png'}`
-      const { error } = await supabase.storage.from('bmb-images').upload(path, sized, { contentType: sized.type, upsert: false })
-      if (error) return srcUrl
-      return supabase.storage.from('bmb-images').getPublicUrl(path).data.publicUrl
-    } catch {
-      return srcUrl // ลายน้ำพัง = ยังไงรูปก็ออก — ใช้ภาพต้นฉบับ (ไม่ขัดจังหวะการเจน)
-    }
-  }
+  // ================= R47 ลายน้ำแบรนด์ + IMG บีบ 1024/300KB =================
+  // ฟังก์ชัน/ค่าคงที่อยู่ที่แหล่งเดียว src/lib/aiImageStudio.ts (applyBrandWatermark, WM_MASCOTS, compressGeneratedToWeb)
 
   async function handleSaveRules() {
     const r = await saveMarketingRules({
@@ -826,13 +722,14 @@ export function AdminMarketing() {
       {tab === 'studio' && (
         <div className="space-y-3">
           <div className="card">
-            <h2 className="font-bold text-brand-accent mb-2">🎨 สร้างภาพโปรโมต</h2>
+            <h2 className="font-bold text-brand-accent mb-2">🎨 สร้างภาพ</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="text-sm">ประเภทภาพ
                 <select className="input w-full" value={genKind} onChange={(e) => setGenKind(e.target.value as typeof genKind)}>
-                  <option value="promo">ป้ายโปรโมต</option>
-                  <option value="festival">ภาพเทศกาล</option>
-                  <option value="menu">ภาพเมนู/อาหาร (ใช้รูปต้นแบบเป็นต้นแบบไดคัท)</option>
+                  <option value="promo">ป้ายโปรโมท/โปรโมชั่น/โค้ดลด</option>
+                  <option value="festival">ภาพเทศกาล/กิจกรรม</option>
+                  <option value="menu">ภาพเมนู/อาหารแนะนำ (ผูกกับ Floating Ad)</option>
+                  <option value="studio">ภาพเมนูอาหาร (Studio)</option>
                 </select>
               </label>
               <label className="text-sm">สไตล์ภาพ
@@ -848,7 +745,7 @@ export function AdminMarketing() {
               <label className="text-sm">เพิ่มเติม (ไม่บังคับ)
                 <input className="input w-full" value={genNote} onChange={(e) => setGenNote(e.target.value)} placeholder="เช่น โทนเหลืองทอง" />
               </label>
-              <label className="text-sm">มาสคอตลายน้ำ (R47 — ทุกภาพเจน)
+              <label className="text-sm">มาสคอตลายน้ำ
                 <select className="input w-full" value={wmMascot} onChange={(e) => changeWmMascot(e.target.value)} data-testid="mk-wm-mascot">
                   {WM_MASCOTS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
                 </select>
@@ -969,11 +866,12 @@ export function AdminMarketing() {
                 {([
                   ['all', '🟢 ใช้งานได้'],
                   ['menu', '🍽️ เมนู'],
+                  ['studio', '🍳 สตูดิโอ'],
                   ['promo', '📣 โปรโมต'],
                   ['festival', '🎉 เทศกาล'],
                   ['disabled', '⚪ ปิดใช้งาน'],
                   ['legacy', '📁 รุ่นก่อน'],
-                ] as Array<['all' | 'menu' | 'promo' | 'festival' | 'disabled' | 'legacy', string]>).map(([k, label]) => (
+                ] as Array<['all' | 'menu' | 'studio' | 'promo' | 'festival' | 'disabled' | 'legacy', string]>).map(([k, label]) => (
                   <button
                     key={k}
                     type="button"
@@ -1141,7 +1039,7 @@ export function AdminMarketing() {
                               await load()
                             } catch { showToast('บันทึกไม่สำเร็จ', 'error') }
                           }}
-                          label="📌 Floating Ad"
+                          label="📌 ใส่คลัง Floating Ad"
                           testId={`mk-floating-ad-${linked.id}`}
                         />
                       )}
