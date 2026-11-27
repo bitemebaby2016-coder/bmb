@@ -631,10 +631,13 @@ const [rows, cats, rounds, promos] = await Promise.all([
 
       {/* 4. ส่งวันนี้ (Feature B: ลำดับ 2) — เมนูสั่งวันนี้ */}
       <section id="home-sec-sameday" className="mb-10 scroll-mt-20" aria-labelledby="home-sameday-heading">
-        <h2 id="home-sameday-heading" className="relative text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2 min-w-0 pr-10">
-          <span className="truncate">{sameDaySectionTitle}</span>
-          <MascotBadge pose="running" size="sm" alt="น้อง Bite ส่งวันนี้" className="section-float-mascot shrink-0" />
-        </h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 id="home-sameday-heading" className="relative text-xl font-display font-bold text-brand-accent flex items-center gap-2 min-w-0 pr-10">
+            <span className="truncate">{sameDaySectionTitle}</span>
+            <MascotBadge pose="running" size="sm" alt="น้อง Bite ส่งวันนี้" className="section-float-mascot shrink-0" />
+          </h2>
+          <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline shrink-0">ดูทั้งหมด →</Link>
+        </div>
         {sameDayShowcase.length > 0 ? (
           <HorizontalCarousel
             items={sameDayShowcase.map((item) => (
@@ -649,10 +652,13 @@ const [rows, cats, rounds, promos] = await Promise.all([
 
       {/* 5. พรีออเดอร์ (Feature B: ลำดับ 3) — เมนูจองล่วงหน้า (ผูกปฏิทินแอดมิน) */}
       <section id="home-sec-preorder" className="mb-10 scroll-mt-20" aria-labelledby="home-preorder-heading">
-        <h2 id="home-preorder-heading" className="relative text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2 min-w-0 pr-10">
-          <span className="truncate">{preOrderSectionTitle}</span>
-          <MascotBadge pose="menu" size="sm" alt="น้อง Bite พรีออเดอร์" className="section-float-mascot shrink-0" />
-        </h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 id="home-preorder-heading" className="relative text-xl font-display font-bold text-brand-accent flex items-center gap-2 min-w-0 pr-10">
+            <span className="truncate">{preOrderSectionTitle}</span>
+            <MascotBadge pose="menu" size="sm" alt="น้อง Bite พรีออเดอร์" className="section-float-mascot shrink-0" />
+          </h2>
+          <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline shrink-0">ดูทั้งหมด →</Link>
+        </div>
         {/* Owner (2026-10-25): CTA พรีออเดอร์ (Directive §8 เดิม — workflow preOrderEntryPath เดียวกัน
             + หัวข้อแก้ได้ในแอดมิน homePreOrderTitle) — แสดงเฉพาะตอนเปิดแท็บ "📅 พรีออเดอร์" เท่านั้น */}
         {homeTab === 'preorder' && (
