@@ -111,7 +111,6 @@ export function FloatingAdBanners({
   config?: FloatingAdConfig;
 }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
-  const [floatAdEnabled, setFloatAdEnabled] = useState(true)
   const [mascotsLoaded, setMascotsLoaded] = useState(false)
 
   // โหลด mascot overrides จาก Admin (bucket Bite_Mascot)
@@ -120,30 +119,6 @@ export function FloatingAdBanners({
     void loadMascotOverrides().then(() => {
       if (alive) setMascotsLoaded(true)
     })
-    return () => { alive = false }
-  }, [])
-
-  // Kill switch สำหรับ floating ad (โหลดจาก business_settings)
-  useEffect(() => {
-    let alive = true
-    void (async () => {
-      try {
-        const { supabase } = await import('@/lib/supabase')
-        const [{ data: enabledData }, { data: configData }] = await Promise.all([
-          supabase.from('business_settings').select('value').eq('key', 'floating_ad_enabled').maybeSingle(),
-          supabase.from('business_settings').select('value').eq('key', 'floating_ad_config').maybeSingle(),
-        ])
-        if (alive) {
-          const enabledV = (enabledData as { value?: unknown } | null)?.value
-          if (typeof enabledV === 'boolean') setFloatAdEnabled(enabledV)
-          else {
-            // Fallback to config if available
-            const cfg = (configData as { value?: FloatingAdConfig } | null)?.value
-            if (cfg?.enabled !== undefined) setFloatAdEnabled(cfg.enabled)
-          }
-        }
-      } catch { /* zero-fake */ }
-    })()
     return () => { alive = false }
   }, [])
 
@@ -178,8 +153,9 @@ export function FloatingAdBanners({
     return () => { alive = false }
   }, [])
    
-  // Early return if floating ad is disabled
-  if (!floatAdEnabled) return null
+  // R123i: single source of truth = config.enabled (จาก FloatingAdTab) — ตัด kill switch
+  // แบบ async fetch เดิมที่ทำให้ default=true แล้วค่อยเปลี่ยน = กระพริบตอนโหลด
+  if (config?.enabled === false) return null
 
   // Filter promos by config sources (if config provided)
   let filteredPromos = promos

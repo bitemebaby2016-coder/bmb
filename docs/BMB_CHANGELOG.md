@@ -7,6 +7,18 @@
 
 ---
 
+## R123i — 2026-11-27 — FLOATING AD: CONSOLIDATE TO SINGLE TOGGLE (ตัดสวิตช์ซ้ำซ้อน + ตัด race กระพริบ)
+
+- **Root Cause:** Floating Ad มีสวิตช์เปิด/ปิด **2 ตัวซ้อนกัน** คนละคีย์ใน `business_settings` — ① `floating_ad_enabled` (kill switch ใน AdminSettings, testId `floating-ad-toggle`) และ ② `floating_ad_config.enabled` (master ใน FloatingAdTab) · `FloatingAdBanners` มี `useState(true)` แล้วค่อย fetch `floating_ad_enabled` แบบ async → รอบแรก render ก่อนเสมอ แล้วค่อยหาย = **กระพริบตอนโหลด** · ถ้าตั้งสองตัวไม่ตรงกัน = ปิดแล้วโผล่อีก
+- **Fix (single source = `floating_ad_config.enabled`):**
+  1. `src/components/home/FloatingAdBanners.tsx` — ลบ `floatAdEnabled` state + kill-switch `useEffect` (async fetch `floating_ad_enabled`/`floating_ad_config`) · เปลี่ยน early-return เป็น `if (config?.enabled === false) return null` (เชื่อม config prop จาก HomePage) → ตัด default-true = หาย flash
+  2. `src/pages/admin/AdminSettings.tsx` — ลบคาร์ด "Floating Ad Kill Switch" (`floating-ad-switch`/`floating-ad-toggle`) + ตัด `floating_ad_enabled` ออกจาก `TYPED_FORM_KEYS` → เหลือสวิตช์เดียวใน FloatingAdTab
+  3. `src/pages/HomePage.tsx` — คง gate `floatingAdConfig.enabled` (บรรทัด 613) เป็น single source (ไม่เปลี่ยน)
+  4. `src/lib/bmbAdminApi_settings.ts` — คง `getFloatingAdConfig` (อ่าน `floating_ad_config` เป็นหลัก, legacy `floating_ad_enabled` เป็น fallback migration ครั้งเดียว)
+- **Gates:** tsc 0 · lint OK · vitest 3,029 PASS · build PASS
+
+---
+
 ## R120 — 2026-11-27 — SECTION-FLOAT-MASCOT: POSITION:ABSOLUTE + FLOAT AMPLITUDE FIX (มาสคอตลอยพ้นออกจากเฟรมหัวข้อ)
 
 - **Root Cause:** `.section-float-mascot` เป็น `display: inline-block` ใน normal flow ภายในกล่องหัวข้อ `<h2>/<h3 class="flex items-center">` — `animation: float` (`translateY(-10px)`) แกว่งแค่ในบรรทัดหัวข้อ (line-box) → ตอนลอยขึ้นถึงจุดสูงสุดส่วนบนของ badge ชนขอบหัวข้อแล้วถูกตัด ("ขาด" ตอนบน) — มันไม่สามารถ "ลอยออกนอกเฟรม" ได้เพราะถูกกักอยู่ในกล่องหัวข้อ
