@@ -1,0 +1,26 @@
+{
+  "at": "2026-11-27T16:22:19.131Z",
+  "probes": [
+    {
+      "name": "studio_empty_subject",
+      "status": 400,
+      "error": "ERR_MISSING_SUBJECT"
+    },
+    {
+      "name": "promo_empty_subject",
+      "status": 400,
+      "error": "ERR_MISSING_SUBJECT"
+    },
+    {
+      "name": "bogus_kind",
+      "status": 400,
+      "error": "ERR_INVALID_KIND"
+    }
+  ],
+  "loginStatus": 200,
+  "verdict": "NEW_DEPLOYED (4 kinds incl. studio)",
+  "sanityPromoOk": true,
+  "negativeControlOk": true,
+  "ALL_PASS": true,
+  "note": "image-gen 4-kind deployed + validated"
+}

@@ -1,0 +1,16 @@
+{
+  "at": "2026-11-27T16:22:54.424Z",
+  "loginStatus": 200,
+  "status": 200,
+  "body": "{\"ok\":true,\"url\":\"https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/studio/gen-mwz6xbud-6udk.png\",\"kind\":\"studio\",\"style\":\"realistic\",\"prompt\":\"ภาพเมนูอาหาร \\\"ทดสอบระบบ R129 — ลบทันทีหลังยืนยัน\\\" สไตล์สตูดิโออาหารพรีเมียม สำหรับร้านของหวาน Bite Me Baby — จัดจานสวย มุม 45 องศา แสงสตูดิโอนุ่ม พื้นหลังสะอาด/โทนพาสเทล รายละเอียดอาหารคมชัด ไม่บิดงอ ไม่เบี้ยว สัดส่วนจานสมจริง อัตราส่วนภาพ 1:1 หรือ 4:3 เต็มกรอบ — สไตล์ภาพถ่ายสมจริง แสงนุ่ม รายละเอียดสูง สมดุลสีธรรมชาติ\",\"model\":\"qwen/qwen-image-2.1-pro [images-api]\",\"attempts\":[],\"folder\":\"ai-generated/studio\"}",
+  "model": "qwen/qwen-image-2.1-pro [images-api]",
+  "attempts": [],
+  "url": "https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/studio/gen-mwz6xbud-6udk.png",
+  "folder": "ai-generated/studio",
+  "generated": true,
+  "cleanupPath": "ai-generated/studio/gen-mwz6xbud-6udk.png",
+  "cleanupStatus": 200,
+  "cleanupVerified": true,
+  "ALL_PASS": true,
+  "note": "STUDIO E2E OK (model=qwen/qwen-image-2.1-pro [images-api]) + test file deleted"
+}

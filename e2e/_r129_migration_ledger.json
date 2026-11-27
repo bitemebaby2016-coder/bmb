@@ -1,0 +1,13 @@
+{
+  "at": "2026-11-27T16:30:06.445Z",
+  "projectRef": "ivkdfognyiwjcmrhcnwz",
+  "localCount": 233,
+  "localMax": "233",
+  "remoteHttpStatus": 201,
+  "remoteCount": 233,
+  "remoteMax": "233",
+  "localOnly": [],
+  "remoteOnly": [],
+  "drift": false,
+  "verdict": "MATCH"
+}
