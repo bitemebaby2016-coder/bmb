@@ -5,6 +5,12 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R124 2026-11-27 (THEATER MENU CONTROL → /admin/products + TOGGLE HEIGHT −50%)**
+- **Move:** `TheaterMenuControl` ย้ายจาก `HomePage` (`/shop`) → `AdminProducts` (`/admin/products`) วางเหนือ `<HomePopularManager>` (เซกชัน 🔥 เมนูยอดนิยม หน้าแรก) — เข้าถึงผ่านเมนูแอดมิน "เมนูและตารางเมนู" เท่านั้น
+- **Toggle:** `.bmb-toggle-track` `height 18px → 9px` (−50%) · knob `14×14 → 5×5` · `translateX(22→31px)` · คงมุม 3px/2px (flat rectangle)
+- **Test:** `theaterMenuControl.test.ts` — control ใน AdminProducts ก่อน HomePopularManager · HomePage ไม่มี control · height 9px
+- **Gates:** tsc 0 · lint OK · vitest 262 files/3,043 tests PASS · build PASS · PUSHED (`1124b2f`)
+
 **R122 2026-11-27 (FLAT RECTANGLE TOGGLE + THEATER MENU CONTROL BOX)**
 - **Toggle:** `.bmb-toggle-track` 40×18px radius 3px, `.bmb-toggle-knob` 14×14px radius 2px, `translateX(22px)` — เป็นสี่เหลี่ยมผืนผ้า เตี้ยที่สุด ไม่ใช่วงกลม/แคปซูล (`index.css`)
 - **Theater control:** สร้าง `src/components/home/TheaterMenuControl.tsx` (admin-only: admin/owner/manager) วางเหนือเซกชัน 🔥 เมนูยอดนิยม — เปิด/ปิดเมนูใน FoodTheater โดยเขียน canonical `admin_portfolio_items.is_theater_carousel` (ไม่สร้าง source ใหม่)

@@ -7,6 +7,19 @@
 
 ---
 
+## R124 — 2026-11-27 — THEATER MENU CONTROL: MOVE TO /admin/products + TOGGLE HEIGHT −50%
+
+- **Root Cause:** กล่อง `TheaterMenuControl` ถูกวางไว้บนหน้าแรก `/shop` (`HomePage.tsx`) ทั้งที่เป็นกล่องควบคุมของฝ่ายแอดมิน → เจ้าของร้าน/แอดมินหาไม่เจอและสับสนกับช่อง "🎭 Theater Carousel" ในฟอร์ม `/admin/media-portfolio` (คนละตัวกัน — อันหลัง เป็น `<input type="checkbox">`)
+- **Fix (4 ไฟล์):**
+  1. `src/pages/HomePage.tsx` — ลบ import `TheaterMenuControl` + ลบ render `<TheaterMenuControl products={products} />` ออกจากหน้า `/shop` (คง `products` ส่วนอื่นไว้ครบ)
+  2. `src/pages/admin/AdminProducts.tsx` — เพิ่ม import + render `<TheaterMenuControl products={products} />` **ก่อน** `<HomePopularManager>` (คือเหนือแผง 🔥 เมนูยอดนิยม หน้าแรก) → กล่องอยู่ในหน้า `/admin/products` เท่านั้น
+  3. `src/index.css` — `.bmb-toggle-track` `height 18px → 9px` (ลด 50%) · `.bmb-toggle-knob` `14×14 → 5×5` · `translateX(22px) → 31px` (40−5−2−2) · เงา `0 2px 6px → 0 1px 3px` — คงมุม 3px/2px (ไม่ใช่วงกลม/แคปซูล)
+  4. `src/__tests__/theaterMenuControl.test.ts` — อัปเดตข้อตกลง: control อยู่ใน `AdminProducts` ก่อน `HomePopularManager` · `HomePage` ไม่มี `<TheaterMenuControl>` แล้ว · `height: 9px`
+- **Gates:** tsc 0 · lint OK · vitest 262 files/3,043 tests PASS · build PASS · PUSHED (`1124b2f`)
+- **Note:** role gate คงเดิม (admin/owner/manager) — หน้า `/admin/*` มี `AdminPage` gate อยู่แล้ว; `<input type="checkbox">` ปกติไม่ถูกแตะ
+
+---
+
 ## R123i — 2026-11-27 — FLOATING AD: CONSOLIDATE TO SINGLE TOGGLE (ตัดสวิตช์ซ้ำซ้อน + ตัด race กระพริบ)
 
 - **Root Cause:** Floating Ad มีสวิตช์เปิด/ปิด **2 ตัวซ้อนกัน** คนละคีย์ใน `business_settings` — ① `floating_ad_enabled` (kill switch ใน AdminSettings, testId `floating-ad-toggle`) และ ② `floating_ad_config.enabled` (master ใน FloatingAdTab) · `FloatingAdBanners` มี `useState(true)` แล้วค่อย fetch `floating_ad_enabled` แบบ async → รอบแรก render ก่อนเสมอ แล้วค่อยหาย = **กระพริบตอนโหลด** · ถ้าตั้งสองตัวไม่ตรงกัน = ปิดแล้วโผล่อีก

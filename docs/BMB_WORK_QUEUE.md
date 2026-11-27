@@ -32,6 +32,7 @@
 | **C-1..C-6** | 6 | ✅ **RESOLVED** | Owner decisions recorded |
 | **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
 | **รวม** | **90+** | | |
+| **R124 (Theater control → /admin/products + toggle −50%)** | 1 | ✅ **CODE_CLOSED + PUSHED** | `1124b2f` — ย้ายออกจาก /shop ไป /admin/products เหนือ 🔥 · toggle 9px · gates green (tsc/lint/vitest 3,043/build) |
 
 ---
 
