@@ -32,6 +32,7 @@
 | **C-1..C-6** | 6 | ✅ **RESOLVED** | Owner decisions recorded |
 | **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
 | **รวม** | **90+** | | |
+| **R125 (Toggle knob +50% / track สูง −50%)** | 1 | ✅ **CODE_CLOSED + PUSHED** | knob 5→7.5px · track 9→4.5px · translateX 31→28.5 · gates green (tsc/lint/vitest 3,043/build) |
 | **R124 (Theater control → /admin/products + toggle −50%)** | 1 | ✅ **CODE_CLOSED + PUSHED** | `1124b2f` — ย้ายออกจาก /shop ไป /admin/products เหนือ 🔥 · toggle 9px · gates green (tsc/lint/vitest 3,043/build) |
 
 ---

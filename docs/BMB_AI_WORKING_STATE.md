@@ -1,5 +1,7 @@
 # BMB — AI WORKING STATE (สถานะปฏิบัติการของ AI Dev)
 
+> **HANDOFF 2026-11-27 (R125 — TOGGLE KNOB +50% / TRACK HEIGHT −50%):** ปรับ `.bmb-toggle` ทุกตัวทั้งแอป — `.bmb-toggle-knob` 5→7.5px (+50%, จัดกึ่งกลาง `top:50%`+`translateY(-50%)`) · `.bmb-toggle-track` สูง 9→4.5px (−50%) · `translateX` 31→28.5px · test อัปเดต `4.5px` + knob `7.5px` · Gates: tsc 0 · lint OK · vitest 262 files/3,043 · build PASS. LIVE_TEST_PENDING (Owner visual). See BMB_CHANGELOG R125.
+
 > **HANDOFF 2026-11-27 (R124 — THEATER MENU CONTROL → /admin/products + TOGGLE HEIGHT −50%):** ย้าย `TheaterMenuControl` จาก `HomePage` (`/shop`) → `AdminProducts` (`/admin/products`) เหนือ `<HomePopularManager>` (🔥 เมนูยอดนิยม หน้าแรก) · `.bmb-toggle-track` 18→9px, knob 14→5px, `translateX` 22→31px · อัปเดต `theaterMenuControl.test.ts` (ตำแหน่ง + 9px) · Gates: tsc 0 · lint OK · vitest 262 files/3,043 · build PASS · PUSHED (`1124b2f`). LIVE_TEST_PENDING (Owner visual). See BMB_CHANGELOG R124.
 
 > **HANDOFF 2026-11-27 (R120 — SECTION-FLOAT-MASCOT POSITION:ABSOLUTE FIX):** `.section-float-mascot` เปลี่ยนจาก in-flow เป็น `position: absolute` ออกจากกล่องหัวข้อ + เพิ่ม `relative` ที่ 8 heading containers + เพิ่ม float amplitude -10px→-22px + ลบ duplicate keyframes. Gates: tsc 0 · lint OK · vitest 259/3,029 · build PASS. LIVE_TEST_PENDING (Owner visual test). See BMB_CHANGELOG R120.

@@ -5,6 +5,11 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R125 2026-11-27 (TOGGLE: KNOB +50% / TRACK HEIGHT −50%)**
+- **Toggle (ทุก `.bmb-toggle` ทั้งแอป):** `.bmb-toggle-knob` `5×5 → 7.5×7.5px` (+50%) จัดกึ่งกลาง (`top:50%` + `translateY(-50%)`) · `.bmb-toggle-track` `height 9 → 4.5px` (−50%) · `translateX(31 → 28.5px)` — คงมุม 3px/2px
+- **Test:** `theaterMenuControl.test.ts` — `height: 4.5px` + knob `7.5px`
+- **Gates:** tsc 0 · lint OK · vitest 262 files/3,043 tests PASS · build PASS
+
 **R124 2026-11-27 (THEATER MENU CONTROL → /admin/products + TOGGLE HEIGHT −50%)**
 - **Move:** `TheaterMenuControl` ย้ายจาก `HomePage` (`/shop`) → `AdminProducts` (`/admin/products`) วางเหนือ `<HomePopularManager>` (เซกชัน 🔥 เมนูยอดนิยม หน้าแรก) — เข้าถึงผ่านเมนูแอดมิน "เมนูและตารางเมนู" เท่านั้น
 - **Toggle:** `.bmb-toggle-track` `height 18px → 9px` (−50%) · knob `14×14 → 5×5` · `translateX(22→31px)` · คงมุม 3px/2px (flat rectangle)

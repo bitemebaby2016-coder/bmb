@@ -7,6 +7,17 @@
 
 ---
 
+## R125 — 2026-11-27 — TOGGLE: KNOB +50% / TRACK HEIGHT −50% (ทุกตัวที่มี)
+
+- **Root Cause:** หลัง R124 ลด toggle เตี้ยลง (track 9px, knob 5px) → knob เล็กเกินไป ต้องการ knob ใหญ่ขึ้น + กรอบ (track) บางลง
+- **Fix (2 ไฟล์, ครอบคลุม ToggleSwitch ทุกตัวที่ใช้ `.bmb-toggle` ทั้งแอป):**
+  1. `src/index.css` — `.bmb-toggle-knob` `5×5 → 7.5×7.5px` (+50%) · `top: 2px → 50%` + `translateY(-50%)` (จัดกึ่งกลางแนวตั้ง) · `.bmb-toggle-track` `height 9 → 4.5px` (−50%) · `.is-on .bmb-toggle-knob` `translateX(31 → 28.5px)` (40−7.5−2−2) — คงมุม 3px/2px
+  2. `src/__tests__/theaterMenuControl.test.ts` — `height: 4.5px` + เพิ่ม assertion knob `7.5px` (width/height)
+- **Gates:** tsc 0 · lint OK · vitest 262 files/3,043 tests PASS · build PASS
+- **Note:** knob 7.5px > track 4.5px (ตั้งใจ — knob ใหญ่กว่ากรอบบาง) · LIVE_TEST_PENDING (Owner visual)
+
+---
+
 ## R124 — 2026-11-27 — THEATER MENU CONTROL: MOVE TO /admin/products + TOGGLE HEIGHT −50%
 
 - **Root Cause:** กล่อง `TheaterMenuControl` ถูกวางไว้บนหน้าแรก `/shop` (`HomePage.tsx`) ทั้งที่เป็นกล่องควบคุมของฝ่ายแอดมิน → เจ้าของร้าน/แอดมินหาไม่เจอและสับสนกับช่อง "🎭 Theater Carousel" ในฟอร์ม `/admin/media-portfolio` (คนละตัวกัน — อันหลัง เป็น `<input type="checkbox">`)
