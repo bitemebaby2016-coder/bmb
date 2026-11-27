@@ -5,6 +5,7 @@ import { getProducts, createProduct, updateProduct, archiveProduct, restoreProdu
 import { invalidateProductCache } from '@/lib/productCache'
 import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
 import { HomePopularManager } from '@/components/admin/HomePopularManager'
+import { TheaterMenuControl } from '@/components/home/TheaterMenuControl'
 import { uploadProductImage, validateImageFile, downscaleImageFile, listAiAlbumFiles, PRODUCT_IMAGE_MAX_SIDE, type AiAlbumFile } from '@/lib/bmbAdminApi_media'
 import { slugifyCategory, blankCategoryForm } from '@/lib/adminUi'
 import { customerVisibilityIssue, CUSTOMER_VISIBILITY_LABEL } from '@/lib/catalogStructure'
@@ -675,6 +676,9 @@ async function handleDeleteProduct(id: string) {
           )}
         </div>
       </div>
+
+      {/* กล่องควบคุมเมนูที่จะโชว์ในเธียเตอร์ (แอดมิน) — เหนือแผง 🔥 เมนูยอดนิยม */}
+      <TheaterMenuControl products={products} />
 
       {/* แผงจัดการ "เมนูยอดนิยม" (แถวพิเศษหน้าแรก) + ข้อความหน้าเว็บ */}
       <HomePopularManager products={products} categories={adminCats} />
