@@ -1798,7 +1798,7 @@ html[data-theme='dark'] .sched-cal-corner, html[data-theme='graphite'] .sched-ca
 .bmb-toggle-track {
   position: relative;
   width: 40px;
-  height: 14px;
+  height: 20px;
   border-radius: 3px;
   background: #D6D3D1;
   border: none;

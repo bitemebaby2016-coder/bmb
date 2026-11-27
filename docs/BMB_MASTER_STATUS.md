@@ -5,6 +5,11 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R127 2026-11-27 (TOGGLE TRACK HEIGHT 14px → 20px — Owner visual tune)**
+- **Context:** R126 ขึ้นจอจริงครั้งแรก (exempt 48px แล้ว) — Owner: "เตี้ยไป ใช้ 40×20 + จุด 10×10"
+- **Fix:** `.bmb-toggle-track` height `14px → 20px` (knob 10×10 / translateX 26px / carve-out คงเดิม) · test assertion `20px`
+- **Gates:** tsc 0 · lint OK · vitest 262 files/3,043 tests PASS · build PASS · PUSHED
+
 **R126 2026-11-27 (TOGGLE HEIGHT FIX — EXEMPT GLOBAL 48px TOUCH TARGET)**
 - **Root Cause:** global touch-target `button {min-height:48px}` (Phase 3.3, `index.css:2212`) ทับ track height ทุกครั้ง (18→9→4.5 render เป็น 40×48 เสมอ) — knob เปลี่ยนจริงเพราะเป็น `<span>` · ยืนยันด้วย console production: `track 40×48 · knob 7.5`
 - **Fix:** carve-out `.bmb-toggle-track {min-height:0; min-width:0}` หลัง block touch-target + ค่าสุดท้าย track **40×14** · knob **10×10** · `translateX(26px)` · test เพิ่ม root-cause lock (`min-height: 0`)

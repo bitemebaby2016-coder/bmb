@@ -33,7 +33,7 @@ describe('Theater Menu Control (admin box บน /admin/products เหนือ
 describe('Toggle — rectangle (ไม่ใช่วงกลม/แคปซูล) + เตี้ยที่สุด', () => {
   it('track/knob เป็นมุมโค้งแทบเหลี่ยม ไม่ใช่ 50%/999px และสูงเตี้ย', () => {
     expect(cssSrc).toContain('.bmb-toggle-track {')
-    expect(cssSrc).toMatch(/\.bmb-toggle-track\s*\{[^}]*height:\s*14px/s)
+    expect(cssSrc).toMatch(/\.bmb-toggle-track\s*\{[^}]*height:\s*20px/s)
     expect(cssSrc).toMatch(/\.bmb-toggle-track\s*\{[^}]*border-radius:\s*3px/s)
     expect(cssSrc).toMatch(/\.bmb-toggle-knob\s*\{[^}]*border-radius:\s*2px/s)
     expect(cssSrc).toMatch(/\.bmb-toggle-knob\s*\{[^}]*width:\s*10px/s)
