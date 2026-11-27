@@ -195,35 +195,38 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   useEffect(() => {
     let active = true
+    // R123: pose เปลี่ยน → reset ก่อน (กัน overrideUrl เก่าถูกใช้กับ pose ใหม่ = กระพริบ)
+    setOverrideSettled(false)
     void loadMascotOverrides().then(() => {
       if (!active) return
       const pool = floatingPosePool(storeClosed, MASCOT_POSES)
       const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
       setOverrideUrl(getOverrideUrl(p))
-      // R207b: โหลดจบแล้วเท่านั้นค่อยอนุญาตให้วาดภาพนิ่ง (ไม่มี static-then-swap)
       setOverrideSettled(true)
     })
     return () => { active = false }
   }, [currentPoseIndex, storeClosed])
 
   // R206: admin บันทึก override ใหม่ → mascot ลอยที่แสดงอยู่เปลี่ยนทันที (ไม่ต้อง deploy)
-  useEffect(() => {
-    let active = true
-    const onChanged = () => {
-      void loadMascotOverrides(true).then(() => {
-        if (!active) return
-        const pool = floatingPosePool(storeClosed, MASCOT_POSES)
-        const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
-        setOverrideUrl(getOverrideUrl(p))
-        setOverrideSettled(true)
-      })
-    }
-    window.addEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
-    return () => {
-      active = false
-      window.removeEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
-    }
-  }, [currentPoseIndex, storeClosed])
+    // R123: reset overrideSettled ก่อนโหลดใหม่ (กันแฟลชรูปเก่า)
+    useEffect(() => {
+      let active = true
+      const onChanged = () => {
+        setOverrideSettled(false)
+        void loadMascotOverrides(true).then(() => {
+          if (!active) return
+          const pool = floatingPosePool(storeClosed, MASCOT_POSES)
+          const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
+          setOverrideUrl(getOverrideUrl(p))
+          setOverrideSettled(true)
+        })
+      }
+      window.addEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
+      return () => {
+        active = false
+        window.removeEventListener(MASCOT_OVERRIDES_CHANGED_EVENT, onChanged)
+      }
+    }, [currentPoseIndex, storeClosed])
 
   // Cycle to next pose on each tap/interaction (ภายในชุดท่าที่อนุญาตเท่านั้น)
   const cyclePose = useCallback(() => {
