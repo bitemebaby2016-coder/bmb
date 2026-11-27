@@ -131,7 +131,7 @@ export function ReviewCarouselSection({ reviews, verifiedReviews, products, onRe
       {/* R100 (แก้ปุ่มตกนอกกรอบจอแคบ): h2 หดได้ (min-w-0) + ป้าย/โลโก้ไม่บีบ (shrink-0) +
           ปุ่ม "ดูทั้งหมด" เป็นลิงก์ /reviews (shrink-0 ไม่ตกแถวเสมอ) */}
       <div className="flex items-center justify-between gap-2 mb-2">
-        <h2 id="home-reviews-heading" className="min-w-0 text-xl font-display font-bold text-brand-accent flex items-center gap-2">
+        <h2 id="home-reviews-heading" className="relative min-w-0 text-xl font-display font-bold text-brand-accent flex items-center gap-2 pr-10">
           {/* R50 (Owner 2026-11-01): ยุบรวม + ชื่อใหม่ = รีวิวจริงจากลูกค้า */}
           <span className="truncate">📸 รีวิวจริงจากลูกค้า</span>
             <MascotBadge pose="reviewing" size="sm" alt="น้อง Bite อ่านรีวิวจริง" className="section-float-mascot shrink-0" />

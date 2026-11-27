@@ -7,7 +7,16 @@
 
 ---
 
-## R119 — 2026-11-26 — PRODUCTION BACKUP GATE + MIGRATION 219–228+233 APPLIED + LEDGER REPAIR + RULE 18
+## R120 — 2026-11-27 — SECTION-FLOAT-MASCOT: POSITION:ABSOLUTE + FLOAT AMPLITUDE FIX (มาสคอตลอยพ้นออกจากเฟรมหัวข้อ)
+
+- **Root Cause:** `.section-float-mascot` เป็น `display: inline-block` ใน normal flow ภายในกล่องหัวข้อ `<h2>/<h3 class="flex items-center">` — `animation: float` (`translateY(-10px)`) แกว่งแค่ในบรรทัดหัวข้อ (line-box) → ตอนลอยขึ้นถึงจุดสูงสุดส่วนบนของ badge ชนขอบหัวข้อแล้วถูกตัด ("ขาด" ตอนบน) — มันไม่สามารถ "ลอยออกนอกเฟรม" ได้เพราะถูกกักอยู่ในกล่องหัวข้อ
+- **Fix (2 ไฟล์):**
+  1. `src/index.css` — `.section-float-mascot`: เพิ่ม `position: absolute; right: 0; top: 50%; transform: translateY(-50%)` → badge ออกจาก normal flow ไม่ถูกจำกัดโดย line-box ของหัวข้อ; `@keyframes float` amplitude `-10px → -22px` ให้เห็นการลอยชัดเจนพ้นขอบหัวข้อ; ลบ duplicate `@keyframes float` (บรรทัด 358)
+  2. **8 ไฟล์ heading containers** — เพิ่ม `relative` + `pr-10` (กันข้อความชน badge): `HomePage.tsx` (3 จุด: Popular/SameDay/PreOrder) · `CategorySections.tsx` · `MenuPage.tsx` · `ReviewPage.tsx` (2 จุด) · `PromotionStrip.tsx` · `VerifiedReviewsSection.tsx` · `ReviewCarouselSection.tsx`
+- **Gates:** tsc 0 · lint OK · vitest 259 files/3,029 tests PASS · build PASS (PWA v1.3.0)
+- **Test:** LIVE_TEST_PENDING (Owner visual test on production)
+
+---
 
 - **Backup gate:** no restorable backup existed (PITR off, backups=[]); created `supabase db dump --linked` → `D:\A PROJECT\backups\backup_pre233_2026-11-26.sql` (708,421 B · SHA-256 36209070…FF736); restore-tested on Docker postgres:16 (77 public tables).
 - **Apply:** Owner `db push --include-all` created schema 219–228+233 (verified via fresh remote dump). **Ledger drift** (schema applied, `schema_migrations` blank) → `supabase migration repair --status applied 219 220 221 222 223 224 225 226 227 228 233` → `migration list` = 001–233 all applied, no gaps/dups.

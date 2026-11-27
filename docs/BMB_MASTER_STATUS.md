@@ -5,6 +5,11 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R120 2026-11-27 (SECTION-FLOAT-MASCOT POSITION:ABSOLUTE + FLOAT AMPLITUDE FIX)**
+- **Root Cause:** `.section-float-mascot` อยู่ใน normal flow ของกล่องหัวข้อ → float translateY(-10px) แกว่งในบรรทัดหัวข้อเท่านั้น → ส่วนบนของ badge ชนขอบหัวข้อแล้วถูกตัด ไม่สามารถ "ลอยออกนอกเฟรม" ได้
+- **Fix:** index.css — `.section-float-mascot` เป็น `position: absolute; right: 0; top: 50%` (ออกจาก normal flow) + `@keyframes float` amplitude -10px→-22px + ลบ duplicate keyframes; 8 heading containers เพิ่ม `relative` + `pr-10`
+- **Gates:** tsc 0 · lint OK · vitest 259 files/3,029 tests PASS · build PASS · LIVE_TEST_PENDING (Owner visual)
+
 **SESSION 2026-11-26 (PRODUCTION BACKUP GATE PASSED + MIGRATION 219–228+233 APPLIED — ledger repaired; 001–233 all applied)**
 - **Existing backup (Management API, read-only):** `pitr_enabled=false`, `backups=[]`, `physical_backup_data={}` → **no restorable backup existed** before this session. On-demand API backup = 404 (not supported).
 - **Backup created:** `supabase db dump --linked` (login role, no DB password) → `D:\A PROJECT\backups\backup_pre233_2026-11-26.sql` (708,421 B · SHA-256 `36209070…FF736` · 75 tables + data · pre-219 state confirmed).
