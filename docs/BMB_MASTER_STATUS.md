@@ -5,6 +5,15 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R129 2026-11-27 (DEPLOY EF image-gen — แก้ "สร้างไม่สำเร็จ: ERR_INVALID_KIND" บน production + เทสครบ + ledger ตรง prod)**
+- **Root Cause:** deploy drift — commit `ee660ea` (2026-11-27 17:18) เพิ่ม kind `studio` ทั้ง frontend (ตัวเลือก "ภาพเมนูอาหาร (Studio)") และ EF `image-gen` (+3 บรรทัด) แต่ frontend ขึ้น production อัตโนมัติผ่าน Cloudflare Pages ส่วน Edge Function ต้อง deploy มือ (CI = Test+Lint+Build เท่านั้น) → frontend ใหม่ส่ง `kind:'studio'` เข้า EF เก่า (3 หมวด) = 400 `ERR_INVALID_KIND` ทันที
+- **Deploy:** `supabase functions deploy image-gen` exit=0 (evidence `e2e/_r129_deploy_imagegen.log` · ไม่แตะ secret ใด ๆ — `IMAGE_GEN_MODELS` คงเดิม) · **PUSHED (`ab388db`)**
+- **Verify (evidence `e2e/_r129_imagegen_probe.json`):** probe ก่อน deploy = studio→`ERR_INVALID_KIND` (OLD_STILL_DEPLOYED · promo→`ERR_MISSING_SUBJECT` sanity · หมวดปลอม→`ERR_INVALID_KIND` negative control) · หลัง deploy = **NEW_DEPLOYED ALL_PASS** (studio ผ่าน kind แล้วโดน subject ว่างที่ตั้งใจ — 0 cost) · **smoke จริงครบโซ่** (`e2e/_r129_studio_smoke.json`): เจนภาพจริง kind=studio → 200 · โมเดล `qwen/qwen-image-2.1-pro [images-api]` (ลำดับ R61 ยังถูก) · อัปโหลดเข้า `ai-generated/studio/` ถูกอัลบั้ม · ไฟล์ทดสอบลบทิ้งแล้ว (cleanup verified)
+- **Tests (gates 4/4):** lint 0 · vitest **263 files/3,050 tests** 0 fail · tsc+build 0 (CSS warning theater var = ของเดิม ไม่ blocker)
+- **Migration Ledger = MATCH:** local 233 ไฟล์ (001–233) ⟷ remote `schema_migrations` 233 เวอร์ชัน · localOnly=[] remoteOnly=[] — ไม่ต้อง repair (evidence `e2e/_r129_migration_ledger.json` · ยืนยันซ้ำตรงกับบันทึก "ledger repaired 001–233" เดิม)
+- **Scripts (reuse ได้):** `e2e/_r129DeployImageGen.cjs` (deploy+secrets read-only) · `_r129ImageGenKindProbe.cjs` (version probe 0 cost) · `_r129ImageGenStudioSmoke.cjs` (E2E+cleanup) · `_r129MigrationLedger.cjs`
+- **LIVE_TEST_PENDING (Owner):** เปิด `/admin/marketing` → เลือกหมวด "ภาพเมนูอาหาร (Studio)" → กดสร้างภาพ → ต้องได้ ✅ (หมายเหตุ: รูปที่อัปโหลดผ่าน 📁 แนบเข้าชุดโพสต์เองตามเดิม · รูปที่เจนจาก AI Studio ยังต้องกด "ใช้" จากอัลบั้มตามกติกา R55 — ถ้าจะให้แนบอัตโนมัติ = เปลี่ยนกติกา ต้องได้การอนุมัติ Owner ก่อน)
+
 **R128 2026-11-27 (THEATER MODE BADGES — ประเภท + ปฏิทิน + ยังไม่ลงปฏิทิน)**
 - **Root Cause:** ของแอดมินเลือกได้ปฏิทิน/pill ไม่ขึ้นเพราะ FoodTheater ป้อน `scheduledDate=undefined` ตลอด + synthetic product ไม่สืบทอด `available_preorder/available_same_day/is_preorder`
 - **Fix:** FoodTheater resolve เมนูจริงจาก `product_id` สืบทอดสิทธิ์โหมด + `_realProduct` ป้อน `schedule[real.id]` · TheaterCards helper `ModeCornerBadge` มุมเดิมทั้งสองการ์ด (ปฏิทิน / "📅 ยังไม่ลงปฏิทิน" / "⚡ ส่งวันนี้" ตาม `deriveOrderMode`) · เทสใหม่ `r128TheaterModeBadges.test.ts` (7 tests)

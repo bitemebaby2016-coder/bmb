@@ -7,6 +7,17 @@
 
 ---
 
+## R129 — 2026-11-27 — DEPLOY EF image-gen (4 kinds incl. studio): แก้ "สร้างไม่สำเร็จ: ERR_INVALID_KIND" บน production + เทสครบ + migration ledger ตรง prod
+
+- **Root Cause (deploy drift):** commit `ee660ea` เพิ่ม kind `studio` พร้อมกันทั้ง frontend + EF แต่ช่องทาง deploy ต่างกัน — frontend (Cloudflare Pages auto จาก main) ขึ้นแล้ว ส่วน Edge Function ต้อง deploy มือ (CI ไม่มี job deploy functions) → production EF ยังเป็นรุ่น 3 หมวด (menu/promo/festival) ขณะ frontend ส่ง `kind:'studio'` = 400 `ERR_INVALID_KIND` (`index.ts:122`) — พิสูจน์ด้วย live probe ก่อน deploy: studio→`ERR_INVALID_KIND` ส่วน promo→`ERR_MISSING_SUBJECT` (sanity ผ่าน = ระบบปกติเฉพาะหมวดใหม่)
+- **Deploy:** `supabase functions deploy image-gen` exit=0 — **ไม่แตะ secret ใด ๆ** (IMAGE_GEN_MODELS/IMAGE_GEN_MODEL คงค่าเดิม · สคริปต์ r55 เก่าที่ตั้งลำดับโมเดลย้อนห้ามใช้)
+- **Verify 3 ชั้น:** ① version probe หลัง deploy = `NEW_DEPLOYED` (studio ผ่าน kind+style แล้วโดน `ERR_MISSING_SUBJECT` จาก subject ว่างที่ตั้งใจ = 0 cost ไม่เปลืองเครดิต) ② smoke จริงครบโซ่ = เจนภาพ studio สำเร็จ 200 · โมเดลจริง `qwen/qwen-image-2.1-pro [images-api]` · อัปโหลด `bmb-images/ai-generated/studio/` ถูกอัลบั้ม · **ไฟล์ทดสอบลบทิ้งทันที** (HEAD ยืนยัน 404) ③ negative control หมวดปลอมถูกปฏิเสธเหมือนเดิม
+- **Tests (gates 4/4):** lint 0 (brandNameGuard OK) · vitest **263 files/3,050 tests** 0 fail · tsc+build 0 · **Migration ledger = MATCH** local 233 ⟷ remote 233 (001–233 · localOnly/remoteOnly = [] · ไม่ต้อง repair) · PUSHED (`ab388db`)
+- **New files:** `e2e/_r129DeployImageGen.cjs` · `e2e/_r129ImageGenKindProbe.cjs` · `e2e/_r129ImageGenStudioSmoke.cjs` · `e2e/_r129MigrationLedger.cjs` + evidence `_r129_deploy_imagegen.log` · `_r129_imagegen_probe.json` · `_r129_studio_smoke.json` · `_r129_migration_ledger.json`
+- **LIVE_TEST_PENDING (Owner):** `/admin/marketing` → หมวด "ภาพเมนูอาหาร (Studio)" → สร้างภาพ → ต้องสำเร็จ (ปิดอาการในภาพหน้าจอ 22:48 น.)
+
+---
+
 ## R128 — 2026-11-27 — THEATER MODE BADGES: ประเภทเมนู + ปฏิทินมุมรูป + "ยังไม่ลงปฏิทิน" (ของแอดมินก็ขึ้นครบ)
 
 - **Root Cause:** การ์ดเธียเตอร์มีของพร้อมใช้อยู่แล้ว (R48 `ScheduleDateBadge` มุมขวาบน + pill "📅 สั่งล่วงหน้า") แต่ **ไม่ทำงานกับของแอดมินเลือก** เพราะ (1) `FoodTheater` ป้อน `scheduledDate = undefined` ตลอด (`_theaterItem ? undefined : schedule[p.id]`) และ (2) synthetic product ไม่สืบทอด `available_preorder/available_same_day/is_preorder` → pill ประเภทไม่ขึ้น · logic "ยังไม่ลงปฏิทิน" มีแค่ใน toast ตอน add() ไม่ได้แสดงบนการ์ด
