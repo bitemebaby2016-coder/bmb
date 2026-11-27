@@ -1174,7 +1174,7 @@ html[data-theme='graphite'] .review-album-close:hover {
    float amplitude -4px = barely perceptible rise, never clips top of line. */
 .section-float-mascot {
   position: absolute;
-  right: 2.5rem;
+  right: 0;
   top: 10%;
   transform: translateY(-50%);
   width: 34px;

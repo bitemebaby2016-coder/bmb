@@ -188,7 +188,7 @@ export function ReviewPage() {
       <section className='mb-10' data-testid='review-real-section'>
         {/* R89 (Owner ~23:40 น.): สองหัวข้อรีวิวซ้ำ = หมวดเดียวกัน → ยุบเป็นหัวข้อเดียว
             · ใหม่สุดขึ้นก่อน (feed = created_at desc) · การ์ดรีวิวมีโลโก้+ดาว แบบการ์ด Grab/FB */}
-        <h2 className='relative text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2 min-w-0'>
+        <h2 className='relative text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2 min-w-0 pr-10'>
           <span className='truncate'>📸 รีวิวจริงจากลูกค้า</span>
           <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite การันตีรีวิวจริง" className="section-float-mascot shrink-0" />
         </h2>
@@ -224,7 +224,7 @@ export function ReviewPage() {
       {/* R89: เซคชันซ้ำ ("รีวิวจากลูกค้าที่สั่งซื้อจริง" + "📸 รีวิวจริงจากลูกค้า") ถูกยุบเข้าหัวข้อเดียว
           "📸 รีวิวจริงจากลูกค้า" ด้านบนแล้ว (Owner: "มันคือหมวดเดียวกัน") — รูปจริงอยู่ใน Admin Portfolio ด้านล่าง */}
       <section className='mb-10'>
-        <h2 className='relative text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-3 min-w-0'>
+        <h2 className='relative text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-3 min-w-0 pr-10'>
           <span className='truncate'>Admin Portfolio</span>
           <MascotBadge pose="award" size="sm" alt="น้อง Bite ผลงาน" className="section-float-mascot shrink-0" />
         </h2>

@@ -338,7 +338,7 @@ export function MenuPage() {
       {buildHeadingGroups(ordered, categories).map(({ category, products: catProducts }, gi) => (
         <section key={category.id} className="mb-8" aria-labelledby={`catsec-${gi}`}>
           <div className="mb-6">
-<h3 id={`catsec-${gi}`} className="relative font-semibold text-brand-accent flex items-center gap-2 mb-2 min-w-0">{category.icon ? `${category.icon} ` : ''}<span className="truncate">{category.name}</span>
+<h3 id={`catsec-${gi}`} className="relative font-semibold text-brand-accent flex items-center gap-2 mb-2 min-w-0 pr-10">{category.icon ? `${category.icon} ` : ''}<span className="truncate">{category.name}</span>
             <MascotBadge pose="menu" size="sm" alt={`น้อง Bite หมวด ${category.name}`} className="section-float-mascot shrink-0" />
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
