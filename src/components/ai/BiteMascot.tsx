@@ -314,7 +314,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
         // customer drags it; otherwise rests above the BottomNav / cart.
         style={pos
           ? { left: pos.x, top: pos.y }
-          : { bottom: cartCount > 0 ? 152 : 84 }}
+          : { bottom: cartCount > 0 ? 72 : 4 }}
       >
         <div className="relative w-16 animate-float">
           {/* Owner 2026-10-17: bubble ต้องไม่ทับฟอร์มหน้า checkout และปิดได้ด้วยการแตะ
