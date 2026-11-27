@@ -168,7 +168,7 @@ export function CategorySections({
         <div className="flex items-center justify-between mb-2">
           <h3
             id={headingId}
-            className={`${grouped ? 'text-lg' : 'text-xl'} relative font-display font-bold text-brand-accent flex items-center gap-2 min-w-0 pr-10`}
+            className={`${grouped ? 'text-lg' : 'text-xl'} relative font-display font-bold text-brand-accent flex items-center gap-2 min-w-0`}
           >
             <span className="truncate">{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>
             <MascotBadge

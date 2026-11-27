@@ -1169,12 +1169,13 @@ html[data-theme='graphite'] .review-album-close:hover {
 }
 
 /* Floating mascot accent on section headings (drinks / snacks / etc.)
-   R120c: position:absolute + container:relative, anchored center-right of heading.
+   R120e: position:absolute + container:relative, anchored top-right of heading.
+   right:2.5rem = align with pr-10 padding so badge stays inside heading row.
    float amplitude -4px = barely perceptible rise, never clips top of line. */
 .section-float-mascot {
   position: absolute;
-  right: 0;
-  top: 25%;
+  right: 2.5rem;
+  top: 10%;
   transform: translateY(-50%);
   width: 34px;
   height: 34px;
