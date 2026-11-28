@@ -136,9 +136,11 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
           name: item.title,
           description: item.theater_caption || item.description || '',
           image_url: item.image_url,
-          price: 0,
-          category_id: '',
-          is_available: true,
+          // R131 (Owner 2026-11-28): ราคา/หมวด/สถานะ = ของจริงจากเมนูที่ผูก (ตัด hack price:0 ที่โชว์ ฿0)
+          //   ถ้าไม่ผูก product_id (portfolio เล่นๆ) = ยังไม่พร้อมขาย (is_available=false) ไม่หลอกให้เห็นราคา 0
+          price: real?.price ?? 0,
+          category_id: real?.category_id ?? '',
+          is_available: real?.is_available ?? false,
           available_preorder: real?.available_preorder,
           available_same_day: real?.available_same_day,
           is_preorder: real?.is_preorder,

@@ -7,6 +7,15 @@
 
 ---
 
+## R131 — 2026-11-28 — Theater: ราคาจริง + ปุ่มพรีออเดอร์/ปฏิทินตรงรูปแบบ HomeProductCard (แก้ตามผลทดสอบ R138)
+
+- **ปัญหา (Owner รายงานจากหน้า /shop):** เมนูที่แอดมินเลือกขึ้นโชว์เธียเตอร์แสดงราคา **฿0** · รูปแบบปุ่มไม่ตรงกับพรีออเดอร์ที่มีอยู่ · เมนูที่ยังไม่ลงปฏิทินควรเป็น **ปุ่มเทา "ยังไม่ลงปฏิทินรอบถัดไป"** · ลงปฏิทินแล้วจึงกดได้ · เซมเดย์ต้องเหมือนเซกชันเดิม · ต้องการ reuse ไม่ใช่การ์ดใหม่ซ้อน
+- **Root cause:** `FoodTheater.tsx` บังคับ `price: 0` / `category_id: ''` / `is_available: true` ใน picks mapping (hack) + การ์ดเธียเตอร์ (`TheaterCards.tsx`) ใช้ `isPreOrderOnly` ไม่ตรวจปฏิทิน → ปุ่มพรีออเดอร์ไม่ลงปฏิทินยังเป็นปุ่มสด (กดแล้ว toast) ไม่ใช่ปุ่มเทา
+- **แก้:** ① `FoodTheater.tsx` picks ใช้ `real?.price ?? 0` · `real?.category_id` · `real?.is_available ?? false` (ไม่ผูก product = ยังไม่พร้อมขาย ไม่หลอก ฿0) ② `TheaterCards.tsx` ทั้งสองใบใช้ `mode === 'PRE_ORDER'` + `preOrderReady = preOrderCta && !!scheduledDate` + `disabledCta` + `btn-locked` + ป้าย "📅 ยังไม่ลงปฏิทินรอบถัดไป" ตรง `HomeProductCard` (พรีออเดอร์ไม่ลงปฏิทิน = ปุ่มเทากดไม่ได้ · มีปฏิทิน = "จองล่วงหน้า" · เซมเดย์ = "เพิ่มลงตะกร้า")
+- **ไฟล์:** `src/components/theater/FoodTheater.tsx` · `src/components/theater/TheaterCards.tsx` · เทสใหม่ `src/__tests__/r131TheaterScheduleGate.test.ts` (9) · อัปเดต `r44UiTheater.test.ts` (isPreOrderOnly → mode === 'PRE_ORDER')
+- **ประตู (gates 4/4):** `tsc --noEmit` 0 · `npm run lint` OK · `vitest run` **266 ไฟล์/3,082 tests PASS** · `npm run build` PASS
+- **ไม่มี migration / ไม่ deploy EF** (frontend เท่านั้น) · **LIVE_TEST_PENDING (Owner):** เปิด `/shop` ดูโชว์เธียเตอร์ — เมนูแอดมินโชว์ราคาจริง + พรีออเดอร์ไม่ลงปฏิทิน = ปุ่มเทา + ลงปฏิทินแล้วกดได้
+
 ## R138 — 2026-11-28 — IMG Studio Pipeline: System Prompt + JSON Payload + ลบพื้นหลัง (BEN2) + alpha WebP + กฎลายน้ำ
 
 - **เป้าหมาย:** อัปเกรดระบบเจนภาพเมนูอาหาร (Studio) ตาม spec ใหม่ โดยต่อยอดโค้ดเดิม (ไม่สร้างระบบซ้ำ) — `image-gen` EF + `aiImageStudio.ts` + UI เดิม

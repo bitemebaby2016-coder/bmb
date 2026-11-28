@@ -5,6 +5,12 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R131 2026-11-28 (Theater — ราคาจริง + ปุ่มพรีออเดอร์/ปฏิทินตรงรูปแบบ HomeProductCard)**
+- **ปัญหา (Owner จากหน้า /shop):** เมนูแอดมินบนโชว์เธียเตอร์ราคา ฿0 · ปุ่มไม่ตรงพรีออเดอร์เดิม · ยังไม่ลงปฏิทินควรเป็นปุ่มเทา "ยังไม่ลงปฏิทินรอบถัดไป" · ลงปฏิทินแล้วจึงกดได้ · เซมเดย์เหมือนเซกชันเดิม
+- **แก้:** `FoodTheater.tsx` picks ใช้ `real?.price ?? 0`/`real?.category_id`/`real?.is_available ?? false` (ตัด hack price:0) · `TheaterCards.tsx` ทั้งสองใบใช้ `mode==='PRE_ORDER'` + `preOrderReady`(ต้องมี scheduledDate) + `disabledCta` + `btn-locked` + ป้าย "ยังไม่ลงปฏิทินรอบถัดไป" ตรง `HomeProductCard`
+- **Tests (gates 4/4):** tsc 0 · lint OK · vitest **266 ไฟล์/3,082 tests** 0 fail · build OK · เทสใหม่ `r131TheaterScheduleGate.test.ts` (9) · อัปเดต `r44UiTheater.test.ts`
+- **ไม่มี migration / ไม่ deploy EF** (frontend) · **LIVE_TEST_PENDING (Owner):** เปิด `/shop` ดูโชว์เธียเตอร์ — ราคาจริง + ปุ่มเทาเมื่อยังไม่ลงปฏิทิน
+
 **R138 2026-11-28 (IMG Studio Pipeline — System Prompt + JSON Payload + ลบพื้นหลัง BEN2 + alpha WebP + กฎลายน้ำ)**
 - **ปัญหา:** ระบบเจนภาพเมนู (Studio) ยังไม่มี system prompt มาตรฐาน (Geometry Lock/พื้นขาว #FFFFFF/45°/100mm macro) · ไม่มี JSON payload (menu_name/category/container_type/texture_keywords) · ไม่มีลบพื้นหลัง/trim/alpha-webp · presets ตีความเป็น "ร้านของหวาน" · mascot=none ยังมีลายน้ำ
 - **แก้ (ต่อยอดโค้ดเดิม ไม่แตะ migration):** `image-gen/index.ts` เพิ่ม `STUDIO_SYSTEM_RULES`+`LOGO_RULE` (role:system) · รับ JSON payload · BEN2 removeBackground (primary) fallback `manual` (TODO secret `BEN2_ENDPOINT`/`BEN2_API_KEY`) · `aiImageStudio.ts` เพิ่ม `buildStudioPayload`/`trimTransparent`/`resizeAndPad`/`toAlphaWebp`/`finalizeStudioImage`/`removeGeneratedByUrl` + `applyBrandWatermark` none=ไม่มีลายน้ำ · UI เพิ่มกล่องเสริมเฉพาะ studio + สถานะขั้นตอน (AdminMarketing + ContentTab)

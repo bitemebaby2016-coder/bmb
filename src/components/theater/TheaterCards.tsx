@@ -19,7 +19,8 @@ import { ScheduleDateBadge } from '@/components/home/ScheduleDateBadge'
 
 // R44 (Owner 2026-11-01): เมนูที่เอามาแสดงต้อง "ลิงก์จริง" ไปหน้าเมนู +
 // ปุ่มตามโหมดขายจริง — พรีออเดอร์ = "จองล่วงหน้า" · เซมเดย์ = "เพิ่มลงตะกร้า"
-const isPreOrderOnly = (p: Product) => !!(p.available_preorder && !p.available_same_day)
+// R131 (Owner 2026-11-28): พรีออเดอร์ที่ยังไม่ลงปฏิทิน = ปุ่มเทา (btn-locked) "ยังไม่ลงปฏิทินรอบถัดไป"
+//   ตรงรูปแบบกับ HomeProductCard (preOrderReady/disabledCta) — ไม่ใช่ปุ่มสดที่กดแล้ว toast
 
 // R128 (Owner 2026-11-27): มุมรูปขวาบนของการ์ดเธียเตอร์ — รูปแบบเดียวกันทุกการ์ด/ทุกโหมด:
 //   มีวันจัดส่งจริง → ปฏิทินลอยมาตรฐาน (ScheduleDateBadge เดียวกับหน้า /menu)
@@ -82,8 +83,16 @@ interface RecommendationCardProps {
 
 export function RecommendationCard({ product, reason, scheduledDate, onAdd }: RecommendationCardProps) {
   const denied = !product.is_available || !!product.archived
-  const preorderOnly = isPreOrderOnly(product)
   const mode = deriveOrderMode(product)
+  // R131: ตรงรูปแบบ HomeProductCard — พรีออเดอร์ต้องมีวันปฏิทินจริงจึงกดได้
+  const preOrderCta = mode === 'PRE_ORDER'
+  const preOrderReady = preOrderCta && !!scheduledDate
+  const disabledCta = denied || (preOrderCta && !preOrderReady)
+  const ctaLabel = denied
+    ? 'หมดแล้ว'
+    : preOrderCta
+      ? (preOrderReady ? '📅 จองล่วงหน้า' : '📅 ยังไม่ลงปฏิทินรอบถัดไป')
+      : '🛒 เพิ่มลงตะกร้า'
   return (
     <article data-testid="theater-rec-card" className="theater-rec-card">
       <div className="theater-rec-media" style={{ position: 'relative' }}>
@@ -109,12 +118,12 @@ export function RecommendationCard({ product, reason, scheduledDate, onAdd }: Re
         <ReasonChip reason={reason} />
         <button
           type="button"
-          disabled={denied}
+          disabled={disabledCta}
           onClick={() => onAdd(product)}
-          className="btn btn-primary btn-sm w-full disabled:opacity-50"
+          className={`btn btn-sm w-full ${disabledCta ? 'btn-locked' : 'btn-primary'}`}
           data-testid="theater-rec-add"
         >
-          {denied ? 'หมดแล้ว' : preorderOnly ? '📅 จองล่วงหน้า' : '🛒 เพิ่ม'}
+          {ctaLabel}
         </button>
       </div>
     </article>
@@ -138,8 +147,16 @@ interface TheaterHeroCardProps {
 export function TheaterHeroCard({ product, reason, scheduledDate, onAdd, onCustomize }: TheaterHeroCardProps) {
   const [qty, setQty] = useState(1)
   const denied = !product.is_available || !!product.archived
-  const preorderOnly = !!(product.available_preorder && !product.available_same_day)
   const mode = deriveOrderMode(product)
+  // R131: ตรงรูปแบบ HomeProductCard — พรีออเดอร์ต้องมีวันปฏิทินจริงจึงกดได้ (ถ้าไม่มี = ปุ่มเทา)
+  const preOrderCta = mode === 'PRE_ORDER'
+  const preOrderReady = preOrderCta && !!scheduledDate
+  const disabledCta = denied || (preOrderCta && !preOrderReady)
+  const ctaLabel = denied
+    ? 'หมดแล้ว'
+    : preOrderCta
+      ? (preOrderReady ? `📅 จองล่วงหน้า${qty > 1 ? ` ${qty}` : ''}` : '📅 ยังไม่ลงปฏิทินรอบถัดไป')
+      : `🛒 เพิ่ม ${qty > 1 ? `${qty} ` : ''}ลงตะกร้า`
 
   return (
     <article className="theater-hero" data-testid="theater-hero">
@@ -162,7 +179,7 @@ export function TheaterHeroCard({ product, reason, scheduledDate, onAdd, onCusto
               หมดแล้ว
             </span>
           ) : null}
-          {preorderOnly && (
+          {preOrderCta && (
             <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-amber-500/25 border border-amber-400/50 text-amber-100">
               📅 สั่งล่วงหน้า
             </span>
@@ -213,17 +230,13 @@ export function TheaterHeroCard({ product, reason, scheduledDate, onAdd, onCusto
           </div>
           <button
             type="button"
-            disabled={denied}
+            disabled={disabledCta}
             onClick={() => onAdd(product, qty)}
-            className="btn btn-primary disabled:opacity-50"
+            className={`btn ${disabledCta ? 'btn-locked' : 'btn-primary'}`}
             data-testid="theater-hero-add"
           >
-            {/* R44: ปุ่มตามโหมด — พรีออเดอร์ = "จองล่วงหน้า" · เซมเดย์ = "เพิ่มลงตะกร้า" */}
-            {denied
-              ? 'หมดแล้ว'
-              : preorderOnly
-                ? `📅 จองล่วงหน้า${qty > 1 ? ` ${qty}` : ''}`
-                : `🛒 เพิ่ม ${qty > 1 ? `${qty} ` : ''}ลงตะกร้า`}
+            {/* R44/R131: ปุ่มตามโหมด — พรีออเดอร์ไม่ลงปฏิทิน = ปุ่มเทา · เซมเดย์ = เพิ่มลงตะกร้า */}
+            {ctaLabel}
           </button>
           <button
             type="button"

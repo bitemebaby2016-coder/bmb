@@ -20,7 +20,8 @@ describe('R44 — Theater: ลิงก์จริง + ปุ่มตาม�
     expect((theaterCardsSrc.match(/to="\/menu"/g) || []).length).toBeGreaterThanOrEqual(4)
   })
   it('ปุ่มแยกโหมด: พรีออเดอร์ = "📅 จองล่วงหน้า" · เซมเดย์ = "เพิ่มลงตะกร้า" คงเดิม', () => {
-    expect(theaterCardsSrc).toContain('isPreOrderOnly')
+    // R131: ใช้ mode === 'PRE_ORDER' (deriveOrderMode) แทน isPreOrderOnly เดิม — ตรงกับ HomeProductCard
+    expect(theaterCardsSrc).toContain("mode === 'PRE_ORDER'")
     expect(theaterCardsSrc).toContain("'📅 จองล่วงหน้า'")
     expect(theaterCardsSrc).toContain('🛒 เพิ่ม')
     expect(theaterCardsSrc).toContain('ลงตะกร้า')
