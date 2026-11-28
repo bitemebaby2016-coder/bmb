@@ -51,19 +51,19 @@ const KIND_PRESETS: Record<string, (subject: string, note: string) => string> = 
   // R55 (Owner 2026-11-02): "ต้องเจนเมนูอาหารได้แม้ไม่มีตัวอย่าง — ใช้ข้อมูลจากรายละเอียด
   //   เนื้อหาเข้าร่วมสร้างด้วย" → ไม่ต้องมีภาพตัวอย่าง สร้างจาก subject+note ได้ทันที
   menu: (subject, note) =>
-    `ภาพเมนูอาหาร "${subject}" สำหรับร้านของหวาน Bite Me Baby — ภาพเมนูน่ากิน มุม 45 องศา แสงธรรมชาตินุ่ม พื้นหลังสะอาด จาน/ชามเด่นชัด ไม่บิดงอ ไม่เบี้ยว สัดส่วนจานสมจริง อัตราส่วนภาพ 4:3 เต็มกรอบ ไม่เว้นขอบเยอะ ไม่ต้องมีภาพตัวอย่างก็สร้างได้ — ใช้รายละเอียดต่อไปนี้เป็นข้อมูลหลักในการรังสรรค์ภาพ: ชื่อเมนู "${subject}"${note ? ` · รายละเอียด/เนื้อหาที่ต้องใช้ประกอบ: ${note}` : ''} · ถ้ามีภาพเมนูตัวอย่างแนบมาให้ใช้เป็นต้นแบบไดคัท/จัดวางให้เห็นเมนูชัดเจนตรงกับต้นแบบ`,
+    `ภาพเมนูอาหาร "${subject}" สำหรับร้าน Bite Me Baby — ภาพเมนูน่ากิน มุม 45 องศา แสงธรรมชาตินุ่ม พื้นหลังสะอาด จาน/ชามเด่นชัด ไม่บิดงอ ไม่เบี้ยว สัดส่วนจานสมจริง อัตราส่วนภาพ 4:3 เต็มกรอบ ไม่เว้นขอบเยอะ ไม่ต้องมีภาพตัวอย่างก็สร้างได้ — ใช้รายละเอียดต่อไปนี้เป็นข้อมูลหลักในการรังสรรค์ภาพ: ชื่อเมนู "${subject}"${note ? ` · รายละเอียด/เนื้อหาที่ต้องใช้ประกอบ: ${note}` : ''} · ถ้ามีภาพเมนูตัวอย่างแนบมาให้ใช้เป็นต้นแบบไดคัท/จัดวางให้เห็นเมนูชัดเจนตรงกับต้นแบบ`,
   promo: (subject, note) => {
     const hasDiscountDetail = note && (note.includes('%') || note.includes('ลด') || note.includes('ส่วนลด') || note.includes('coupon') || note.includes('โค้ด') || note.includes('code') || note.includes('discount'));
     const discountInstruction = hasDiscountDetail
       ? ` · ข้อความโปรโมตบนภาพต้องตรงกับรายละเอียดส่วนลดนี้เป๊ะ: ${note}`
       : ' · ห้ามเขียนข้อความลดราคา/เปอร์เซ็นต์/คูปอง/โค้ดส่วนลด ใด ๆ บนภาพ (รอแอดมินระบุใน note ก่อน) — ให้โฟกัสที่ชื่อสินค้า/บรรยากาศ/บรรณานุการเท่านั้น';
-    return `ป้ายโปรโมต "${subject}" สำหรับร้านของหวาน Bite Me Baby — ดีไซน์ดึงดูด สีสดใส จุดเด่นที่ข้อเสนอ${discountInstruction} · ถ้ามีภาพอ้างอิงแนบ ให้ใช้เป็นองค์ประกอบประกอบป้าย`;
+    return `ป้ายโปรโมต "${subject}" สำหรับร้าน Bite Me Baby — ดีไซน์ดึงดูด สีสดใส จุดเด่นที่ข้อเสนอ${discountInstruction} · ถ้ามีภาพอ้างอิงแนบ ให้ใช้เป็นองค์ประกอบประกอบป้าย`;
   },
   festival: (subject, note) =>
-    `ภาพบรรยากาศเทศกาล "${subject}" โทนอบอุ่น สนุก ฉลอง สำหรับโปรโมทร้านของหวานไทย Bite Me Baby — องค์ประกอบเทศกาลชัดเจน${note ? ` · ข้อความโปรโมต/ตัวอักษรบนภาพต้องตรงกับรายละเอียดนี้เป๊ะ: ${note}` : ' · ถ้ามีข้อความบนภาพ ให้เขียนตรงกับหัวข้อที่ให้มา'}${note ? ' · ถ้ามีภาพอ้างอิงแนบ ให้จัดวางเป็นองค์ประกอบร่วม' : ''}`,
+    `ภาพบรรยากาศเทศกาล "${subject}" โทนอบอุ่น สนุก ฉลอง สำหรับโปรโมทร้าน Bite Me Baby — องค์ประกอบเทศกาลชัดเจน${note ? ` · ข้อความโปรโมต/ตัวอักษรบนภาพต้องตรงกับรายละเอียดนี้เป๊ะ: ${note}` : ' · ถ้ามีข้อความบนภาพ ให้เขียนตรงกับหัวข้อที่ให้มา'}${note ? ' · ถ้ามีภาพอ้างอิงแนบ ให้จัดวางเป็นองค์ประกอบร่วม' : ''}`,
   // IMG: ภาพเมนูอาหาร (Studio) — ภาพสวยระดับพรีเมียมสำหรับโพสต์/แคตตาลอก ไม่ผูกกับ Floating Ad
   studio: (subject, note) =>
-    `ภาพเมนูอาหาร "${subject}" สไตล์สตูดิโออาหารพรีเมียม สำหรับร้านของหวาน Bite Me Baby — จัดจานสวย มุม 45 องศา แสงสตูดิโอนุ่ม พื้นหลังสะอาด/โทนพาสเทล รายละเอียดอาหารคมชัด ไม่บิดงอ ไม่เบี้ยว สัดส่วนจานสมจริง อัตราส่วนภาพ 1:1 หรือ 4:3 เต็มกรอบ${note ? ` · ใช้รายละเอียดนี้เป็นข้อมูลหลัก: ${note}` : ''}${note ? ' · ถ้ามีภาพอ้างอิงแนบ ให้จัดวางเป็นองค์ประกอบร่วม' : ''}`,
+    `ภาพเมนูอาหาร "${subject}" สไตล์สตูดิโออาหารพรีเมียม สำหรับร้าน Bite Me Baby — จัดจานสวย มุม 45 องศา แสงสตูดิโอนุ่ม พื้นหลังสะอาด/โทนพาสเทล รายละเอียดอาหารคมชัด ไม่บิดงอ ไม่เบี้ยว สัดส่วนจานสมจริง อัตราส่วนภาพ 1:1 หรือ 4:3 เต็มกรอบ${note ? ` · ใช้รายละเอียดนี้เป็นข้อมูลหลัก: ${note}` : ''}${note ? ' · ถ้ามีภาพอ้างอิงแนบ ให้จัดวางเป็นองค์ประกอบร่วม' : ''}`,
 }
 
 // E6: 3 แนวจากโจทย์เดียวกัน
@@ -71,6 +71,43 @@ const STYLE_MODIFIERS: Record<string, string> = {
   realistic: 'สไตล์ภาพถ่ายสมจริง แสงนุ่ม รายละเอียดสูง สมดุลสีธรรมชาติ',
   illustration: 'สไตล์ภาพประกอบสีน้ำน่ารัก ลายเส้นละมุน พาสเทล',
   poster: 'สไตล์กราฟิกป้ายโฆษณา รูปทรงหนา คอนทราสต์สูง ดูทันสมัย',
+}
+
+// IMG: กฎเหล็กสำหรับทุกการเจน (ห้ามเจนโลโก้เอง + ห้ามตีความเป็นร้านขนมหวาน — ดูจากชื่อเมนู)
+const LOGO_RULE =
+  'ห้ามเจน/วาด/ติดโลโก้ร้านหรือโลโก้ใด ๆ บนภาพ (ระบบจะประกบโลโก้จริงเองภายหลัง) · ' +
+  'ห้ามตีความว่า Bite Me Baby เป็นร้านขนมหวาน — ให้ดูจากชื่อเมนูแล้วสรุปประเภทสินค้าจริง'
+
+// IMG: กฎเหล็กเฉพาะภาพเมนูอาหาร (Studio/Menu) — Geometry Lock / Zero Hallucination / พื้นขาว / สแตนด์ 45°
+const STUDIO_SYSTEM_RULES =
+  'กฎเหล็ก (Geometry Lock / Zero Hallucination): ล็อกมุมกล้องและสัดส่วนตามภาพต้นฉบับ ห้ามเพิ่มสินค้า/พร็อพที่ไม่มีในต้นฉบับ · ' +
+  'พื้นหลังสีขาวล้วน #FFFFFF · แสงสตูดิโอ 45 องศา · 100mm macro look, tack-sharp focus · ห้ามมีพร็อพส่วนเกิน · ' +
+  LOGO_RULE
+
+// IMG: ลบพื้นหลัง (Segmentation) ผ่านบริการภายนอก BEN2 (primary) — ถ้าไม่พร้อม/พัง = fallback ให้แอดมินตัดเอง
+// TODO(owner): ตั้ง secret `BEN2_ENDPOINT` (+ `BEN2_API_KEY` ถ้าต้องใช้ auth) — ถ้าไม่ตั้ง = ข้ามขั้นตอนนี้ (แอดมินตัดเอง)
+const BEN2_ENDPOINT = Deno.env.get('BEN2_ENDPOINT') || ''
+const BEN2_KEY = Deno.env.get('BEN2_API_KEY') || ''
+
+/** เรียก BEN2 ตัดพื้นหลัง — คืน {bytes,mime} โปร่งใส หรือ null (ไม่พร้อม/พัง = ให้แอดมินตัดเอง) */
+async function removeBackgroundBEN2(bytes: Uint8Array, mime: string): Promise<{ bytes: Uint8Array; mime: string } | null> {
+  if (!BEN2_ENDPOINT) return null
+  try {
+    const form = new FormData()
+    form.append('image_file', new Blob([bytes], { type: mime }), 'input')
+    const r = await fetch(BEN2_ENDPOINT, {
+      method: 'POST',
+      headers: BEN2_KEY ? { Authorization: `Bearer ${BEN2_KEY}` } : {},
+      body: form,
+    })
+    if (!r.ok) return null
+    const out = new Uint8Array(await r.arrayBuffer())
+    if (!out.length) return null
+    const outMime = r.headers.get('content-type') || 'image/png'
+    return { bytes: out, mime: outMime }
+  } catch {
+    return null
+  }
 }
 
 // R74-OMNI s7 (2026-11-07 · แก้ ERR_FORBIDDEN ตอนเจนภาพ — Owner "เคยเจนรูปได้ ทำไมเออเร่อ"):
@@ -110,7 +147,10 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   if (!(await isAdmin(jwt))) return json({ error: 'ERR_FORBIDDEN' }, 403)
   if (!OPENROUTER_KEY) return json({ error: 'ERR_IMAGE_GEN_UNCONFIGURED', hint: 'set OPENROUTER_API_KEY secret' }, 503)
 
-  let body: { kind?: string; style?: string; subject?: string; note?: string; reference_image_url?: string }
+  let body: {
+    kind?: string; style?: string; subject?: string; note?: string; reference_image_url?: string;
+    menu_name?: string; category?: string; container_type?: string; texture_keywords?: unknown;
+  }
   try {
     body = await req.json()
   } catch {
@@ -123,7 +163,24 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   if (!STYLE_MODIFIERS[style]) return json({ error: 'ERR_INVALID_STYLE' }, 400)
   if (!subject) return json({ error: 'ERR_MISSING_SUBJECT' }, 400)
 
-  const prompt = KIND_PRESETS[kind](subject, String(body.note || '')) + ' — ' + STYLE_MODIFIERS[style]
+  // IMG: JSON payload มาตรฐาน (menu_name/category/container_type/texture_keywords) — เฉพาะภาพเมนู (studio/menu)
+  const isFood = kind === 'studio' || kind === 'menu'
+  const menuName = String(body.menu_name || '').trim() || subject
+  const payloadBits: string[] = []
+  if (isFood) {
+    const category = String(body.category || '').trim()
+    const container = String(body.container_type || '').trim()
+    const textures = Array.isArray(body.texture_keywords)
+      ? body.texture_keywords.filter((t): t is string => typeof t === 'string' && t.trim().length > 0).slice(0, 6)
+      : []
+    if (category) payloadBits.push(`หมวดอาหาร: ${category}`)
+    if (container) payloadBits.push(`ภาชนะ: ${container}`)
+    if (textures.length) payloadBits.push(`เท็กซ์เจอร์: ${textures.join(', ')}`)
+  }
+  const enrichedNote = [String(body.note || ''), payloadBits.join(' · ')].filter(Boolean).join(' · ')
+  const userPrompt = KIND_PRESETS[kind](menuName, enrichedNote) + ' — ' + STYLE_MODIFIERS[style]
+  // กฎเหล็กแยกเป็น system prompt (เฉพาะภาพเมนู = บังคับ Geometry Lock; ทุกภาพ = ห้ามเจนโลโก้)
+  const systemRules = isFood ? STUDIO_SYSTEM_RULES : LOGO_RULE
   // R39 (Owner): "เอาภาพที่ชี้มาทำร่วมเจนด้วย" — ส่งภาพอ้างอิงเป็น part ที่ 2 ของ message
   // (โมเดลที่รับ image input จะใช้เป็นต้นแบบ · ตัวที่ไม่รับ = HTTP error → วน pass ถัดไปแบบไม่แนบภาพ)
   const refUrl = String(body.reference_image_url || '').trim()
@@ -189,10 +246,10 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
               const j = await r.json().catch(() => null)
               return { r, j }
             }
-            let { r: ir, j: ij } = await callImages({ model, prompt, n: 1, size: '1024x1024' })
+            let { r: ir, j: ij } = await callImages({ model, prompt: `${systemRules} · ${userPrompt}`, n: 1, size: '1024x1024' })
             if (!ir.ok && (ir.status === 400 || ir.status === 422)) {
               attempts.push(`${model}:size_param_unsupported${ir.status}`)
-              ;({ r: ir, j: ij } = await callImages({ model, prompt, n: 1 }))
+              ;({ r: ir, j: ij } = await callImages({ model, prompt: `${systemRules} · ${userPrompt}`, n: 1 }))
             }
             const iu = ir.ok ? pickImage(ij) : ''
             if (iu) { dataUrl = iu; usedModel = `${model} [images-api]`; break outer }
@@ -200,10 +257,10 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
             attempts.push(`${model}:images${ir.status}${imsg ? ' ' + String(imsg).slice(0, 70) : ''}`)
           } catch { attempts.push(`${model}:images_exception`) }
         }
-        // (B) chat completions
+        // (B) chat completions — ส่ง system prompt (กฎเหล็ก) แยก role ชัดเจน
         const content = pass === 'with-ref'
-          ? [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: refUrl } }]
-          : prompt
+          ? [{ type: 'text', text: userPrompt }, { type: 'image_url', image_url: { url: refUrl } }]
+          : userPrompt
         const res = await fetch(OPENROUTER_URL, {
           method: 'POST',
           headers: {
@@ -213,7 +270,7 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
           body: JSON.stringify({
             model,
             modalities: ['image', 'text'],
-            messages: [{ role: 'user', content }],
+            messages: [{ role: 'system', content: systemRules }, { role: 'user', content }],
           }),
         })
         const j = await res.json().catch(() => null)
@@ -231,13 +288,11 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   // 2) อัปโหลดเข้า site_assets (public) — ได้ URL จริงไปใช้ต่อทันที
   const isDataUrl = dataUrl.startsWith('data:')
   const mime = isDataUrl ? (dataUrl.match(/^data:([^;]+);/)?.[1] || 'image/png') : 'image/png'
-  const ext = mime.includes('jpeg') ? 'jpg' : 'png'
   // R40 (Owner: "ให้ไปอยู่ในอัลบั้มเดียวกันแยกโฟลเดอร์") — เดิม site-assets/marketing = เห็นที่อื่นยาก
   // → bmb-images/ai-generated/ = อัลบั้มเดียวกับภาพแคตตาลอก/browse แยกโฟลเดอร์ชัดเจน (list ได้จาก UI)
   // R55 (Owner): "แยกภาพที่เจนออกมาเป็นคนละอัลบั้มตามหมวดหมู่ที่ให้เจน"
-  // → ai-generated/<kind>/ (menu | promo | festival) — อัลบั้มแยกตามหมวดตามคำสั่ง
+  // → ai-generated/<kind>/ (menu | promo | festival | studio) — อัลบั้มแยกตามหมวดตามคำสั่ง
   const safeKind = KIND_PRESETS[kind] ? kind : 'menu'
-  const objectPath = `ai-generated/${safeKind}/gen-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.${ext}`
   try {
     let bytes: Uint8Array
     if (isDataUrl) {
@@ -245,23 +300,40 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
     } else {
       bytes = new Uint8Array(await (await fetch(dataUrl)).arrayBuffer())
     }
+    // IMG: ลบพื้นหลัง (Segmentation) เฉพาะภาพเมนู (studio) ผ่าน BEN2 — ไม่พร้อม/พัง = fallback แอดมินตัดเอง
+    let uploadBytes = bytes
+    let uploadMime = mime
+    let bgRemoved = false
+    let fallback = ''
+    if (kind === 'studio') {
+      const cut = await removeBackgroundBEN2(bytes, mime)
+      if (cut) {
+        uploadBytes = cut.bytes
+        uploadMime = cut.mime
+        bgRemoved = true
+      } else {
+        fallback = 'manual'
+      }
+    }
+    const ext = uploadMime.includes('jpeg') ? 'jpg' : uploadMime.includes('webp') ? 'webp' : 'png'
+    const objectPath = `ai-generated/${safeKind}/gen-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.${ext}`
     const up = await fetch(`${SB_URL}/storage/v1/object/bmb-images/${objectPath}`, {
       method: 'POST',
       headers: {
         apikey: SERVICE,
         Authorization: `Bearer ${SERVICE}`,
-        'Content-Type': mime,
+        'Content-Type': uploadMime,
         'x-upsert': 'true',
       },
-      body: bytes,
+      body: uploadBytes,
     })
     if (!up.ok) return json({ error: 'ERR_IMAGE_UPLOAD_FAILED', detail: `HTTP ${up.status}` }, 502)
+
+    const publicUrl = `${SB_URL}/storage/v1/object/public/bmb-images/${objectPath}`
+    return json({ ok: true, url: publicUrl, kind, style, prompt: userPrompt, model: usedModel, attempts, folder: `ai-generated/${safeKind}`, bg_removed: bgRemoved, fallback })
   } catch (e) {
     return json({ error: 'ERR_IMAGE_UPLOAD_FAILED', detail: String(e instanceof Error ? e.message : e).slice(0, 200) }, 502)
   }
-
-  const publicUrl = `${SB_URL}/storage/v1/object/public/bmb-images/${objectPath}`
-  return json({ ok: true, url: publicUrl, kind, style, prompt, model: usedModel, attempts, folder: `ai-generated/${safeKind}` })
   } catch (e) {
     // R40: error ทุกกรณีต้องเป็น JSON ที่ client อ่านได้ — เดิม crash = body ว่าง → Owner เห็นแค่ "non-2xx" ไม่รู้เหตุ
     return json({ error: 'ERR_UNCAUGHT', detail: String(e instanceof Error ? e.message : e).slice(0, 300) }, 500)

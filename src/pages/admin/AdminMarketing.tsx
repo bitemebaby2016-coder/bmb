@@ -26,6 +26,7 @@ import { compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE, POST_IMAGE_MAX_SIDE, POST_
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 import {
   applyBrandWatermark, checkGenQuality, WM_MASCOTS,
+  buildStudioPayload, finalizeStudioImage, removeGeneratedByUrl,
   AI_ALBUM_KINDS, type GenKind, type GenQa,
 } from '@/lib/aiImageStudio'
 import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
@@ -93,6 +94,7 @@ export function AdminMarketing() {
   const [genStyle, setGenStyle] = useState<'realistic' | 'illustration' | 'poster'>('realistic')
   const [genSubject, setGenSubject] = useState('')
   const [genNote, setGenNote] = useState('')
+  const [genExtra, setGenExtra] = useState('')
   // R47 (Owner): มาสคอตสำหรับลายน้ำทุกภาพเจน — เลือกอัตโนมัติตามประเภทภาพ (auto)
   // หรือเลือกเองแล้ว "จำไว้ใช้ทุกครั้ง" (localStorage bmb:wm-mascot)
   const [wmMascot, setWmMascot] = useState<string>(() => {
@@ -123,7 +125,7 @@ export function AdminMarketing() {
   const [genBusy, setGenBusy] = useState(false)
   // R40 (Owner: "ให้มีตัวแสดงสถานะ + พรีวิวรูปที่สร้าง + รู้ว่าสร้างเสร็จหรือยัง ไปอยู่อัลบั้มเดียวกันแยกโฟลเดอร์")
   // R55: + qa (ตรวจขนาด/สัดส่วน — "เบี้ยว/ขนาดไม่ตรง" ต้องเห็นก่อนกดใช้ · ห้ามใช้แทนอัตโนมัติ)
-  const [genStatus, setGenStatus] = useState<{ phase: 'idle' | 'running' | 'ok' | 'fail'; detail?: string; url?: string; model?: string; qa?: GenQa }>({ phase: 'idle' })
+  const [genStatus, setGenStatus] = useState<{ phase: 'idle' | 'running' | 'ok' | 'fail'; step?: string; detail?: string; url?: string; model?: string; qa?: GenQa; bgRemoved?: boolean; fallback?: string }>({ phase: 'idle' })
   // R55 (Owner: "แยกภาพที่เจนออกมาเป็นคนละอัลบั้มตามหมวดหมู่ที่ให้เจน")
   // = โฟลเดอร์ ai-generated/<kind>/ · ปิดใช้งาน = ย้ายไป ai-generated/_disabled/<kind>/ (ย้ายกลับได้)
   type AiAlbumItem = { name: string; url: string; path: string; kind: string; disabled: boolean }
@@ -483,8 +485,15 @@ export function AdminMarketing() {
     setGenStatus({ phase: 'running' })
     flashTo('mk-gen-status')
     try {
+      // IMG: ภาพเมนู (studio) ส่ง JSON payload มาตรฐาน (menu_name/category/container_type/texture_keywords)
+      const studioPayload = genKind === 'studio'
+        ? buildStudioPayload(subject, [genNote.trim(), genExtra.trim()].filter(Boolean).join(' · '))
+        : undefined
       const { data, error } = await supabase.functions.invoke('image-gen', {
-        body: { kind: genKind, style: genStyle, subject, note, reference_image_url: reference },
+        body: {
+          kind: genKind, style: genStyle, subject, note, reference_image_url: reference,
+          ...(studioPayload ? { menu_name: studioPayload.menu_name, category: studioPayload.category, container_type: studioPayload.container_type, texture_keywords: studioPayload.texture_keywords } : {}),
+        },
       })
       if (error || !data?.ok) {
         // R32+R40: ดึงรายละเอียดจริงจาก body ของ EF — json ไม่ได้ = อ่านเป็น text เลย (เดิมเห็นแค่ "non-2xx")
@@ -506,27 +515,29 @@ export function AdminMarketing() {
         flashTo('mk-gen-status')
         showToast('สร้างภาพไม่สำเร็จ: ' + detail, 'error')
       } else {
-        // R47: ประกบลายน้ำแบรนด์ (โลโก้จริง + มาสคอต) → อัปไฟล์ wm (ลงโฟลเดอร์หมวดเดิม) แล้วลบต้นฉบับ
+        // IMG: ภาพเมนู (studio) ที่ลบพื้นหลังแล้ว (bg_removed) → trim → resize/pad 1024 → webp โปร่งใส
+        let base = data.url as string
+        if (genKind === 'studio' && data.bg_removed && data.url) {
+          setGenStatus({ phase: 'running', step: 'กำลังตัดขอบ/จัดกึ่งกลาง/แปลง webp โปร่งใส…' })
+          flashTo('mk-gen-status')
+          const finalized = await finalizeStudioImage(data.url)
+          if (finalized !== data.url) await removeGeneratedByUrl(data.url)
+          base = finalized
+        }
+        // R47: ประกบลายน้ำแบรนด์ (โลโก้จริง + มาสคอต; mascot=none = ไม่มีลายน้ำ) → อัปไฟล์ wm แล้วลบต้นฉบับ
         // R55 (Owner 2026-11-02): "ภาพที่เจนมาพอไปอยู่ในเมนูแล้วเบี้ยวเละเทะ ขนาดไม่ตรง
         //   ห้ามเลือกมาใช้แทนโดยอัตโนมัติ" → ไม่ต่อชุดภาพอัตโนมัติ + ตรวจคุณภาพโชว์ให้เห็น
         //   การใช้ = แอดมินกด "ใช้" เองจากอัลบั้มเท่านั้น
-        const wmUrl = await applyBrandWatermark(data.url, genKind, wmMascot)
-        if (wmUrl !== data.url) {
-          try {
-            const marker = '/object/public/bmb-images/'
-            if (data.url.includes(marker)) {
-              const p = data.url.slice(data.url.indexOf(marker) + marker.length).split('?')[0]
-              await supabase.storage.from('bmb-images').remove([decodeURIComponent(p)])
-            }
-          } catch { /* ลบต้นฉบับไม่ได้ = ไม่เป็นไร (มีปุ่มลบในอัลบั้มอยู่แล้ว) */ }
-        }
+        const wmUrl = await applyBrandWatermark(base, genKind, wmMascot)
+        if (wmUrl !== base) await removeGeneratedByUrl(base)
         const qa = await checkGenQuality(wmUrl, genKind)
-        setGenStatus({ phase: 'ok', url: wmUrl, model: data.model, qa })
+        setGenStatus({ phase: 'ok', url: wmUrl, model: data.model, qa, bgRemoved: !!data.bg_removed, fallback: data.fallback })
         await loadAiAlbum() // ภาพใหม่เข้าอัลบั้มตามหมวดทันที
         flashTo('mk-gen-status')
+        const bgNote = data.bg_removed ? ' · ลบพื้นหลัง+จัดกรอบ 1024 เรียบร้อย' : (data.fallback === 'manual' ? ' · ยังไม่ลบพื้นหลัง (BEN2 ไม่พร้อม) — ตัดเองได้จากอัลบั้ม' : '')
         showToast(
           qa.ok
-            ? '✅ สร้างภาพสำเร็จ + ประกบลายน้ำแล้ว — อยู่ในอัลบั้มตามหมวด (ไม่แนบเข้าชุดอัตโนมัติ · กด "ใช้" เองเมื่อต้องการ)'
+            ? `✅ สร้างภาพสำเร็จ${wmUrl !== base ? ' + ประกบลายน้ำแล้ว' : ''}${bgNote} — อยู่ในอัลบั้มตามหมวด (ไม่แนบเข้าชุดอัตโนมัติ · กด "ใช้" เองเมื่อต้องการ)`
             : `⚠️ สร้างภาพสำเร็จ แต่ ${qa.warn} — ระบบไม่เลือกใช้แทนให้อัตโนมัติ (ตรวจดูก่อน แล้วกด "ใช้" เองถ้า OK)`,
           qa.ok ? 'success' : 'warning',
         )
@@ -751,6 +762,20 @@ export function AdminMarketing() {
                 </select>
               </label>
             </div>
+            {genKind === 'studio' && (
+              <label className="text-sm block mt-3" data-testid="mk-studio-extra-prompt">
+                รายละเอียดเพิ่มเติมสำหรับสร้างภาพ (Studio — เฉพาะภาพเมนู)
+                <textarea
+                  className="input w-full mt-1"
+                  rows={3}
+                  value={genExtra}
+                  onChange={(e) => setGenExtra(e.target.value)}
+                  placeholder="เช่น วางบนพื้นหินอ่อน ให้เห็นไอร้อน เพิ่มผักสลัดแต่งจาน (ระบบล็อกมุมกล้อง/พื้นขาว #FFFFFF ให้อัตโนมัติ)"
+                  data-testid="mk-studio-extra-input"
+                />
+                <span className="block text-xs text-brand-muted mt-1">พรอมป์นี้บังคับเฉพาะภาพเมนูอาหาร (Studio) · ระบบจับคู่หมวด/คอนเทนเนอร์/เท็กซ์เจอร์ให้อัตโนมัติจากชื่อเมนู</span>
+              </label>
+            )}
             <div className="flex flex-wrap gap-2 mt-3">
               <button className="btn btn-primary" disabled={genBusy} onClick={() => void handleGenerateImage()} data-testid="mk-generate-image">
                 {genBusy ? '⏳ กำลังสร้าง…' : '✨ สร้างภาพ'}
@@ -821,10 +846,10 @@ export function AdminMarketing() {
                 role="status"
               >
                 {genStatus.phase === 'running' && (
-                  <span>⏳ <b>กำลังสร้างภาพ…</b> (วนโมเดลตามลำดับ — อาจใช้ 10–40 วินาที) · โจทย์: {genSubject.trim() || title.trim() || '—'} · ภาพอ้างอิง: {images.length ? 'มี (ภาพล่าสุดในชุด)' : 'ไม่มี'}</span>
+                  <span>⏳ <b>{genStatus.step ? 'กำลังประมวลผลภาพ…' : 'กำลังสร้างภาพ…'}</b>{genStatus.step ? ` — ${genStatus.step}` : ' (วนโมเดลตามลำดับ — อาจใช้ 10–40 วินาที)'} · โจทย์: {genSubject.trim() || title.trim() || '—'} · ภาพอ้างอิง: {images.length ? 'มี (ภาพล่าสุดในชุด)' : 'ไม่มี'}</span>
                 )}
                 {genStatus.phase === 'ok' && (
-                  <span>✅ <b>สร้างสำเร็จ</b>{genStatus.model ? ` · โมเดล ${genStatus.model}` : ''} — บันทึกอัลบั้มตามหมวด + ไม่แนบเข้าชุดอัตโนมัติ{genStatus.qa && genStatus.qa.w ? ` · ขนาด ${genStatus.qa.w}×${genStatus.qa.h}px` : ''}</span>
+                  <span>✅ <b>สร้างสำเร็จ</b>{genStatus.model ? ` · โมเดล ${genStatus.model}` : ''} — บันทึกอัลบั้มตามหมวด + ไม่แนบเข้าชุดอัตโนมัติ{genStatus.qa && genStatus.qa.w ? ` · ขนาด ${genStatus.qa.w}×${genStatus.qa.h}px` : ''}{genStatus.bgRemoved ? ' · ลบพื้นหลัง+จัดกรอบ 1024 เรียบร้อย' : (genStatus.fallback === 'manual' ? ' · ยังไม่ลบพื้นหลัง (BEN2 ไม่พร้อม) — ตัดเองได้จากอัลบั้ม' : '')}</span>
                 )}
                 {genStatus.phase === 'ok' && genStatus.qa && !genStatus.qa.ok && (
                   <span className="block mt-1 text-amber-700" data-testid="mk-gen-qa-warn">⚠️ {genStatus.qa.warn} — <b>ระบบไม่เลือกใช้แทนให้อัตโนมัติ</b> ตรวจภาพก่อน แล้วกด "ใช้" เองถ้าผ่าน</span>

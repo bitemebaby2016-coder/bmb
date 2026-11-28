@@ -7,6 +7,21 @@
 
 ---
 
+## R138 — 2026-11-28 — IMG Studio Pipeline: System Prompt + JSON Payload + ลบพื้นหลัง (BEN2) + alpha WebP + กฎลายน้ำ
+
+- **เป้าหมาย:** อัปเกรดระบบเจนภาพเมนูอาหาร (Studio) ตาม spec ใหม่ โดยต่อยอดโค้ดเดิม (ไม่สร้างระบบซ้ำ) — `image-gen` EF + `aiImageStudio.ts` + UI เดิม
+- **System Prompt (แยก role):** `supabase/functions/image-gen/index.ts` เพิ่ม `STUDIO_SYSTEM_RULES` (Geometry Lock/Zero Hallucination · พื้นขาว #FFFFFF · แสงสตูดิโอ 45° · `100mm macro look, tack-sharp focus` · ห้ามพร็อพเกิน) + `LOGO_RULE` (ห้ามเจนโลโก้เอง · ห้ามตีความว่า Bite Me Baby เป็นร้านขนมหวาน — สรุปประเภทจากชื่อเมนู) · ส่งเป็น `role:'system'` ใน chat path + prepend ใน images-API path · ตัด "ร้านของหวาน" ออกจาก presets ทุกหมวด
+- **JSON Payload:** รับ `menu_name`/`category`/`container_type`/`texture_keywords` · แอดมินส่งผ่าน `buildStudioPayload()` (จับคู่หมวด: ของทอด/เครื่องดื่มเย็น/เบเกอรี่/สลัด/ข้าวหน้า → container + texture อัตโนมัติ)
+- **ลบพื้นหลัง (Segmentation):** เรียก BEN2 ภายนอก (primary) ใน EF เฉพาะ `studio` · ถ้าไม่ตั้ง secret `BEN2_ENDPOINT` (±`BEN2_API_KEY`) หรือพัง = `fallback:'manual'` (แอดมินตัดเอง) · ห้ามบล็อกการเจน · **TODO(owner): ตั้ง BEN2 secret + ยืนยัน contract**
+- **Post-process (client):** `finalizeStudioImage()` = trim โปร่งใส → resize+pad กึ่งกลาง 1024×1024 + margin เท่ากัน → webp โปร่งใส (quality 0.85 เป้า ≤500KB) → อัปโหลดทับ `ai-generated/studio/` · ลบต้นฉบับผ่าน `removeGeneratedByUrl()`
+- **กฎลายน้ำ:** `applyBrandWatermark` — `mascot='none'` = คืนภาพเดิม ไม่วาดโลโก้/ข้อความ (ไม่ใช้มาสคอต = ไม่ใช้ลายน้ำทั้งหมด) · โลโก้จากระบบ `/Logo_Sticker_Circle.webp` เท่านั้น
+- **UI:** เพิ่มกล่อง "รายละเอียดเพิ่มเติม (Studio)" เฉพาะ `genKind==='studio'` เหนือปุ่มสร้างภาพ (ทั้ง `AdminMarketing` + `ContentTab`) + สถานะขั้นตอน (ลบพื้นหลัง/ตัดขอบ/แปลง webp) ใน `genStatus` เดิม ไม่รื้อ layout
+- **ไฟล์:** `supabase/functions/image-gen/index.ts` · `src/lib/aiImageStudio.ts` · `src/components/admin/ContentTab.tsx` · `src/pages/admin/AdminMarketing.tsx` · เทสใหม่ `src/__tests__/r130StudioPipeline.test.ts` · อัปเดต `r47AiStudio.test.ts` (ยืนยัน helper ใหม่)
+- **ประตู (gates 4/4):** `tsc --noEmit` 0 · `npm run lint` OK · `vitest run` **265 ไฟล์/3,073 tests PASS** · `npm run build` PASS
+- **Deploy + verify:** `supabase functions deploy image-gen` exit=0 (v28) · **ledger 001–234 local=remote (ไม่มี drift/ช่องว่าง)** · **R138 smoke จริง ALL_PASS** (`e2e/_r138StudioSmoke.cjs` → `e2e/_r138_studio_smoke.json`): status 200 · โมเดล `qwen/qwen-image-2.1-pro [images-api]` · `bg_removed=false` · `fallback=manual` (BEN2 ไม่พร้อม) · `newFields=true` · อัปโหลด `ai-generated/studio/` แล้วลบทิ้ง (cleanup DELETED) — พิสูจน์ EF รุ่นใหม่รับ JSON payload + คืน bg_removed/fallback จริง
+- **ไม่มี migration ใหม่** (คงสถาปัตยกรรม storage/flow เดิม) · **BEN2 secret ยังไม่ตั้ง** (`BEN2_ENDPOINT`/`BEN2_API_KEY`) → fallback=แอดมินตัดเอง (TODO owner)
+- **LIVE_TEST_PENDING (Owner):** `/admin/marketing` Studio → เจนภาพเมนู → กล่องเสริมโผล่เฉพาะ studio + สถานะลบพื้นหลัง + อัลบั้มมี webp โปร่งใส 1024 (ถ้า BEN2 พร้อม) / ขาวรอตัดเอง (ถ้าไม่พร้อม) · mascot=none = ไม่มีลายน้ำ
+
 ## R137 — 2026-11-28 — ไอคอน "B" สีส้ม → โลโก้จริง (favicon/apple-touch/PWA ตาม brandLogoUrl)
 
 - **ปัญหา:** favicon/apple-touch/PWA icon ยังเป็น "B" สีส้ม (`public/favicon.svg`, `pwa-192/512x*.png`) — แอดมินแก้โลโก้แล้วไม่เปลี่ยน

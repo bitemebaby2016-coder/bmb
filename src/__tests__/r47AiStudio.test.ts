@@ -37,8 +37,8 @@ describe('R47 — ยุบสองเซคชั่นเป็นใบเ�
     expect(marketingSrc).toContain('data-testid={`mk-img-del-${images.indexOf(u)}`}')
     expect(marketingSrc).toContain(".from('bmb-images').remove([path])")
     expect(marketingSrc).toContain('ลบรูปออกจากชุดภาพ + ลบไฟล์จริงจากคลังภาพแล้ว')
-    // ลบต้นฉบับหลังอัปรูปลายน้ำ (เหลือเฉพาะรูปที่มีลายน้ำในอัลบั้ม)
-    expect(marketingSrc).toContain("await supabase.storage.from('bmb-images').remove([decodeURIComponent(p)])")
+    // ลบต้นฉบับหลังอัปรูปลายน้ำ (เหลือเฉพาะรูปที่มีลายน้ำในอัลบั้ม) — ผ่าน helper removeGeneratedByUrl
+    expect(marketingSrc).toContain('removeGeneratedByUrl(base)')
   })
 })
 
@@ -52,7 +52,7 @@ describe('R47 — ลายน้ำโลโก้จริง + มาสค�
     expect(studioSrc).toContain("mascotChoice === 'none'")
     expect(studioSrc).toContain("key: 'none'")
     // UI เรียก applyBrandWatermark + จำค่าใน localStorage
-    expect(marketingSrc).toContain('applyBrandWatermark(data.url, genKind, wmMascot)')
+    expect(marketingSrc).toContain('applyBrandWatermark(base, genKind, wmMascot)')
     expect(marketingSrc).toContain("localStorage.getItem('bmb:wm-mascot') || 'auto'")
     expect(marketingSrc).toContain("localStorage.setItem('bmb:wm-mascot', v)")
     expect(marketingSrc).toContain('data-testid="mk-wm-mascot"')

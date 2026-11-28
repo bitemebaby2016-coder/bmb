@@ -5,6 +5,14 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R138 2026-11-28 (IMG Studio Pipeline — System Prompt + JSON Payload + ลบพื้นหลัง BEN2 + alpha WebP + กฎลายน้ำ)**
+- **ปัญหา:** ระบบเจนภาพเมนู (Studio) ยังไม่มี system prompt มาตรฐาน (Geometry Lock/พื้นขาว #FFFFFF/45°/100mm macro) · ไม่มี JSON payload (menu_name/category/container_type/texture_keywords) · ไม่มีลบพื้นหลัง/trim/alpha-webp · presets ตีความเป็น "ร้านของหวาน" · mascot=none ยังมีลายน้ำ
+- **แก้ (ต่อยอดโค้ดเดิม ไม่แตะ migration):** `image-gen/index.ts` เพิ่ม `STUDIO_SYSTEM_RULES`+`LOGO_RULE` (role:system) · รับ JSON payload · BEN2 removeBackground (primary) fallback `manual` (TODO secret `BEN2_ENDPOINT`/`BEN2_API_KEY`) · `aiImageStudio.ts` เพิ่ม `buildStudioPayload`/`trimTransparent`/`resizeAndPad`/`toAlphaWebp`/`finalizeStudioImage`/`removeGeneratedByUrl` + `applyBrandWatermark` none=ไม่มีลายน้ำ · UI เพิ่มกล่องเสริมเฉพาะ studio + สถานะขั้นตอน (AdminMarketing + ContentTab)
+- **ผล:** ภาพเมนูมาตรฐานเดียว (1024×1024 + margin · webp โปร่งใส ≤500KB) · ล็อกมุมกล้อง/พื้นขาว · จับคู่หมวด/คอนเทนเนอร์/เท็กซ์เจอร์อัตโนมัติ · ห้ามเจนโลโก้ · mascot=none = ไม่มีลายน้ำ
+- **Tests (gates 4/4):** `tsc` 0 · lint OK · vitest **265 ไฟล์/3,073 tests** 0 fail · build OK · เทสใหม่ `r130StudioPipeline.test.ts` (13) · อัปเดต `r47AiStudio.test.ts`
+- **DEPLOYED + VERIFIED:** `image-gen` deploy exit=0 (v28) · ledger 001–234 local=remote (no drift) · **R138 smoke ALL_PASS** (`e2e/_r138_studio_smoke.json`): 200 · `qwen/qwen-image-2.1-pro [images-api]` · bg_removed=false · fallback=manual · newFields=true · cleanup DELETED
+- **ยังไม่ปิด:** BEN2 secret ยังไม่ตั้ง (`BEN2_ENDPOINT`/`BEN2_API_KEY` → fallback=แอดมินตัดเอง, TODO owner) · **LIVE_TEST_PENDING (Owner):** เปิด `/admin/marketing` Studio เจนภาพเมนู ดูกล่องเสริม/สถานะ/อัลบั้ม webp โปร่งใส
+
 **R137 2026-11-28 (ไอคอน "B" สีส้ม → โลโก้จริง — favicon/apple-touch/PWA ตาม brandLogoUrl)**
 - **ปัญหา:** favicon/apple-touch/PWA icon ยังเป็น "B" สีส้ม (`public/favicon.svg`, `pwa-192/512x*.png`) แก้โลโก้ในแอดมินแล้วไอคอนไม่เปลี่ยน
 - **แก้:** `lib/runtimeBrandIcons.ts` (applyRuntimeBrandIcons + buildRuntimeManifest) ตั้ง favicon + apple-touch-icon + PWA manifest (blob) ตาม `brandLogoUrl` ตอน runtime · `components/RuntimeBrandIcons.tsx` วางใน App · `index.html` default ไอคอน = `/Head Logo.webp` (โลโก้จริง)

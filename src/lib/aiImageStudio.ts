@@ -24,6 +24,12 @@ export const GEN_QUALITY = 0.82
 /** ขนาดกรอบเมนูที่ใช้ได้จริง = 1:1 หรือ 4:3 (tolerance 12%) · ความละเอียดขั้นต่ำ 512px */
 export const MENU_ASPECTS = [1, 4 / 3, 3 / 4]
 
+/** IMG: มาตรฐานภาพเมนู (Studio) หลังลบพื้นหลัง — canvas 1024×1024 + margin เท่ากัน · webp โปร่งใส ≤500KB */
+export const STUDIO_PAD_SIZE = 1024
+export const STUDIO_MARGIN_RATIO = 0.06 // margin รอบด้านละ 6% ของ canvas
+export const ALPHA_WEBP_QUALITY = 0.85 // ~alphaQuality 90 (Canvas ไม่มี alphaQuality แยก → ใช้ quality เดียว)
+export const ALPHA_WEBP_MAX_BYTES = 500 * 1024
+
 export type GenQa = { ok: boolean; warn?: string; w: number; h: number }
 
 /** R55: ตรวจคุณภาพภาพเจนก่อนใช้ — เบี้ยว/ขนาดไม่ตรง = ห้ามใช้แทนอัตโนมัติ */
@@ -146,6 +152,8 @@ export async function compressGeneratedToWeb(
 
 /** R47: ประกบลายน้ำแบรนด์ (โลโก้จริง + มาสคอต; mascotChoice='none' = ไม่วาดมาสคอต) → อัปไฟล์ webp ลงโฟลเดอร์หมวด */
 export async function applyBrandWatermark(srcUrl: string, kind: string, mascotChoice: string): Promise<string> {
+  // กฎใหม่ (Owner): ถ้าไม่ใช้มาสคอต = ต้องไม่ใช้ทั้งมาสคอตและลายน้ำ (คืนภาพเดิม ไม่วาดโลโก้/ข้อความ)
+  if (mascotChoice === 'none') return srcUrl
   try {
     const mascotKey = mascotChoice === 'auto' ? autoMascotForKind(kind) : mascotChoice
     const mascotUrl = mascotChoice === 'none' ? '' : getOverrideUrl(mascotKey)
@@ -201,5 +209,130 @@ export async function applyBrandWatermark(srcUrl: string, kind: string, mascotCh
     return supabase.storage.from('bmb-images').getPublicUrl(path).data.publicUrl
   } catch {
     return srcUrl
+  }
+}
+
+// ============================================
+// IMG: Studio (เมนูอาหาร) — JSON payload + post-processing (ลบพื้นหลัง → trim → resize/pad → webp โปร่งใส)
+// ============================================
+
+/** JSON payload มาตรฐานสำหรับสร้างภาพเมนู — ดึงจาก subject/note แล้วจับคู่ texture ตามหมวดอาหาร */
+export interface StudioPayload {
+  menu_name: string
+  category: string
+  container_type: string
+  texture_keywords: string[]
+}
+
+/** ตารางจับคู่หมวดอาหาร → container + texture keywords (ห้ามตีความว่าเป็นร้านขนมหวาน — ดูจากชื่อเมนู) */
+const TEXTURE_BY_CATEGORY: Array<{ re: RegExp; category: string; container: string; textures: string[] }> = [
+  { re: /ทอด|กรอบ|เฟรนช์ฟราย|tempura|fried|crispy|katsu|หมูทอด|ไก่ทอด|ปีกไก่|นักเก็ต/i, category: 'ของทอด', container: 'จานกระเบื้อง/ตะกร้าสแตนเลส', textures: ['crispy golden crust', 'crunchy texture', 'freshly fried', 'steam rising'] },
+  { re: /เย็น|น้ำแข็ง|สมูทตี้|บิงซู|ชาไทย|กาแฟเย็น|โกโก้เย็น|cold|iced|smoothie|shake|มะม่วง|ทับทิม/i, category: 'เครื่องดื่มเย็น', container: 'แก้วใสมีหลอด/ฝาปิด', textures: ['frosty condensation', 'refreshing', 'ice cubes', 'condensation droplets'] },
+  { re: /เบเกอรี่|ขนมปัง|เค้ก|ครัวซองต์|บิสกิต|คุกกี้|แดริ|พาย|bread|cake|croissant|cookie|bakery|pie|muffin/i, category: 'เบเกอรี่', container: 'จานพาสเทล/กระดาษไขมัน', textures: ['flaky buttery layers', 'soft crumb', 'golden baked crust', 'delicate glaze'] },
+  { re: /สลัด|ผักสด|ผลไม้สด|salad|greens|fresh herbs|ผัก/i, category: 'สลัด', container: 'ชามพาสเทล/จานไม้', textures: ['fresh crisp greens', 'vibrant colors', 'dewy freshness', 'light dressing sheen'] },
+  { re: /ข้าว|ผัด|ราด|ข้าวมัน|ข้าวผัด|ข้าวหน้า|rice|nasi|กะหล่ำ|หมูกรอบ/i, category: 'ข้าวหน้าต่างๆ', container: 'จานร้อน/ชามกระเบื้อง', textures: ['fluffy steamed rice', 'glossy sauce', 'gentle steam', 'savory glaze'] },
+]
+
+/** สร้าง StudioPayload จาก subject (ชื่อเมนู) + note — จับคู่หมวด/คอนเทนเนอร์/texture อัตโนมัติ */
+export function buildStudioPayload(subject: string, note = ''): StudioPayload {
+  const menu_name = subject.trim()
+  const hay = `${menu_name} ${note}`.trim()
+  const hit = TEXTURE_BY_CATEGORY.find((c) => c.re.test(hay))
+  if (hit) return { menu_name, category: hit.category, container_type: hit.container, texture_keywords: hit.textures }
+  return { menu_name, category: 'ทั่วไป', container_type: 'จานเดี่ยว/จานพาสเทล', texture_keywords: ['appetizing', 'fresh', 'detailed', 'studio lit'] }
+}
+
+/** ลบไฟล์จริงบนคลัง bmb-images จาก public URL (ignore ถ้าไม่ใช่คลังเรา/ลบไม่สำเร็จ) */
+export async function removeGeneratedByUrl(url: string): Promise<void> {
+  try {
+    const marker = '/object/public/bmb-images/'
+    if (!url || !url.includes(marker)) return
+    const p = decodeURIComponent(url.slice(url.indexOf(marker) + marker.length).split('?')[0])
+    await supabase.storage.from('bmb-images').remove([p])
+  } catch { /* ลบไม่ได้ = ไม่เป็นไร (มีปุ่มลบในอัลบั้มอยู่แล้ว) */ }
+}
+
+/** ตัดขอบโปร่งใสส่วนเกินรอบอาหาร (trim) — หา alpha bbox แล้ว crop ให้แน่นที่สุด */
+export async function trimTransparent(src: ImageBitmap, alphaThreshold = 8): Promise<ImageBitmap> {
+  const w = src.width, h = src.height
+  const canvas = document.createElement('canvas')
+  canvas.width = w; canvas.height = h
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx) return src
+  ctx.drawImage(src, 0, 0)
+  let data: ImageData
+  try { data = ctx.getImageData(0, 0, w, h) } catch { return src }
+  const px = data.data
+  let minX = w, minY = h, maxX = -1, maxY = -1
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (px[(y * w + x) * 4 + 3] > alphaThreshold) {
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+        if (y < minY) minY = y
+        if (y > maxY) maxY = y
+      }
+    }
+  }
+  if (maxX < 0) return src // โปร่งใสทั้งหมด = คงภาพเดิม
+  const cw = maxX - minX + 1, ch = maxY - minY + 1
+  if (cw === w && ch === h) return src
+  const out = document.createElement('canvas')
+  out.width = cw; out.height = ch
+  const octx = out.getContext('2d')
+  if (!octx) return src
+  octx.drawImage(canvas, minX, minY, cw, ch, 0, 0, cw, ch)
+  return await createImageBitmap(out)
+}
+
+/** จัดกึ่งกลางบน canvas ใส่ (โปร่งใส) ขนาดมาตรฐาน + margin เท่ากันรอบ 4 ด้าน (คงสัดส่วน ไม่บิด) */
+export async function resizeAndPad(src: ImageBitmap, size = STUDIO_PAD_SIZE, marginRatio = STUDIO_MARGIN_RATIO): Promise<ImageBitmap> {
+  const inner = Math.max(1, Math.round(size * (1 - marginRatio * 2)))
+  const scale = inner / Math.max(src.width, src.height)
+  const dw = Math.max(1, Math.round(src.width * scale))
+  const dh = Math.max(1, Math.round(src.height * scale))
+  const canvas = document.createElement('canvas')
+  canvas.width = size; canvas.height = size
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return src
+  ctx.clearRect(0, 0, size, size)
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(src, Math.round((size - dw) / 2), Math.round((size - dh) / 2), dw, dh)
+  return await createImageBitmap(canvas)
+}
+
+/** แปลงเป็น webp โปร่งใส (quality เริ่ม 0.85 แล้วลดจนถึง ≤ maxBytes) — คืน File พร้อม alpha */
+export async function toAlphaWebp(src: ImageBitmap, maxBytes = ALPHA_WEBP_MAX_BYTES, quality = ALPHA_WEBP_QUALITY): Promise<File> {
+  const canvas = document.createElement('canvas')
+  canvas.width = src.width; canvas.height = src.height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('canvas_unavailable')
+  ctx.drawImage(src, 0, 0)
+  const enc = (q: number): Promise<Blob | null> => new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/webp', q))
+  let q = quality
+  let blob = await enc(q)
+  while (blob && blob.size > maxBytes && q > 0.4) {
+    q -= 0.1
+    blob = await enc(q)
+  }
+  if (!blob) throw new Error('encode_failed')
+  return new File([blob], `studio-${Date.now().toString(36)}.webp`, { type: 'image/webp', lastModified: Date.now() })
+}
+
+/** Post-process ภาพพื้นหลังโปร่งใสจาก BEN2: trim → resize/pad 1024 → webp โปร่งใส → อัปโหลดทับโฟลเดอร์ studio */
+export async function finalizeStudioImage(transparentUrl: string): Promise<string> {
+  const bmp = await fetchBitmap(transparentUrl)
+  if (!bmp) return transparentUrl
+  try {
+    const trimmed = await trimTransparent(bmp)
+    const padded = await resizeAndPad(trimmed)
+    const file = await toAlphaWebp(padded)
+    const path = `ai-generated/studio/studio-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.webp`
+    const { error } = await supabase.storage.from('bmb-images').upload(path, file, { contentType: file.type, upsert: false })
+    if (error) return transparentUrl
+    return supabase.storage.from('bmb-images').getPublicUrl(path).data.publicUrl
+  } finally {
+    bmp.close?.()
   }
 }

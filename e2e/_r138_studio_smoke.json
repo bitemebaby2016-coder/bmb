@@ -1,0 +1,19 @@
+{
+  "at": "2026-11-28T07:17:32.799Z",
+  "loginStatus": 200,
+  "status": 200,
+  "body": "{\"ok\":true,\"url\":\"https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/studio/gen-mx02vteo-s3y0.png\",\"kind\":\"studio\",\"style\":\"realistic\",\"prompt\":\"ภาพเมนูอาหาร \\\"ไก่ทอดกรอบ\\\" สไตล์สตูดิโออาหารพรีเมียม สำหรับร้าน Bite Me Baby — จัดจานสวย มุม 45 องศา แสงสตูดิโอนุ่ม พื้นหลังสะอาด/โทนพาสเทล รายละเอียดอาหารคมชัด ไม่บิดงอ ไม่เบี้ยว สัดส่วนจานสมจริง อัตราส่วนภาพ 1:1 หรือ 4:3 เต็มกรอบ · ใช้รายละเอียดนี้เป็นข้อมูลหลัก: ทดสอบระบบ R138 — ลบทันทีหลังยืนยัน · หมวดอาหาร: ของทอด · ภาชนะ: ตะกร้าสแตนเลส · เท็กซ์เจอร์: crispy golden crust, crunchy texture · ถ้ามีภาพอ้างอิงแนบ ให้จัดวางเป็นองค์ประกอบร่วม — สไตล์ภาพถ่ายสมจริง แสงนุ่ม รายละเอียดสูง สมดุลสีธรรมชาติ\",\"model\":\"qwen/qwen-image-2.1-pro [images-api]\",\"attempts\":[],\"folder\":\"ai-generated/studio\",\"bg_removed\":false,\"fallback\":\"manual\"}",
+  "model": "qwen/qwen-image-2.1-pro [images-api]",
+  "attempts": [],
+  "url": "https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/studio/gen-mx02vteo-s3y0.png",
+  "folder": "ai-generated/studio",
+  "bg_removed": false,
+  "fallback": "manual",
+  "generated": true,
+  "hasNewFields": true,
+  "cleanupPath": "ai-generated/studio/gen-mx02vteo-s3y0.png",
+  "cleanupStatus": 200,
+  "cleanupVerified": true,
+  "ALL_PASS": true,
+  "note": "R138 STUDIO E2E OK (model=qwen/qwen-image-2.1-pro [images-api] bg_removed=false fallback=manual) + test file deleted"
+}
