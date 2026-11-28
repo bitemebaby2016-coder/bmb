@@ -5,6 +5,16 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R131 2026-11-28 (MIGRATION 234 — otp_challenges รับ `phone_login` : ปิดปัญหา "ส่งรหัส OTP ไม่สำเร็จ" บนไลฟ์)**
+- **Root Cause (ยืนยันด้วย probe ไลฟ์):** `migrations/122_otp_challenges.sql:27` กำหนด `CHECK (purpose IN ('quick_login','guest_checkout'))` — R130 เพิ่ม `phone_login` เฉพาะใน EF โดยไม่มี migration ขยาย CHECK → insert `otp_challenges` ชน **23514 check_violation** → `otp-send` คืน **503 ERR_OTP_STORE_FAILED** → UI ขึ้น "ส่งรหัส OTP ไม่สำเร็จ" และ `phoneOtpSent` ไม่เป็น true = **ไม่มีช่องกรอก OTP** (ตรงกับอาการที่ Owner แจ้ง)
+- **หลักฐานการวินิจฉัย:** `otp_challenges` ไม่มีแถว `phone_login` เลย (มีแต่ quick_login/guest_checkout จาก 2026-11-15) · node probe ได้ `503` + detail `23514` · สมมติฐาน verify_jwt/service-key ถูกหักล้างด้วย probe (platform 400 ถึง handler · sms-send auth ผ่าน · `bmb_backend_*` ว่างแต่ `||` fallback ได้คีย์ถูก)
+- **Fix:** migration `234_otp_purpose_phone_login.sql` — drop + create CHECK รับ 3 ค่า (คง RLS/REVOKE/index ของ m122 ไว้ครบ) · apply ผ่าน Management API = **201** · constraint ยืนยัน `ARRAY['quick_login','guest_checkout','phone_login']`
+- **Ledger:** `migration repair --status applied 234` + `migration list` = **234/234 Local=Remote ครบทุกช่อง** (evidence `e2e/_r131_ledger_234.log`)
+- **Verify หลัง fix:** probe `phone_login` เปลี่ยนจาก `503 ERR_OTP_STORE_FAILED` → **`502 ERR_SMS_SEND_FAILED`** (insert ผ่าน · ล้มเฉพาะขั้นส่ง SMS ที่เบอร์ปลอม 999999999) · แถวทดสอบถูกลบทิ้งแล้ว (204)
+- **Tests (gates 4/4):** lint 0 (653 ไฟล์) · vitest **263 files/3,050 tests** 0 fail · tsc+build 0
+- **Scripts/evidence:** `e2e/_r131ApplyMigration234.cjs` · `e2e/_r131LedgerRepair234.cjs` · `_r131_apply_234.log` · `_r131_ledger_234.log` · **PUSHED (`a4498a0`)**
+- **LIVE_TEST_PENDING (Owner):** เข้าสู่ระบบ → แท็บเบอร์โทร → ขอ OTP (ต้องใช้เบอร์จริง 0XXXXXXXXX) → ใส่ 6 หลัก → เข้าสู่
+
 **R130 2026-11-28 (PHONE NUMBER MANAGEMENT + OTP LOGIN — เพิ่มเบอร์ในโปรไฟล์/แอดมิน + OTP เข้าสู่ระบบด้วยเบอร์)**
 - **UI เพิ่มเบอร์ใน ProfilePage:** การ์ด "📱 เบอร์โทรศัพท์" ใหม่ (`src/lib/phoneProfile.ts` — validate ไทย→E.164 `+66XXXXXXXXX` · `supabase.auth.updateUser({ phone })` เข้า `auth.users.phone` จริง · fallback `user_metadata.phone` ถ้า provider ไม่พร้อม) — เดิมอ่านแต่ไม่แก้ได้
 - **AdminCustomers แก้เบอร์เองได้:** ปุ่ม 📱 ต่อแถว → inline edit + บันทึก (`updateCustomerPhone` ใน `bmbAdminApi_customers.ts` — RLS เดิมบังคับ) — เดิมได้แค่ลบ

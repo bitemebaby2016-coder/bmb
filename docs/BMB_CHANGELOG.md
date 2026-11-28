@@ -7,6 +7,17 @@
 
 ---
 
+## R131 — 2026-11-28 — MIGRATION 234: otp_challenges รับ `phone_login` (ปิดปัญหา OTP ไม่ส่ง + ไม่มีช่องกรอกรหัส)
+
+- **Root Cause:** `122_otp_challenges.sql:27` CHECK รับแค่ `('quick_login','guest_checkout')` — R130 เพิ่ม `phone_login` ใน EF แต่ไม่มี migration → insert ชน **23514** → `otp-send` 503 `ERR_OTP_STORE_FAILED` → UI generic error + `phoneOtpSent` ไม่เป็น true = ไม่มีช่อง OTP
+- **วิธีวินิจฉัย (probe ไลฟ์ ไม่ใช่การเดา):** หักล้าง verify_jwt (platform ถึง handler 400) · หักล้าง service-key (sms-send auth ผ่าน · `bmb_backend_*` ว่างแต่ fallback ได้คีย์ถูก) · `otp_challenges` ไม่มีแถว `phone_login` · node probe ได้ 503 + detail `23514`
+- **Fix:** `234_otp_purpose_phone_login.sql` drop+create CHECK รับ 3 ค่า (RLS/REVOKE/index คงเดิม) · apply = 201 · constraint ยืนยันครบ
+- **Ledger:** repair 234 + `migration list` = **234/234 Local=Remote** (ไม่มี drift)
+- **Verify:** probe เปลี่ยน 503 → **502 ERR_SMS_SEND_FAILED** (insert ผ่าน) · ลบแถวทดสอบแล้ว
+- **Tests (gates 4/4):** lint 0 (653 ไฟล์) · vitest **263 files/3,050 tests** 0 fail · tsc+build 0
+- **New files:** `supabase/migrations/234_otp_purpose_phone_login.sql` · `e2e/_r131ApplyMigration234.cjs` · `e2e/_r131LedgerRepair234.cjs` · PUSHED (`a4498a0`)
+- **LIVE_TEST_PENDING (Owner):** OTP login ด้วยเบอร์จริง
+
 ## R130 — 2026-11-28 — PHONE NUMBER MANAGEMENT + OTP LOGIN: เพิ่มเบอร์ในโปรไฟล์/แอดมิน + OTP เข้าสู่ระบบด้วยเบอร์ (ปรับของที่มีอยู่ ไม่แตะ/ซ้ำ)
 
 - **UI เพิ่มเบอร์ใน ProfilePage:** การ์ด "📱 เบอร์โทรศัพท์" ใหม่ — `src/lib/phoneProfile.ts` (validate ไทย→E.164 · `supabase.auth.updateUser({ phone })` เข้า `auth.users.phone` จริง · fallback `user_metadata.phone` เมื่อ Phone Provider ไม่พร้อม) — เดิม ProfilePage แสดงเบอร์แต่แก้ไม่ได้
