@@ -35,6 +35,39 @@ function saveQuickProfile(p: QuickProfile) {
   try { localStorage.setItem(QUICK_PROFILE_KEY, JSON.stringify(p)) } catch { /* ignore */ }
 }
 
+// R132 — อ่าน error code จริงจาก FunctionsHttpError (supabase-js ไม่วาง body ไว้ใน data)
+//   ไม่แสดง error code ดิบให้ลูกค้าเห็น — แปลงเป็นข้อความไทย + เหตุผลที่เข้าใจได้
+async function readFunctionErrorCode(fnError: unknown): Promise<string> {
+  const ctx = (fnError as { context?: Response } | null)?.context
+  if (ctx && typeof ctx.json === 'function') {
+    try {
+      const j = await ctx.json()
+      return String((j as { error?: string; message?: string })?.error || (j as { message?: string })?.message || '')
+    } catch { /* body ไม่ใช่ JSON */ }
+  }
+  return ''
+}
+
+function describeOtpSendError(code: string): string {
+  if (code === 'ERR_RATE_LIMITED') return 'ขอรหัสบ่อยเกินไป — กรุณารอสักครู่แล้วกด "ส่งรหัสใหม่"'
+  if (code === 'ERR_SMS_SEND_FAILED') return 'ส่ง SMS ไม่สำเร็จ — กด "ส่งรหัสใหม่" ได้เลย (ถ้าไม่ถึงให้ลองอีกครั้ง)'
+  if (code === 'ERR_OTP_STORE_FAILED') return 'ระบบยังไม่พร้อมสร้างรหัส — กรุณากด "ส่งรหัสใหม่"'
+  if (code === 'ERR_INVALID_PHONE') return 'เบอร์โทรไม่ถูกต้อง — กรุณากรอก 0XXXXXXXXX'
+  if (code === 'ERR_NOT_CONFIGURED') return 'ระบบส่ง SMS ยังไม่พร้อม — กรุณาแจ้งผู้ดูแล'
+  if (code === 'ERR_INVALID_PURPOSE') return 'ระบบยังไม่รองรับการส่งรหัสนี้ — กรุณาแจ้งผู้ดูแล'
+  return 'ส่งรหัส OTP ไม่สำเร็จ — กรุณากด "ส่งรหัสใหม่" หรือลองอีกครั้ง'
+}
+
+function describeOtpVerifyError(code: string): string {
+  if (code === 'ERR_OTP_INVALID') return 'รหัส OTP ไม่ถูกต้อง — กรุณากรอกรหัส 6 หลักที่ได้รับทาง SMS'
+  if (code === 'ERR_OTP_EXPIRED') return 'รหัส OTP หมดอายุแล้ว — กรุณากด "ส่งรหัสใหม่"'
+  if (code === 'ERR_OTP_ALREADY_USED') return 'รหัสนี้ถูกใช้ไปแล้ว — กรุณากด "ส่งรหัสใหม่"'
+  if (code === 'ERR_OTP_TOO_MANY_TRIES') return 'กรอกรหัสผิดบ่อยเกินไป — กรุณารอสักครู่แล้วขอรหัสใหม่'
+  if (code === 'ERR_OTP_NOT_FOUND') return 'ไม่พบรหัสที่ขอไว้ — กรุณากด "ส่งรหัสใหม่"'
+  if (code === 'ERR_RATE_LIMITED') return 'พยายามมากเกินไป — กรุณารอสักครู่'
+  return 'ยืนยัน OTP ไม่สำเร็จ — กรุณาลองใหม่อีกครั้ง'
+}
+
 export function LoginPage() {
   const navigate = useNavigate()
   const routerLocation = useLocation()
@@ -68,6 +101,15 @@ export function LoginPage() {
   const [phoneOtpCode, setPhoneOtpCode] = useState('')
   const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false)
   const [phoneOtpMasked, setPhoneOtpMasked] = useState('')
+  // R132 — ปุ่มส่งซ้ำ + ตัวนับ 30 วินาที (กัน rate limit 3 ครั้ง/10 นาที)
+  const [phoneOtpResendAt, setPhoneOtpResendAt] = useState(0)
+  const [phoneOtpNow, setPhoneOtpNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!phoneOtpResendAt) return
+    const t = setInterval(() => setPhoneOtpNow(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [phoneOtpResendAt])
+  const phoneOtpResendSec = Math.max(0, Math.ceil((phoneOtpResendAt - phoneOtpNow) / 1000))
 
   // P1 / SF-04 — ลืมรหัสผ่าน (ไม่มีในระบบมาก่อน 2026-10-12)
   const [isForgot, setIsForgot] = useState(false)
@@ -192,6 +234,7 @@ export function LoginPage() {
   }
 
   // R130 — ส่ง OTP สำหรับเบอร์โทร (ใช้ otp-send EF เหมือนกับ quick login)
+  // R132 — อ่าน error code จริงจาก response (ไม่กลืนเป็น generic) + ตั้งตัวนับส่งซ้ำ 30 วินาที
   async function handleSendPhoneOtp(e: React.FormEvent) {
     e.preventDefault()
     if (isSendingPhoneOtp) return
@@ -203,15 +246,18 @@ export function LoginPage() {
       })
       setIsSendingPhoneOtp(false)
       if (fnError) {
-        setError('ส่งรหัส OTP ไม่สำเร็จ — กรุณาลองใหม่อีกครั้ง')
+        const code = await readFunctionErrorCode(fnError)
+        setError(describeOtpSendError(code))
         return
       }
       if (data?.error) {
-        setError(data.error === 'ERR_RATE_LIMITED' ? 'ขอรหัสบ่อยเกินไป — กรุณารอสักครู่' : 'ส่งรหัส OTP ไม่สำเร็จ')
+        setError(describeOtpSendError(String(data.error)))
         return
       }
       setPhoneOtpSent(true)
       setPhoneOtpMasked(data?.masked_phone || '')
+      setPhoneOtpResendAt(Date.now() + 30_000)
+      setPhoneOtpNow(Date.now())
       showToast('ส่งรหัสยืนยันทาง SMS แล้ว', 'success')
     } catch {
       setIsSendingPhoneOtp(false)
@@ -234,7 +280,8 @@ export function LoginPage() {
         body: { phone: pPhone, code: phoneOtpCode, purpose: 'phone_login' },
       })
       if (fnError || !data?.ok) {
-        setError(data?.error === 'ERR_OTP_INVALID' ? 'รหัส OTP ไม่ถูกต้อง' : 'ยืนยัน OTP ไม่สำเร็จ')
+        const code = fnError ? await readFunctionErrorCode(fnError) : String(data?.error || '')
+        setError(describeOtpVerifyError(code))
         setIsLoading(false)
         return
       }
@@ -580,38 +627,59 @@ return (
               {phoneOtpSent && (
                 <>
                   <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-700">
-                    ส่งรหัสยืนยันไปที่ {phoneOtpMasked || 'เบอร์ของคุณ'} แล้ว — กรุณากรอกรหัส 6 หลัก
+                    <div>ส่งรหัสยืนยันไปที่ {phoneOtpMasked || 'เบอร์ของคุณ'} แล้ว — กรุณากรอกรหัส 6 หลัก</div>
+                    {/* R132 — ปุ่มส่งซ้ำ + ตัวนับ (กัน rate limit) */}
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={(e) => void handleSendPhoneOtp(e)}
+                        disabled={isSendingPhoneOtp || phoneOtpResendSec > 0}
+                        className={`btn btn-outline btn-sm ${isSendingPhoneOtp || phoneOtpResendSec > 0 ? 'btn-disabled' : ''}`}
+                        data-testid="phone-otp-resend"
+                      >
+                        {isSendingPhoneOtp
+                          ? 'กำลังส่ง…'
+                          : phoneOtpResendSec > 0
+                            ? `ส่งรหัสใหม่ (${phoneOtpResendSec})`
+                            : 'ส่งรหัสใหม่'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhoneOtpSent(false)
+                          setPhoneOtpCode('')
+                          setPhoneOtpResendAt(0)
+                          setError('')
+                        }}
+                        className="btn btn-outline btn-sm"
+                      >
+                        เปลี่ยนเบอร์
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-brand-accent mb-2">รหัส OTP</label>
                     <input
                       type="text"
                       inputMode="numeric"
+                      autoComplete="one-time-code"
                       value={phoneOtpCode}
                       onChange={(e) => setPhoneOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      className="input"
+                      className="input tracking-[0.4em]"
                       placeholder="000000"
                       maxLength={6}
                       required
                       autoFocus
+                      data-testid="phone-otp-input"
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className={`btn btn-primary flex-1 ${isLoading ? 'btn-disabled' : ''}`}
-                    >
-                      {isLoading ? 'กำลังยืนยัน…' : 'ยืนยันและเข้าสู่ระบบ'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setPhoneOtpSent(false); setPhoneOtpCode(''); setError('') }}
-                      className="btn btn-outline"
-                    >
-                      เปลี่ยนเบอร์
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`btn btn-primary w-full ${isLoading ? 'btn-disabled' : ''}`}
+                  >
+                    {isLoading ? 'กำลังยืนยัน…' : 'ยืนยันและเข้าสู่ระบบ'}
+                  </button>
                 </>
               )}
             </form>
