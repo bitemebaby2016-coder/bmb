@@ -26,6 +26,7 @@ import { evaluateCoupon } from "@/lib/promotionClient"
 import type { OrderMode } from "@/config/platformConfig"
 import { addOnTotalFor } from "@/lib/addonDisplay"
 import { showToast } from "@/components/ui/ToastContainer"
+import { ORDER_MODE_ADD_EVENT } from "@/lib/orderNotice"
 
 export type AddToCartResult = 'added' | 'context_blocked' | 'blocked'
 
@@ -189,6 +190,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
       return { items: newItems }
     })
     get().recalculate()
+    // R132: single add funnel → fire one event so the global OrderModeNoticeModal
+    // can show its one-time-per-mode notice. Only on a real add ('added'); the
+    // blocked/context_blocked returns above never reach here. Guard for non-browser
+    // (store may run in tests/SSR where window is undefined).
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(ORDER_MODE_ADD_EVENT, { detail: { mode } }))
+    }
     return 'added'
   },
 

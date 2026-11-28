@@ -5,6 +5,7 @@ import { BottomNav } from './BottomNav'
 import { Footer } from './Footer'
 import { ToastContainer } from '../ui/ToastContainer'
 import { OrderBuilderModal } from '../order/OrderBuilderModal'
+import { OrderModeNoticeModal } from '../order/OrderModeNoticeModal'
 import { BiteMascot } from '../ai/BiteMascot'
 import { BackgroundLayer } from './BackgroundLayer'
 import { AmbientMusicToggle } from '../audio/AmbientMusicToggle'
@@ -339,6 +340,7 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
         <ToastContainer />
         <PushPermissionPrompt />
         <OrderBuilderModal />
+        <OrderModeNoticeModal />
         {/* Decorative + floating AI mascot (pointer-events guarded) */}
         <BiteMascot activeSection={activeSection} />
       </div>

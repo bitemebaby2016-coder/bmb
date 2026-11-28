@@ -7,6 +7,17 @@
 
 ---
 
+## R132 — 2026-11-28 — Order-Mode Notice Popup (Preorder / Same-day) หลังกดเพิ่มสินค้า
+
+- **เป้าหมาย:** ทุกครั้งที่กด "เพิ่มสินค้า" (ทุกช่องทาง) ให้แสดง modal ข้อมูลครั้งเดียวต่อโหมด โดยเรียกชื่อลูกค้าตามชื่อที่ AI ใช้ แล้วหายไปอัตโนมัติหลังกดยอมรับ 2 ครั้งต่อโหมดต่อผู้ใช้ (persisted ไม่รีเซ็ตเมื่อ session ใหม่)
+- **จุดรวมการกดเพิ่ม (single funnel):** `useCartStore.getState().addItem()` ใน `src/store/cartStore.ts` คืน `'added'` — ทุกที่ (FoodTheater/TalkToBite/HomeProductCard/ProductCard/menu) ผ่านจุดเดียว → ยิง event ที่เดียวครอบคลุมทั้งหมด (ไม่ต้องแก้ทีละ component)
+- **ตรรกะ:** `src/lib/orderNotice.ts` (pure helpers) — `ORDER_MODE_ADD_EVENT='bmb:order-mode-add'` · `NOTICE_MAX=2` · key `bmb:order-notice:v1:<subject>:<mode>` (subject = `customer.id || 'guest'`) · `shouldShowNotice` เมื่อ count < 2 · `bumpNoticeCount` ตอน accept · `noticeWho` = `คุณ<name>` หรือ `คุณ` (guest) · `noticeContent` คืน title/body/button/hint ตามข้อความที่กำหนด
+- **การเชื่อมต่อ:** `cartStore.addItem` dispatch `CustomEvent(ORDER_MODE_ADD_EVENT,{detail:{mode}})` ก่อน `return 'added'` (guard `typeof window !== 'undefined'` · เฉพาะ `'added'`) · `src/components/order/OrderModeNoticeModal.tsx` (ใหม่) subscribe event, เปิดเมื่อ `shouldShowNotice`, ดึงชื่อจาก `hydrateMemoryFromServer(customer.id)` → `customer.name`, overlay `z-[60] bg-black/50` role=dialog, ปุ่มเดียว "เข้าใจแล้ว ดำเนินการต่อ" + hint สีเทา, accept → `bumpNoticeCount` + ปิด · mount ที่ `Layout.tsx` ข้าง `OrderBuilderModal`
+- **ไฟล์:** ใหม่ `src/lib/orderNotice.ts` · `src/components/order/OrderModeNoticeModal.tsx` · เทสใหม่ `src/__tests__/r132OrderModeNotice.test.ts` (10) · แก้ `src/store/cartStore.ts` · `src/components/layout/Layout.tsx`
+- **ประตู (gates 4/4):** `tsc --noEmit` 0 · `npm run lint` OK · `vitest run` **267 ไฟล์/3,092 tests PASS** · `npm run build` PASS
+- **Ledger verify (read-only, 2026-11-28):** `node e2e/prodCheckMigrations.cjs --remote` → remote history **234** = local files **234** (001–234) · **MISSING=(none) · EXTRA=(none) → NO DRIFT** · functions 287 · tables 81 · F1_else=present · grant_029=granted · evidence `e2e/prod-check-result.json` (docker local stack down → local probe skipped; remote read-only only, ไม่มี repair)
+- **ไม่มี migration / ไม่ deploy EF** (frontend เท่านั้น) · **หมายเหตุ:** guest→login เปลี่ยน subject (guest vs id) → ตัวนับแยกกัน (guest อาจเห็นอีกครั้งหลัง login) — ยอมรับตามนโยบาย "ต่อผู้ใช้" · **LIVE_TEST_PENDING (Owner):** กดเพิ่มพรีออเดอร์ (count 0) → modal เรียกชื่อ → accept · เพิ่มอีกครั้ง → modal · ครั้งที่ 3 → ไม่ขึ้น · reload (browser เดิม) → count คงอยู่ · โหมดซ้ำเดย์เหมือนกัน · guest → "คุณ"
+
 ## R131 — 2026-11-28 — Theater: ราคาจริง + ปุ่มพรีออเดอร์/ปฏิทินตรงรูปแบบ HomeProductCard (แก้ตามผลทดสอบ R138)
 
 - **ปัญหา (Owner รายงานจากหน้า /shop):** เมนูที่แอดมินเลือกขึ้นโชว์เธียเตอร์แสดงราคา **฿0** · รูปแบบปุ่มไม่ตรงกับพรีออเดอร์ที่มีอยู่ · เมนูที่ยังไม่ลงปฏิทินควรเป็น **ปุ่มเทา "ยังไม่ลงปฏิทินรอบถัดไป"** · ลงปฏิทินแล้วจึงกดได้ · เซมเดย์ต้องเหมือนเซกชันเดิม · ต้องการ reuse ไม่ใช่การ์ดใหม่ซ้อน

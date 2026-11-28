@@ -5,6 +5,13 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R132 2026-11-28 (Order-Mode Notice Popup — Preorder / Same-day หลังกดเพิ่มสินค้า)**
+- **เป้าหมาย:** ทุกช่องทางกดเพิ่มสินค้า (FoodTheater/TalkToBite/HomeProductCard/ProductCard/menu) แสดง modal ข้อมูลครั้งเดียวต่อโหมด เรียกชื่อตามที่ AI ใช้ แล้วหายอัตโนมัติหลังกดยอมรับ 2 ครั้ง/โหมด/ผู้ใช้ (persisted localStorage ไม่รีเซ็ต session ใหม่)
+- **แก้:** ใหม่ `src/lib/orderNotice.ts` (pure helpers — event `bmb:order-mode-add`, `NOTICE_MAX=2`, key `bmb:order-notice:v1:<subject>:<mode>`, `shouldShowNotice`/`bumpNoticeCount`/`noticeWho`/`noticeContent`) · `cartStore.addItem` dispatch event ก่อน `return 'added'` (guard window, เฉพาะ 'added') · ใหม่ `OrderModeNoticeModal.tsx` (overlay z-[60], ดึงชื่อ `hydrateMemoryFromServer`→`customer.name`, ปุ่มเดียว + hint, accept→bump+ปิด) · mount ใน `Layout.tsx` ข้าง `OrderBuilderModal`
+- **Tests (gates 4/4):** tsc 0 · lint OK · vitest **267 ไฟล์/3,092 tests** 0 fail · build OK · เทสใหม่ `r132OrderModeNotice.test.ts` (10)
+- **Ledger verify (read-only):** `prodCheckMigrations.cjs --remote` → remote 234 = local 234 (001–234) · MISSING/EXTRA = none → **NO DRIFT** · functions 287 · tables 81 · F1/grant live · evidence `e2e/prod-check-result.json`
+- **ไม่มี migration / ไม่ deploy EF** (frontend) · **หมายเหตุ:** guest→login เปลี่ยน subject → count แยกกัน (ยอมรับได้) · **LIVE_TEST_PENDING (Owner):** กดเพิ่มพรีออเดอร์/เซมเดย์ → modal เรียกชื่อ → accept 2 ครั้งแล้วหาย · reload → count คงอยู่ · guest → "คุณ"
+
 **R131 2026-11-28 (Theater — ราคาจริง + ปุ่มพรีออเดอร์/ปฏิทินตรงรูปแบบ HomeProductCard)**
 - **ปัญหา (Owner จากหน้า /shop):** เมนูแอดมินบนโชว์เธียเตอร์ราคา ฿0 · ปุ่มไม่ตรงพรีออเดอร์เดิม · ยังไม่ลงปฏิทินควรเป็นปุ่มเทา "ยังไม่ลงปฏิทินรอบถัดไป" · ลงปฏิทินแล้วจึงกดได้ · เซมเดย์เหมือนเซกชันเดิม
 - **แก้:** `FoodTheater.tsx` picks ใช้ `real?.price ?? 0`/`real?.category_id`/`real?.is_available ?? false` (ตัด hack price:0) · `TheaterCards.tsx` ทั้งสองใบใช้ `mode==='PRE_ORDER'` + `preOrderReady`(ต้องมี scheduledDate) + `disabledCta` + `btn-locked` + ป้าย "ยังไม่ลงปฏิทินรอบถัดไป" ตรง `HomeProductCard`
