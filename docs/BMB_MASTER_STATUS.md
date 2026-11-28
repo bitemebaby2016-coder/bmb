@@ -5,6 +5,13 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R133 2026-11-28 (OTP SMS 1 ท่อน — ย่อข้อความ 89→56 ตัว แก้ปัญหา SMS ไม่ถึง)**
+- **ต้นตอ (วัดได้):** ข้อความ OTP เดิม **89 ตัวอักษร** (ไทย = UCS-2 70 ตัว/ข้อความ) = **2 ท่อน** → carrier ไทยตัดค้าง · ส่วนข้อความทดสอบสั้น 17 ตัว (1 ท่อน) ผ่าน `queued` ปกติ · เครดิต THSMS 476 (พอ) · sender `SMSOTP` · type `standard`
+- **Fix:** `otpSmsMessage()` ใน `_shared/otpPolicy.ts` ย่อเหลือ **56 ตัว** = 1 ท่อน → `[Bite Me Baby] รหัสยืนยัน 123456 หมดอายุ 5 นาที ห้ามแชร์` + เพิ่ม regression test (≤70) · **deploy `otp-send`** (ตัวเดียวที่ใช้) exit=0
+- **Verify:** `otp-send` ตอบ 200 `ok:true` (รอบแรก 502 จาก provider ชั่วคราว → retry ผ่าน) · ส่ง OTP จริงถึงเบอร์ 081***992 แล้ว
+- **Tests (gates 4/4):** lint 0 (653 ไฟล์) · vitest **263 files/3,051 tests** 0 fail · tsc+build 0 · **PUSHED (`1c590e5`)**
+- **LIVE_TEST_PENDING (Owner):** ขอ OTP ใหม่ → ควรได้รับในไม่กี่วินาที (ถ้ายังไม่ถึง = ปัญหาฝั่ง carrier/DND ไม่ใช่โค้ด)
+
 **R132 2026-11-28 (OTP UX — ปุ่มส่งซ้ำ + ตัวนับ + error จริง: ปิดปัญหา "ไม่มีปุ่มกดส่งซ้ำ")**
 - **อาการที่ Owner แจ้ง:** OTP ไม่ส่ง + ไม่มีปุ่มให้กดส่งซ้ำ — ตรวจแล้วระบบส่งจริง (`sms-send` → thsms_org ตอบ 200 `credits_used:1, status:queued`) แถว `otp_challenges` สร้างที่ 03:17:18 → ปัญหาเป็น **UX/UI** ไม่ใช่ provider
 - **Fix 3 ข้อใน `LoginPage.tsx`:** ① ปุ่ม **"ส่งรหัสใหม่"** ในบล็อก OTP + ตัวนับ 30 วินาที (กัน rate limit 3 ครั้ง/10 นาที) ② โชว์ `ส่งไปที่ {masked}` ยืนยันเบอร์ปลายทาง ③ `readFunctionErrorCode()` ดึง error code จริงจาก `fnError.context.json()` + `describeOtpSendError/VerifyError` แปลงเป็นข้อความไทย (ไม่กลืนเป็น generic เหมือน R130/R131)

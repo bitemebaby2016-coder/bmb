@@ -7,6 +7,14 @@
 
 ---
 
+## R133 — 2026-11-28 — OTP SMS 1 ท่อน: ย่อข้อความ 89→56 ตัว (แก้ SMS ไม่ถึง)
+
+- **ต้นตอ:** ข้อความ OTP 89 ตัว (ไทย UCS-2 = 70 ตัว/ท่อน) = 2 ท่อน → carrier ตัดค้าง · ข้อความสั้น 17 ตัว 1 ท่อน ผ่าน `queued` · เครดิต 476 พอ · sender `SMSOTP` · type `standard`
+- **Fix:** `otpSmsMessage()` ย่อเป็น 56 ตัว = 1 ท่อน + regression test (≤70) · deploy `otp-send` exit=0
+- **Verify:** `otp-send` 200 `ok:true` (รอบแรก 502 ชั่วคราวจาก provider → retry ผ่าน) · ส่งจริง�ึงเบอร์ 081***992
+- **Tests (gates 4/4):** lint 0 · vitest **263 files/3,051 tests** 0 fail · tsc+build 0 · PUSHED (`1c590e5`)
+- **LIVE_TEST_PENDING (Owner):** ขอ OTP ใหม่แล้วดูว่าถึงมือถือ
+
 ## R132 — 2026-11-28 — OTP UX: ปุ่มส่งซ้ำ + ตัวนับ 30 วินาที + error จริง (ไม่กลืนเป็น generic)
 
 - **อาการ:** Owner แจ้ง "OTP ไม่ส่ง + ไม่มีปุ่มกดส่งซ้ำ" — ตรวจพบว่าระบบ **ส่งจริง** (`sms-send` → thsms_org 200 `credits_used:1, status:queued` · `otp_challenges` มีแถว `phone_login` 03:17:18) → ปัญหาคือ **UI ไม่มีปุ่มส่งซ้ำ** และ error ถูกแปลงเป็น generic
