@@ -5,6 +5,12 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R132 2026-11-28 (OTP UX — ปุ่มส่งซ้ำ + ตัวนับ + error จริง: ปิดปัญหา "ไม่มีปุ่มกดส่งซ้ำ")**
+- **อาการที่ Owner แจ้ง:** OTP ไม่ส่ง + ไม่มีปุ่มให้กดส่งซ้ำ — ตรวจแล้วระบบส่งจริง (`sms-send` → thsms_org ตอบ 200 `credits_used:1, status:queued`) แถว `otp_challenges` สร้างที่ 03:17:18 → ปัญหาเป็น **UX/UI** ไม่ใช่ provider
+- **Fix 3 ข้อใน `LoginPage.tsx`:** ① ปุ่ม **"ส่งรหัสใหม่"** ในบล็อก OTP + ตัวนับ 30 วินาที (กัน rate limit 3 ครั้ง/10 นาที) ② โชว์ `ส่งไปที่ {masked}` ยืนยันเบอร์ปลายทาง ③ `readFunctionErrorCode()` ดึง error code จริงจาก `fnError.context.json()` + `describeOtpSendError/VerifyError` แปลงเป็นข้อความไทย (ไม่กลืนเป็น generic เหมือน R130/R131)
+- **Tests (gates 4/4):** lint 0 (653 ไฟล์) · vitest **263 files/3,050 tests** 0 fail · tsc+build 0 · **PUSHED (`8c228c3`)**
+- **LIVE_TEST_PENDING (Owner):** เข้าสู่ระบบ → เบอร์โทร → ขอ OTP → ถ้าไม่ถึงให้กด "ส่งรหัสใหม่" ได้เลยหลังนับ 30 วินาที
+
 **R131 2026-11-28 (MIGRATION 234 — otp_challenges รับ `phone_login` : ปิดปัญหา "ส่งรหัส OTP ไม่สำเร็จ" บนไลฟ์)**
 - **Root Cause (ยืนยันด้วย probe ไลฟ์):** `migrations/122_otp_challenges.sql:27` กำหนด `CHECK (purpose IN ('quick_login','guest_checkout'))` — R130 เพิ่ม `phone_login` เฉพาะใน EF โดยไม่มี migration ขยาย CHECK → insert `otp_challenges` ชน **23514 check_violation** → `otp-send` คืน **503 ERR_OTP_STORE_FAILED** → UI ขึ้น "ส่งรหัส OTP ไม่สำเร็จ" และ `phoneOtpSent` ไม่เป็น true = **ไม่มีช่องกรอก OTP** (ตรงกับอาการที่ Owner แจ้ง)
 - **หลักฐานการวินิจฉัย:** `otp_challenges` ไม่มีแถว `phone_login` เลย (มีแต่ quick_login/guest_checkout จาก 2026-11-15) · node probe ได้ `503` + detail `23514` · สมมติฐาน verify_jwt/service-key ถูกหักล้างด้วย probe (platform 400 ถึง handler · sms-send auth ผ่าน · `bmb_backend_*` ว่างแต่ `||` fallback ได้คีย์ถูก)

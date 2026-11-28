@@ -32,6 +32,7 @@
 | **C-1..C-6** | 6 | ✅ **RESOLVED** | Owner decisions recorded |
 | **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
 | **รวม** | **90+** | | |
+| **R132 (OTP UX — ปุ่มส่งซ้ำ + ตัวนับ + error จริง)** | 1 | ✅ **CODE_CLOSED + PUSHED (`8c228c3`)** | ปุ่ม "ส่งรหัสใหม่" + นับ 30 วินาที · โชว์เบอร์ปลายทาง · error code จริง · gates 4/4 (vitest 3,050) · LIVE_TEST_PENDING: Owner ทดสอบส่งซ้ำ |
 | **R131 (Migration 234 — otp_challenges รับ phone_login)** | 1 | ✅ **CODE_CLOSED + APPLIED PROD + LEDGER 234/234 + PUSHED (`a4498a0`)** | ปิดปัญหา OTP ไม่ส่ง + ไม่มีช่องกรอก (23514 → 503) · probe 503→502 · gates 4/4 (vitest 3,050) · LIVE_TEST_PENDING: Owner ทดสอบ OTP ด้วยเบอร์จริง |
 | **R130 (Phone management + OTP login — เพิ่มเบอร์ในโปรไฟล์/แอดมิน + OTP เข้าสู่ระบบ)** | 1 | ✅ **CODE_CLOSED + DEPLOYED + PUSHED (`ac32e42`)** | ProfilePage เพิ่มเบอร์ (E.164) · AdminCustomers แก้เบอร์ · tab เบอร์เดิมมี OTP ก่อน login · gates 4/4 (vitest 3,050) · ledger MATCH 233/233 · LIVE_TEST_PENDING: Owner ทดสอบ 3 ทาง (เพิ่มเบอร์/แก้เบอร์/OTP login) |
 | **R129 (Deploy EF image-gen 4 kinds — แก้ ERR_INVALID_KIND + ledger ตรง prod)** | 1 | ✅ **CODE_CLOSED + DEPLOYED + PUSHED (`ab388db`)** | deploy `image-gen` exit=0 · probe ก่อน/หลัง + smoke จริง kind=studio (qwen · cleanup แล้ว) · gates 4/4 (vitest 3,050) · ledger MATCH 233/233 · LIVE_TEST_PENDING: Owner สร้างภาพหมวด Studio บน /admin/marketing |

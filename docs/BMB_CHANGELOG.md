@@ -7,6 +7,13 @@
 
 ---
 
+## R132 — 2026-11-28 — OTP UX: ปุ่มส่งซ้ำ + ตัวนับ 30 วินาที + error จริง (ไม่กลืนเป็น generic)
+
+- **อาการ:** Owner แจ้ง "OTP ไม่ส่ง + ไม่มีปุ่มกดส่งซ้ำ" — ตรวจพบว่าระบบ **ส่งจริง** (`sms-send` → thsms_org 200 `credits_used:1, status:queued` · `otp_challenges` มีแถว `phone_login` 03:17:18) → ปัญหาคือ **UI ไม่มีปุ่มส่งซ้ำ** และ error ถูกแปลงเป็น generic
+- **Fix:** ① ปุ่ม "ส่งรหัสใหม่" + ตัวนับ 30 วินาที (กัน rate limit) ② โชว์ `ส่งไปที่ {masked}` ③ `readFunctionErrorCode()` + `describeOtpSendError/VerifyError` แปลง error code จริงเป็นข้อความไทย
+- **Tests (gates 4/4):** lint 0 (653 ไฟล์) · vitest **263 files/3,050 tests** 0 fail · tsc+build 0 · PUSHED (`8c228c3`)
+- **LIVE_TEST_PENDING (Owner):** ทดสอบขอ OTP + กดส่งซ้ำ
+
 ## R131 — 2026-11-28 — MIGRATION 234: otp_challenges รับ `phone_login` (ปิดปัญหา OTP ไม่ส่ง + ไม่มีช่องกรอกรหัส)
 
 - **Root Cause:** `122_otp_challenges.sql:27` CHECK รับแค่ `('quick_login','guest_checkout')` — R130 เพิ่ม `phone_login` ใน EF แต่ไม่มี migration → insert ชน **23514** → `otp-send` 503 `ERR_OTP_STORE_FAILED` → UI generic error + `phoneOtpSent` ไม่เป็น true = ไม่มีช่อง OTP
