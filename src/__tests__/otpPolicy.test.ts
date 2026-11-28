@@ -113,6 +113,13 @@ describe('expiry, masking, message', () => {
     // ห้ามมีชื่อ/ที่อยู่/อีเมลในข้อความ
     expect(msg).not.toMatch(/@/)
   })
+
+  // R133 — ข้อความต้องยาว ≤ 70 ตัว (ไทย = UCS-2 70 ตัว/ข้อความ) เท่านั้น
+  //   เดิม 89 ตัว = 2 ท่อน → carrier ไทยตัดค้าง (ยืนยันด้วย probe จริง 2026-11-28)
+  it('R133 — SMS text fits ONE Thai segment (<= 70 chars) so carriers do not split it', () => {
+    const msg = otpSmsMessage('123456')
+    expect(msg.length).toBeLessThanOrEqual(70)
+  })
 })
 
 describe('OTP limits — กัน SMS fraud และ brute force', () => {

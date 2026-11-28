@@ -135,8 +135,11 @@ export function recordOtpHit(
   store.set(key, hits)
 }
 
-/** ข้อความ SMS ที่ส่งให้ลูกค้า — ห้ามใส่ชื่อ/ข้อมูลส่วนตัว */
+/** ข้อความ SMS ที่ส่งให้ลูกค้า — ห้ามใส่ชื่อ/ข้อมูลส่วนตัว
+ *  R133: ต้องยาว ≤ 70 ตัวอักษรเสมอ (ไทย = UCS-2 70 ตัว/ข้อความ) — เดิม 89 ตัว = 2 ท่อน
+ *  ทำให้ carrier ตัดค้าง/ยับยั้ง (ยืนยันด้วย probe: ข้อความสั้น 1 ท่อน queued ผ่าน)
+ *  ห้ามขยายข้อความเกิน 70 ตัวโดยไม่ทดสอบส่งจริง */
 export function otpSmsMessage(code: string, ttlMs: number = OTP_TTL_MS): string {
   const min = Math.max(1, Math.round(ttlMs / 60000))
-  return `[Bite Me Baby] รหัสยืนยันตัวตนของคุณคือ ${code} (หมดอายุใน ${min} นาที) — ห้ามแชร์รหัสนี้กับใคร`
+  return `[Bite Me Baby] รหัสยืนยัน ${code} หมดอายุ ${min} นาที ห้ามแชร์`
 }
