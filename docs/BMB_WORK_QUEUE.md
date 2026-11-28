@@ -32,6 +32,7 @@
 | **C-1..C-6** | 6 | ✅ **RESOLVED** | Owner decisions recorded |
 | **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
 | **รวม** | **90+** | | |
+| **R130 (Phone management + OTP login — เพิ่มเบอร์ในโปรไฟล์/แอดมิน + OTP เข้าสู่ระบบ)** | 1 | ✅ **CODE_CLOSED + DEPLOYED + PUSHED (`ac32e42`)** | ProfilePage เพิ่มเบอร์ (E.164) · AdminCustomers แก้เบอร์ · tab เบอร์เดิมมี OTP ก่อน login · gates 4/4 (vitest 3,050) · ledger MATCH 233/233 · LIVE_TEST_PENDING: Owner ทดสอบ 3 ทาง (เพิ่มเบอร์/แก้เบอร์/OTP login) |
 | **R129 (Deploy EF image-gen 4 kinds — แก้ ERR_INVALID_KIND + ledger ตรง prod)** | 1 | ✅ **CODE_CLOSED + DEPLOYED + PUSHED (`ab388db`)** | deploy `image-gen` exit=0 · probe ก่อน/หลัง + smoke จริง kind=studio (qwen · cleanup แล้ว) · gates 4/4 (vitest 3,050) · ledger MATCH 233/233 · LIVE_TEST_PENDING: Owner สร้างภาพหมวด Studio บน /admin/marketing |
 | **R128 (Theater mode badges — ประเภท/ปฏิทิน/ยังไม่ลงปฏิทิน)** | 1 | ✅ **CODE_CLOSED + PUSHED** | FoodTheater สืบทอดสิทธิ์โหมดจากเมนูจริง + ModeCornerBadge ทั้งสองการ์ด · เทสใหม่ 7 tests · gates green (tsc/lint/vitest 3,050/build) |
 | **R127 (Toggle track 14→20px)** | 1 | ✅ **CODE_CLOSED + PUSHED** | Owner visual tune หลัง R126 — track 40×20 / knob 10×10 · gates green (tsc/lint/vitest 3,043/build) |

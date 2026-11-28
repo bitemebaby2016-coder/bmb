@@ -7,6 +7,18 @@
 
 ---
 
+## R130 — 2026-11-28 — PHONE NUMBER MANAGEMENT + OTP LOGIN: เพิ่มเบอร์ในโปรไฟล์/แอดมิน + OTP เข้าสู่ระบบด้วยเบอร์ (ปรับของที่มีอยู่ ไม่แตะ/ซ้ำ)
+
+- **UI เพิ่มเบอร์ใน ProfilePage:** การ์ด "📱 เบอร์โทรศัพท์" ใหม่ — `src/lib/phoneProfile.ts` (validate ไทย→E.164 · `supabase.auth.updateUser({ phone })` เข้า `auth.users.phone` จริง · fallback `user_metadata.phone` เมื่อ Phone Provider ไม่พร้อม) — เดิม ProfilePage แสดงเบอร์แต่แก้ไม่ได้
+- **AdminCustomers แก้เบอร์เองได้:** ปุ่ม 📱 ต่อแถว → inline edit + บันทึกผ่าน `updateCustomerPhone` (RLS เดิมบังคับ) — เดิมได้แค่ลบ
+- **Phone OTP login (ปรับ tab เดิม):** tab "เบอร์โทร/รหัสผ่าน" เดิม เพิ่มขั้น OTP ก่อน login — `otp-send` EF (purpose `phone_login` ใหม่ใน VALID_PURPOSES + OtpPurpose type) → `otp-verify` EF ใหม่ (reuse `consumeOtpChallenge` จาก `_shared/otpVerify.ts` — ไม่ duplicate) → `loginByPhone` เดิม — ไม่ได้สร้าง tab/หน้าใหม่
+- **EF Deploy:** `otp-send` + `otp-verify` exit=0 (`e2e/_r130_deploy_otp.log`) · probe หลัง deploy = 400 `ERR_OTP_NOT_FOUND` สำหรับโค้ดปลอม = live + สาย verify ทำงาน
+- **Tests (gates 4/4):** lint 0 (653 ไฟล์) · vitest **263 files/3,050 tests** 0 fail · tsc+build 0 · PUSHED (`ac32e42`)
+- **New files:** `src/lib/phoneProfile.ts` · `supabase/functions/otp-verify/index.ts` · `e2e/_r130DeployOtpFns.cjs` · `e2e/_r130OtpVerifyProbe.cjs`
+- **LIVE_TEST_PENDING (Owner):** /profile เพิ่มเบอร์ · /admin/customers แก้เบอร์ · เข้าสู่ระบบแท็บเบอร์โทร ขอ OTP → ใส่ 6 หลัก → เข้าสู่
+
+---
+
 ## R129 — 2026-11-27 — DEPLOY EF image-gen (4 kinds incl. studio): แก้ "สร้างไม่สำเร็จ: ERR_INVALID_KIND" บน production + เทสครบ + migration ledger ตรง prod
 
 - **Root Cause (deploy drift):** commit `ee660ea` เพิ่ม kind `studio` พร้อมกันทั้ง frontend + EF แต่ช่องทาง deploy ต่างกัน — frontend (Cloudflare Pages auto จาก main) ขึ้นแล้ว ส่วน Edge Function ต้อง deploy มือ (CI ไม่มี job deploy functions) → production EF ยังเป็นรุ่น 3 หมวด (menu/promo/festival) ขณะ frontend ส่ง `kind:'studio'` = 400 `ERR_INVALID_KIND` (`index.ts:122`) — พิสูจน์ด้วย live probe ก่อน deploy: studio→`ERR_INVALID_KIND` ส่วน promo→`ERR_MISSING_SUBJECT` (sanity ผ่าน = ระบบปกติเฉพาะหมวดใหม่)

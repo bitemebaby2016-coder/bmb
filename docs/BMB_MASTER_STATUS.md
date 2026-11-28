@@ -5,6 +5,14 @@
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
 
+**R130 2026-11-28 (PHONE NUMBER MANAGEMENT + OTP LOGIN — เพิ่มเบอร์ในโปรไฟล์/แอดมิน + OTP เข้าสู่ระบบด้วยเบอร์)**
+- **UI เพิ่มเบอร์ใน ProfilePage:** การ์ด "📱 เบอร์โทรศัพท์" ใหม่ (`src/lib/phoneProfile.ts` — validate ไทย→E.164 `+66XXXXXXXXX` · `supabase.auth.updateUser({ phone })` เข้า `auth.users.phone` จริง · fallback `user_metadata.phone` ถ้า provider ไม่พร้อม) — เดิมอ่านแต่ไม่แก้ได้
+- **AdminCustomers แก้เบอร์เองได้:** ปุ่ม 📱 ต่อแถว → inline edit + บันทึก (`updateCustomerPhone` ใน `bmbAdminApi_customers.ts` — RLS เดิมบังคับ) — เดิมได้แค่ลบ
+- **Phone OTP login (ปรับของที่มี ไม่แตะ tab ใหม่):** tab "เบอร์โทร/รหัสผ่าน" เดิม (`mode='phone'`) เพิ่มขั้น OTP ก่อน login — ส่งรหัสผ่าน `otp-send` EF (purpose `phone_login` ใหม่) → ยืนยันผ่าน `otp-verify` EF (ใหม่ · reuse `consumeOtpChallenge` จาก `_shared/otpVerify.ts` — ไม่ duplicate logic) → ค่อย `loginByPhone` — เดิมมีแต่แถบเดิมไม่มี OTP
+- **EF Deploy:** `otp-send` (VALID_PURPOSES + `phone_login` · `OtpPurpose` type อัปเดต) + `otp-verify` (ใหม่) — exit=0 ทุก fn (evidence `e2e/_r130_deploy_otp.log`) · probe `otp-verify` หลัง deploy = 400 `ERR_OTP_NOT_FOUND` สำหรับโค้ดปลอม = function live + สาย verify ทำงาน (`e2e/_r130OtpVerifyProbe.cjs`) · **PUSHED (`ac32e42`)**
+- **Tests (gates 4/4):** lint 0 (653 ไฟล์) · vitest **263 files/3,050 tests** 0 fail · tsc+build 0
+- **LIVE_TEST_PENDING (Owner):** ① /profile → ใส่เบอร์ → บันทึก (ถ้า Supabase Phone Provider ไม่ตั้ง = บันทึก metadata เท่านั้น แจ้ง toast ตามจริง) ② /admin/customers → 📱 แก้เบอร์ลูกค้า ③ ออกจากระบบ → เข้าสู่ระบบ → แท็บเบอร์โทร → ขอ OTP → ใส่ 6 หลัก → เข้าสู่ (ต้องตั้งค่า SMS provider ใน Supabase หรือใช้ sms-send EF เดิม)
+
 **R129 2026-11-27 (DEPLOY EF image-gen — แก้ "สร้างไม่สำเร็จ: ERR_INVALID_KIND" บน production + เทสครบ + ledger ตรง prod)**
 - **Root Cause:** deploy drift — commit `ee660ea` (2026-11-27 17:18) เพิ่ม kind `studio` ทั้ง frontend (ตัวเลือก "ภาพเมนูอาหาร (Studio)") และ EF `image-gen` (+3 บรรทัด) แต่ frontend ขึ้น production อัตโนมัติผ่าน Cloudflare Pages ส่วน Edge Function ต้อง deploy มือ (CI = Test+Lint+Build เท่านั้น) → frontend ใหม่ส่ง `kind:'studio'` เข้า EF เก่า (3 หมวด) = 400 `ERR_INVALID_KIND` ทันที
 - **Deploy:** `supabase functions deploy image-gen` exit=0 (evidence `e2e/_r129_deploy_imagegen.log` · ไม่แตะ secret ใด ๆ — `IMAGE_GEN_MODELS` คงเดิม) · **PUSHED (`ab388db`)**
