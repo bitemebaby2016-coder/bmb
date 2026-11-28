@@ -37,6 +37,7 @@ import { MarketingFeedSection } from '@/components/home/MarketingFeedSection'
 import { CategorySections } from '@/components/home/CategorySections'
 import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { runOrderBuilder } from '@/lib/orderEntry'
+import { emitOrderModeAdd } from '@/lib/orderNotice'
 import { deriveOrderMode } from '@/lib/talkToBite'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { headingChips } from '@/lib/catalogStructure'
@@ -364,6 +365,8 @@ const [rows, cats, rounds, promos] = await Promise.all([
     }
     // OD-4 / RC-3 contract เดียวกับปุ่มสั่งซื้อปุ่มอื่น: ต้องเช็ค AddToCartResult
     // ก่อนบอกผู้ใช้ว่า "เพิ่มแล้ว" และก่อน navigate (เดิมบรรทัดนี้ไม่เช็คผลเลย)
+    // R132: notice at add-click (direct add — no add-on sheet on this path).
+    emitOrderModeAdd(isPre ? 'PRE_ORDER' : 'SAME_DAY')
     const res = addItem(product, 1, {}, isPre ? 'PRE_ORDER' : 'SAME_DAY')
     if (res !== 'added') {
       showToast(

@@ -24,6 +24,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { MascotBadge } from '@/components/MascotBadge'
 import { deriveOrderMode } from '@/lib/talkToBite'
+import { emitOrderModeAdd } from '@/lib/orderNotice'
 import { recommendReason } from '@/lib/theaterReasons'
 import { theaterPosFor, clampIndex } from '@/lib/theaterGeometry'
 import { readTheaterOpen, writeTheaterOpen } from '@/lib/theaterPreferences'
@@ -254,6 +255,8 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
     const mode = deriveOrderMode(productToAdd)
     if (!mode) { showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning'); return }
     if (mode === 'PRE_ORDER' && !schedule[productToAdd.id]) { showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning'); return }
+    // R132: notice at add-click (direct add — no add-on sheet on this path).
+    emitOrderModeAdd(mode)
     const res = useCartStore.getState().addItem(productToAdd, quantity, {}, mode)
     if (res === 'added') {
       showToast('เพิ่ม ' + productToAdd.name + ' ลงตะกร้าแล้ว 🛒')

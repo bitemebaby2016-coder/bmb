@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useRiderIdentity } from '@/hooks/useRiderIdentity'
 import { useCartStore } from '@/store/cartStore'
+import { emitOrderModeAdd } from '@/lib/orderNotice'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { MascotBadge } from '@/components/MascotBadge'
 import { RecommendationCard } from '@/components/theater/TheaterCards'
@@ -711,6 +712,8 @@ pushAssistant(`ออเดอร์ล่าสุดของคุณ (${Math
           showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
           return
         }
+        // R132: notice at add-click (direct add — no add-on sheet on this path).
+        emitOrderModeAdd(mode)
         const gated = useCartStore.getState().addItem(product, 1, {}, mode)
         if (gated === 'added') {
           showToast(`เพิ่ม ${product.name} ลงตะกร้าแล้ว 🛒`)
@@ -722,6 +725,8 @@ pushAssistant(`ออเดอร์ล่าสุดของคุณ (${Math
       })()
       return
     }
+    // R132: notice at add-click (direct add — no add-on sheet on this path).
+    emitOrderModeAdd(mode)
     const res = useCartStore.getState().addItem(product, 1, {}, mode)
     if (res === 'added') {
       showToast(`เพิ่ม ${product.name} ลงตะกร้าแล้ว 🛒`)
@@ -747,6 +752,8 @@ pushAssistant(`ออเดอร์ล่าสุดของคุณ (${Math
     for (const line of draft) {
       const p = line.product
       const mode: OrderMode = p.available_preorder && !p.available_same_day ? 'PRE_ORDER' : 'SAME_DAY'
+      // R132: notice at add-click (one event per line; modal dedupes while open).
+      emitOrderModeAdd(mode)
       const res = useCartStore.getState().addItem(p, line.quantity, line.customizations ?? {}, mode)
       if (res === 'added') addedCount += 1
       else failedNames.push(p.name)

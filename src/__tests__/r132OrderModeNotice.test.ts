@@ -17,8 +17,11 @@ import {
   bumpNoticeCount,
   shouldShowNotice,
   noticeContent,
+  emitOrderModeAdd,
 } from '@/lib/orderNotice'
 import cartStoreSrc from '../store/cartStore.ts?raw'
+import orderEntrySrc from '../lib/orderEntry.ts?raw'
+import foodTheaterSrc from '../components/theater/FoodTheater.tsx?raw'
 import layoutSrc from '../components/layout/Layout.tsx?raw'
 import modalSrc from '../components/order/OrderModeNoticeModal.tsx?raw'
 import orderNoticeSrc from '../lib/orderNotice.ts?raw'
@@ -83,12 +86,32 @@ describe('R132 — orderNotice helpers', () => {
     expect(same.body).toContain('คุณกำลังสั่งอาหารส่งวันนี้')
     expect(same.button).toBe('เข้าใจแล้ว ดำเนินการต่อ')
   })
+  it('emitOrderModeAdd dispatches ORDER_MODE_ADD_EVENT with the mode', () => {
+    let seen: unknown = null
+    const onEvt = (e: Event) => { seen = (e as CustomEvent).detail }
+    window.addEventListener(ORDER_MODE_ADD_EVENT, onEvt)
+    emitOrderModeAdd('PRE_ORDER')
+    window.removeEventListener(ORDER_MODE_ADD_EVENT, onEvt)
+    expect(seen).toEqual({ mode: 'PRE_ORDER' })
+  })
 })
 
-describe('R132 — source wiring', () => {
-  it('cartStore dispatches ORDER_MODE_ADD_EVENT on add', () => {
-    expect(cartStoreSrc).toContain('ORDER_MODE_ADD_EVENT')
-    expect(cartStoreSrc).toContain('window.dispatchEvent(new CustomEvent(ORDER_MODE_ADD_EVENT')
+describe('R132 — source wiring (event fires at add-click, BEFORE the add-on sheet)', () => {
+  it('cartStore.addItem NO LONGER dispatches (moved to add-click entry)', () => {
+    expect(cartStoreSrc).not.toContain('ORDER_MODE_ADD_EVENT')
+    expect(cartStoreSrc).not.toContain('dispatchEvent(new CustomEvent(ORDER_MODE_ADD_EVENT')
+  })
+
+  it('runOrderBuilder emits BEFORE openBuilder (sheet opens after notice)', () => {
+    expect(orderEntrySrc).toContain('emitOrderModeAdd(mode)')
+    const emitIdx = orderEntrySrc.indexOf('emitOrderModeAdd(mode)')
+    const openIdx = orderEntrySrc.indexOf('openBuilder(product, products')
+    expect(emitIdx).toBeGreaterThanOrEqual(0)
+    expect(openIdx).toBeGreaterThan(emitIdx)
+  })
+
+  it('direct-add path (FoodTheater.add) emits the notice too', () => {
+    expect(foodTheaterSrc).toContain('emitOrderModeAdd(mode)')
   })
 
   it('Layout mounts OrderModeNoticeModal', () => {

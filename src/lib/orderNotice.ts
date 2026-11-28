@@ -21,6 +21,17 @@ export const ORDER_MODE_ADD_EVENT = 'bmb:order-mode-add'
 /** Show the notice while count < this; increment on accept. */
 export const NOTICE_MAX = 2
 
+/**
+ * Fire the order-mode add event. MUST be called at the add-click entry point
+ * (the moment the customer taps "เพิ่มลงตะกร้า"), BEFORE any add-on / add-to-cart
+ * sheet (OrderBuilderModal) opens — so the notice precedes the sheet, not after
+ * the item is already added. Guarded for non-browser contexts.
+ */
+export function emitOrderModeAdd(mode: OrderMode): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(ORDER_MODE_ADD_EVENT, { detail: { mode } }))
+}
+
 const NOTICE_KEY_PREFIX = 'bmb:order-notice:v1'
 
 const NOTICE_BUTTON = 'เข้าใจแล้ว ดำเนินการต่อ'

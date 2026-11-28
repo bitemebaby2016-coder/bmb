@@ -24,6 +24,7 @@ import type { Product } from '@/types'
 import type { OrderMode } from '@/config/platformConfig'
 import type { AddToCartResult } from '@/store/cartStore'
 import { useOrderBuilderStore, type OrderBuilderResult } from '@/store/orderBuilderStore'
+import { emitOrderModeAdd } from '@/lib/orderNotice'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -76,6 +77,9 @@ export function runOrderBuilder(opts: OrderEntryOptions): void {
     toast(notFound, 'error')
     return
   }
+  // R132: fire the order-mode notice at the add-click, BEFORE the add-on /
+  // add-to-cart sheet opens (Owner: ต้องขึ้นก่อนหน้าต่าง add-on/add-to-cart).
+  emitOrderModeAdd(mode)
   useOrderBuilderStore.getState().openBuilder(product, products, (result) => {
     const customizations: Record<string, any> = {}
     if (result.addOns.length > 0) {
