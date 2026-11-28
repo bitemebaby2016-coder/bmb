@@ -32,6 +32,7 @@
 | **C-1..C-6** | 6 | ✅ **RESOLVED** | Owner decisions recorded |
 | **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
 | **รวม** | **90+** | | |
+| **R134 (SMS_MESSAGE_TYPE → superfast)** | 1 | ✅ **CODE_CLOSED + SECRET SET (201) + PUSHED (`5ec618e`)** | `standard` ไม่มีหลักฐานว่าส่งถึง → เปลี่ยนเป็น `superfast` (3 เครดิต) · otp-send 200 ok · LIVE_TEST_PENDING: Owner ยืนยันว่าได้ SMS |
 | **R133 (OTP SMS 1 ท่อน — ย่อ 89→56 ตัว)** | 1 | ✅ **CODE_CLOSED + DEPLOYED + PUSHED (`1c590e5`)** | ข้อความ 2 ท่อน = carrier ตัด → ย่อ 1 ท่อน + regression test · gates 4/4 (vitest 3,051) · LIVE_TEST_PENDING: Owner ขอ OTP แล้วดูว่าถึง |
 | **R132 (OTP UX — ปุ่มส่งซ้ำ + ตัวนับ + error จริง)** | 1 | ✅ **CODE_CLOSED + PUSHED (`8c228c3`)** | ปุ่ม "ส่งรหัสใหม่" + นับ 30 วินาที · โชว์เบอร์ปลายทาง · error code จริง · gates 4/4 (vitest 3,050) · LIVE_TEST_PENDING: Owner ทดสอบส่งซ้ำ |
 | **R131 (Migration 234 — otp_challenges รับ phone_login)** | 1 | ✅ **CODE_CLOSED + APPLIED PROD + LEDGER 234/234 + PUSHED (`a4498a0`)** | ปิดปัญหา OTP ไม่ส่ง + ไม่มีช่องกรอก (23514 → 503) · probe 503→502 · gates 4/4 (vitest 3,050) · LIVE_TEST_PENDING: Owner ทดสอบ OTP ด้วยเบอร์จริง |

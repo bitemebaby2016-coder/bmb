@@ -7,6 +7,15 @@
 
 ---
 
+## R134 — 2026-11-28 — SMS_MESSAGE_TYPE → `superfast` (แก้ OTP ไม่ถึงมือถือ)
+
+- **ต้นตอ:** การส่งถึงที่ยืนยันจริง (2026-10-07) ใช้ `superfast` · รอบ 8i เปลี่ยน `standard` เพื่อประหยัดแต่ไม่มีหลักฐานว่าถึงหลังเปลี่ยน → `standard` เสี่ยง DND/หน่วง
+- **Fix:** set secret `SMS_MESSAGE_TYPE=superfast` (Management API `POST /secrets` = 201 · `PATCH` ใช้ไม่ได้ = 404) · evidence `e2e/_r134_superfast.log`
+- **Verify:** `otp-send` 200 `ok:true` · ส่งจริงถึงเบอร์ 081***992
+- **ต้นทุน:** 3 เครดิต/ข้อความ (เหลือ ~476 ≈ 158 ครั้ง)
+- **Tests:** lint 0 · ไม่มี src เปลี่ยน · PUSHED (`5ec618e`)
+- **LIVE_TEST_PENDING (Owner):** ยืนยันว่าได้ SMS
+
 ## R133 — 2026-11-28 — OTP SMS 1 ท่อน: ย่อข้อความ 89→56 ตัว (แก้ SMS ไม่ถึง)
 
 - **ต้นตอ:** ข้อความ OTP 89 ตัว (ไทย UCS-2 = 70 ตัว/ท่อน) = 2 ท่อน → carrier ตัดค้าง · ข้อความสั้น 17 ตัว 1 ท่อน ผ่าน `queued` · เครดิต 476 พอ · sender `SMSOTP` · type `standard`
