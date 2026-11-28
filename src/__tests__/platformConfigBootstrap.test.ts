@@ -3,7 +3,7 @@
 // ============================================
 import { describe, it, expect } from 'vitest'
 import { mapServerConfigToOverrides } from '@/lib/platformConfigBootstrap'
-import { DEFAULT_PLATFORM_CONFIG } from '@/config/platformConfig'
+import { DEFAULT_PLATFORM_CONFIG, DEFAULT_HERO_CONFIG, parseHeroConfig } from '@/config/platformConfig'
 
 const SETTINGS = {
   delivery_policy: {
@@ -85,5 +85,48 @@ describe('mapServerConfigToOverrides — server → client config projection', (
     const o = mapServerConfigToOverrides(null, { display_name: '', name: 'Fallback Brand', tenant_id: null }, null)
     expect(o.brandName).toBe('Fallback Brand')
     expect(o.tenantId).toBeUndefined()
+  })
+
+  it('maps brand logo_url_icon → brandLogoUrl (admin logo change reaches Header)', () => {
+    const o = mapServerConfigToOverrides(null, {
+      display_name: 'Chanthaburi Kitchen',
+      name: 'X',
+      tenant_id: 'tenant-2',
+      logo_url_icon: 'https://cdn.example.com/logo-new.png',
+    }, null)
+    expect(o.brandLogoUrl).toBe('https://cdn.example.com/logo-new.png')
+  })
+
+  it('blank logo_url_icon is ignored (fallback asset preserved)', () => {
+    const o = mapServerConfigToOverrides(null, { display_name: 'X', name: 'X', tenant_id: null, logo_url_icon: '   ' }, null)
+    expect(o.brandLogoUrl).toBeUndefined()
+  })
+
+  it('maps hero_config → hero (admin hero text/image reaches FoodTheater)', () => {
+    const o = mapServerConfigToOverrides({ hero_config: { headline: 'สวัสดีจ้า', heroImageUrl: 'https://cdn/x.png' } }, null, null)
+    expect(o.hero?.headline).toBe('สวัสดีจ้า')
+    expect(o.hero?.heroImageUrl).toBe('https://cdn/x.png')
+    // fields not provided fall back to defaults (no hardcoding scattered)
+    expect(o.hero?.ctaLabel).toBe(DEFAULT_HERO_CONFIG.ctaLabel)
+  })
+
+  it('no hero_config key → no hero override (defaults preserved, empty stays empty)', () => {
+    expect(mapServerConfigToOverrides({}, null, null)).toEqual({})
+    expect(mapServerConfigToOverrides(null, null, null).hero).toBeUndefined()
+  })
+})
+
+describe('parseHeroConfig — raw business_settings.hero_config → HeroConfig', () => {
+  it('parses JSON string and fills missing fields with defaults', () => {
+    const cfg = parseHeroConfig(JSON.stringify({ headline: 'A', kicker: '  ' }))
+    expect(cfg.headline).toBe('A')
+    expect(cfg.kicker).toBe(DEFAULT_HERO_CONFIG.kicker) // blank → default
+    expect(cfg.subheadline).toBe(DEFAULT_HERO_CONFIG.subheadline)
+  })
+
+  it('null / garbage → full defaults (zero-fake, no crash)', () => {
+    expect(parseHeroConfig(null)).toEqual(DEFAULT_HERO_CONFIG)
+    expect(parseHeroConfig('not-json')).toEqual(DEFAULT_HERO_CONFIG)
+    expect(parseHeroConfig(42)).toEqual(DEFAULT_HERO_CONFIG)
   })
 })

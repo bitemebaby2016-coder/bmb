@@ -19,15 +19,19 @@ import { supabase } from './supabase'
 import {
   usePlatformConfigStore,
   DEFAULT_PLATFORM_CONFIG,
+  parseHeroConfig,
   type PlatformConfig,
   type GlassTheme,
+  type HeroConfig,
 } from '@/config/platformConfig'
 
 export interface ConfigOverrides {
   tenantId?: string
   brandName?: string
+  brandLogoUrl?: string
   currency?: string
   theme?: GlassTheme
+  hero?: HeroConfig
   delivery?: Partial<PlatformConfig['delivery']>
 }
 
@@ -40,7 +44,7 @@ function num(v: unknown): number | null {
 /** Pure mapping — settings + default brand/branch rows → config overrides (missing = คง fallback). */
 export function mapServerConfigToOverrides(
   settings: Record<string, unknown> | null | undefined,
-  brand: { display_name?: string | null; name?: string | null; tenant_id?: string | null; theme_tokens?: Record<string, any> | null } | null | undefined,
+  brand: { display_name?: string | null; name?: string | null; tenant_id?: string | null; logo_url_icon?: string | null; theme_tokens?: Record<string, any> | null } | null | undefined,
   branch: { service_radius_km?: number | string | null } | null | undefined,
 ): ConfigOverrides {
   const overrides: ConfigOverrides = {}
@@ -71,6 +75,13 @@ export function mapServerConfigToOverrides(
   const brandName = brand?.display_name || brand?.name
   if (brandName && brandName.trim() !== '') overrides.brandName = brandName
   if (brand?.tenant_id) overrides.tenantId = brand.tenant_id
+  const logoUrl = brand?.logo_url_icon
+  if (logoUrl && String(logoUrl).trim() !== '') overrides.brandLogoUrl = String(logoUrl).trim()
+
+  // Hero stage (Food Theater) — present key = override (parse fills defaults for missing fields)
+  if (settings && typeof settings === 'object' && 'hero_config' in settings) {
+    overrides.hero = parseHeroConfig((settings as Record<string, unknown>).hero_config)
+  }
 
   const glass = (brand?.theme_tokens as Record<string, any> | null | undefined)?.glass
   if (glass && typeof glass === 'object') {
@@ -91,21 +102,23 @@ export async function hydratePlatformConfigFromServer(): Promise<void> {
   try {
     const [settings, brandRes, branchRes] = await Promise.all([
       getBusinessSettings(),
-      supabase.from('brands').select('display_name, name, tenant_id, theme_tokens').eq('is_default', true).maybeSingle(),
+      supabase.from('brands').select('display_name, name, tenant_id, logo_url_icon, theme_tokens').eq('is_default', true).maybeSingle(),
       supabase.from('branches').select('service_radius_km').eq('is_default', true).eq('status', 'active').maybeSingle(),
     ])
     const brand = brandRes.error ? null : brandRes.data
     const branch = branchRes.error ? null : branchRes.data
     const overrides = mapServerConfigToOverrides(settings, brand, branch)
     const store = usePlatformConfigStore.getState()
-    const hasIdentity = Boolean(overrides.brandName || overrides.currency || overrides.tenantId || overrides.theme)
+    const hasIdentity = Boolean(overrides.brandName || overrides.brandLogoUrl || overrides.currency || overrides.tenantId || overrides.theme || overrides.hero)
     const hasDelivery = Boolean(overrides.delivery && Object.keys(overrides.delivery).length > 0)
     // setTenant rebuilds config from defaults → ต้อง setDeliveryOverrides ทีหลัง
     if (hasIdentity) {
       const identity: Partial<PlatformConfig> = {}
       if (overrides.brandName) identity.brandName = overrides.brandName
+      if (overrides.brandLogoUrl) identity.brandLogoUrl = overrides.brandLogoUrl
       if (overrides.currency) identity.currency = overrides.currency
       if (overrides.theme) identity.theme = overrides.theme
+      if (overrides.hero) identity.hero = overrides.hero
       store.setTenant(overrides.tenantId, identity)
     }
     if (hasDelivery) store.setDeliveryOverrides(overrides.delivery!)

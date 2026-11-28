@@ -11,6 +11,7 @@ import { InAppBrowserBanner } from '@/components/InAppBrowserBanner'
 import { SeoHelmet, TrackOrderSeo, ReviewDetailSeo, PaymentSeo } from './components/SeoHelmet'
 import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrdersMeta, getNotificationsMeta, getReviewsMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta, getResetPasswordMeta, getTrackIndexMeta, getTalkToBiteMeta, getVoiceDemoMeta, getRiderMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
+import { RuntimeBrandIcons } from './components/RuntimeBrandIcons'
 import { subscribeSeoSettings, getSeoSettingsVersion } from './lib/seoSettings'
 import { subscribeSocialLinks, getSocialVersion } from './lib/socialLinks'
 import { useAdminTenantContextStore } from './lib/adminTenantContext'
@@ -228,6 +229,8 @@ export default function App() {
       <ErrorBoundary>
         {/* N3: auth session sync กลาง (mount ครั้งเดียว · ไม่ render อะไร) */}
         <AuthSessionSync />
+        {/* R137: ไอคอนแท็บ/apple-touch/PWA ตามโลโก้แอดมิน (แทน "B" สีส้ม) */}
+        <RuntimeBrandIcons />
         {/* SEO Helmet — per-page meta tags */}
         <Routes>
         <Route path="/" element={<SeoHelmet seo={getHomeMeta()} />} />

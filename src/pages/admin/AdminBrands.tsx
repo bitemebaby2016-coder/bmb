@@ -66,6 +66,10 @@ export function AdminBrands() {
     finally { setLoading(false) }
   }
 
+  // R136: เดิมไม่มี effect เรียก loadAll → loading ค้าง true ตลอด
+  // (หน้านี้ค้าง "กำลังโหลด..." กดปุ่ม/ฟอร์มไม่ตอบสนอง) → ต้องโหลดตอน mount
+  useEffect(() => { void loadAll() }, [])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const brandData = {

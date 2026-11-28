@@ -2321,6 +2321,15 @@ html[data-theme='dark'], html[data-theme='graphite'] {
   box-shadow: var(--theater-stage-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .theater-head { display: flex; align-items: center; gap: 12px; }
+.theater-hero-image {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(var(--theater-accent-rgb), 0.25);
+}
 .theater-head-mascot {
   width: 64px; height: 64px; flex-shrink: 0;
   filter: drop-shadow(0 10px 18px rgba(var(--theater-accent-rgb), 0.35));

@@ -16,6 +16,49 @@ import { ORDER_POLICY_DEFAULTS } from '@/lib/orderPolicy'
 
 export type OrderMode = 'SAME_DAY' | 'PRE_ORDER'
 
+/** Hero stage content (Food Theater) — admin-editable, no hardcoding in components. */
+export interface HeroConfig {
+  /** Small label above the headline (e.g. "🍽️ Bite Food Theater") */
+  kicker: string
+  /** Main hero headline */
+  headline: string
+  /** Sub text under the hero (mascot bubble) */
+  subheadline: string
+  /** Call-to-action button label */
+  ctaLabel: string
+  /** Single big hero banner image URL (empty = no banner, zero-fake) */
+  heroImageUrl: string
+}
+
+/** Centralized hero defaults (single source — components must not hardcode these). */
+export const DEFAULT_HERO_CONFIG: HeroConfig = {
+  kicker: '🍽️ Bite Food Theater',
+  headline: 'Bite เลือกเมนูมาให้แล้ววันนี้',
+  subheadline: 'เลื่อนดูเมนูที่ Bite คัดสรรมาให้ · กดเพิ่มได้เลย',
+  ctaLabel: 'ดูเมนูทั้งหมด',
+  heroImageUrl: '',
+}
+
+/** Pure parse: raw business_settings.hero_config → HeroConfig (missing/blank = default). */
+export function parseHeroConfig(value: unknown): HeroConfig {
+  let raw: unknown = value
+  if (typeof value === 'string') {
+    try { raw = JSON.parse(value) } catch { raw = null }
+  }
+  const v = (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}) as Record<string, unknown>
+  const str = (key: keyof HeroConfig): string => {
+    const candidate = v[key]
+    return typeof candidate === 'string' && candidate.trim() !== '' ? candidate : DEFAULT_HERO_CONFIG[key]
+  }
+  return {
+    kicker: str('kicker'),
+    headline: str('headline'),
+    subheadline: str('subheadline'),
+    ctaLabel: str('ctaLabel'),
+    heroImageUrl: str('heroImageUrl'),
+  }
+}
+
 export interface DeliveryConfig {
   /** Canonical: delivery_policy.bite_drive_radius_km + branch override branches.service_radius_km (hydrated — FC-3) */
   biteDriveMaxDistanceKm: number
@@ -52,6 +95,10 @@ export interface PlatformConfig {
   /** Tenant ID — resolved dynamically from brand context (TEN-06). Fallback on bootstrapping. */
   tenantId: string
   brandName: string
+  /** Brand logo icon URL (brands.logo_url_icon) — hydrated at boot; fallback = bundled asset. */
+  brandLogoUrl: string
+  /** Hero stage content (Food Theater) — hydrated from business_settings.hero_config. */
+  hero: HeroConfig
   currency: string
   delivery: DeliveryConfig
   theme: GlassTheme
@@ -65,6 +112,8 @@ export interface PlatformConfig {
 export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   tenantId: 'tenant-bmb-001', // Only used as bootstrapping fallback
   brandName: 'Bite Me Baby',
+  brandLogoUrl: '/Head Logo.webp', // Bundled fallback — overridden by brands.logo_url_icon at boot
+  hero: { ...DEFAULT_HERO_CONFIG }, // Overridden by business_settings.hero_config at boot
   currency: 'THB',
   delivery: {
     biteDriveMaxDistanceKm: 5,

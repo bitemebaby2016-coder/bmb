@@ -28,6 +28,7 @@ import { recommendReason } from '@/lib/theaterReasons'
 import { theaterPosFor, clampIndex } from '@/lib/theaterGeometry'
 import { readTheaterOpen, writeTheaterOpen } from '@/lib/theaterPreferences'
 import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
+import { usePlatformConfig } from '@/config/platformConfig'
 import { showToast } from '@/components/ui/ToastContainer'
 import { TheaterHeroCard, RecommendationCard } from './TheaterCards'
 
@@ -84,6 +85,7 @@ function getDailyTheaterPicks(products: Product[], schedule: Record<string, stri
 
 export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }: FoodTheaterProps) {
   const navigate = useNavigate()
+  const { hero } = usePlatformConfig()
   const customer = useAuthStore((s) => s.customer)
   const cartItems = useCartStore((s) => s.items)
   const setBiteState = useBiteAIStore((s) => s.setBiteState)
@@ -148,18 +150,15 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
     return getDailyTheaterPicks(products, schedule, PICK_COUNT) as (Product & { _theaterItem?: TheaterCarouselItem; _realProduct?: Product })[]
   }, [theaterItems, products, schedule])
 
-  const defaultHeadline = 'Bite เลือกเมนูมาให้แล้ววันนี้'
-  const defaultSubheadline = 'เลื่อนดูเมนูที่ Bite คัดสรรมาให้ · กดเพิ่มได้เลย'
-  const defaultCtaLabel = 'ดูเมนูทั้งหมด'
-  const defaultKicker = '🍽️ Bite Food Theater'
-
+  // Hero copy/image comes from platform config (business_settings.hero_config via
+  // admin "ฮีโร่หน้าแรก" tab) — never hardcoded here.
   const stage = useMemo(() => ({
-    headline: defaultHeadline,
-    subheadline: defaultSubheadline,
-    ctaLabel: defaultCtaLabel,
-    kicker: defaultKicker,
+    headline: hero.headline,
+    subheadline: hero.subheadline,
+    ctaLabel: hero.ctaLabel,
+    kicker: hero.kicker,
     recommendationLabel: '',
-  }), [])
+  }), [hero.headline, hero.subheadline, hero.ctaLabel, hero.kicker])
 
   const cartCategoryIds = useMemo(
     () => cartItems.map((i) => i.product.category_id).filter(Boolean),
@@ -291,6 +290,16 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
 
   return (
     <section className='theater-stage' aria-label='Bite Food Theater' data-testid='food-theater'>
+      {hero.heroImageUrl && (
+        <img
+          src={hero.heroImageUrl}
+          alt=''
+          className='theater-hero-image'
+          data-testid='theater-hero-image'
+          loading='eager'
+          decoding='async'
+        />
+      )}
       <div className='theater-head'>
         <div className='min-w-0 flex-1'>
           <p className='theater-kicker'>{stage.kicker}</p>

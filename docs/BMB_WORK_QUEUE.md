@@ -32,6 +32,8 @@
 | **C-1..C-6** | 6 | ✅ **RESOLVED** | Owner decisions recorded |
 | **Runtime Tests §T** | 13+ | ⚠️ BLOCKED | Production test pack — รออุปกรณ์/บัญชีจริง |
 | **รวม** | **90+** | | |
+| **R137 (ไอคอน "B" สีส้ม → โลโก้จริง)** | 1 | ✅ **CODE_CLOSED + PUSHED** | favicon/apple-touch/PWA ตาม `brandLogoUrl` (runtime blob manifest) · index.html default `/Head Logo.webp` · gates 4/4 (vitest 3,060) · LIVE_TEST_PENDING: Owner ดูไอคอนแท็บ/หน้าโฮม/PWA บนไลฟ์แชท |
+| **R136 (Header โลโก้/ชื่อ + ฮีโร่หน้าแรก + แก้แท็บแบรนด์ stuck)** | 1 | ✅ **CODE_CLOSED + PUSHED** | Header อ่าน brandLogoUrl/brandName · hero text+รูป จาก business_settings.hero_config (ตัดฮาร์ดโค้ด) · AdminBrands mount effect · HeroSettingsPage · gates 4/4 (vitest 3,057) · LIVE_TEST_PENDING: Owner ทดสอบแท็บแบรนด์/ฮีโร่ |
 | **R135 (คืน standard + ทดสอบ 082)** | 1 | ✅ **CODE_CLOSED + SECRET SET (201) + PUSHED (`96a289c`)** | เปลี่ยนเบอร์แล้วถึง = ปัญหาที่เบอร์ 081 (2 ยูซเซอร์) · คืน 1 เครดิต · sms-send 082 = 200 queued · LIVE_TEST_PENDING: Owner ยืนยัน 082 ได้รับ |
 | **R134 (SMS_MESSAGE_TYPE → superfast)** | 1 | ✅ **CODE_CLOSED + SECRET SET (201) + PUSHED (`5ec618e`)** | `standard` ไม่มีหลักฐานว่าส่งถึง → เปลี่ยนเป็น `superfast` (3 เครดิต) · otp-send 200 ok · LIVE_TEST_PENDING: Owner ยืนยันว่าได้ SMS |
 | **R133 (OTP SMS 1 ท่อน — ย่อ 89→56 ตัว)** | 1 | ✅ **CODE_CLOSED + DEPLOYED + PUSHED (`1c590e5`)** | ข้อความ 2 ท่อน = carrier ตัด → ย่อ 1 ท่อน + regression test · gates 4/4 (vitest 3,051) · LIVE_TEST_PENDING: Owner ขอ OTP แล้วดูว่าถึง |

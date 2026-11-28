@@ -22,6 +22,7 @@ import { AdminSettings } from '@/pages/admin/AdminSettings'
 import { AdminPrintSettings } from '@/pages/admin/AdminPrintSettings'
 import { MascotSettingsPage } from '@/pages/admin/MascotSettingsPage'
 import { StoreFrontSettingsPage } from '@/pages/admin/StoreFrontSettingsPage'
+import { HeroSettingsPage } from '@/pages/admin/HeroSettingsPage'
 import { BackgroundMusicSettingsPage } from '@/pages/admin/BackgroundMusicSettingsPage'
 import { AdminRounds } from '@/pages/admin/AdminRounds'
 import { DeliveryZonesPanel } from '@/components/admin/DeliveryZonesPanel'
@@ -130,6 +131,8 @@ export function SettingsHub() {
         { key: 'music', label: 'เพลงพื้นหลัง', icon: '🎵', render: () => <BackgroundMusicSettingsPage /> },
         // N-8 (Owner 2026-11-05): แท็บหน้าร้าน — รูป+รายละเอียดร้านสำหรับเส้นทาง "รับที่ร้าน"
         { key: 'storefront', label: 'หน้าร้าน', icon: '🏪', render: () => <StoreFrontSettingsPage /> },
+        // R136: แท็บฮีโร่หน้าแรก — ข้อความ+รูป hero (business_settings.hero_config)
+        { key: 'hero', label: 'ฮีโร่หน้าแรก', icon: '🎭', render: () => <HeroSettingsPage /> },
       ]}
     />
   )

@@ -7,6 +7,20 @@
 
 ---
 
+## R137 — 2026-11-28 — ไอคอน "B" สีส้ม → โลโก้จริง (favicon/apple-touch/PWA ตาม brandLogoUrl)
+
+- **ปัญหา:** favicon/apple-touch/PWA icon ยังเป็น "B" สีส้ม (`public/favicon.svg`, `pwa-192/512x*.png`) — แอดมินแก้โลโก้แล้วไม่เปลี่ยน
+- **แก้:** `lib/runtimeBrandIcons.ts` (applyRuntimeBrandIcons + buildRuntimeManifest) ตั้ง favicon + apple-touch-icon + PWA manifest (blob) ตาม `brandLogoUrl` ตอน runtime · `components/RuntimeBrandIcons.tsx` วางใน App · `index.html` default เป็น `/Head Logo.webp`
+- **ผลลัพธ์:** แอดมินแก้โลโก้ที่ "องค์กรและแบรนด์" ครั้งเดียว → ทุกไอคอนอัปเดตตาม ไม่ต้อง rebuild (installed PWA เปลี่ยนตอน reinstall)
+- **Tests (gates 4/4):** lint 0 (658 ไฟล์) · vitest **264 files/3,060 tests** 0 fail · tsc+build 0 · PUSHED
+
+## R136 — 2026-11-28 — Header โลโก้/ชื่อ + ฮีโร่หน้าแรก (ตัดฮาร์ดโค้ด) + แก้แท็บแบรนด์ stuck
+
+- **ปัญหา 1:** `Header.tsx` ฮาร์ดโค้ด `/Head Logo.webp` + "Bite Me Baby" · **ปัญหา 2:** `AdminBrands` import `useEffect` แต่ไม่เรียก → `loading` ค้าง true → แท็บ "องค์กรและแบรนด์" กดอะไรไม่ตอบ · **ปัญหา 3:** ข้อความ hero ฮาร์ดโค้ดใน `FoodTheater.tsx`
+- **แก้:** เพิ่ม `brandLogoUrl` + `hero` (HeroConfig/parseHeroConfig) ใน platformConfig · hydrate จาก `brands.logo_url_icon` + `business_settings.hero_config` · `Header`/`FoodTheater` อ่านจาก config (ห้ามฮาร์ดโค้ด) · เพิ่ม mount effect ใน `AdminBrands` · UI ใหม่ `HeroSettingsPage` (แท็บ "🎭 ฮีโร่หน้าแรก" ใน ตั้งค่าร้าน) + รูป hero ใหญ่
+- **Tests (gates 4/4):** lint 0 · vitest **263 files/3,057 tests** 0 fail · tsc+build 0 · PUSHED
+- **LIVE_TEST_PENDING (Owner):** ทดสอบแท็บแบรนด์ + ฮีโร่หน้าแรก + ไอคอนบนไลฟ์แชท
+
 ## R135 — 2026-11-28 — คืน `standard` + ทดสอบ 082 (ปัญหาที่เบอร์ 081 ไม่ใช่โค้ด)
 
 - **หลักฐาน:** Owner เปลี่ยนเบอร์แล้วข้อความถึง → ระบบส่งได้จริง · เบอร์ 081 ลงทะเบียน 2 ยูซเซอร์ = ปัญหาฝั่งเบอร์/บัญชี

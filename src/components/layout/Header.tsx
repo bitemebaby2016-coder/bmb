@@ -8,6 +8,7 @@ import { NotificationDropdown } from '@/components/notification/NotificationDrop
 import { AmbientMusicToggle } from '@/components/audio/AmbientMusicToggle'
 import { applyTheme, cycleTheme, getTheme, THEME_LABELS, type ThemeName } from '@/lib/theme'
 import { scrollMainToTop } from '@/lib/scrollTo'
+import { usePlatformConfig } from '@/config/platformConfig'
 
 const MOBILE_NAV_LINKS = [
   { path: '/menu', label: 'เมนู' },
@@ -21,8 +22,9 @@ export function Header() {
   const customer = useAuthStore((s) => s.customer)
   const role = useAuthStore((s) => s.role)
   const logout = useAuthStore((s) => s.logout)
-const riderIdentity = useRiderIdentity()
+  const riderIdentity = useRiderIdentity()
   const location = useLocation()
+  const { brandName, brandLogoUrl } = usePlatformConfig()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeName>(() => getTheme())
   // Admin area keeps a slim header: no customer menu links, no hamburger
@@ -68,8 +70,8 @@ const riderIdentity = useRiderIdentity()
         {/* R55 (Owner 2026-11-02): "ถ้าเคยล็อกอินอยู่แล้ว กดหน้าแรกหรือกดโลโก้ให้ส่งไปที่/shop เลย
             ไม่ต้องไปแลนดิ้งโฮมใหม่" — guest คงไป / (landing) เดิม */}
         <Link to={customer ? '/shop' : '/'} className="flex items-center gap-2 min-w-0 shrink" data-testid="header-logo-link">
-          <img src="/Head Logo.webp" alt="Bite Me Baby" width={40} height={40} className="rounded-lg object-cover shrink-0" />
-          <span className="font-display font-bold text-brand-accent text-xl truncate">Bite Me Baby</span>
+          <img src={brandLogoUrl} alt={brandName} width={40} height={40} className="rounded-lg object-cover shrink-0" />
+          <span className="font-display font-bold text-brand-accent text-xl truncate">{brandName}</span>
         </Link>
 
         {!isAdminArea && (
