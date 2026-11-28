@@ -21,6 +21,7 @@ import {
   type PasskeyInfo,
 } from '@/lib/passkeyLogin'
 import { fetchMyCrmProfile, saveMyCrmProfile, validateBirthday } from '@/lib/customerProfile'
+import { validateAndNormalizePhone, updateMyPhone, fetchMyPhone } from '@/lib/phoneProfile'
 
 export function ProfilePage() {
   const riderIdentity = useRiderIdentity()
@@ -42,6 +43,10 @@ export function ProfilePage() {
   const [crmConsent, setCrmConsent] = useState(false)
   const [crmLoaded, setCrmLoaded] = useState(false)
   const [crmSaving, setCrmSaving] = useState(false)
+  // R130 — เบอร์โทรศัพท์
+  const [phoneInput, setPhoneInput] = useState('')
+  const [phoneSaving, setPhoneSaving] = useState(false)
+  const [phoneLoaded, setPhoneLoaded] = useState(false)
   useEffect(() => {
     if (!customer) return
     let active = true
@@ -88,6 +93,16 @@ export function ProfilePage() {
         setCrmConsent(p.crm_consent)
       }
       setCrmLoaded(true)
+    })
+    return () => { active = false }
+  }, [customer])
+  useEffect(() => {
+    if (!customer) return
+    let active = true
+    void fetchMyPhone().then((phone) => {
+      if (!active) return
+      if (phone) setPhoneInput(phone)
+      setPhoneLoaded(true)
     })
     return () => { active = false }
   }, [customer])
@@ -308,6 +323,62 @@ export function ProfilePage() {
             data-testid="crm-save"
           >
             {crmSaving ? 'กำลังบันทึก…' : 'บันทึก'}
+          </button>
+        </div>
+      </div>
+
+      {/* R130 — เบอร์โทรศัพท์: เพิ่ม/แก้ไขเบอร์สำหรับเข้าสู่ระบบและติดต่อ
+          (ใช้ supabase.auth.updateUser({ phone }) — รองรับ SMS OTP หากเปิดใช้ Phone Provider) */}
+      <div className="card mt-6" data-testid="profile-phone">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xl">📱</span>
+          <h3 className="font-bold text-brand-accent">เบอร์โทรศัพท์</h3>
+        </div>
+        <p className="text-sm text-brand-muted mb-4">
+          ใช้เบอร์โทรเข้าสู่ระบบและติดต่อ — ระบบจะส่งรหัสยืนยันทาง SMS (หากเปิดใช้งาน)
+        </p>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="text-sm">
+            <div className="text-brand-muted mb-1">เบอร์โทรศัพท์</div>
+            <input
+              type="tel"
+              value={phoneInput}
+              onChange={(e) => setPhoneInput(e.target.value)}
+              className="input"
+              placeholder="0812345678"
+              data-testid="phone-input"
+            />
+          </label>
+          <button
+            type="button"
+            disabled={phoneSaving || !phoneLoaded || !phoneInput.trim()}
+            onClick={() => {
+              void (async () => {
+                const result = validateAndNormalizePhone(phoneInput)
+                if (!result.valid) {
+                  showToast(result.error || 'เบอร์โทรไม่ถูกต้อง', 'error')
+                  return
+                }
+                setPhoneSaving(true)
+                const r = await updateMyPhone(result.e164!)
+                setPhoneSaving(false)
+                if (!r.ok) {
+                  showToast(r.error || 'บันทึกไม่สำเร็จ — ลองใหม่อีกครั้ง', 'error')
+                  return
+                }
+                if (r.needsVerification) {
+                  showToast('ส่งรหัสยืนยันไปยังเบอร์โทรศัพท์แล้ว — กรุณาตรวจสอบ SMS', 'success')
+                } else {
+                  showToast('บันทึกเบอร์โทรแล้ว', 'success')
+                }
+                // Update local state
+                if (customer) setCustomer({ ...customer, phone: result.e164 || phoneInput })
+              })()
+            }}
+            className="btn btn-primary btn-sm"
+            data-testid="phone-save"
+          >
+            {phoneSaving ? 'กำลังบันทึก…' : 'บันทึก'}
           </button>
         </div>
       </div>

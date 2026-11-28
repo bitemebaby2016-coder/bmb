@@ -11,7 +11,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { getCustomersWithStats, deleteCustomer, type CustomerWithStats } from '@/lib/bmbAdminApi_customers'
+import { getCustomersWithStats, deleteCustomer, updateCustomerPhone, type CustomerWithStats } from '@/lib/bmbAdminApi_customers'
 import {
   deriveCustomerInsight,
   segmentTally,
@@ -19,6 +19,7 @@ import {
   type CustomerInsight,
 } from '@/lib/customerIntelligence'
 import { showToast } from '@/components/ui/ToastContainer'
+import { validateAndNormalizePhone } from '@/lib/phoneProfile'
 
 export function AdminCustomers() {
   const [customers, setCustomers] = useState<CustomerWithStats[]>([])
@@ -26,6 +27,10 @@ export function AdminCustomers() {
   const [tally, setTally] = useState<ReturnType<typeof segmentTally> | null>(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  // R130 — แก้ไขเบอร์โทร
+  const [editingPhone, setEditingPhone] = useState<string | null>(null)
+  const [phoneInput, setPhoneInput] = useState('')
+  const [savingPhone, setSavingPhone] = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -58,6 +63,30 @@ export function AdminCustomers() {
       return
     }
     showToast('ลบลูกค้าออกจากระบบแล้ว', 'success')
+    void load()
+  }
+
+  // R130 — แก้ไขเบอร์โทร
+  function startEditPhone(c: CustomerWithStats) {
+    setEditingPhone(c.id)
+    setPhoneInput(c.phone || '')
+  }
+
+  async function savePhone(c: CustomerWithStats) {
+    const result = validateAndNormalizePhone(phoneInput)
+    if (!result.valid) {
+      showToast(result.error || 'เบอร์โทรไม่ถูกต้อง', 'error')
+      return
+    }
+    setSavingPhone(true)
+    const res = await updateCustomerPhone(c.id, result.e164!)
+    setSavingPhone(false)
+    if (!res.ok) {
+      showToast(res.error || 'บันทึกไม่สำเร็จ', 'error')
+      return
+    }
+    showToast('บันทึกเบอร์โทรแล้ว', 'success')
+    setEditingPhone(null)
     void load()
   }
 
@@ -118,13 +147,48 @@ export function AdminCustomers() {
                   {c.last_order_at ? new Date(c.last_order_at).toLocaleDateString() : '—'}
                 </td>
                 <td className="px-3 py-2 text-right">
-                  <button
-                    onClick={() => void handleDelete(c)}
-                    disabled={deleting === c.id}
-                    className="btn btn-danger text-xs disabled:opacity-50"
-                  >
-                    {deleting === c.id ? 'กำลังลบ…' : '🗑 ลบ'}
-                  </button>
+                  {editingPhone === c.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="tel"
+                        value={phoneInput}
+                        onChange={(e) => setPhoneInput(e.target.value)}
+                        className="input text-xs w-32"
+                        placeholder="0812345678"
+                        data-testid={`phone-edit-${c.id}`}
+                      />
+                      <button
+                        onClick={() => void savePhone(c)}
+                        disabled={savingPhone}
+                        className="btn btn-primary text-xs px-2 py-1"
+                      >
+                        {savingPhone ? '…' : '✓'}
+                      </button>
+                      <button
+                        onClick={() => setEditingPhone(null)}
+                        className="btn btn-outline text-xs px-2 py-1"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 justify-end">
+                      <button
+                        onClick={() => startEditPhone(c)}
+                        className="btn btn-outline text-xs px-2 py-1"
+                        data-testid={`phone-edit-btn-${c.id}`}
+                      >
+                        📱
+                      </button>
+                      <button
+                        onClick={() => void handleDelete(c)}
+                        disabled={deleting === c.id}
+                        className="btn btn-danger text-xs px-2 py-1 disabled:opacity-50"
+                      >
+                        {deleting === c.id ? 'กำลังลบ…' : '🗑 ลบ'}
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

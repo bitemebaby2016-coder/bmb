@@ -30,7 +30,7 @@ import {
   type OtpPurpose,
 } from '../_shared/otpPolicy.ts'
 
-const VALID_PURPOSES: OtpPurpose[] = ['quick_login', 'guest_checkout']
+const VALID_PURPOSES: OtpPurpose[] = ['quick_login', 'guest_checkout', 'phone_login']
 
 // in-memory limiter (interim — reset ตอน cold start) รูปแบบเดียวกับ phone-auto-login
 const sendStore = new Map<string, number[]>()

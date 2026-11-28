@@ -23,7 +23,7 @@ export const OTP_SEND_WINDOW_MS = 10 * 60 * 1000
 export const OTP_VERIFY_LIMIT = 10
 export const OTP_VERIFY_WINDOW_MS = 15 * 60 * 1000
 
-export type OtpPurpose = 'quick_login' | 'guest_checkout'
+export type OtpPurpose = 'quick_login' | 'guest_checkout' | 'phone_login'
 
 /** คืนรหัส OTP เป็นตัวเลข OTP_LENGTH หลัก — ต้องสุ่มด้วย CSPRNG เท่านั้น */
 export function generateOtpCode(rng: (n: number) => Uint8Array = defaultRng): string {

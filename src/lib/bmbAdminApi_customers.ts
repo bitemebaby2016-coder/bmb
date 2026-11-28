@@ -61,3 +61,17 @@ export async function deleteCustomer(id: string): Promise<{ ok: boolean; code?: 
   if (error) return { ok: false, code: error.code, message: error.message }
   return { ok: true }
 }
+
+/** R130 — อัปเดตเบอร์โทรใน customers table (admin only) */
+export async function updateCustomerPhone(id: string, phone: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('customers')
+      .update({ phone, updated_at: new Date().toISOString() })
+      .eq('id', id)
+    if (error) return { ok: false, error: error.message }
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: String(e instanceof Error ? e.message : e).slice(0, 200) }
+  }
+}

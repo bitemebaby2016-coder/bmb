@@ -11,6 +11,7 @@ import { signInWithFacebook, signInWithSocial, consumeSocialCallbackError, descr
 import { signInWithPasskey, describePasskeyError, isPasskeySupported } from '@/lib/passkeyLogin'
 import { writeAuditLog } from '@/lib/auditLog'
 import { MascotBadge } from '@/components/MascotBadge'
+import { supabase } from '@/lib/supabase'
 
 // จำข้อมูล Quick login ครั้งเดียวใช้ตลอด (localStorage — รอบหน้ากรอกให้อัตโนมัติ)
 const QUICK_PROFILE_KEY = 'bmb_quick_profile'
@@ -62,6 +63,11 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLocating, setIsLocating] = useState(false)
   const [error, setError] = useState('')
+  // R130 — OTP สำหรับเบอร์โทร + รหัสผ่าน
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false)
+  const [phoneOtpCode, setPhoneOtpCode] = useState('')
+  const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false)
+  const [phoneOtpMasked, setPhoneOtpMasked] = useState('')
 
   // P1 / SF-04 — ลืมรหัสผ่าน (ไม่มีในระบบมาก่อน 2026-10-12)
   const [isForgot, setIsForgot] = useState(false)
@@ -179,6 +185,69 @@ export function LoginPage() {
       await finishLogin('phone:' + pPhone.trim())
     } catch (err) {
       console.error('Phone login error:', err)
+      setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // R130 — ส่ง OTP สำหรับเบอร์โทร (ใช้ otp-send EF เหมือนกับ quick login)
+  async function handleSendPhoneOtp(e: React.FormEvent) {
+    e.preventDefault()
+    if (isSendingPhoneOtp) return
+    setError('')
+    setIsSendingPhoneOtp(true)
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('otp-send', {
+        body: { phone: pPhone, purpose: 'phone_login' },
+      })
+      setIsSendingPhoneOtp(false)
+      if (fnError) {
+        setError('ส่งรหัส OTP ไม่สำเร็จ — กรุณาลองใหม่อีกครั้ง')
+        return
+      }
+      if (data?.error) {
+        setError(data.error === 'ERR_RATE_LIMITED' ? 'ขอรหัสบ่อยเกินไป — กรุณารอสักครู่' : 'ส่งรหัส OTP ไม่สำเร็จ')
+        return
+      }
+      setPhoneOtpSent(true)
+      setPhoneOtpMasked(data?.masked_phone || '')
+      showToast('ส่งรหัสยืนยันทาง SMS แล้ว', 'success')
+    } catch {
+      setIsSendingPhoneOtp(false)
+      setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
+    }
+  }
+
+  // R130 — ยืนยัน OTP สำหรับเบอร์โทร
+  async function handleVerifyPhoneOtp(e: React.FormEvent) {
+    e.preventDefault()
+    if (!phoneOtpCode.trim() || phoneOtpCode.length !== 6) {
+      setError('กรุณากรอกรหัส OTP 6 หลัก')
+      return
+    }
+    setIsLoading(true)
+    setError('')
+    try {
+      // ตรวจ OTP ผ่าน otp-verify EF
+      const { data, error: fnError } = await supabase.functions.invoke('otp-verify', {
+        body: { phone: pPhone, code: phoneOtpCode, purpose: 'phone_login' },
+      })
+      if (fnError || !data?.ok) {
+        setError(data?.error === 'ERR_OTP_INVALID' ? 'รหัส OTP ไม่ถูกต้อง' : 'ยืนยัน OTP ไม่สำเร็จ')
+        setIsLoading(false)
+        return
+      }
+      // OTP ผ่านแล้ว → ล็อกอินด้วย loginByPhone
+      const ok = await loginByPhone(pPhone.trim(), password)
+      if (!ok) {
+        setError('เบอร์โทรศัพท์หรือรหัสผ่านไม่ถูกต้อง')
+        setIsLoading(false)
+        return
+      }
+      await finishLogin('phone:' + pPhone.trim())
+    } catch (err) {
+      console.error('Phone OTP verify error:', err)
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
     } finally {
       setIsLoading(false)
@@ -465,9 +534,10 @@ return (
               </button>
             </form>
           ) : mode === 'phone' ? (
-            <form onSubmit={handlePhoneLogin} className="space-y-4">
+            <form onSubmit={phoneOtpSent ? handleVerifyPhoneOtp : handlePhoneLogin} className="space-y-4">
               <div className="rounded-lg bg-brand-bg border border-brand-border p-3 text-xs text-brand-muted">
                 เข้าสู่ระบบด้วยเบอร์โทร + รหัสผ่าน — สำหรับเบอร์ที่เคยตั้งรหัสผ่านไว้ในระบบ
+                {!phoneOtpSent && ' (ต้องยืนยันเบอร์ด้วย OTP ก่อน)'}
               </div>
               <div>
                 <label className="block text-sm font-medium text-brand-accent mb-2">เบอร์โทรศัพท์</label>
@@ -479,26 +549,71 @@ return (
                   placeholder="เช่น 0812345678"
                   required
                   autoFocus
+                  disabled={phoneOtpSent}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-brand-accent mb-2">รหัสผ่าน</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`btn btn-primary w-full ${isLoading ? 'btn-disabled' : ''}`}
-              >
-                {isLoading ? 'กำลังเข้าสู่ระบบ…' : 'เข้าสู่ระบบ'}
-              </button>
+              {!phoneOtpSent && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-brand-accent mb-2">รหัสผ่าน</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="input"
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => void handleSendPhoneOtp(e)}
+                      disabled={isSendingPhoneOtp || pPhone.trim().length < 9 || !password}
+                      className={`btn btn-outline btn-sm ${isSendingPhoneOtp ? 'btn-disabled' : ''}`}
+                    >
+                      {isSendingPhoneOtp ? 'กำลังส่ง…' : 'ส่งรหัส OTP'}
+                    </button>
+                  </div>
+                </>
+              )}
+              {phoneOtpSent && (
+                <>
+                  <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-700">
+                    ส่งรหัสยืนยันไปที่ {phoneOtpMasked || 'เบอร์ของคุณ'} แล้ว — กรุณากรอกรหัส 6 หลัก
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-brand-accent mb-2">รหัส OTP</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={phoneOtpCode}
+                      onChange={(e) => setPhoneOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="input"
+                      placeholder="000000"
+                      maxLength={6}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className={`btn btn-primary flex-1 ${isLoading ? 'btn-disabled' : ''}`}
+                    >
+                      {isLoading ? 'กำลังยืนยัน…' : 'ยืนยันและเข้าสู่ระบบ'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPhoneOtpSent(false); setPhoneOtpCode(''); setError('') }}
+                      className="btn btn-outline"
+                    >
+                      เปลี่ยนเบอร์
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
           ) : (
             <form onSubmit={handleQuickLogin} className="space-y-4">
